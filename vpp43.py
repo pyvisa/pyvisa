@@ -31,37 +31,49 @@ VI_SPEC_VERSION = 0x00300000
 
 from vpp43_types import *
 from vpp43_constants import *
-from visa_messages import completion_and_error_messages \
-    as _completion_and_error_messages
+from visa_exceptions import *
 import os
 
-
-class Error(EnvironmentError):
-    """Exception class for VISA errors.
-
-    Please note that all values for "errno" are negative according to the
-    specification (VPP-4.3.2, observation 3.3.2) and the NI implementation.
-    """
-    def __init__(self, status):
-	(abbreviation, description) = \
-	    _completion_and_error_messages[self.errno]
-	EnvironmentError.__init__(self, status, abbreviation + ": "
-				  + description)
 
 def check_status(status):
     """Check return values for errors."""
     if status < 0:
-        raise Error(status)
+        raise VisaIOError, status
     else:
         return status
 
 
 # load VISA library
 
-if os.name == 'nt':
-    visa = windll.visa32
-elif os.name == 'posix':
-    visa = cdll.LoadLibrary("/usr/local/vxipnp/linux/bin/libvisa.so.7")
-else:
-    raise "No implementation for your platform available."
+class _Singleton(object):
+    """Base class for singleton classes.  Taken from
+    <http://www.python.org/2.2.3/descrintro.html>.
+    """
+    def __new__(cls, *args, **kwds):
+        it = cls.__dict__.get("__it__")
+        if it is not None:
+            return it
+        cls.__it__ = it = object.__new__(cls)
+        it.init(*args, **kwds)
+        return it
+    def init(self, *args, **kwds):
+        pass
+
+class _VisaLibrary(_Singleton):
+    def init(self):
+	self.__lib = None
+    def load_library(self, path = "/usr/local/vxipnp/linux/bin/libvisa.so.7"):
+	if os.name == 'nt':
+	    self.__lib = windll.visa32
+	elif os.name == 'posix':
+	    self.__lib = cdll.LoadLibrary(path)
+	else:
+	    self.__lib = None
+	    raise OSNotSupported, os.name
+    def __call__(self):
+	if self.__lib is None:
+	    self.load_library()
+	return self.__lib
+
+visa_library = _VisaLibrary()
 
