@@ -67,11 +67,11 @@ __all__ = ["visa_library", "get_status",
 	   "assert_utility_signal", "assert_interrupt_signal", "map_trigger",
 	   "unmap_trigger"]
 
-# Add all symbols from visa_exceptions and vpp43_constants to the list of
+# Add all symbols from #visa_exceptions# and #vpp43_constants# to the list of
 # exported symbols
 import visa_exceptions, vpp43_constants
 __all__.extend([name for name in vpp43_constants.__dict__.keys() +
-		visa_exceptions.__dict__.keys() if name[0] != "_"])
+		visa_exceptions.__dict__.keys() if name[0] != '_'])
 
 
 # load VISA library
@@ -269,29 +269,68 @@ def vxi_command_query(vi, mode, command):
 				     ViUInt32(command), byref(response))
     return response.value
 
-def parse_resource():
-    pass
+def parse_resource(session, resource_name):
+    interface_type = ViUInt16()
+    interface_board_number = ViUInt16
+    visa_library().viParseRsrc(ViSession(session), ViRsrc(resource_name),
+			       byref(interface_type),
+			       byref(interface_board_number))
+    return (interface_type, interface_board_number)
 
-def write_from_file():
-    pass
+def write_from_file(vi, filename, count):
+    return_count = ViUInt32()
+    visa_library().viWriteFromFile(ViSession(vi), ViConstString(filename),
+				   ViUInt32(count), return_count)
+    return return_count
 
-def read_from_file():
-    pass
+def read_to_file(vi, filename, count):
+    return_count = ViUInt32()
+    visa_library().viReadToFile(ViSession(vi), ViConstString(filename),
+				ViUInt32(count), return_count)
+    return return_count
 
-def parse_resource_extended():
-    pass
+def parse_resource_extended(session, resource_name):
+    interface_type = ViUInt16()
+    interface_board_number = ViUInt16
+    resource_class = create_string_buffer(VI_FIND_BUFLEN)
+    unaliased_expanded_resource_name = create_string_buffer(VI_FIND_BUFLEN)
+    alias_if_exists = create_string_buffer(VI_FIND_BUFLEN)
+    visa_library().viParseRsrc(ViSession(session), ViRsrc(resource_name),
+			       byref(interface_type),
+			       byref(interface_board_number),
+			       resource_class,
+			       unaliased_expanded_resource_name,
+			       alias_if_exists)
+    return (interface_type.value, interface_board_number.value,
+	    resource_class.value, unaliased_expanded_resource_name.value,
+	    alias_if_exists.value)
 
-def usb_control_out():
-    pass
+def usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
+		    index, length, buffer):
+    visa_library().viUsbControlOut(ViSession(vi),
+		    ViInt16(request_type_bitmap_field), ViInt16(request_id),
+		    ViUInt16(request_value), ViUInt16(index), ViUInt16(length),
+		    create_string_buffer(buffer))
 
-def read():
-    pass
+def read(vi, count):
+    buffer = create_string_buffer(count)
+    return_count = ViUInt32()
+    visa_library().viRead(ViSession(vi), buffer, ViUInt32(count),
+			  byref(return_count))
+    return (buffer.raw[0:return_count.value], return_count.value)
 
-def read_asynchronously():
-    pass
+def read_asynchronously(vi, count):
+    buffer = create_string_buffer(count)
+    job_id = ViUInt32()
+    visa_library().viReadAsync(ViSession(vi), buffer, ViUInt32(count),
+			       byref(job_id))
+    return (buffer.raw[0:return_count.value], return_count.value)
 
-def write():
-    pass
+def write(vi, buffer, count):
+    return_count = ViUInt32()
+    visa_library().viWrite(ViSession(vi), create_string_buffer(buffer),
+			   ViUInt32(count), byref(return_count))
+    return return_count.value
 
 def write_asynchronously():
     pass
