@@ -35,18 +35,43 @@ __version__ = "$Revision$"
 
 VI_SPEC_VERSION = 0x00300000
 
-from vpp43_types import *
 from visa_exceptions import *
+from vpp43_constants import *
+from vpp43_types import *
 import os
 from ctypes import byref, windll, cdll, create_string_buffer
 
 
-# Consistency remark: Here *all* low-level wrappers must be listed
 
-__all__ = ("visa_library", "visa_status",
+__all__ = ["visa_library", "get_status",
+
+	   # Consistency remark: Here *all* low-level wrappers must be listed
 	   "open_default_resource_manager", "get_default_resource_manager",
 	   "find_resources", "find_next", "open", "close", "get_attribute",
-	   "set_attribute")
+	   "set_attribute", "status_description", "terminate", "lock",
+	   "unlock", "enable_event", "disable_event", "discard_events",
+	   "wait_on_event", "install_handler", "uninstall_handler",
+	   "mem_allocation", "mem_free", "gpib_control_ren",
+	   "vxi_command_query", "parse_resource", "write_from_file",
+	   "read_from_file", "parse_resource_extended", "usb_control_out",
+	   "read", "read_asynchronously", "write", "write_asynchronously",
+	   "assert_trigger", "read_stb", "clear", "set_buffer", "flush",
+	   "buffer_write", "buffer_read", "printf", "vprintf", "sprintf",
+	   "vsprintf", "scanf", "vscanf", "sscanf", "vsscanf", "queryf",
+	   "vqueryf", "gpib_control_atn", "gpib_send_ifc", "gpib_command",
+	   "gpib_pass_control", "usb_control_in", "in_8", "out_8", "in_16",
+	   "out_16", "in_32", "out_32", "move_in_8", "move_out_8",
+	   "move_in_16", "move_out_16", "move_in_32", "move_out_32", "move",
+	   "move_asynchronously", "map_address", "unmap_address", "peek_8",
+	   "poke_8", "peek_16", "poke_16", "peek_32", "poke_32",
+	   "assert_utility_signal", "assert_interrupt_signal", "map_trigger",
+	   "unmap_trigger"]
+
+# Add all symbols from visa_exceptions and vpp43_constants to the list of
+# exported symbols
+import visa_exceptions, vpp43_constants
+__all__.extend([name for name in vpp43_constants.__dict__.keys() +
+		visa_exceptions.__dict__.keys() if name[0] != "_"])
 
 
 # load VISA library
@@ -97,7 +122,7 @@ class VisaLibrary(Singleton):
 	    self.__lib = _ctypes.cdll.LoadLibrary(path)
 	else:
 	    self.__lib = None
-	    raise OSNotSupported, os.name
+	    raise visa_exceptions.OSNotSupported, os.name
     def __call__(self):
 	"""Returns the ctypes object to the VISA library."""
 	if self.__lib is None:
@@ -106,6 +131,7 @@ class VisaLibrary(Singleton):
 
 visa_library = VisaLibrary()
 
+
 visa_status = 0
 
 def check_status(status):
@@ -113,9 +139,13 @@ def check_status(status):
     global visa_status
     visa_status = status
     if status < 0:
-        raise VisaIOError, status
+        raise visa_exceptions.VisaIOError, status
     else:
         return status
+
+def get_status():
+    return visa_status
+
 
 # Consistency remark: here all VPP-4.3.2 routines must be listed (unless, of
 # course, they don't return a status value).
@@ -141,13 +171,13 @@ def find_resources(session, regular_expression):
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
     visa_library().viFindRsrc(ViSession(session), ViString(regular_expression),
 			      byref(find_list), byref(return_counter),
-			      byref(instrument_description))
-    return (find_list.value, return_counter.value, instrument_description.value)
+			      instrument_description)
+    return (find_list.value, return_counter.value,
+	    instrument_description.value)
 
 def find_next(find_list):
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
-    visa_library().viFindNext(ViFindList(find_list),
-			      byref(instrument_description))
+    visa_library().viFindNext(ViFindList(find_list), instrument_description)
     return instrument_description.value
 
 def open(session, resource_name, access_mode, timeout):
@@ -169,3 +199,243 @@ def get_attribute(vi, attribute):
 def set_attribute(vi, attribute, attribute_state):
     visa_library().viSetAttribute(ViSession(vi), ViAttr(attribute),
 				  ViAttrState(attribute_state))
+
+def status_description(vi, status):
+    description = create_string_buffer(VI_FIND_BUFLEN)
+    visa_library().viStatusDesc(ViSession(vi), ViStatus(status), description)
+    return description.value
+
+def terminate(vi, degree, job_id):
+    visa_library().viTerminate(ViSession(vi), ViUInt16(degree),
+			       ViJobId(job_id))
+
+def lock(vi, lock_type, timeout, requested_key):
+    if lock_type == VI_EXCLUSIVE_LOCK:
+	requested_key = VI_NULL
+	access_key = None
+    else:
+	access_key = create_string_buffer(VI_FIND_BUFLEN)
+    visa_library().viLock(ViSession(vi), ViAccessMode(lock_type),
+			  ViUInt32(timeout), ViKeyId(requested_key),
+			  access_key)
+    return access_key.value
+
+def unlock(vi):
+    visa_library().viUnlock(ViSession(vi))
+
+def enable_event(vi, event_type, mechanism, context):
+    context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
+    visa_library().viEnableEvent(ViSession(vi), ViEventType(event_type),
+				 ViUInt16(mechanism), ViEventFilter(context))
+
+def disable_event(vi, event_type, mechanism):
+    visa_library().viDisableEvent(ViSession(vi), ViEventType(event_type),
+				  ViUInt16(mechanism))
+
+def discard_events(vi, event_type, mechanism):
+    visa_library().viDiscardEvents(ViSession(vi), ViEventType(event_type),
+				   ViUInt16(mechanism))
+
+def wait_on_event(vi, in_event_type, timeout):
+    out_event_type = ViEventType()
+    out_context = ViEvent()
+    visa_library().viWaitOnEvent(ViSession(vi), ViEventType(in_event_type),
+				 ViUInt32(timeout), byref(out_event_type),
+				 byref(out_context))
+    return (out_event_type, out_context)
+
+def install_handler(vi, event_type, handle, user_handle):
+    visa_library().viInstallHandler(ViSession(vi), ViEventType(event_type),
+				    ViHndlr(handler), ViAddr(user_handle))
+
+def uninstall_handler(vi, event_type, handle, user_handle):
+    visa_library().viUninstallHandler(ViSession(vi), ViEventType(event_type),
+				      ViHndlr(handler), ViAddr(user_handle))
+
+def mem_allocation(vi, size):
+    offset = ViBusAddress()
+    visa_library().viMemAlloc(ViSession(vi), ViBusSize(size), byref(offset))
+    return offset.value
+
+def mem_free(vi, offset):
+    visa_library().viMemFree(ViSession(vi), ViBusAddress(offset))
+
+def gpib_control_ren(vi, mode):
+    visa_library().viGpibControlREN(ViSession(vi), ViUInt16(mode))
+
+def vxi_command_query(vi, mode, command):
+    response = ViUInt32()
+    visa_library().viVxiCommandQuery(ViSession(vi), ViUInt16(mode),
+				     ViUInt32(command), byref(response))
+    return response.value
+
+def parse_resource():
+    pass
+
+def write_from_file():
+    pass
+
+def read_from_file():
+    pass
+
+def parse_resource_extended():
+    pass
+
+def usb_control_out():
+    pass
+
+def read():
+    pass
+
+def read_asynchronously():
+    pass
+
+def write():
+    pass
+
+def write_asynchronously():
+    pass
+
+def assert_trigger():
+    pass
+
+def read_stb():
+    pass
+
+def clear():
+    pass
+
+def set_buffer():
+    pass
+
+def flush():
+    pass
+
+def buffer_write():
+    pass
+
+def buffer_read():
+    pass
+
+def printf():
+    pass
+
+def vprintf():
+    pass
+
+def sprintf():
+    pass
+
+def vsprintf():
+    pass
+
+def scanf():
+    pass
+
+def vscanf():
+    pass
+
+def sscanf():
+    pass
+
+def vsscanf():
+    pass
+
+def queryf():
+    pass
+
+def vqueryf():
+    pass
+
+def gpib_control_atn():
+    pass
+
+def gpib_send_ifc():
+    pass
+
+def gpib_command():
+    pass
+
+def gpib_pass_control():
+    pass
+
+def usb_control_in():
+    pass
+
+def in_8():
+    pass
+
+def out_8():
+    pass
+
+def in_16():
+    pass
+
+def out_16():
+    pass
+
+def in_32():
+    pass
+
+def out_32():
+    pass
+
+def move_in_8():
+    pass
+
+def move_out_8():
+    pass
+
+def move_in_16():
+    pass
+
+def move_out_16():
+    pass
+
+def move_in_32():
+    pass
+
+def move_out_32():
+    pass
+
+def move():
+    pass
+
+def move_asynchronously():
+    pass
+
+def map_address():
+    pass
+
+def unmap_address():
+    pass
+
+def peek_8():
+    pass
+
+def poke_8():
+    pass
+
+def peek_16():
+    pass
+
+def poke_16():
+    pass
+
+def peek_32():
+    pass
+
+def poke_32():
+    pass
+
+def assert_utility_signal():
+    pass
+
+def assert_interrupt_signal():
+    pass
+
+def map_trigger():
+    pass
+
+def unmap_trigger():
+    pass
