@@ -28,6 +28,7 @@ values", and "values and ranges" defined in the VISA specification VPP-4.3.2,
 section 3, available as variable values.
 
 The module exports the values under the original, all-uppercase names.
+
 """
 
 __version__ = "$Revision$"

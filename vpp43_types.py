@@ -23,8 +23,11 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-"""All data types that are defined by VPP-4.3.2, including the pointer and
-array types.  This means "ViUInt32" and such.
+"""All data types that are defined by VPP-4.3.2.
+
+The module exports all data types including the pointer and array types.  This
+means "ViUInt32" and such.
+
 """
 
 __version__ = "$Revision$"

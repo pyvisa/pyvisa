@@ -23,9 +23,12 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-""""completion_and_error_messages" is a dictionary that binds every completion
-and error value to its name and a short textual description (both in a
-two-elements tuple).
+"""Textual explanations of VISA completion and error codes.
+
+The only export is "completion_and_error_messages", which is a dictionary that
+binds every completion and error value to its name and a short textual
+description (both in a two-elements tuple).
+
 """
 
 __version__ = "$Revision$"
