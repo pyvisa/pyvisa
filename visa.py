@@ -36,6 +36,11 @@ from vpp43_constants import *
 from visa_attributes import attributes_s, attributes
 import os
 import types
+import sys
+import logging
+
+log = logging.getLogger('visa')
+
 
 #load Visa library
 if os.name == 'nt':
@@ -77,6 +82,8 @@ visa.viFindNext.restype = CheckStatus
 visa.viParseRsrc.restype = CheckStatus
 visa.viParseRsrcEx.restype = CheckStatus
 visa.viClose.restype    = CheckStatus
+visa.viGetAttribute.restype = CheckStatus
+visa.viSetAttribute.restype = CheckStatus
 
 def OpenDefaultRM():
     """Return a session to the Default Resource Manager resource."""
@@ -172,6 +179,9 @@ def GetAttribute(vi, attribute):
     if attr_type is ViString:
         attr_val = c_buffer(256)
         result = visa.viGetAttribute(vi, attr_value, attr_val)
+    elif attr_type is ViBuf:
+        attr_val = c_void_p()
+        result = visa.viGetAttribute(vi, attr_value, byref(attr_val))
     else:
         attr_val = attr_type(attr_value)
         result = visa.viGetAttribute(vi, attr_value, byref(attr_val))
@@ -181,10 +191,12 @@ def GetAttribute(vi, attribute):
     if attr_info.values:
         value_ext = attr_info.values.tostring(val)
     else:
-        value_ext = str(val)
+        if isinstance(val, (types.IntType, types.LongType)):
+            value_ext = str(val) + " (%s)"%hex(val)
+        else:
+            value_ext = str(val)
     
-        
-    return result, (attr_name, val, value_ext)
+    return (attr_name, val, value_ext)
 
 def SetAttribute(vi, attribute, value):
     """Set attribute"""
@@ -219,17 +231,42 @@ def Write(vi, buf):
     buf = c_buffer(buf, len(buf))
     count = ViUInt32(len(buf))
     retCount = ViUInt32()
+    log.debug("Write: %s", buf)
     result = visa.viWrite(vi, buf, count, byref(retCount))
     return retCount.value
 
 visa.viRead.restype = CheckStatus
 def Read(vi, count):
     vi = ViSession(vi)
-    buf = c_buffer(count)
+    buf = create_string_buffer(count)
     count = ViUInt32(count)
     retCount = ViUInt32()
     result = visa.viRead(vi, buf, count, byref(retCount))
+    log.debug("Read: buffer length %d at %s", sizeof(buf), hex(addressof(buf)))
     return (result, buf.raw[0:retCount.value])
+
+visa.viWriteAsync.restype = CheckStatus
+def WriteAsync(vi, buf):
+    vi = ViSession(vi)
+    buf = c_buffer(buf, len(buf))
+    count = ViUInt32(len(buf))
+    jobId = ViJobId()
+    result = visa.viWriteAsync(vi, buf, count, byref(jobId))
+    return jobId.value
+
+visa.viReadAsync.restype = CheckStatus
+def ReadAsync(vi, count):
+    buf = create_string_buffer(count) #FIXME: buffer needs to survive garbage collection!
+    jobId = ViJobId()
+    log.debug("ReadAsync: buffer length %d at %s", sizeof(buf), hex(addressof(buf)))
+    visa.viReadAsync(ViSession(vi),
+                     buf,
+                     ViUInt32(count),
+                     byref(jobId))
+    return jobId.value
+    
+
+#
 
 visa.viGpibControlREN.restype = CheckStatus
 def GpibControlREN(vi, mode):
@@ -237,7 +274,22 @@ def GpibControlREN(vi, mode):
     mode = ViUInt16(mode)
     result = visa.viGpibControlREN(vi, mode)
 
-#higher level classes and methods
+
+#Event management
+
+visa.viEnableEvent.restype = CheckStatus
+def EnableEvent(vi, eventType, mechanism):
+    visa.viEnableEvent(vi, eventType, mechanism, 0)
+
+visa.viInstallHandler.restype = CheckStatus
+visa.viInstallHandler.argtypes = [ViSession, ViEventType, ViHndlr, ViAddr]
+#FIXME: dangerous ViAddr
+def InstallHandler(vi, eventType, handler, userHandle):
+    userHandle = ViAddr(userHandle)
+    visa.viInstallHandler(vi, eventType, handler, userHandle)
+
+
+#higher level classes and metho)ds
 
 class ResourceManager:
     def __init__(self):
@@ -292,7 +344,7 @@ class Resource:
                     return accumbuf
 
     def getattr(self, attribute):
-        result, attrvalue = GetAttribute(self.session, attribute)
+        attrvalue = GetAttribute(self.session, attribute)
         return attrvalue
 
     def setattr(self, attribute, value):
@@ -300,22 +352,29 @@ class Resource:
 
                 
     def setlocal(self):
-        VI_GPIB_REN_DEASSERT        = 0 
-        VI_GPIB_REN_ASSERT          = 1
-        VI_GPIB_REN_DEASSERT_GTL    = 2
-        VI_GPIB_REN_ASSERT_ADDRESS  = 3
-        VI_GPIB_REN_ASSERT_LLO      = 4
-        VI_GPIB_REN_ASSERT_ADDRESS_LLO = 5
-        VI_GPIB_REN_ADDRESS_GTL     = 6
+        #VI_GPIB_REN_DEASSERT        = 0 
+        #VI_GPIB_REN_ASSERT          = 1
+        #VI_GPIB_REN_DEASSERT_GTL    = 2
+        #VI_GPIB_REN_ASSERT_ADDRESS  = 3
+        #VI_GPIB_REN_ASSERT_LLO      = 4
+        #VI_GPIB_REN_ASSERT_ADDRESS_LLO = 5
+        #VI_GPIB_REN_ADDRESS_GTL     = 6
+
         mode = 6
-
-        
         #Test Marconi 2019: 0 local, 1 remote, 2 local, 4 local lockout, 5 local, 6 local
-
         GpibControlREN(self.session, mode)
         
     def close(self):
         Close(self.session)
+
+    def install_handler(self, eventType, handler, user_handle):
+        return InstallHandler(self.session,
+                              eventType,
+                              handler,
+                              user_handle)
+
+    def enable_event(self, eventType, mechanism):
+        return EnableEvent(self.session, eventType, mechanism)
     
 #_RM = ResourceManager() #liefert Exception in __del__ beim Beenden
 #open = _RM.Open
@@ -323,29 +382,86 @@ class Resource:
 
 #for faster testing
 def testvisa():
+
+    logging.basicConfig(level = logging.DEBUG)
+    #log.setLevel(logging.DEBUG) #FIXME
+    
+    #open ResourceManager
     RM = ResourceManager()
+
+    #find resources
     resourcelist = RM.find_resource('ASRL?::INSTR')
     print resourcelist
 
+    #get some information without opening
     result = RM.parse_resource('ASRL1::INSTR')
     print result
 
+    #open
     device = RM.open('ASRL1::INSTR')
-    device.write('Hi')
+
+    #high level write
+    device.write('*IDN?')
+
+    #high level read
+    #print device.read() #don't wan't to wait for timeout...
+
+    #try getting all attributes
     for key in attributes_s.keys():
         try:
             print device.getattr(key)
         except IOError, value:
             print "Error retrieving Attribute ", key
 
-    print
+    #set some attributes, try different combinations of numeric/string arguments
     device.setattr('VI_ATTR_ASRL_DATA_BITS', 7)
     print device.getattr(VI_ATTR_ASRL_DATA_BITS)
 
+    #attribute value, string argument
     device.setattr(VI_ATTR_ASRL_STOP_BITS, 'VI_ASRL_STOP_TWO')
     print device.getattr('VI_ATTR_ASRL_STOP_BITS')
+    print
+
+    #bitfields
+    device.setattr('VI_ATTR_ASRL_FLOW_CNTRL', VI_ASRL_FLOW_XON_XOFF | VI_ASRL_FLOW_RTS_CTS)
+    print device.getattr('VI_ATTR_ASRL_FLOW_CNTRL')
+
+    #bitfield with string argument
+    device.setattr(VI_ATTR_ASRL_FLOW_CNTRL, 'VI_ASRL_FLOW_NONE')
+    print device.getattr('VI_ATTR_ASRL_FLOW_CNTRL')
     
+    #callback functions
     
+    def event_handler(vi, event_type, context, userhandle):
+    #def event_handler(vi, event_type, context): #FIX: should accept four arguments
+        sys.stdout.flush()
+        print 'in event handler'
+        print 'vi: ', vi
+        print 'event_type: ', event_type
+        print 'context: ', context
+
+        print GetAttribute(context, VI_ATTR_EVENT_TYPE)
+        print GetAttribute(context, VI_ATTR_STATUS)
+        print GetAttribute(context, VI_ATTR_JOB_ID)
+        print GetAttribute(context, VI_ATTR_BUFFER)
+        print GetAttribute(context, VI_ATTR_RET_COUNT)
+        print GetAttribute(context, VI_ATTR_OPER_NAME)
+        print 'userhandle: ', userhandle
+        print 'leaving event handler'
+
+        return VI_SUCCESS
+
+    device.install_handler(VI_EVENT_IO_COMPLETION, ViHndlr(event_handler), 13)
+
+    device.enable_event(VI_EVENT_IO_COMPLETION, VI_HNDLR)
+
+    print 'session', device.session
+    jobId = WriteAsync(device.session, 'going to nowhere city')
+    print "jobId: ", jobId
+
+    jobId = ReadAsync(device.session, 10)
+    print "jobId: ", jobId
+        
     device.close()
 
 if __name__ == '__main__':
