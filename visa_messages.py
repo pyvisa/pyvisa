@@ -35,8 +35,8 @@ __version__ = "$Revision$"
 # $Source$
 
 
-# FixMe: Without "from" *very* slightly more efficient.
 from vpp43_constants import *
+
 
 # Don't export the VPP-4.3 constants, but only the messages.
 __all__ = ("completion_and_error_messages",)
