@@ -33,6 +33,7 @@ from ctypes import *
 from visa_messages import *
 from vpp43_types import *
 from vpp43_constants import *
+from visa_attributes import attrib, attr
 import os
 
 #load Visa library
@@ -72,6 +73,8 @@ visa.viOpenDefaultRM.restype = CheckStatus
 visa.viOpen.restype = CheckStatus
 visa.viFindRsrc.restype = CheckStatus
 visa.viFindNext.restype = CheckStatus
+visa.viParseRsrc.restype = CheckStatus
+visa.viParseRsrcEx.restype = CheckStatus
 visa.viClose.restype    = CheckStatus
 
 def OpenDefaultRM():
@@ -90,28 +93,6 @@ def Open(sesn, rsrcName, accessMode, openTimeout):
     result = visa.viOpen(sesn, rsrcName, accessMode, openTimeout, byref(vi))
     return (result, vi.value)
 
-def ParseRsrc(sesn, rsrcName):
-    """Parse a resource string to get the interface information.
-
-    This operation parses a resource string to verify its validity.
-    It should succeed for all strings returned by viFindRsrc() and
-    recognized by viOpen().  This operation is useful if you want to
-    know what interface a given resource descriptor would use without
-    actually opening a session to it.
- 
-    The values returned in intfType and intfNum correspond to the
-    attributes VI_ATTR_INTF_TYPE and VI_ATTR_INTF_NUM. These values
-    would be the same if a user opened that resource with viOpen() and
-    queried the attributes with viGetAttribute()."""
-    intfType = ViUInt16()
-    intfNum = ViUInt16()
-    result = visa.viParseRsrc(
-        ViSession(sesn),
-        ViRsrc(rsrcName),
-        byref(intfType),
-        byref(intfNum))
-    return (result, intfType.value, intfNum.value)
-    
 def FindRsrc(session, expr):
     """Query a VISA system to locate the resources associated with a
     specified interface.
@@ -138,6 +119,33 @@ def FindRsrc(session, expr):
         visa.viClose(findList)
     return resource_list
 
+def ParseRsrc(sesn, rsrcName):
+    """Parse a resource string to get the interface information."""
+    intfType = ViUInt16()
+    intfNum = ViUInt16()
+    result = visa.viParseRsrc(
+        ViSession(sesn),
+        ViRsrc(rsrcName),
+        byref(intfType),
+        byref(intfNum))
+    return (result, intfType.value, intfNum.value)
+
+def ParseRsrcEx(sesn, rsrcName):
+    """Parse a resource string to get extended interface information."""
+    intfType = ViUInt16()
+    intfNum = ViUInt16()
+    rsrcClass = c_buffer(256)
+    unaliasedExpandedRsrcName = c_buffer(256)
+    aliasIfExists = c_buffer(256)
+    result = visa.viParseRsrcEx(sesn, rsrcName, byref(intfType), byref(intfNum),
+                                rsrcClass, unaliasedExpandedRsrcName, aliasIfExists)
+    return (result, intfType.value, intfNum.value, rsrcClass.value,
+            unaliasedExpandedRsrcName.value, aliasIfExists.value)
+
+
+    
+#VISA Resource Template
+
 def Close(object):
     """Close the specified session, event, or find list.
 
@@ -147,6 +155,29 @@ def Close(object):
     result = visa.viClose(ViObject(object))
     return result
 
+def GetAttribute(vi, attribute):
+    """Retrieve the state of an attribute."""
+    attrname, attrinfo = attr[attribute]
+    attrtype = attrinfo.datatype
+    if attrtype is ViString:
+        attrval = c_buffer(256)
+        result = visa.viGetAttribute(vi, attribute, attrval)
+    else:
+        attrval = attrtype(attribute)
+        result = visa.viGetAttribute(vi, attribute, byref(attrval))
+    val = attrval.value
+
+    try: #FIXME
+        if attrinfo.values:
+            value_ext = attrinfo.values[val]
+        else:
+            value_ext = None
+    except Exception, value:
+        print value
+        value_ext = None
+        
+        
+    return result, (attrname, attrval.value, value_ext)
 
 #Basic I/O
 
@@ -188,8 +219,13 @@ class ResourceManager:
         return resource_list
 
     def parse_resource(self, resource_name):
-        result, interface_type, interface_number = \
-                ParseRsrc(self.session, resource_name)
+        """give information about resource"""
+        result, interface_type, interface_number, \
+                rsrcClass, unaliasedExpandedRsrcName, \
+                aliasIfExists = ParseRsrcEx(self.session, resource_name)
+        return interface_type, interface_number, \
+               rsrcClass, unaliasedExpandedRsrcName, \
+               aliasIfExists
 
     def open(self, resourceName, exclusiveLock = None, loadConfig = None, openTimeout = 1000):
         accessMode = 0
@@ -198,12 +234,15 @@ class ResourceManager:
         if loadConfig:
             accessMode = accessMode | VI_LOAD_CONFIG
         result, vi = Open(self.session, resourceName, accessMode, openTimeout)
-        return Resource(vi.value)
+        return Resource(vi)
 
 
 class Resource:
     def __init__(self, vi):
         self.session = vi
+
+    #def __del__(self): #shit happens
+    #    self.close()
 
     def write(self, buf):
         return Write(self.session, buf)
@@ -219,6 +258,12 @@ class Resource:
                 accumbuf = accumbuf + buf
                 if result in (VI_SUCCESS, VI_SUCCESS_TERM_CHAR):
                     return accumbuf
+
+    def getattr(self, attribute):
+        result, attrvalue = GetAttribute(self.session, attribute)
+        return attrvalue
+
+                
     def setlocal(self):
         VI_GPIB_REN_DEASSERT        = 0 
         VI_GPIB_REN_ASSERT          = 1
@@ -237,25 +282,32 @@ class Resource:
     def close(self):
         Close(self.session)
     
-class ResourceManager:
-    def __init__(self):
-        result, self.session = OpenDefaultRM()
-
-    def __del__(self):
-        Close(self.session)
-
-    def find_resource(self, expression):
-        return FindRsrc(self.session, expression)
-
-    def open(self, resourceName, exclusiveLock = None, loadConfig = None, openTimeout = 1000):
-        accessMode = 0
-        if exclusiveLock:
-            accessMode = accessMode | VI_EXCLUSIVE_LOCK
-        if loadConfig:
-            accessMode = accessMode | VI_LOAD_CONFIG
-        result, vi = Open(self.session, resourceName, accessMode, openTimeout)
-        return Resource(vi)
-
 #_RM = ResourceManager() #liefert Exception in __del__ beim Beenden
 #open = _RM.Open
 #find_resource = _RM.FindResource
+
+#for faster testing
+def testvisa():
+    RM = ResourceManager()
+    resourcelist = RM.find_resource('ASRL?::INSTR')
+    print resourcelist
+
+    result = RM.parse_resource('ASRL1::INSTR')
+    print result
+
+    device = RM.open('ASRL1::INSTR')
+    device.write('Hi')
+    print device.getattr(VI_ATTR_RSRC_IMPL_VERSION)
+    print device.getattr(VI_ATTR_RSRC_LOCK_STATE)
+    print device.getattr(VI_ATTR_RSRC_MANF_ID)
+    print device.getattr(VI_ATTR_RSRC_MANF_NAME)
+    print device.getattr(VI_ATTR_RSRC_NAME)
+    print device.getattr(VI_ATTR_RSRC_SPEC_VERSION)
+    print device.getattr(VI_ATTR_RSRC_CLASS)
+    print device.getattr(VI_ATTR_INTF_NUM)
+    print device.getattr(VI_ATTR_INTF_TYPE)
+    print device.getattr(VI_ATTR_INTF_INST_NAME)
+    device.close()
+
+if __name__ == '__main__':
+    testvisa()
