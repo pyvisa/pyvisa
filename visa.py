@@ -33,14 +33,15 @@ from ctypes import *
 from visa_messages import *
 from vpp43_types import *
 from vpp43_constants import *
-from visa_attributes import attrib, attr
+from visa_attributes import attributes_s, attributes
 import os
+import types
 
 #load Visa library
 if os.name == 'nt':
     visa = windll.visa32
 elif os.name == 'posix':
-    visa = cdll.visa #fix
+    visa = cdll.LoadLibrary('libvisa.so')
 else:
     raise "No implementation for your platform available."
     
@@ -156,28 +157,59 @@ def Close(object):
     return result
 
 def GetAttribute(vi, attribute):
-    """Retrieve the state of an attribute."""
-    attrname, attrinfo = attr[attribute]
-    attrtype = attrinfo.datatype
-    if attrtype is ViString:
-        attrval = c_buffer(256)
-        result = visa.viGetAttribute(vi, attribute, attrval)
+    """Retrieve the state of an attribute. Argument can be numeric or
+    string argument"""
+    #convert argument to numeric (attr_value)
+    if isinstance(attribute, types.StringTypes):
+        attr_name, attr_info = attribute, attributes_s[attribute]
+        attr_value = attr_info.attribute_value
     else:
-        attrval = attrtype(attribute)
-        result = visa.viGetAttribute(vi, attribute, byref(attrval))
-    val = attrval.value
+        attr_value,  attr_info = attribute, attributes[attribute]
+        attr_name = attr_info.attribute_name
 
-    try: #FIXME
-        if attrinfo.values:
-            value_ext = attrinfo.values[val]
-        else:
-            value_ext = None
-    except Exception, value:
-        print value
-        value_ext = None
+    #call viGetAttribute, convert output to proper data type
+    attr_type = attr_info.datatype
+    if attr_type is ViString:
+        attr_val = c_buffer(256)
+        result = visa.viGetAttribute(vi, attr_value, attr_val)
+    else:
+        attr_val = attr_type(attr_value)
+        result = visa.viGetAttribute(vi, attr_value, byref(attr_val))
+    val = attr_val.value
+
+    #convert result to string
+    if attr_info.values:
+        value_ext = attr_info.values.tostring(val)
+    else:
+        value_ext = str(val)
+    
         
-        
-    return result, (attrname, attrval.value, value_ext)
+    return result, (attr_name, val, value_ext)
+
+def SetAttribute(vi, attribute, value):
+    """Set attribute"""
+    #convert attribute to numeric ('attr_value')
+    if isinstance(attribute, types.StringTypes):
+        attr_name, attr_info = attribute, attributes_s[attribute]
+        attr_value = attr_info.attribute_value
+    else:
+        attr_value,  attr_info = attribute, attributes[attribute]
+        attr_name = attr_info.attribute_name
+
+    #convert value to numeric ('val'), when appropriate
+    if isinstance(value, types.StringTypes):
+        if attr_info.values: 
+            val = attr_info.values.fromstring(value)
+        else: #fallback, FIXME
+            val = str(value)
+            print 'conversion from string argument not possible'
+    else:
+        val = value
+
+    cval = attr_info.datatype(val)
+    result = visa.viSetAttribute(vi, attr_value, cval)
+
+    return result
 
 #Basic I/O
 
@@ -263,6 +295,9 @@ class Resource:
         result, attrvalue = GetAttribute(self.session, attribute)
         return attrvalue
 
+    def setattr(self, attribute, value):
+        SetAttribute(self.session, attribute, value)
+
                 
     def setlocal(self):
         VI_GPIB_REN_DEASSERT        = 0 
@@ -297,16 +332,20 @@ def testvisa():
 
     device = RM.open('ASRL1::INSTR')
     device.write('Hi')
-    print device.getattr(VI_ATTR_RSRC_IMPL_VERSION)
-    print device.getattr(VI_ATTR_RSRC_LOCK_STATE)
-    print device.getattr(VI_ATTR_RSRC_MANF_ID)
-    print device.getattr(VI_ATTR_RSRC_MANF_NAME)
-    print device.getattr(VI_ATTR_RSRC_NAME)
-    print device.getattr(VI_ATTR_RSRC_SPEC_VERSION)
-    print device.getattr(VI_ATTR_RSRC_CLASS)
-    print device.getattr(VI_ATTR_INTF_NUM)
-    print device.getattr(VI_ATTR_INTF_TYPE)
-    print device.getattr(VI_ATTR_INTF_INST_NAME)
+    for key in attributes_s.keys():
+        try:
+            print device.getattr(key)
+        except IOError, value:
+            print "Error retrieving Attribute ", key
+
+    print
+    device.setattr('VI_ATTR_ASRL_DATA_BITS', 7)
+    print device.getattr(VI_ATTR_ASRL_DATA_BITS)
+
+    device.setattr(VI_ATTR_ASRL_STOP_BITS, 'VI_ASRL_STOP_TWO')
+    print device.getattr('VI_ATTR_ASRL_STOP_BITS')
+    
+    
     device.close()
 
 if __name__ == '__main__':
