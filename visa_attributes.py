@@ -1,5 +1,7 @@
 import vpp43_constants as _constants
 from vpp43_types import *
+from visa_messages import completion_and_error_messages
+import string
 
 viRO = 'readonly'
 viRW = 'readwrite'
@@ -44,8 +46,8 @@ class _AttrSet:
     def __contains__(self, item):
         return item in self.NameSet
 
-    def __getitem__(self, key):
-        return self.tostring(key)
+    #def __getitem__(self, key):
+    #    return self.tostring(key)
 
     def tostring(self, value):
         return self.namedict.get(value, None)
@@ -53,7 +55,41 @@ class _AttrSet:
     def fromstring(self, name):
         return self.valuedict.get(name, None)
 
+class _AttrBitSet(_AttrSet):
+    """class for set of attribute values that can be ORed together"""
+
+    def __contains__(self, bitfield): #Fixme: more strict test for validity, test for zero
+        """True if at least on of allowed bits is set"""
+        for bit in self.namedict:
+            if bit & item:
+                return True
+        else:
+            return False
+
+    def tostring(self, bitfield):
+        s = ''
+        for bit in self.namedict.keys():
+            if bit & bitfield:
+                if not s:
+                    s = self.namedict[bit]
+                else:
+                    s = s + ' | ' + self.namedict[bit]
+            if self.namedict.has_key(0) and bitfield == 0: #no bit set: special name
+                s = self.namedict[0]
+        return s
+
+    def fromstring(self, expr):
+        bitfield = 0
+        for s in map(string.strip, string.split(expr, '|')): #split at | and remove whitespace
+            bitfield = bitfield | self.valuedict[s]
+        return bitfield
+
 class viAttrInfo:
+    """container for information about attribute (attribute name,
+    value, access restriction, scope (local for session or global for
+    device), ctypes data type, range of possible values, short and
+    long description"""
+    
     def __init__(self, access, scope, datatype, values, shortdesc,
                  description, attribute = None, name = None):
         self.access = access
@@ -68,6 +104,7 @@ class viAttrInfo:
         #s = repr(self.typecode) + repr(self.values)
         #return s
         return repr(self.__dict__)
+
 
 #VISA Template Attributes
 #Table 3.2.1
@@ -197,7 +234,7 @@ attributes_s = {
     'VI_ATTR_ASRL_FLOW_CNTRL': \
     viAttrInfo(
     viRW, viGlobal, ViUInt16,
-    _AttrSet('VI_ASRL_FLOW_NONE', 'VI_ASRL_FLOW_XON_XOFF',
+    _AttrBitSet('VI_ASRL_FLOW_NONE', 'VI_ASRL_FLOW_XON_XOFF',
              'VI_ASRL_FLOW_RTS_CTS', 'VI_ASRL_FLOW_DTR_DSR'),
     '',
     ""
@@ -288,7 +325,54 @@ attributes_s = {
     viRW, viLocal, ViUInt8, None, #0 to FFh
     '',
     ""
+    ),
+
+    #Event Attributes: VI_EVENT_IO_COMPLETION
+    'VI_ATTR_EVENT_TYPE': \
+    viAttrInfo(
+    viRO, None, ViEventType,
+    _AttrSet('VI_EVENT_IO_COMPLETION'), #FIXME: add other Events
+    'event type',
+    "Unique logical identifier of the event type."
+    ),
+
+    'VI_ATTR_STATUS': \
+    viAttrInfo(
+    viRO, None, ViStatus,
+    _AttrSet(*map(lambda x:x[0], completion_and_error_messages.values())),
+             #list of status codes, FIXME
+    'return code of asynchronous operation that has completed',
+    ""
+    ),
+
+    'VI_ATTR_JOB_ID': \
+    viAttrInfo(
+    viRO, None, ViJobId, None,
+    'job ID',
+    ""
+    ),
+
+    'VI_ATTR_BUFFER': \
+    viAttrInfo(
+    viRO, None, ViBuf, None,
+    'buffer address',
+    "Address of a buffer that was used in an asynchronous operation."
+    ),
+
+    'VI_ATTR_RET_COUNT': \
+    viAttrInfo(
+    viRO, None, ViUInt32, None, #0 to ffffffffh
+    'return count',
+    "actual number of elements that were asynchronously transferred"
+    ),
+
+    'VI_ATTR_OPER_NAME': \
+    viAttrInfo(
+    viRO, None, ViString, None,
+    'operation name',
+    "The name of the operation generating the event."
     )
+    
     }
 """List of VISA Attributes, as dictionary with string keys"""
 
