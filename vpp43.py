@@ -30,7 +30,7 @@ See VPP-4.3.2.
 """
 
 __version__ = "$Revision$"
-# $Source$
+# \$Source${}$\$
 
 
 VI_SPEC_VERSION = 0x00300000
@@ -152,7 +152,7 @@ def get_status():
 
 for visa_function in ["viOpenDefaultRM", "viFindRsrc", "ViFindNext", "viOpen",
 		      "viClose", "viGetAttribute", "viSetAttribute"]:
-    visa_library().__getattr(visa_function)__.restype = check_status
+    visa_library().__getattr__(visa_function).restype = check_status
 
 
 # The VPP-4.3.2 routines
@@ -321,10 +321,10 @@ def read(vi, count):
 
 def read_asynchronously(vi, count):
     buffer = create_string_buffer(count)
-    job_id = ViUInt32()
+    job_id = ViJobId()
     visa_library().viReadAsync(ViSession(vi), buffer, ViUInt32(count),
 			       byref(job_id))
-    return (buffer.raw[0:return_count.value], return_count.value)
+    return (buffer.raw[0:return_count.value], job_id.value)
 
 def write(vi, buffer, count):
     return_count = ViUInt32()
@@ -332,32 +332,45 @@ def write(vi, buffer, count):
 			   ViUInt32(count), byref(return_count))
     return return_count.value
 
-def write_asynchronously():
-    pass
+def write_asynchronously(vi, buffer, count):
+    job_id = ViJobId()
+    visa_library().viWriteAsync(ViSession(vi), create_string_buffer(buffer),
+				byref(job_id))
+    return job_id.value
 
-def assert_trigger():
-    pass
+def assert_trigger(vi, protocol):
+    visa_library().viAssertTrigger(ViSession(vi), ViUInt16(protocol))
 
-def read_stb():
-    pass
+def read_stb(vi):
+    status = ViUInt16()
+    visa_library().viReadSTB(ViSession(vi), byref(status))
+    return status.value
 
-def clear():
-    pass
+def clear(vi):
+    visa_library().viClear(ViSession(vi))
 
-def set_buffer():
-    pass
+def set_buffer(vi, mask, size):
+    visa_library().viSetBuf(ViSession(vi), ViUInt16(mask), ViUInt32(size))
 
-def flush():
-    pass
+def flush(vi, mask):
+    visa_library(),viFlush(ViSession(vi), ViUInt16(mask))
 
-def buffer_write():
-    pass
+def buffer_write(vi, buffer, count):
+    return_count = ViUInt32()
+    visa_library().viBufWrite(ViSession(vi), create_string_buffer(buffer),
+			      ViUInt32(count), byref(return_count))
+    return return_count.value
 
-def buffer_read():
-    pass
-
-def printf():
-    pass
+def buffer_read(vi, count):
+    buffer = create_string_buffer(count)
+    return_count = ViUInt32()
+    visa_library().viBufRead(ViSession(vi), buffer, ViUInt32(count),
+			     byref(return_count))
+    return (buffer.raw[0:return_count.value], return_count.value)
+    
+def printf(vi, write_format, *args):
+    visa_library().viPrintf(ViSession(vi),
+			    create_string_buffer(write_format % args))
 
 def vprintf():
     pass
