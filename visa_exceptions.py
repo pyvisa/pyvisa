@@ -30,16 +30,17 @@ from visa_messages import completion_and_error_messages \
     as _completion_and_error_messages
 
 
-class VisaError(Exception):
+class Error(Exception):
     """Abstract basic exception class for this module."""
     def __init__(self, description):
 	Exception.__init__(self, description)
 
-class VisaIOError(VisaError):
-    """Exception class for VISA errors.
+class VisaIOError(Error):
+    """Exception class for VISA I/O errors.
 
     Please note that all values for "error_code" are negative according to the
     specification (VPP-4.3.2, observation 3.3.2) and the NI implementation.
+
     """
     def __init__(self, error_code):
 	(abbreviation, description) = \
@@ -47,6 +48,6 @@ class VisaIOError(VisaError):
 	VisaError.__init__(self, abbreviation + ": " + description)
 	self.error_code = error_code
 
-class OSNotSupported(VisaError):
+class OSNotSupported(Error):
     def __init__(self, os):
 	VisaError.__init__(self, os + " is not yet supported by pyvisa")
