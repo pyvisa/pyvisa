@@ -31,5 +31,37 @@ VI_SPEC_VERSION = 0x00300000
 
 from vpp43_types import *
 from vpp43_constants import *
-import visa_messages as _visa_messages
+from visa_messages import completion_and_error_messages \
+    as _completion_and_error_messages
+import os
+
+
+class Error(EnvironmentError):
+    """Exception class for VISA errors.
+
+    Please note that all values for "errno" are negative according to the
+    specification (VPP-4.3.2, observation 3.3.2) and the NI implementation.
+    """
+    def __init__(self, status):
+	(abbreviation, description) = \
+	    _completion_and_error_messages[self.errno]
+	EnvironmentError.__init__(self, status, abbreviation + ": "
+				  + description)
+
+def check_status(status):
+    """Check return values for errors."""
+    if status < 0:
+        raise Error(status)
+    else:
+        return status
+
+
+# load VISA library
+
+if os.name == 'nt':
+    visa = windll.visa32
+elif os.name == 'posix':
+    visa = cdll.LoadLibrary("/usr/local/vxipnp/linux/bin/libvisa.so.7")
+else:
+    raise "No implementation for your platform available."
 
