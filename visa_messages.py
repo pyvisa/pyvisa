@@ -36,7 +36,10 @@ __version__ = "$Revision$"
 from vpp43_constants import *
 
 # Don't export the VPP-4.3 constants, but only the messages.
-__all__ = ("completion_and_error_messages")
+#__all__ = ("completion_and_error_messages")
+# FixMe: gives error:
+#    from visa_messages import *
+#AttributeError: 'module' object has no attribute 'c'
 
 
 completion_and_error_messages = {
