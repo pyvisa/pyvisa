@@ -23,8 +23,9 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-"""Makes all "completion and error codes" defined in the VISA specification
-VPP-4.3.2, section 3, available as variable values.
+"""Makes all "completion and error codes", "attribute values", "event type
+values", and "values and ranges" defined in the VISA specification VPP-4.3.2,
+section 3, available as variable values.
 
 The module exports the values under the original, all-uppercase names.
 
@@ -42,6 +43,9 @@ __version__ = "$Revision$"
 # signed integer representation.  However, this is positive.  ctypes doesn't
 # care about that and (correctly) returns the negative value, which is left as
 # such by Python.
+#
+# FixMe: Get rid of it.  It slows down only.  Instead, the negative values
+# should be coded directly.
 
 def _to_int(x):
     """Converts a completion and error code as it is listed in 32-bit notation
@@ -498,6 +502,7 @@ VI_ASRL_IN_BUF_DISCARD      = VI_IO_IN_BUF_DISCARD
 VI_ASRL_OUT_BUF_DISCARD     = VI_IO_OUT_BUF_DISCARD
 
 
+# FixMe: The following should go into a file of its own.
 
 completion_and_error_messages = {
 
