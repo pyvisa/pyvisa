@@ -114,4 +114,5 @@ ViEvent, ViPEvent           = _type_dublet(ViObject)
 ViKeyId, ViPKeyId           = _type_dublet(ViString)
 ViJobId, ViPJobId           = _type_dublet(ViUInt32)
 
-ViHndlr       = _ctypes.CFUNCTYPE(ViSession, ViEventType, ViEvent, ViAddr)
+#Class of callback functions for event handling, first type is result type
+ViHndlr       = _ctypes.CFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent, ViAddr)
