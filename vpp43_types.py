@@ -69,8 +69,8 @@ ViPBuf        = ViPByte
 ViABuf        = _ctypes.POINTER(ViBuf)
 
 
-ViString      = c_char_p #instead of ViPChar
-ViPString     = c_char_p #instead of ViPChar
+ViString      = _ctypes.c_char_p  # ViPChar in the spec
+ViPString     = _ctypes.c_char_p  # ViPChar in the spec
 ViAString     = _ctypes.POINTER(ViString)
 
 ViRsrc        = ViString
