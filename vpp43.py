@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 #
 #    vpp43.py - VISA VPP-4.3.2 functions implementation
-#	$Id$	
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
 #                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
@@ -24,5 +23,13 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
+__version__ = "$Revision$"
+# $Source$
+
+
+VI_SPEC_VERSION = 0x00300000
+
 from vpp43_types import *
+from vpp43_constants import *
+import visa_messages as _visa_messages
 
