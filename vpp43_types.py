@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 #    vpp43_types.py - VISA VPP-4.3 data types (VPP-4.3.2 spec, section 3)
 #	$Id$	
