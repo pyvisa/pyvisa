@@ -11,26 +11,24 @@ from ctypes import *
 # significance in Python because there is no native call-by-reference.
 # However, as long as I'm not fully sure about this, they won't hurt.
 
-def _generate_type_dublett(visa_type, ctypes_type):
-    return visa_type + "=" + ctypes_type + ";" + \
-	"ViP" + visa_type[2:] + "=POINTER(" + visa_type + ")"
+def _type_dublet(ctypes_type):
+    return (ctypes_type, POINTER(ctypes_type))
 
-def _generate_type_triplett(visa_type, ctypes_type):
-    return _generate_type_dublett(visa_type, ctypes_type) + ";" + \
-	"ViA" + visa_type[2:] + "=" + "ViP" + visa_type[2:]
+def _type_triplet(ctypes_type):
+    return _type_dublet(ctypes_type) + (POINTER(ctypes_type),)
 
-exec _generate_type_triplett("ViUInt32",  "c_ulong"  )
-exec _generate_type_triplett("ViInt32",   "c_long"   )
-exec _generate_type_triplett("ViUInt16",  "c_ushort" )
-exec _generate_type_triplett("ViInt16",   "c_short"  )
-exec _generate_type_triplett("ViUInt8",   "c_ubyte"  )
-exec _generate_type_triplett("ViInt8",    "c_byte"   )
-exec _generate_type_triplett("ViAddr",    "c_void_p" )
-exec _generate_type_triplett("ViChar",    "c_char"   )
-exec _generate_type_triplett("ViByte",    "c_ubyte"  )
-exec _generate_type_triplett("ViBoolean", "ViUInt16" )
-exec _generate_type_triplett("ViReal32",  "c_float"  )
-exec _generate_type_triplett("ViReal64",  "c_double" )
+ViUInt32, ViPUInt32, ViAUInt32    = _type_triplet(c_ulong)
+ViInt32, ViPInt32, ViAInt32       = _type_triplet(c_long)
+ViUInt16, ViPUInt16, ViAUInt16    = _type_triplet(c_ushort)
+ViInt16, ViPInt16, ViAInt16       = _type_triplet(c_short)
+ViUInt8, ViPUInt8, ViAUInt8       = _type_triplet(c_ubyte)
+ViInt8, ViPInt8, ViAInt8          = _type_triplet(c_byte)
+ViAddr, ViPAddr, ViAAddr          = _type_triplet(c_void_p)
+ViChar, ViPChar, ViAChar          = _type_triplet(c_char)
+ViByte, ViPByte, ViAByte          = _type_triplet(c_ubyte)
+ViBoolean, ViPBoolean, ViABoolean = _type_triplet(ViUInt16)
+ViReal32, ViPReal32, ViAReal32    = _type_triplet(c_float)
+ViReal64, ViPReal64, ViAReal64    = _type_triplet(c_double)
 
 ViBuf         = ViPByte
 ViPBuf        = ViPByte
@@ -44,10 +42,10 @@ ViRsrc        = ViString
 ViPRsrc       = ViString
 ViARsrc       = POINTER(ViRsrc)
 
-exec _generate_type_triplett("ViStatus",  "ViInt32"  )
-exec _generate_type_triplett("ViVersion", "ViUInt32" )
-exec _generate_type_triplett("ViObject",  "ViUInt32" )
-exec _generate_type_triplett("ViSession", "ViObject" )
+ViStatus, ViPStatus, ViAStatus    = _type_triplet(ViInt32)
+ViVersion, ViPVersion, ViAVersion = _type_triplet(ViUInt32)
+ViObject, ViPObject, ViAObject    = _type_triplet(ViUInt32)
+ViSession, ViPSession, ViASession = _type_triplet(ViObject)
 
 ViAttr        = ViUInt32
 ViConstString = POINTER(ViChar)
@@ -57,26 +55,26 @@ ViConstString = POINTER(ViChar)
 # difference to the above is of no significance in Python, so I use it here
 # only for easier synchronisation with the spec.
 
-exec _generate_type_dublett("ViAccessMode", "ViUInt32" )
-exec _generate_type_dublett("ViBusAddress", "ViUInt32" )
+ViAccessMode, ViPAccessMode = _type_dublet(ViUInt32)
+ViBusAddress, ViPBusAddress = _type_dublet(ViUInt32)
 
 ViBusSize     = ViUInt32
 
-exec _generate_type_dublett("ViAttrState",  "ViUInt32" )
+ViAttrState, ViPAttrState   = _type_dublet(ViUInt32)
 
 # The following is weird, taken from news:zn2ek2w2.fsf@python.net
 viVAList      = POINTER(c_char)
 
-exec _generate_type_triplett("ViEventType", "ViUInt32" )
+ViEventType, ViPEventType, ViAEventType = _type_triplet(ViUInt32)
 
 ViPAttr       = POINTER(ViAttr)
 ViAAttr       = ViPAttr
 
 ViEventFilter = ViUInt32
 
-exec _generate_type_dublett("ViFindList", "ViObject" )
-exec _generate_type_dublett("ViEvent",    "ViObject" )
-exec _generate_type_dublett("ViKeyId",    "ViString" )
-exec _generate_type_dublett("ViJobId",    "ViUInt32" )
+ViFindList, ViPFindList     = _type_dublet(ViObject)
+ViEvent, ViPEvent           = _type_dublet(ViObject)
+ViKeyId, ViPKeyId           = _type_dublet(ViString)
+ViJobId, ViPJobId           = _type_dublet(ViUInt32)
 
 ViHndlr       = CFUNCTYPE(ViSession, ViEventType, ViEvent, ViAddr)
