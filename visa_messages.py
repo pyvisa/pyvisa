@@ -360,5 +360,8 @@ completion_and_error_messages = {
 				  "sufficient privileges for the current "\
 				  "user or machine")
     }
-
+"""A dictionary that holds the name and a short description of all completion
+and error codes in the VISA specification.  The name and the description are
+strings in a tupel.
+"""
 
