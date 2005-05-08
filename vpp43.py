@@ -102,9 +102,10 @@ class VisaLibrary(Singleton):
     Public methods:
     load_library -- (re-)loads the VISA library
     __call__     -- returns the ctypes object holding the VISA library
+
     """
-    def init(self):
-	self.__lib = None
+    def __init__(self):
+	self.__lib = self.__cdecl_lib = None
     def load_library(self, path = "/usr/local/vxipnp/linux/bin/libvisa.so.7"):
 	"""(Re-)loads the VISA library.
 
@@ -117,16 +118,25 @@ class VisaLibrary(Singleton):
 
 	"""
 	if os.name == 'nt':
-	    self.__lib = _ctypes.windll.visa32
+	    self.__lib       = _ctypes.windll.visa32
+	    self.__cdecl_lib = _ctypes.cdll.visa32
 	elif os.name == 'posix':
-	    self.__lib = _ctypes.cdll.LoadLibrary(path)
+	    self.__lib = self.__cdecl_lib = _ctypes.cdll.LoadLibrary(path)
 	else:
-	    self.__lib = None
+	    self.__lib = self.__cdecl_lib = None
 	    raise visa_exceptions.OSNotSupported, os.name
-    def __call__(self):
-	"""Returns the ctypes object to the VISA library."""
-	if self.__lib is None:
+    def __call__(self, force_cdecl = False):
+	"""Returns the ctypes object to the VISA library.
+
+	If "force_cdecl" is True, use the cdecl calling convension even under
+	Windows, where the stdcall convension is the default.  For Linux, this
+	has no effect.
+	
+	"""
+	if self.__lib is None or self.__cdecl_lib is None:
 	    self.load_library()
+	if force_cdecl:
+	    return self.__cdecl_lib
 	return self.__lib
 
 visa_library = VisaLibrary()
@@ -140,8 +150,7 @@ def check_status(status):
     visa_status = status
     if status < 0:
         raise visa_exceptions.VisaIOError, status
-    else:
-        return status
+    return status
 
 def get_status():
     return visa_status
@@ -153,6 +162,33 @@ def get_status():
 for visa_function in ["viOpenDefaultRM", "viFindRsrc", "ViFindNext", "viOpen",
 		      "viClose", "viGetAttribute", "viSetAttribute"]:
     visa_library().__getattr__(visa_function).restype = check_status
+
+# convert_argument_list is used for VISA routines with variable argument list,
+# which means that also the types are unknown.  While ctypes can deal with
+# strings and integer, it is unable to dealt with all other types, in
+# particular doubles.  Since I expect doubles to be a rather frequent type in
+# the application of VISA, I convert them here.
+#
+# Attention: This means that only double can be used in format strings!  No
+# floats, no long doubles.
+
+def convert_argument_list(original_arguments):
+    """Converts a Python arguments list to the equivalent ctypes list.
+
+    Arguments:
+    original_arguments -- a sequence type with the arguments that should be
+        used with ctypes.
+
+    Return value: a tuple with the ctypes version of the argument list.
+
+    """
+    converted_arguments = []
+    for argument in original_arguments:
+	if isinstance(argument, float):
+	    argument_list.append(_ctypes.c_double(argument))
+	else:
+	    argument_list.append(argument)
+    return tuple(converted_arguments)
 
 
 # The VPP-4.3.2 routines
@@ -310,7 +346,7 @@ def usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
     visa_library().viUsbControlOut(ViSession(vi),
 		    ViInt16(request_type_bitmap_field), ViInt16(request_id),
 		    ViUInt16(request_value), ViUInt16(index), ViUInt16(length),
-		    create_string_buffer(buffer))
+		    ViBuf(buffer))
 
 def read(vi, count):
     buffer = create_string_buffer(count)
@@ -328,14 +364,13 @@ def read_asynchronously(vi, count):
 
 def write(vi, buffer, count):
     return_count = ViUInt32()
-    visa_library().viWrite(ViSession(vi), create_string_buffer(buffer),
+    visa_library().viWrite(ViSession(vi), ViBuf(buffer),
 			   ViUInt32(count), byref(return_count))
     return return_count.value
 
 def write_asynchronously(vi, buffer, count):
     job_id = ViJobId()
-    visa_library().viWriteAsync(ViSession(vi), create_string_buffer(buffer),
-				byref(job_id))
+    visa_library().viWriteAsync(ViSession(vi), ViBuf(buffer), byref(job_id))
     return job_id.value
 
 def assert_trigger(vi, protocol):
@@ -353,12 +388,12 @@ def set_buffer(vi, mask, size):
     visa_library().viSetBuf(ViSession(vi), ViUInt16(mask), ViUInt32(size))
 
 def flush(vi, mask):
-    visa_library(),viFlush(ViSession(vi), ViUInt16(mask))
+    visa_library().viFlush(ViSession(vi), ViUInt16(mask))
 
 def buffer_write(vi, buffer, count):
     return_count = ViUInt32()
-    visa_library().viBufWrite(ViSession(vi), create_string_buffer(buffer),
-			      ViUInt32(count), byref(return_count))
+    visa_library().viBufWrite(ViSession(vi), ViBuf(buffer), ViUInt32(count),
+			      byref(return_count))
     return return_count.value
 
 def buffer_read(vi, count):
@@ -367,37 +402,41 @@ def buffer_read(vi, count):
     visa_library().viBufRead(ViSession(vi), buffer, ViUInt32(count),
 			     byref(return_count))
     return (buffer.raw[0:return_count.value], return_count.value)
+
+# FixMe: Benchmarks show that the redundant use of ViString (it would work
+# without it, too) slows down a bit (10%, if viPrintf were a no-op).  *Maybe*
+# it makes sense to trade explicity for speed.
     
 def printf(vi, write_format, *args):
-    visa_library().viPrintf(ViSession(vi),
-			    create_string_buffer(write_format % args))
+    visa_library(True).viPrintf(ViSession(vi), ViString(write_format),
+				*convert_argument_list(args))
 
-def vprintf():
-    pass
+def sprintf(vi, write_format, *args, **keyw):
+    buffer = create_string_buffer(keyw.get("buffer_length", 1024))
+    visa_library(True).viSPrintf(ViSession(vi), buffer, ViString(write_format),
+				 *convert_argument_list(args))
+    return buffer.value
 
-def sprintf():
-    pass
-
-def vsprintf():
-    pass
-
-def scanf():
-    pass
-
-def vscanf():
-    pass
+def scanf(vi, read_format, *args):
+    argument_list = convert_argument_list(args)
+    visa_library(True).viScanf(ViSession(vi), ViString(read_format),
+			       *argument_list)
+    return tuple([argument.value for argument in argument_list])
 
 def sscanf():
-    pass
-
-def vsscanf():
     pass
 
 def queryf():
     pass
 
-def vqueryf():
-    pass
+# The following variants make no sense in Python, so I realise them as mere
+# aliases.
+
+vprintf  = printf
+vsprintf = sprintf
+vscanf   = scanf
+vsscanf  = sscanf
+vqueryf  = queryf
 
 def gpib_control_atn():
     pass
