@@ -362,6 +362,9 @@ def read_asynchronously(vi, count):
 			       byref(job_id))
     return (buffer.raw[0:return_count.value], job_id.value)
 
+# FixMe: Is "count" really necessary for the write functions?  Same for
+# "gpib_command()".
+
 def write(vi, buffer, count):
     return_count = ViUInt32()
     visa_library().viWrite(ViSession(vi), ViBuf(buffer),
@@ -415,7 +418,10 @@ def sprintf(vi, write_format, *args, **keyw):
     buffer = create_string_buffer(keyw.get("buffer_length", 1024))
     visa_library(True).viSPrintf(ViSession(vi), buffer, ViString(write_format),
 				 *convert_argument_list(args))
-    return buffer.value
+    return buffer.raw
+
+# FixMe: I have to test whether the results are really written to
+# "argument_list" rather than only to a local copy within "viScanf".
 
 def scanf(vi, read_format, *args):
     argument_list = convert_argument_list(args)
@@ -423,11 +429,20 @@ def scanf(vi, read_format, *args):
 			       *argument_list)
     return tuple([argument.value for argument in argument_list])
 
-def sscanf():
-    pass
+def sscanf(vi, buffer, read_format, *args):
+    argument_list = convert_argument_list(args)
+    visa_library(True).viSScanf(ViSession(vi), ViBuf(buffer),
+				ViString(read_format), *argument_list)
+    return tuple([argument.value for argument in argument_list])
 
-def queryf():
-    pass
+def queryf(vi, write_format, read_format, write_args, *read_args):
+    argument_list = convert_argument_list(read_args)
+    if write_args is None: write_args = ()
+    visa_library(True).viQueryf(ViSession(vi), ViString(write_format),
+				ViString(read_format),
+				*(write_args + argument_list))
+    return tuple([argument.value for argument in argument_list])
+
 
 # The following variants make no sense in Python, so I realise them as mere
 # aliases.
@@ -438,56 +453,99 @@ vscanf   = scanf
 vsscanf  = sscanf
 vqueryf  = queryf
 
-def gpib_control_atn():
-    pass
+def gpib_control_atn(vi, mode):
+    visa_library().viGpibControlATN(ViSession(vi), ViUInt16(mode))
 
-def gpib_send_ifc():
-    pass
+def gpib_send_ifc(vi):
+    visa_library().viGpibSendIFC(ViSession(vi))
 
-def gpib_command():
-    pass
+def gpib_command(vi, buffer, count):
+    return_count = ViUInt32()
+    visa_library().viGpibCommand(ViSession(vi), buffer, ViUInt32(count),
+				 byref(return_count))
+    return return_count.value
 
-def gpib_pass_control():
-    pass
+def gpib_pass_control(vi, primary_address, secondary_address):
+    visa_library().viGpibPassControl(ViSession(vi), ViUInt16(primary_address),
+				     ViUInt16(secondary_address))
 
-def usb_control_in():
-    pass
+def usb_control_in(vi, bm_request_type, b_request, w_value, w_index, w_length):
+    buffer = create_string_buffer(w_length)
+    return_count = ViUInt16()
+    visa_library().viUsbControlIn(ViSession(vi), ViInt16(bm_request_type),
+				  ViInt16(b_request), ViUInt16(w_value),
+				  ViUInt16(w_index), ViUInt16(w_length),
+				  buffer, byref(return_count))
+    return (buffer.raw[0:return_count.value], return_count.value)
 
-def in_8():
-    pass
+def in_8(vi, space, offset):
+    value_8 = ViUInt8()
+    visa_library().viIn8(ViSession(vi), ViUInt16(space), ViBusAddess(offset),
+			 byref(value_8))
+    return value_8.value
 
-def out_8():
-    pass
+def out_8(vi, space, offset, value_8):
+    visa_library().viOut8(ViSession(vi), ViUInt16(space), ViBusAddress(offset),
+			  ViUInt8(value_8))
 
 def in_16():
-    pass
+    value_16 = ViUInt16()
+    visa_library().viIn16(ViSession(vi), ViUInt16(space), ViBusAddess(offset),
+			  byref(value_16))
+    return value_8.value
 
 def out_16():
-    pass
+    visa_library().viOut16(ViSession(vi), ViUInt16(space), ViBusAddress(offset),
+			   ViUInt16(value_16))
 
 def in_32():
-    pass
+    value_32 = ViUInt32()
+    visa_library().viIn32(ViSession(vi), ViUInt16(space), ViBusAddess(offset),
+			  byref(value_32))
+    return value_32.value
 
 def out_32():
-    pass
+    visa_library().viOut32(ViSession(vi), ViUInt16(space), ViBusAddress(offset),
+			   ViUInt32(value_32))
 
-def move_in_8():
-    pass
+def move_in_8(vi, space, offset, length):
+    buffer_8 = (ViUInt8 * length)();
+    visa_library().viMoveIn8(ViSession(vi), ViUInt16(space),
+			     ViBusAddress(offset), ViBusSize(length),
+			     byref(buffer_8))
+    return list(buffer_8)
 
-def move_out_8():
-    pass
+def move_out_8(vi, space, offset, length, buffer_8):
+    converted_buffer = (ViUInt8 * length)(*tuple(buffer_8))
+    visa_library().viMoveOut8(ViSession(vi), ViUInt16(space),
+			      ViBusAddress(offset), ViBusSize(length),
+			      converted_buffer)
 
 def move_in_16():
-    pass
+    buffer_16 = (ViUInt16 * length)();
+    visa_library().viMoveIn16(ViSession(vi), ViUInt16(space),
+			      ViBusAddress(offset), ViBusSize(length),
+			      byref(buffer_16))
+    return list(buffer_16)
 
 def move_out_16():
-    pass
+    converted_buffer = (ViUInt16 * length)(*tuple(buffer_16))
+    visa_library().viMoveOut16(ViSession(vi), ViUInt16(space),
+			       ViBusAddress(offset), ViBusSize(length),
+			       converted_buffer)
 
 def move_in_32():
-    pass
+    buffer_32 = (ViUInt32 * length)();
+    visa_library().viMoveIn32(ViSession(vi), ViUInt16(space),
+			      ViBusAddress(offset), ViBusSize(length),
+			      byref(buffer_32))
+    return list(buffer_32)
 
 def move_out_32():
-    pass
+    converted_buffer = (ViUInt32 * length)(*tuple(buffer_32))
+    visa_library().viMoveOut32(ViSession(vi), ViUInt16(space),
+			       ViBusAddress(offset), ViBusSize(length),
+			       converted_buffer)
 
 def move():
     pass
