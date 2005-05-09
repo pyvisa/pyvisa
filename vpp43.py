@@ -42,30 +42,28 @@ import os
 from ctypes import byref, windll, cdll, create_string_buffer
 
 
+visa_functions = [
+    "open_default_resource_manager", "get_default_resource_manager",
+    "find_resources", "find_next", "open", "close", "get_attribute",
+    "set_attribute", "status_description", "terminate", "lock", "unlock",
+    "enable_event", "disable_event", "discard_events", "wait_on_event",
+    "install_handler", "uninstall_handler", "memory_allocation", "memory_free",
+    "gpib_control_ren", "vxi_command_query", "parse_resource",
+    "write_from_file", "read_from_file", "parse_resource_extended",
+    "usb_control_out", "read", "read_asynchronously", "write",
+    "write_asynchronously", "assert_trigger", "read_stb", "clear",
+    "set_buffer", "flush", "buffer_write", "buffer_read", "printf", "vprintf",
+    "sprintf", "vsprintf", "scanf", "vscanf", "sscanf", "vsscanf", "queryf",
+    "vqueryf", "gpib_control_atn", "gpib_send_ifc", "gpib_command",
+    "gpib_pass_control", "usb_control_in", "in_8", "out_8", "in_16", "out_16",
+    "in_32", "out_32", "move_in_8", "move_out_8", "move_in_16", "move_out_16",
+    "move_in_32", "move_out_32", "move", "move_asynchronously", "map_address",
+    "unmap_address", "peek_8", "poke_8", "peek_16", "poke_16", "peek_32",
+    "poke_32", "assert_utility_signal", "assert_interrupt_signal",
+    "map_trigger", "unmap_trigger"]
 
-__all__ = ["visa_library", "get_status",
+__all__ = ["visa_library", "get_status"] + visa_functions
 
-	   # Consistency remark: Here *all* low-level wrappers must be listed
-	   "open_default_resource_manager", "get_default_resource_manager",
-	   "find_resources", "find_next", "open", "close", "get_attribute",
-	   "set_attribute", "status_description", "terminate", "lock",
-	   "unlock", "enable_event", "disable_event", "discard_events",
-	   "wait_on_event", "install_handler", "uninstall_handler",
-	   "mem_allocation", "mem_free", "gpib_control_ren",
-	   "vxi_command_query", "parse_resource", "write_from_file",
-	   "read_from_file", "parse_resource_extended", "usb_control_out",
-	   "read", "read_asynchronously", "write", "write_asynchronously",
-	   "assert_trigger", "read_stb", "clear", "set_buffer", "flush",
-	   "buffer_write", "buffer_read", "printf", "vprintf", "sprintf",
-	   "vsprintf", "scanf", "vscanf", "sscanf", "vsscanf", "queryf",
-	   "vqueryf", "gpib_control_atn", "gpib_send_ifc", "gpib_command",
-	   "gpib_pass_control", "usb_control_in", "in_8", "out_8", "in_16",
-	   "out_16", "in_32", "out_32", "move_in_8", "move_out_8",
-	   "move_in_16", "move_out_16", "move_in_32", "move_out_32", "move",
-	   "move_asynchronously", "map_address", "unmap_address", "peek_8",
-	   "poke_8", "peek_16", "poke_16", "peek_32", "poke_32",
-	   "assert_utility_signal", "assert_interrupt_signal", "map_trigger",
-	   "unmap_trigger"]
 
 # Add all symbols from #visa_exceptions# and #vpp43_constants# to the list of
 # exported symbols
@@ -141,7 +139,6 @@ class VisaLibrary(Singleton):
 
 visa_library = VisaLibrary()
 
-
 visa_status = 0
 
 def check_status(status):
@@ -157,10 +154,24 @@ def get_status():
 
 
 # Consistency remark: here all VPP-4.3.2 routines must be listed (unless, of
-# course, they don't return a status value).
+# course, they don't return a status value, like "peek" and "poke").
 
-for visa_function in ["viOpenDefaultRM", "viFindRsrc", "ViFindNext", "viOpen",
-		      "viClose", "viGetAttribute", "viSetAttribute"]:
+for visa_function in ["viOpenDefaultRM", "viFindRsrc", "viFindNext",
+    "viParseRsrc", "viParseRsrcEx", "viOpen", "viClose", "viSetAttribute",
+    "viGetAttribute", "viStatusDesc", "viTerminate", "viLock", "viUnlock",
+    "viEnableEvent", "viDisableEvent", "viDiscardEvents", "viWaitOnEvent",
+    "viInstallHandler", "viUninstallHandler", "viRead", "viReadAsync",
+    "viReadToFile", "viWrite", "viWriteAsync", "viWriteFromFile",
+    "viAssertTrigger", "viReadSTB", "viClear", "viSetBuf", "viFlush",
+    "viBufWrite", "viBufRead", "viPrintf", "viVPrintf", "viSPrintf",
+    "viVSPrintf", "viScanf", "viVScanf", "viSScanf", "viVSScanf", "viQueryf",
+    "viVQueryf", "viIn8", "viOut8", "viIn16", "viOut16", "viIn32", "viOut32",
+    "viMoveIn8", "viMoveOut8", "viMoveIn16", "viMoveOut16", "viMoveIn32",
+    "viMoveOut32", "viMove", "viMoveAsync", "viMapAddress", "viUnmapAddress",
+    "viMemAlloc", "viMemFree", "viGpibControlREN", "viGpibControlATN",
+    "viGpibSendIFC", "viGpibCommand", "viGpibPassControl", "viVxiCommandQuery",
+    "viAssertUtilSignal", "viAssertIntrSignal", "viMapTrigger",
+    "viUnmapTrigger", "viUsbControlOut", "viUsbControlIn"]:
     visa_library().__getattr__(visa_function).restype = check_status
 
 # convert_argument_list is used for VISA routines with variable argument list,
@@ -288,12 +299,12 @@ def uninstall_handler(vi, event_type, handle, user_handle):
     visa_library().viUninstallHandler(ViSession(vi), ViEventType(event_type),
 				      ViHndlr(handler), ViAddr(user_handle))
 
-def mem_allocation(vi, size):
+def memory_allocation(vi, size):
     offset = ViBusAddress()
     visa_library().viMemAlloc(ViSession(vi), ViBusSize(size), byref(offset))
     return offset.value
 
-def mem_free(vi, offset):
+def memory_free(vi, offset):
     visa_library().viMemFree(ViSession(vi), ViBusAddress(offset))
 
 def gpib_control_ren(vi, mode):
