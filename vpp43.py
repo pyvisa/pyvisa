@@ -22,6 +22,18 @@
 #    with pyvisa; if not, write to the Free Software Foundation, Inc., 59
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
+# TODO:
+#
+# * Test as many routines as possible, audit the rest
+#
+# * Get rid of as many explicit ctypes casts and back-casts as possible.  For
+#   example, the session handle "vi" can be passed as a ctypes type rather than
+#   an integer.  The user won't be interested in its value anyway.
+#
+# * Delete the "count" parameter from all routines where len(buffer) would
+#   yield the same.  This affects the "write" methods first and foremost.
+#
+
 
 """Main module of the implementation of the original VISA routines.
 
