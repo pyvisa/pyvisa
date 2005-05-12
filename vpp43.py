@@ -216,10 +216,48 @@ def convert_argument_list(original_arguments):
 
 # The VPP-4.3.2 routines
 
+# Usually, there is more than one way to pass parameters to ctypes calls.  The
+# ctypes policy used in this code goes as follows:
+#
+# * Null pointers are passed as "None" rather than "0".  This is a little bit
+#   unfortunate, since the VPP specification calls this "VI_NULL", but I can't
+#   use "VI_NULL" since it's an integer and may not be compatible with a
+#   pointer type (don't know whether this is really dangerous).
+#
+# * Strings must have been created with "create_string_buffer" and are passed
+#   without any further conversion; they stand in the parameter list as is.
+#
+# * All other types are explicitly cast using the types defined in
+#   vpp43_types.py.  (This is not really casting but creating, anyway ...)
+#
+# Further notes:
+#
+# * The following Python routines take and give handles as ctypes objects.
+#   Since the user shouldn't be interested in handle values anyway, I see no
+#   point in converting them to Python strings or integers.
+#
+# * All other parameters are natural Python types, i.e. strings (may contain
+#   binary data) and integers.  The same is true for return values.
+#
+# * The original VPP function signatures cannot be realised in Python, at least
+#   not in a sensible way, because a) Python has no real call-by-reference, and
+#   b) Python allows for more elegant solutions, e.g. using len(buffer) instead
+#   of a separate "count" parameter, or using tuples as return values.
+#
+#   Therefore, all function signatures have been carefully adjusted.  I think
+#   this is okay, since the original standard must be adopted to at least C and
+#   Visual Basic anyway, with slight modifications.  I also made the function
+#   names and parameters more legible, but in a way that it's perfectly clear
+#   which original function is meant.
+#
+#   The important thing is that the semantics of functions and parameters are
+#   totally intact, and the inner order of parameters, too.  There is a 1:1
+#   mapping.
+
 def open_default_resource_manager():
-    resource_manager = ViSession()
-    visa_library().viOpenDefaultRM(byref(resource_manager))
-    return resource_manager.value
+    session = ViSession()
+    visa_library().viOpenDefaultRM(byref(session))
+    return session
 
 get_default_resource_manager = open_default_resource_manager
 """A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
@@ -228,7 +266,7 @@ def find_resources(session, regular_expression):
     find_list = ViFindList()
     return_counter = ViUInt32()
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
-    visa_library().viFindRsrc(ViSession(session), ViString(regular_expression),
+    visa_library().viFindRsrc(session, ViString(regular_expression),
 			      byref(find_list), byref(return_counter),
 			      instrument_description)
     return (find_list.value, return_counter.value,
@@ -241,110 +279,108 @@ def find_next(find_list):
 
 def open(session, resource_name, access_mode, timeout):
     vi = ViSession()
-    visa_library().viOpen(ViSession(session), ViRsrc(resource_name),
+    visa_library().viOpen(session, ViRsrc(resource_name),
 			  ViAccessMode(access_mode), ViUInt32(timeout),
 			  byref(vi))
-    return vi.value
+    return vi
 
 def close(vi):
-    visa_library().viClose(ViSession(vi))
+    visa_library().viClose(vi)
 
 def get_attribute(vi, attribute):
     attribute_state = ViAttrState()
-    visa_library().viGetAttribute(ViSession(vi), ViAttr(attribute),
+    visa_library().viGetAttribute(vi, ViAttr(attribute),
 				  byref(attribute_state))
     return attribute_state.value
 
 def set_attribute(vi, attribute, attribute_state):
-    visa_library().viSetAttribute(ViSession(vi), ViAttr(attribute),
+    visa_library().viSetAttribute(vi, ViAttr(attribute),
 				  ViAttrState(attribute_state))
 
 def status_description(vi, status):
     description = create_string_buffer(VI_FIND_BUFLEN)
-    visa_library().viStatusDesc(ViSession(vi), ViStatus(status), description)
+    visa_library().viStatusDesc(vi, ViStatus(status), description)
     return description.value
 
 def terminate(vi, degree, job_id):
-    visa_library().viTerminate(ViSession(vi), ViUInt16(degree),
-			       ViJobId(job_id))
+    visa_library().viTerminate(vi, ViUInt16(degree), job_id)
 
 def lock(vi, lock_type, timeout, requested_key):
     if lock_type == VI_EXCLUSIVE_LOCK:
-	requested_key = VI_NULL
+	requested_key = None
 	access_key = None
     else:
-	access_key = create_string_buffer(VI_FIND_BUFLEN)
-    visa_library().viLock(ViSession(vi), ViAccessMode(lock_type),
-			  ViUInt32(timeout), ViKeyId(requested_key),
-			  access_key)
-    return access_key.value
+	access_key = create_string_buffer(256)
+    visa_library().viLock(vi, ViAccessMode(lock_type), ViUInt32(timeout),
+			  requested_key, access_key)
+    return access_key
 
 def unlock(vi):
-    visa_library().viUnlock(ViSession(vi))
+    visa_library().viUnlock(vi)
 
 def enable_event(vi, event_type, mechanism, context):
     context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
-    visa_library().viEnableEvent(ViSession(vi), ViEventType(event_type),
+    visa_library().viEnableEvent(vi, ViEventType(event_type),
 				 ViUInt16(mechanism), ViEventFilter(context))
 
 def disable_event(vi, event_type, mechanism):
-    visa_library().viDisableEvent(ViSession(vi), ViEventType(event_type),
+    visa_library().viDisableEvent(vi, ViEventType(event_type),
 				  ViUInt16(mechanism))
 
 def discard_events(vi, event_type, mechanism):
-    visa_library().viDiscardEvents(ViSession(vi), ViEventType(event_type),
+    visa_library().viDiscardEvents(vi, ViEventType(event_type),
 				   ViUInt16(mechanism))
 
 def wait_on_event(vi, in_event_type, timeout):
     out_event_type = ViEventType()
     out_context = ViEvent()
-    visa_library().viWaitOnEvent(ViSession(vi), ViEventType(in_event_type),
+    visa_library().viWaitOnEvent(vi, ViEventType(in_event_type),
 				 ViUInt32(timeout), byref(out_event_type),
 				 byref(out_context))
     return (out_event_type, out_context)
 
 def install_handler(vi, event_type, handle, user_handle):
-    visa_library().viInstallHandler(ViSession(vi), ViEventType(event_type),
+    visa_library().viInstallHandler(vi, ViEventType(event_type),
 				    ViHndlr(handler), ViAddr(user_handle))
 
 def uninstall_handler(vi, event_type, handle, user_handle):
-    visa_library().viUninstallHandler(ViSession(vi), ViEventType(event_type),
+    visa_library().viUninstallHandler(vi, ViEventType(event_type),
 				      ViHndlr(handler), ViAddr(user_handle))
 
 def memory_allocation(vi, size):
     offset = ViBusAddress()
-    visa_library().viMemAlloc(ViSession(vi), ViBusSize(size), byref(offset))
+    visa_library().viMemAlloc(vi, ViBusSize(size), byref(offset))
     return offset.value
 
 def memory_free(vi, offset):
-    visa_library().viMemFree(ViSession(vi), ViBusAddress(offset))
+    visa_library().viMemFree(vi, ViBusAddress(offset))
 
 def gpib_control_ren(vi, mode):
-    visa_library().viGpibControlREN(ViSession(vi), ViUInt16(mode))
+    visa_library().viGpibControlREN(vi, ViUInt16(mode))
 
 def vxi_command_query(vi, mode, command):
     response = ViUInt32()
-    visa_library().viVxiCommandQuery(ViSession(vi), ViUInt16(mode),
+    visa_library().viVxiCommandQuery(vi, ViUInt16(mode),
 				     ViUInt32(command), byref(response))
     return response.value
 
 def parse_resource(session, resource_name):
     interface_type = ViUInt16()
     interface_board_number = ViUInt16
-    visa_library().viParseRsrc(ViSession(session), ViRsrc(resource_name),
+    visa_library().viParseRsrc(session, ViRsrc(resource_name),
 			       byref(interface_type),
 			       byref(interface_board_number))
     return (interface_type, interface_board_number)
 
 def write_from_file(vi, filename, count):
     return_count = ViUInt32()
-    visa_library().viWriteFromFile(ViSession(vi), ViConstString(filename),
+    visa_library().viWriteFromFile(vi, ViConstString(filename),
 				   ViUInt32(count), return_count)
     return return_count
 
 def read_to_file(vi, filename, count):
     return_count = ViUInt32()
-    visa_library().viReadToFile(ViSession(vi), ViConstString(filename),
+    visa_library().viReadToFile(vi, ViConstString(filename),
 				ViUInt32(count), return_count)
     return return_count
 
@@ -354,7 +390,7 @@ def parse_resource_extended(session, resource_name):
     resource_class = create_string_buffer(VI_FIND_BUFLEN)
     unaliased_expanded_resource_name = create_string_buffer(VI_FIND_BUFLEN)
     alias_if_exists = create_string_buffer(VI_FIND_BUFLEN)
-    visa_library().viParseRsrc(ViSession(session), ViRsrc(resource_name),
+    visa_library().viParseRsrc(session, ViRsrc(resource_name),
 			       byref(interface_type),
 			       byref(interface_board_number),
 			       resource_class,
@@ -366,7 +402,7 @@ def parse_resource_extended(session, resource_name):
 
 def usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
 		    index, length, buffer):
-    visa_library().viUsbControlOut(ViSession(vi),
+    visa_library().viUsbControlOut(vi,
 		    ViInt16(request_type_bitmap_field), ViInt16(request_id),
 		    ViUInt16(request_value), ViUInt16(index), ViUInt16(length),
 		    ViBuf(buffer))
@@ -374,58 +410,58 @@ def usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
 def read(vi, count):
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
-    visa_library().viRead(ViSession(vi), buffer, ViUInt32(count),
+    visa_library().viRead(vi, buffer, ViUInt32(count),
 			  byref(return_count))
     return (buffer.raw[0:return_count.value], return_count.value)
 
 def read_asynchronously(vi, count):
     buffer = create_string_buffer(count)
     job_id = ViJobId()
-    visa_library().viReadAsync(ViSession(vi), buffer, ViUInt32(count),
+    visa_library().viReadAsync(vi, buffer, ViUInt32(count),
 			       byref(job_id))
-    return (buffer.raw[0:return_count.value], job_id.value)
+    return (buffer.raw[0:return_count.value], job_id)
 
 # FixMe: Is "count" really necessary for the write functions?  Same for
 # "gpib_command()".
 
 def write(vi, buffer, count):
     return_count = ViUInt32()
-    visa_library().viWrite(ViSession(vi), ViBuf(buffer),
+    visa_library().viWrite(vi, ViBuf(buffer),
 			   ViUInt32(count), byref(return_count))
     return return_count.value
 
 def write_asynchronously(vi, buffer, count):
     job_id = ViJobId()
-    visa_library().viWriteAsync(ViSession(vi), ViBuf(buffer), byref(job_id))
-    return job_id.value
+    visa_library().viWriteAsync(vi, ViBuf(buffer), byref(job_id))
+    return job_id
 
 def assert_trigger(vi, protocol):
-    visa_library().viAssertTrigger(ViSession(vi), ViUInt16(protocol))
+    visa_library().viAssertTrigger(vi, ViUInt16(protocol))
 
 def read_stb(vi):
     status = ViUInt16()
-    visa_library().viReadSTB(ViSession(vi), byref(status))
+    visa_library().viReadSTB(vi, byref(status))
     return status.value
 
 def clear(vi):
-    visa_library().viClear(ViSession(vi))
+    visa_library().viClear(vi)
 
 def set_buffer(vi, mask, size):
-    visa_library().viSetBuf(ViSession(vi), ViUInt16(mask), ViUInt32(size))
+    visa_library().viSetBuf(vi, ViUInt16(mask), ViUInt32(size))
 
 def flush(vi, mask):
-    visa_library().viFlush(ViSession(vi), ViUInt16(mask))
+    visa_library().viFlush(vi, ViUInt16(mask))
 
 def buffer_write(vi, buffer, count):
     return_count = ViUInt32()
-    visa_library().viBufWrite(ViSession(vi), ViBuf(buffer), ViUInt32(count),
+    visa_library().viBufWrite(vi, ViBuf(buffer), ViUInt32(count),
 			      byref(return_count))
     return return_count.value
 
 def buffer_read(vi, count):
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
-    visa_library().viBufRead(ViSession(vi), buffer, ViUInt32(count),
+    visa_library().viBufRead(vi, buffer, ViUInt32(count),
 			     byref(return_count))
     return (buffer.raw[0:return_count.value], return_count.value)
 
@@ -434,12 +470,12 @@ def buffer_read(vi, count):
 # it makes sense to trade explicity for speed.
     
 def printf(vi, write_format, *args):
-    visa_library(True).viPrintf(ViSession(vi), ViString(write_format),
+    visa_library(True).viPrintf(vi, ViString(write_format),
 				*convert_argument_list(args))
 
 def sprintf(vi, write_format, *args, **keyw):
     buffer = create_string_buffer(keyw.get("buffer_length", 1024))
-    visa_library(True).viSPrintf(ViSession(vi), buffer, ViString(write_format),
+    visa_library(True).viSPrintf(vi, buffer, ViString(write_format),
 				 *convert_argument_list(args))
     return buffer.raw
 
@@ -448,20 +484,20 @@ def sprintf(vi, write_format, *args, **keyw):
 
 def scanf(vi, read_format, *args):
     argument_list = convert_argument_list(args)
-    visa_library(True).viScanf(ViSession(vi), ViString(read_format),
+    visa_library(True).viScanf(vi, ViString(read_format),
 			       *argument_list)
     return tuple([argument.value for argument in argument_list])
 
 def sscanf(vi, buffer, read_format, *args):
     argument_list = convert_argument_list(args)
-    visa_library(True).viSScanf(ViSession(vi), ViBuf(buffer),
+    visa_library(True).viSScanf(vi, ViBuf(buffer),
 				ViString(read_format), *argument_list)
     return tuple([argument.value for argument in argument_list])
 
 def queryf(vi, write_format, read_format, write_args, *read_args):
     argument_list = convert_argument_list(read_args)
     if write_args is None: write_args = ()
-    visa_library(True).viQueryf(ViSession(vi), ViString(write_format),
+    visa_library(True).viQueryf(vi, ViString(write_format),
 				ViString(read_format),
 				*(write_args + argument_list))
     return tuple([argument.value for argument in argument_list])
@@ -477,25 +513,25 @@ vsscanf  = sscanf
 vqueryf  = queryf
 
 def gpib_control_atn(vi, mode):
-    visa_library().viGpibControlATN(ViSession(vi), ViUInt16(mode))
+    visa_library().viGpibControlATN(vi, ViUInt16(mode))
 
 def gpib_send_ifc(vi):
-    visa_library().viGpibSendIFC(ViSession(vi))
+    visa_library().viGpibSendIFC(vi)
 
 def gpib_command(vi, buffer, count):
     return_count = ViUInt32()
-    visa_library().viGpibCommand(ViSession(vi), buffer, ViUInt32(count),
+    visa_library().viGpibCommand(vi, buffer, ViUInt32(count),
 				 byref(return_count))
     return return_count.value
 
 def gpib_pass_control(vi, primary_address, secondary_address):
-    visa_library().viGpibPassControl(ViSession(vi), ViUInt16(primary_address),
+    visa_library().viGpibPassControl(vi, ViUInt16(primary_address),
 				     ViUInt16(secondary_address))
 
 def usb_control_in(vi, bm_request_type, b_request, w_value, w_index, w_length):
     buffer = create_string_buffer(w_length)
     return_count = ViUInt16()
-    visa_library().viUsbControlIn(ViSession(vi), ViInt16(bm_request_type),
+    visa_library().viUsbControlIn(vi, ViInt16(bm_request_type),
 				  ViInt16(b_request), ViUInt16(w_value),
 				  ViUInt16(w_index), ViUInt16(w_length),
 				  buffer, byref(return_count))
@@ -503,76 +539,76 @@ def usb_control_in(vi, bm_request_type, b_request, w_value, w_index, w_length):
 
 def in_8(vi, space, offset):
     value_8 = ViUInt8()
-    visa_library().viIn8(ViSession(vi), ViUInt16(space), ViBusAddess(offset),
+    visa_library().viIn8(vi, ViUInt16(space), ViBusAddess(offset),
 			 byref(value_8))
     return value_8.value
 
 def out_8(vi, space, offset, value_8):
-    visa_library().viOut8(ViSession(vi), ViUInt16(space), ViBusAddress(offset),
+    visa_library().viOut8(vi, ViUInt16(space), ViBusAddress(offset),
 			  ViUInt8(value_8))
 
 def in_16(vi, space, offset):
     value_16 = ViUInt16()
-    visa_library().viIn16(ViSession(vi), ViUInt16(space), ViBusAddess(offset),
+    visa_library().viIn16(vi, ViUInt16(space), ViBusAddess(offset),
 			  byref(value_16))
     return value_8.value
 
 def out_16(vi, space, offset, value_16):
-    visa_library().viOut16(ViSession(vi), ViUInt16(space), ViBusAddress(offset),
+    visa_library().viOut16(vi, ViUInt16(space), ViBusAddress(offset),
 			   ViUInt16(value_16))
 
 def in_32(vi, space, offset):
     value_32 = ViUInt32()
-    visa_library().viIn32(ViSession(vi), ViUInt16(space), ViBusAddess(offset),
+    visa_library().viIn32(vi, ViUInt16(space), ViBusAddess(offset),
 			  byref(value_32))
     return value_32.value
 
 def out_32(vi, space, offset, value_32):
-    visa_library().viOut32(ViSession(vi), ViUInt16(space), ViBusAddress(offset),
+    visa_library().viOut32(vi, ViUInt16(space), ViBusAddress(offset),
 			   ViUInt32(value_32))
 
 def move_in_8(vi, space, offset, length):
     buffer_8 = (ViUInt8 * length)();
-    visa_library().viMoveIn8(ViSession(vi), ViUInt16(space),
+    visa_library().viMoveIn8(vi, ViUInt16(space),
 			     ViBusAddress(offset), ViBusSize(length),
 			     byref(buffer_8))
     return list(buffer_8)
 
 def move_out_8(vi, space, offset, length, buffer_8):
     converted_buffer = (ViUInt8 * length)(*tuple(buffer_8))
-    visa_library().viMoveOut8(ViSession(vi), ViUInt16(space),
+    visa_library().viMoveOut8(vi, ViUInt16(space),
 			      ViBusAddress(offset), ViBusSize(length),
 			      converted_buffer)
 
 def move_in_16(vi, space, offset, length):
     buffer_16 = (ViUInt16 * length)();
-    visa_library().viMoveIn16(ViSession(vi), ViUInt16(space),
+    visa_library().viMoveIn16(vi, ViUInt16(space),
 			      ViBusAddress(offset), ViBusSize(length),
 			      byref(buffer_16))
     return list(buffer_16)
 
 def move_out_16(vi, space, offset, length, buffer_16):
     converted_buffer = (ViUInt16 * length)(*tuple(buffer_16))
-    visa_library().viMoveOut16(ViSession(vi), ViUInt16(space),
+    visa_library().viMoveOut16(vi, ViUInt16(space),
 			       ViBusAddress(offset), ViBusSize(length),
 			       converted_buffer)
 
 def move_in_32(vi, space, offset, length):
     buffer_32 = (ViUInt32 * length)();
-    visa_library().viMoveIn32(ViSession(vi), ViUInt16(space),
+    visa_library().viMoveIn32(vi, ViUInt16(space),
 			      ViBusAddress(offset), ViBusSize(length),
 			      byref(buffer_32))
     return list(buffer_32)
 
 def move_out_32(vi, space, offset, length, buffer_16):
     converted_buffer = (ViUInt32 * length)(*tuple(buffer_32))
-    visa_library().viMoveOut32(ViSession(vi), ViUInt16(space),
+    visa_library().viMoveOut32(vi, ViUInt16(space),
 			       ViBusAddress(offset), ViBusSize(length),
 			       converted_buffer)
 
 def move(vi, source_space, source_offset, source_width, destination_space,
 	 destination_offset, destination_width, length):
-    visa_library().viMove(ViSession(vi), ViUInt16(source_space),
+    visa_library().viMove(vi, ViUInt16(source_space),
 			  ViBusAddress(source_offset), ViUInt16(source_width),
 			  ViUInt16(destination_space),
 			  ViBusAddress(destination_offset),
@@ -581,61 +617,61 @@ def move(vi, source_space, source_offset, source_width, destination_space,
 def move_asynchronously(vi, source_space, source_offset, source_width,
 	 destination_space, destination_offset, destination_width, length):
     job_id = ViJobId()
-    visa_library().viMoveAsync(ViSession(vi), ViUInt16(source_space),
+    visa_library().viMoveAsync(vi, ViUInt16(source_space),
 			       ViBusAddress(source_offset),
 			       ViUInt16(source_width),
 			       ViUInt16(destination_space),
 			       ViBusAddress(destination_offset),
 			       ViUInt16(destination_width), ViBusSize(length),
 			       byref(job_id))
-    return job_id.value
+    return job_id
 
 def map_address(vi, map_space, map_base, map_size, access, suggested):
     address = ViAddr()
-    visa_library().viMapAddress(ViSession(vi), ViUInt16(map_space),
+    visa_library().viMapAddress(vi, ViUInt16(map_space),
 				ViBusAddress(map_base), ViBusSize(map_size),
 				ViBoolean(access), ViAddr(suggested),
 				byref(address))
     return address.value
 
 def unmap_address(vi):
-    visa_library().viUnmapAddress(ViSession(vi))
+    visa_library().viUnmapAddress(vi)
 
 def peek_8(vi, address):
     value_8 = ViUInt8()
-    visa_library().viPeek8(ViSession(vi), ViAddr(address), byref(value_8))
+    visa_library().viPeek8(vi, ViAddr(address), byref(value_8))
     return value_8.value
 
 def poke_8(vi, address, value_8):
-    visa_library().viPoke8(ViSession(vi), ViAddr(address), ViUInt8(value_8))
+    visa_library().viPoke8(vi, ViAddr(address), ViUInt8(value_8))
 
 def peek_16(vi, address):
     value_16 = ViUInt16()
-    visa_library().viPeek16(ViSession(vi), ViAddr(address), byref(value_16))
+    visa_library().viPeek16(vi, ViAddr(address), byref(value_16))
     return value_16.value
 
 def poke_16(vi, address, value_16):
-    visa_library().viPoke16(ViSession(vi), ViAddr(address), ViUInt16(value_16))
+    visa_library().viPoke16(vi, ViAddr(address), ViUInt16(value_16))
 
 def peek_32(vi, address):
     value_32 = ViUInt32()
-    visa_library().viPeek32(ViSession(vi), ViAddr(address), byref(value_32))
+    visa_library().viPeek32(vi, ViAddr(address), byref(value_32))
     return value_32.value
 
 def poke_32(vi, address, value_32):
-    visa_library().viPoke32(ViSession(vi), ViAddr(address), ViUInt32(value_32))
+    visa_library().viPoke32(vi, ViAddr(address), ViUInt32(value_32))
 
 def assert_utility_signal(vi, line):
-    visa_library().viAssertUtilSignal(ViSession(vi), ViUInt16(line))
+    visa_library().viAssertUtilSignal(vi, ViUInt16(line))
 
 def assert_interrupt_signal(vi, mode, status_id):
-    visa_library().viAssertIntrSignal(ViSession(vi), ViInt16(mode),
+    visa_library().viAssertIntrSignal(vi, ViInt16(mode),
 				      ViUInt32(status_id))
 
 def map_trigger(vi, trigger_source, trigger_destination, mode):
-    visa_library().viMapTrigger(ViSession(vi), ViInt16(trigger_source),
+    visa_library().viMapTrigger(vi, ViInt16(trigger_source),
 				ViInt16(trigger_destination), ViUInt16(mode))
 
 def unmap_trigger(vi, trigger_source, trigger_destination):
-    visa_library().viUnmapTrigger(ViSession(vi), ViInt16(trigger_source),
+    visa_library().viUnmapTrigger(vi, ViInt16(trigger_source),
 				  ViInt16(trigger_destination))
