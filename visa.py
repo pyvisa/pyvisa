@@ -3,7 +3,7 @@
 #
 #    visa.py - VISA completion and error messages
 #
-#    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
+#    Copyright Â© 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
 #                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
 #
 #    This file is part of pyvisa.
@@ -32,6 +32,9 @@ __version__ = "$Revision$"
 from ctypes import *
 from visa_messages import *
 from vpp43_types import *
+ViString = c_char_p
+ViBuf    = POINTER(c_ubyte)
+ViRsrc   = ViString
 from vpp43_constants import *
 from visa_attributes import attributes_s, attributes
 import os
