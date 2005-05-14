@@ -266,7 +266,7 @@ def find_resources(session, regular_expression):
     find_list = ViFindList()
     return_counter = ViUInt32()
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
-    visa_library().viFindRsrc(session, ViString(regular_expression),
+    visa_library().viFindRsrc(session, regular_expression,
 			      byref(find_list), byref(return_counter),
 			      instrument_description)
     return (find_list.value, return_counter.value,
@@ -279,7 +279,7 @@ def find_next(find_list):
 
 def open(session, resource_name, access_mode, timeout):
     vi = ViSession()
-    visa_library().viOpen(session, ViRsrc(resource_name),
+    visa_library().viOpen(session, resource_name,
 			  ViAccessMode(access_mode), ViUInt32(timeout),
 			  byref(vi))
     return vi
@@ -367,21 +367,18 @@ def vxi_command_query(vi, mode, command):
 def parse_resource(session, resource_name):
     interface_type = ViUInt16()
     interface_board_number = ViUInt16
-    visa_library().viParseRsrc(session, ViRsrc(resource_name),
-			       byref(interface_type),
+    visa_library().viParseRsrc(session, resource_name, byref(interface_type),
 			       byref(interface_board_number))
     return (interface_type, interface_board_number)
 
 def write_from_file(vi, filename, count):
     return_count = ViUInt32()
-    visa_library().viWriteFromFile(vi, ViConstString(filename),
-				   ViUInt32(count), return_count)
+    visa_library().viWriteFromFile(vi, filename, ViUInt32(count), return_count)
     return return_count
 
 def read_to_file(vi, filename, count):
     return_count = ViUInt32()
-    visa_library().viReadToFile(vi, ViConstString(filename),
-				ViUInt32(count), return_count)
+    visa_library().viReadToFile(vi, filename, ViUInt32(count), return_count)
     return return_count
 
 def parse_resource_extended(session, resource_name):
@@ -390,10 +387,8 @@ def parse_resource_extended(session, resource_name):
     resource_class = create_string_buffer(VI_FIND_BUFLEN)
     unaliased_expanded_resource_name = create_string_buffer(VI_FIND_BUFLEN)
     alias_if_exists = create_string_buffer(VI_FIND_BUFLEN)
-    visa_library().viParseRsrc(session, ViRsrc(resource_name),
-			       byref(interface_type),
-			       byref(interface_board_number),
-			       resource_class,
+    visa_library().viParseRsrc(session, resource_name, byref(interface_type),
+			       byref(interface_board_number), resource_class,
 			       unaliased_expanded_resource_name,
 			       alias_if_exists)
     return (interface_type.value, interface_board_number.value,
@@ -401,38 +396,37 @@ def parse_resource_extended(session, resource_name):
 	    alias_if_exists.value)
 
 def usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
-		    index, length, buffer):
-    visa_library().viUsbControlOut(vi,
-		    ViInt16(request_type_bitmap_field), ViInt16(request_id),
-		    ViUInt16(request_value), ViUInt16(index), ViUInt16(length),
-		    ViBuf(buffer))
+		    index, buffer = ""):
+    length = len(buffer)
+    visa_library().viUsbControlOut(vi, ViInt16(request_type_bitmap_field),
+				   ViInt16(request_id),
+				   ViUInt16(request_value), ViUInt16(index),
+				   ViUInt16(length), buffer)
 
 def read(vi, count):
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
     visa_library().viRead(vi, buffer, ViUInt32(count),
 			  byref(return_count))
-    return (buffer.raw[0:return_count.value], return_count.value)
+    return (buffer.raw[:return_count.value], return_count.value)
 
 def read_asynchronously(vi, count):
     buffer = create_string_buffer(count)
     job_id = ViJobId()
     visa_library().viReadAsync(vi, buffer, ViUInt32(count),
 			       byref(job_id))
-    return (buffer.raw[0:return_count.value], job_id)
+    return (buffer.raw[:return_count.value], job_id)
 
-# FixMe: Is "count" really necessary for the write functions?  Same for
-# "gpib_command()".
-
-def write(vi, buffer, count):
+def write(vi, buffer):
     return_count = ViUInt32()
-    visa_library().viWrite(vi, ViBuf(buffer),
-			   ViUInt32(count), byref(return_count))
+    visa_library().viWrite(vi, buffer,
+			   ViUInt32(len(buffer)), byref(return_count))
     return return_count.value
 
-def write_asynchronously(vi, buffer, count):
+def write_asynchronously(vi, buffer):
     job_id = ViJobId()
-    visa_library().viWriteAsync(vi, ViBuf(buffer), byref(job_id))
+    visa_library().viWriteAsync(vi, buffer, ViUInt32(len(buffer)),
+				byref(job_id))
     return job_id
 
 def assert_trigger(vi, protocol):
@@ -452,9 +446,9 @@ def set_buffer(vi, mask, size):
 def flush(vi, mask):
     visa_library().viFlush(vi, ViUInt16(mask))
 
-def buffer_write(vi, buffer, count):
+def buffer_write(vi, buffer):
     return_count = ViUInt32()
-    visa_library().viBufWrite(vi, ViBuf(buffer), ViUInt32(count),
+    visa_library().viBufWrite(vi, buffer, ViUInt32(len(buffer)),
 			      byref(return_count))
     return return_count.value
 
@@ -463,19 +457,14 @@ def buffer_read(vi, count):
     return_count = ViUInt32()
     visa_library().viBufRead(vi, buffer, ViUInt32(count),
 			     byref(return_count))
-    return (buffer.raw[0:return_count.value], return_count.value)
+    return (buffer.raw[:return_count.value], return_count.value)
 
-# FixMe: Benchmarks show that the redundant use of ViString (it would work
-# without it, too) slows down a bit (10%, if viPrintf were a no-op).  *Maybe*
-# it makes sense to trade explicity for speed.
-    
 def printf(vi, write_format, *args):
-    visa_library(True).viPrintf(vi, ViString(write_format),
-				*convert_argument_list(args))
+    visa_library(True).viPrintf(vi, write_format, *convert_argument_list(args))
 
 def sprintf(vi, write_format, *args, **keyw):
     buffer = create_string_buffer(keyw.get("buffer_length", 1024))
-    visa_library(True).viSPrintf(vi, buffer, ViString(write_format),
+    visa_library(True).viSPrintf(vi, buffer, write_format,
 				 *convert_argument_list(args))
     return buffer.raw
 
@@ -484,21 +473,18 @@ def sprintf(vi, write_format, *args, **keyw):
 
 def scanf(vi, read_format, *args):
     argument_list = convert_argument_list(args)
-    visa_library(True).viScanf(vi, ViString(read_format),
-			       *argument_list)
+    visa_library(True).viScanf(vi, read_format, *argument_list)
     return tuple([argument.value for argument in argument_list])
 
 def sscanf(vi, buffer, read_format, *args):
     argument_list = convert_argument_list(args)
-    visa_library(True).viSScanf(vi, ViBuf(buffer),
-				ViString(read_format), *argument_list)
+    visa_library(True).viSScanf(vi, buffer, read_format, *argument_list)
     return tuple([argument.value for argument in argument_list])
 
 def queryf(vi, write_format, read_format, write_args, *read_args):
     argument_list = convert_argument_list(read_args)
     if write_args is None: write_args = ()
-    visa_library(True).viQueryf(vi, ViString(write_format),
-				ViString(read_format),
+    visa_library(True).viQueryf(vi, write_format, read_format,
 				*(write_args + argument_list))
     return tuple([argument.value for argument in argument_list])
 
@@ -518,9 +504,9 @@ def gpib_control_atn(vi, mode):
 def gpib_send_ifc(vi):
     visa_library().viGpibSendIFC(vi)
 
-def gpib_command(vi, buffer, count):
+def gpib_command(vi, buffer):
     return_count = ViUInt32()
-    visa_library().viGpibCommand(vi, buffer, ViUInt32(count),
+    visa_library().viGpibCommand(vi, buffer, ViUInt32(len(buffer)),
 				 byref(return_count))
     return return_count.value
 
@@ -535,7 +521,7 @@ def usb_control_in(vi, bm_request_type, b_request, w_value, w_index, w_length):
 				  ViInt16(b_request), ViUInt16(w_value),
 				  ViUInt16(w_index), ViUInt16(w_length),
 				  buffer, byref(return_count))
-    return (buffer.raw[0:return_count.value], return_count.value)
+    return (buffer.raw[:return_count.value], return_count.value)
 
 def in_8(vi, space, offset):
     value_8 = ViUInt8()
