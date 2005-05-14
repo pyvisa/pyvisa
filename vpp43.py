@@ -226,6 +226,8 @@ def convert_argument_list(original_arguments):
 #
 # * Strings must have been created with "create_string_buffer" and are passed
 #   without any further conversion; they stand in the parameter list as is.
+#   The same applies to pseudo-string types as ViRsrc or VuBuf.  Their Pythonic
+#   counterpats are strings as well.
 #
 # * All other types are explicitly cast using the types defined in
 #   vpp43_types.py.  (This is not really casting but creating, anyway ...)
@@ -279,9 +281,8 @@ def find_next(find_list):
 
 def open(session, resource_name, access_mode, timeout):
     vi = ViSession()
-    visa_library().viOpen(session, resource_name,
-			  ViAccessMode(access_mode), ViUInt32(timeout),
-			  byref(vi))
+    visa_library().viOpen(session, resource_name, ViAccessMode(access_mode),
+			  ViUInt32(timeout), byref(vi))
     return vi
 
 def close(vi):
@@ -555,42 +556,36 @@ def out_32(vi, space, offset, value_32):
 
 def move_in_8(vi, space, offset, length):
     buffer_8 = (ViUInt8 * length)();
-    visa_library().viMoveIn8(vi, ViUInt16(space),
-			     ViBusAddress(offset), ViBusSize(length),
-			     byref(buffer_8))
+    visa_library().viMoveIn8(vi, ViUInt16(space), ViBusAddress(offset),
+			     ViBusSize(length), byref(buffer_8))
     return list(buffer_8)
 
 def move_out_8(vi, space, offset, length, buffer_8):
     converted_buffer = (ViUInt8 * length)(*tuple(buffer_8))
-    visa_library().viMoveOut8(vi, ViUInt16(space),
-			      ViBusAddress(offset), ViBusSize(length),
-			      converted_buffer)
+    visa_library().viMoveOut8(vi, ViUInt16(space), ViBusAddress(offset),
+			      ViBusSize(length), converted_buffer)
 
 def move_in_16(vi, space, offset, length):
     buffer_16 = (ViUInt16 * length)();
-    visa_library().viMoveIn16(vi, ViUInt16(space),
-			      ViBusAddress(offset), ViBusSize(length),
-			      byref(buffer_16))
+    visa_library().viMoveIn16(vi, ViUInt16(space), ViBusAddress(offset),
+			      ViBusSize(length), byref(buffer_16))
     return list(buffer_16)
 
 def move_out_16(vi, space, offset, length, buffer_16):
     converted_buffer = (ViUInt16 * length)(*tuple(buffer_16))
-    visa_library().viMoveOut16(vi, ViUInt16(space),
-			       ViBusAddress(offset), ViBusSize(length),
-			       converted_buffer)
+    visa_library().viMoveOut16(vi, ViUInt16(space), ViBusAddress(offset),
+			       ViBusSize(length), converted_buffer)
 
 def move_in_32(vi, space, offset, length):
     buffer_32 = (ViUInt32 * length)();
-    visa_library().viMoveIn32(vi, ViUInt16(space),
-			      ViBusAddress(offset), ViBusSize(length),
-			      byref(buffer_32))
+    visa_library().viMoveIn32(vi, ViUInt16(space), ViBusAddress(offset),
+			      ViBusSize(length), byref(buffer_32))
     return list(buffer_32)
 
 def move_out_32(vi, space, offset, length, buffer_16):
     converted_buffer = (ViUInt32 * length)(*tuple(buffer_32))
-    visa_library().viMoveOut32(vi, ViUInt16(space),
-			       ViBusAddress(offset), ViBusSize(length),
-			       converted_buffer)
+    visa_library().viMoveOut32(vi, ViUInt16(space), ViBusAddress(offset),
+			       ViBusSize(length), converted_buffer)
 
 def move(vi, source_space, source_offset, source_width, destination_space,
 	 destination_offset, destination_width, length):
@@ -601,7 +596,8 @@ def move(vi, source_space, source_offset, source_width, destination_space,
 			  ViUInt16(destination_width), ViBusSize(length))
 
 def move_asynchronously(vi, source_space, source_offset, source_width,
-	 destination_space, destination_offset, destination_width, length):
+			destination_space, destination_offset,
+			destination_width, length):
     job_id = ViJobId()
     visa_library().viMoveAsync(vi, ViUInt16(source_space),
 			       ViBusAddress(source_offset),
