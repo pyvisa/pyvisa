@@ -44,8 +44,8 @@ class VisaIOError(Error):
     """
     def __init__(self, error_code):
 	(abbreviation, description) = \
-	    _completion_and_error_messages[self.errno]
-	VisaError.__init__(self, abbreviation + ": " + description)
+	    _completion_and_error_messages[error_code]
+	Error.__init__(self, abbreviation + ": " + description)
 	self.error_code = error_code
 
 class OSNotSupported(Error):
