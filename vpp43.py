@@ -26,13 +26,8 @@
 #
 # * Test as many routines as possible, audit the rest
 #
-# * Create prototypes
-#
-# * Define a restype for peek and poke functions?
-#
 # * Sort everything by alphabet
 #
-# * Test for wrong types for functions without a prototype (e.g. printf)
 
 
 """Main module of the implementation of the original VISA routines.
@@ -324,7 +319,7 @@ def get_status():
 
 # convert_argument_list is used for VISA routines with variable argument list,
 # which means that also the types are unknown.  While ctypes can deal with
-# strings and integer, it is unable to dealt with all other types, in
+# strings and integers, it is unable to dealt with all other types, in
 # particular doubles.  Since I expect doubles to be a rather frequent type in
 # the application of VISA, I convert them here.
 #
@@ -349,11 +344,6 @@ def convert_argument_list(original_arguments):
 	    argument_list.append(argument)
     return tuple(converted_arguments)
 
-def ensure_string_type(argument):
-    if not isinstance(argument, basestring):
-	raise TypeError("string expected instead of " + str(type(argument)))
-    
-
 
 # The VPP-4.3.2 routines
 
@@ -370,8 +360,8 @@ def ensure_string_type(argument):
 #   The same applies to pseudo-string types as ViRsrc or VuBuf.  Their Pythonic
 #   counterpats are strings as well.
 #
-# * All other types are explicitly cast using the types defined in
-#   vpp43_types.py.  (This is not really casting but creating, anyway ...)
+# * All other types are explicitly cast using the types defined by ctypes'
+#   "restype".
 #
 # Further notes:
 #
@@ -440,7 +430,7 @@ def set_attribute(vi, attribute, attribute_state):
     visa_library().viSetAttribute(vi, attribute, attribute_state)
 
 def status_description(vi, status):
-    description = create_string_buffer(VI_FIND_BUFLEN)
+    description = create_string_buffer(256)
     visa_library().viStatusDesc(vi, status, description)
     return description.value
 
@@ -672,7 +662,7 @@ def out_32(vi, space, offset, value_32):
 
 def move_in_8(vi, space, offset, length):
     buffer_8 = (ViUInt8 * length)();
-    visa_library().viMoveIn8(vi, space, offset, length, byref(buffer_8))
+    visa_library().viMoveIn8(vi, space, offset, length, buffer_8)
     return list(buffer_8)
 
 def move_out_8(vi, space, offset, length, buffer_8):
@@ -681,7 +671,7 @@ def move_out_8(vi, space, offset, length, buffer_8):
 
 def move_in_16(vi, space, offset, length):
     buffer_16 = (ViUInt16 * length)();
-    visa_library().viMoveIn16(vi, space, offset, length, byref(buffer_16))
+    visa_library().viMoveIn16(vi, space, offset, length, buffer_16)
     return list(buffer_16)
 
 def move_out_16(vi, space, offset, length, buffer_16):
@@ -690,7 +680,7 @@ def move_out_16(vi, space, offset, length, buffer_16):
 
 def move_in_32(vi, space, offset, length):
     buffer_32 = (ViUInt32 * length)();
-    visa_library().viMoveIn32(vi, space, offset, length, byref(buffer_32))
+    visa_library().viMoveIn32(vi, space, offset, length, buffer_32)
     return list(buffer_32)
 
 def move_out_32(vi, space, offset, length, buffer_16):
