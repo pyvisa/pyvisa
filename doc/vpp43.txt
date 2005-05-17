@@ -8,11 +8,12 @@ The VISA low-level implementation
 :Version: 1
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
 :Abstract: This document covers the ``vpp43.py`` module, which is part of the
-  pyvisa_ package.  This module implements thin wrappers around all functions
-  defined in the VISA specification.  Thus it enables the programmer to
+  PyVISA_ package.  This module implements thin wrappers around all functions
+  defined in the `VISA specification`_.  Thus it enables the programmer to
   communicate with measurement and test devices via GPIB, RS232, USB etc.
 
-.. _pyvisa: http://sourceforge.net/projects/pyvisa/
+.. _PyVISA: http://sourceforge.net/projects/pyvisa/
+.. _`VISA specification`: http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
 
 
 Overview
@@ -59,7 +60,7 @@ controlling:
 .. [#] For example, you don't need to care about the underlying operating
        system with all its peculiarities.
 
-The pyvisa package is a VISA binding for Python.  It is implemented in two
+The PyVISA package is a VISA binding for Python.  It is implemented in two
 layers.  This document describes its lower level ``vpp43.py``, which directly
 accesses the VISA functions from Python.  On top of it, an object-oriented
 Python module has been created called ``visa.py``.  In case of doubt, use
@@ -70,11 +71,1288 @@ people who need full control or the official VISA functions for some reason.
 Prerequisites
 ================
 
-The pyvisa package doesn't include a VISA library itself.  You have to download
+The PyVISA package doesn't include a VISA library itself.  You have to download
 it from one of the VISA vendors, e.g. `National Instruments' VISA pages`_.
+Please install it properly as documented there or within the packages.
 
 .. _`National Instruments' VISA pages`: http://ni.com/visa/
 
-.. _`VPP VISA`: http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
+For Windows, PyVISA expects a file called ``visa32.dll`` in the PATH.  For
+Linux, it's the file ``/usr/local/vxipnp/linux/bin/libvisa.so.7`` by default.
 
-..  LocalWords:  rst british vpp pyvisa ies
+
+The VISA functions
+=======================
+
+
+assert_interrupt_signal
+.......................
+
+Asserts the specified device interrupt or signal.
+
+:Call: assert_interrupt_signal(vi, mode, status_id)
+:VISA name: viAssertIntrSignal
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `mode` : integer
+        This specifies how to assert the interrupt.
+    `status_id` : integer
+        This is the status value to be presented during an interrupt
+	acknowledge cycle.
+:Return values:
+    None.
+
+
+assert_trigger
+..............
+
+:Call: assert_trigger(vi, protocol)
+:VISA name: viassert_trigger
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viAssertTrigger(vi, protocol)
+
+
+assert_utility_signal
+.....................
+
+Asserts the specified utility bus signal.
+
+:Call: assert_utility_signal(vi, line)
+:VISA name: viassert_utility_signal
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `line` : integer
+        Specifies the utility bus signal to assert.
+:Return values:
+    None.
+
+    visa_library().viAssertUtilSignal(vi, line)
+
+
+buffer_read
+................
+
+:Call: buffer_read(vi, count)
+:VISA name: vibuffer_read
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    buffer = create_string_buffer(count)
+    return_count = ViUInt32()
+    visa_library().viBufRead(vi, buffer, count, byref(return_count))
+    return buffer.raw[:return_count.value]
+
+
+buffer_write
+................
+
+:Call: buffer_write(vi, buffer)
+:VISA name: vibuffer_write
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    return_count = ViUInt32()
+    visa_library().viBufWrite(vi, buffer, len(buffer), byref(return_count))
+    return return_count.value
+
+
+clear
+................
+
+:Call: clear(vi)
+:VISA name: viclear
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viClear(vi)
+
+
+close
+................
+
+:Call: close(vi)
+:VISA name: viclose
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viClose(vi)
+
+
+disable_event
+................
+
+:Call: disable_event(vi, event_type, mechanism)
+:VISA name: vidisable_event
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viDisableEvent(vi, event_type, mechanism)
+
+
+discard_events
+................
+
+:Call: discard_events(vi, event_type, mechanism)
+:VISA name: vidiscard_events
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viDiscardEvents(vi, event_type, mechanism)
+
+
+enable_event
+................
+
+:Call: enable_event(vi, event_type, mechanism, context)
+:VISA name: vienable_event
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
+    visa_library().viEnableEvent(vi, event_type, mechanism, context)
+
+
+find_next
+................
+
+:Call: find_next(find_list)
+:VISA name: vifind_next
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    instrument_description = create_string_buffer(VI_FIND_BUFLEN)
+    visa_library().viFindNext(ViFindList(find_list), instrument_description)
+    return instrument_description.value
+
+
+find_resources
+................
+
+:Call: find_resources(session, regular_expression)
+:VISA name: vifind_resources
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    ensure_string_type(regular_expression)
+    find_list = ViFindList()
+    return_counter = ViUInt32()
+    instrument_description = create_string_buffer(VI_FIND_BUFLEN)
+    visa_library().viFindRsrc(session, regular_expression,
+			      byref(find_list), byref(return_counter),
+			      instrument_description)
+    return (find_list.value, return_counter.value,
+	    instrument_description.value)
+
+
+flush
+................
+
+:Call: flush(vi, mask)
+:VISA name: viflush
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viFlush(vi, mask)
+
+
+get_attribute
+................
+
+:Call: get_attribute(vi, attribute)
+:VISA name: viget_attribute
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    attribute_state = ViAttrState()
+    visa_library().viGetAttribute(vi, attribute, byref(attribute_state))
+    return attribute_state.value
+
+
+gpib_command
+................
+
+:Call: gpib_command(vi, buffer)
+:VISA name: vigpib_command
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    return_count = ViUInt32()
+    visa_library().viGpibCommand(vi, buffer, len(buffer), byref(return_count))
+    return return_count.value
+
+
+gpib_control_atn
+................
+
+:Call: gpib_control_atn(vi, mode)
+:VISA name: vigpib_control_atn
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viGpibControlATN(vi, ViUInt16(mode))
+
+
+gpib_control_ren
+................
+
+:Call: gpib_control_ren(vi, mode)
+:VISA name: vigpib_control_ren
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viGpibControlREN(vi, mode)
+
+
+gpib_pass_control
+................
+
+:Call: gpib_pass_control(vi, primary_address, secondary_address)
+:VISA name: vigpib_pass_control
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viGpibPassControl(vi, primary_address, secondary_address)
+
+
+gpib_send_ifc
+................
+
+:Call: gpib_send_ifc(vi)
+:VISA name: vigpib_send_ifc
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viGpibSendIFC(vi)
+
+
+in_8
+................
+
+:Call: in_8(vi, space, offset)
+:VISA name: viin_8
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    value_8 = ViUInt8()
+    visa_library().viIn8(vi, space, offset, byref(value_8))
+    return value_8.value
+
+
+in_16
+................
+
+:Call: in_16(vi, space, offset)
+:VISA name: viin_16
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    value_16 = ViUInt16()
+    visa_library().viIn16(vi, space, offset, byref(value_16))
+    return value_8.value
+
+
+in_32
+................
+
+:Call: in_32(vi, space, offset)
+:VISA name: viin_32
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    value_32 = ViUInt32()
+    visa_library().viIn32(vi, space, offset, byref(value_32))
+    return value_32.value
+
+
+install_handler
+................
+
+:Call: install_handler(vi, event_type, handler, user_handle)
+:VISA name: viinstall_handler
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viInstallHandler(vi, event_type, handler, user_handle)
+
+
+lock
+................
+
+:Call: lock(vi, lock_type, timeout, requested_key)
+:VISA name: vilock
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    if lock_type == VI_EXCLUSIVE_LOCK:
+	requested_key = None
+	access_key = None
+    else:
+	access_key = create_string_buffer(256)
+    visa_library().viLock(vi, lock_type, timeout, requested_key, access_key)
+    return access_key
+
+
+map_address
+................
+
+:Call: map_address(vi, map_space, map_base, map_size, access, suggested)
+:VISA name: vimap_address
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    address = ViAddr()
+    visa_library().viMapAddress(vi, map_space, map_base, map_size, access,
+				suggested, byref(address))
+    return address.value
+
+
+map_trigger
+...........
+
+Map the specified trigger source line to the specified destination line.
+
+:Call: map_trigger(vi, trigger_source, trigger_destination, mode)
+:VISA name: viMapTrigger
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `trigger_source` : integer
+        Source line from which to map.
+    `trigger_destination` : integer
+        Destination line to which to map.
+    `mode` : integer
+        Specifies the trigger mapping mode. This should always be VI_NULL.
+:Return values:
+    None.
+
+
+memory_allocation
+................
+
+:Call: memory_allocation(vi, size)
+:VISA name: vimemory_allocation
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    offset = ViBusAddress()
+    visa_library().viMemAlloc(vi, size, byref(offset))
+    return offset.value
+
+
+memory_free
+................
+
+:Call: memory_free(vi, offset)
+:VISA name: vimemory_free
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viMemFree(vi, offset)
+
+
+move
+................
+
+:Call: move(vi, source_space, source_offset, source_width, destination_space,
+	 destination_offset, destination_width, length)
+:VISA name: vimove
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viMove(vi, source_space, source_offset, source_width,
+			  destination_space, destination_offset,
+			  destination_width, length)
+
+
+move_asynchronously
+................
+
+:Call: move_asynchronously(vi, source_space, source_offset, source_width,
+			destination_space, destination_offset,
+			destination_width, length)
+:VISA name: vimove_asynchronously
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    job_id = ViJobId()
+    visa_library().viMoveAsync(vi, source_space, source_offset, source_width,
+			       destination_space, destination_offset,
+			       destination_width, length, byref(job_id))
+    return job_id
+
+
+move_in_8
+................
+
+:Call: move_in_8(vi, space, offset, length)
+:VISA name: vimove_in_8
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    buffer_8 = (ViUInt8 * length)();
+    visa_library().viMoveIn8(vi, space, offset, length, buffer_8)
+    return list(buffer_8)
+
+
+move_in_16
+................
+
+:Call: move_in_16(vi, space, offset, length)
+:VISA name: vimove_in_16
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    buffer_16 = (ViUInt16 * length)();
+    visa_library().viMoveIn16(vi, space, offset, length, buffer_16)
+    return list(buffer_16)
+
+
+move_in_32
+................
+
+:Call: move_in_32(vi, space, offset, length)
+:VISA name: vimove_in_32
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    buffer_32 = (ViUInt32 * length)();
+    visa_library().viMoveIn32(vi, space, offset, length, buffer_32)
+    return list(buffer_32)
+
+
+move_out_8
+................
+
+:Call: move_out_8(vi, space, offset, length, buffer_8)
+:VISA name: vimove_out_8
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    converted_buffer = (ViUInt8 * length)(*tuple(buffer_8))
+    visa_library().viMoveOut8(vi, space, offset, length, converted_buffer)
+
+
+move_out_16
+................
+
+:Call: move_out_16(vi, space, offset, length, buffer_16)
+:VISA name: vimove_out_16
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    converted_buffer = (ViUInt16 * length)(*tuple(buffer_16))
+    visa_library().viMoveOut16(vi, space, offset, length, converted_buffer)
+
+
+move_out_32
+................
+
+:Call: move_out_32(vi, space, offset, length, buffer_16)
+:VISA name: vimove_out_32
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    converted_buffer = (ViUInt32 * length)(*tuple(buffer_32))
+    visa_library().viMoveOut32(vi, space, offset, length, converted_buffer)
+
+
+open
+................
+
+:Call: open(session, resource_name, access_mode, timeout)
+:VISA name: viopen
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    ensure_string_type(resource_name)
+    vi = ViSession()
+    visa_library().viOpen(session, resource_name, access_mode, timeout,
+			  byref(vi))
+    return vi
+
+
+open_default_resource_manager
+................
+
+:Call: open_default_resource_manager()
+:VISA name: viopen_default_resource_manager
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    session = ViSession()
+    visa_library().viOpenDefaultRM(byref(session))
+    return session
+
+get_default_resource_manager = open_default_resource_manager
+"""A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
+
+
+out_8
+................
+
+:Call: out_8(vi, space, offset, value_8)
+:VISA name: viout_8
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viOut8(vi, space, offset, value_8)
+
+
+out_16
+................
+
+:Call: out_16(vi, space, offset, value_16)
+:VISA name: viout_16
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viOut16(vi, space, offset, value_16)
+
+
+out_32
+................
+
+:Call: out_32(vi, space, offset, value_32)
+:VISA name: viout_32
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viOut32(vi, space, offset, value_32)
+
+
+parse_resource
+................
+
+:Call: parse_resource(session, resource_name)
+:VISA name: viparse_resource
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    interface_type = ViUInt16()
+    interface_board_number = ViUInt16
+    visa_library().viParseRsrc(session, resource_name, byref(interface_type),
+			       byref(interface_board_number))
+    return (interface_type, interface_board_number)
+
+
+parse_resource_extended
+................
+
+:Call: parse_resource_extended(session, resource_name)
+:VISA name: viparse_resource_extended
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    interface_type = ViUInt16()
+    interface_board_number = ViUInt16
+    resource_class = create_string_buffer(VI_FIND_BUFLEN)
+    unaliased_expanded_resource_name = create_string_buffer(VI_FIND_BUFLEN)
+    alias_if_exists = create_string_buffer(VI_FIND_BUFLEN)
+    visa_library().viParseRsrc(session, resource_name, byref(interface_type),
+			       byref(interface_board_number), resource_class,
+			       unaliased_expanded_resource_name,
+			       alias_if_exists)
+    return (interface_type.value, interface_board_number.value,
+	    resource_class.value, unaliased_expanded_resource_name.value,
+	    alias_if_exists.value)
+
+
+peek_8
+................
+
+:Call: peek_8(vi, address)
+:VISA name: vipeek_8
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    value_8 = ViUInt8()
+    visa_library().viPeek8(vi, address, byref(value_8))
+    return value_8.value
+
+
+peek_16
+................
+
+:Call: peek_16(vi, address)
+:VISA name: vipeek_16
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    value_16 = ViUInt16()
+    visa_library().viPeek16(vi, address, byref(value_16))
+    return value_16.value
+
+
+peek_32
+................
+
+:Call: peek_32(vi, address)
+:VISA name: vipeek_32
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    value_32 = ViUInt32()
+    visa_library().viPeek32(vi, address, byref(value_32))
+    return value_32.value
+
+
+poke_8
+................
+
+:Call: poke_8(vi, address, value_8)
+:VISA name: vipoke_8
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viPoke8(vi, address, value_8)
+
+
+poke_16
+................
+
+:Call: poke_16(vi, address, value_16)
+:VISA name: vipoke_16
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viPoke16(vi, address, value_16)
+
+
+poke_32
+................
+
+:Call: poke_32(vi, address, value_32)
+:VISA name: vipoke_32
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viPoke32(vi, address, value_32)
+
+
+printf
+................
+
+:Call: printf(vi, write_format, *args)
+:VISA name: viprintf
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library(True).viPrintf(vi, write_format, *convert_argument_list(args))
+
+
+queryf
+................
+
+:Call: queryf(vi, write_format, read_format, write_args, *read_args)
+:VISA name: viqueryf
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    argument_list = convert_argument_list(read_args)
+    if write_args is None: write_args = ()
+    visa_library(True).viQueryf(vi, write_format, read_format,
+				*(write_args + argument_list))
+    return tuple([argument.value for argument in argument_list])
+
+
+read
+................
+
+:Call: read(vi, count)
+:VISA name: viread
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    buffer = create_string_buffer(count)
+    return_count = ViUInt32()
+    visa_library().viRead(vi, buffer, count, byref(return_count))
+    return buffer.raw[:return_count.value]
+
+
+read_asynchronously
+................
+
+:Call: read_asynchronously(vi, count)
+:VISA name: viread_asynchronously
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    buffer = create_string_buffer(count)
+    job_id = ViJobId()
+    visa_library().viReadAsync(vi, buffer, count, byref(job_id))
+    return (buffer.raw[:return_count.value], job_id)
+
+
+read_stb
+................
+
+:Call: read_stb(vi)
+:VISA name: viread_stb
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    status = ViUInt16()
+    visa_library().viReadSTB(vi, byref(status))
+    return status.value
+
+
+read_to_file
+................
+
+:Call: read_to_file(vi, filename, count)
+:VISA name: viread_to_file
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    return_count = ViUInt32()
+    visa_library().viReadToFile(vi, filename, count, return_count)
+    return return_count
+
+# FixMe: I have to test whether the results are really written to
+# "argument_list" rather than only to a local copy within "viScanf".
+
+
+scanf
+................
+
+:Call: scanf(vi, read_format, *args)
+:VISA name: viscanf
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    argument_list = convert_argument_list(args)
+    visa_library(True).viScanf(vi, read_format, *argument_list)
+    return tuple([argument.value for argument in argument_list])
+
+
+set_attribute
+................
+
+:Call: set_attribute(vi, attribute, attribute_state)
+:VISA name: viset_attribute
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viSetAttribute(vi, attribute, attribute_state)
+
+
+set_buffer
+................
+
+:Call: set_buffer(vi, mask, size)
+:VISA name: viset_buffer
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viSetBuf(vi, mask, size)
+
+
+sprintf
+................
+
+:Call: sprintf(vi, write_format, *args, **keyw)
+:VISA name: visprintf
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    buffer = create_string_buffer(keyw.get("buffer_length", 1024))
+    visa_library(True).viSPrintf(vi, buffer, write_format,
+				 *convert_argument_list(args))
+    return buffer.raw
+
+
+sscanf
+................
+
+:Call: sscanf(vi, buffer, read_format, *args)
+:VISA name: visscanf
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    argument_list = convert_argument_list(args)
+    visa_library(True).viSScanf(vi, buffer, read_format, *argument_list)
+    return tuple([argument.value for argument in argument_list])
+
+
+status_description
+................
+
+:Call: status_description(vi, status)
+:VISA name: vistatus_description
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    description = create_string_buffer(256)
+    visa_library().viStatusDesc(vi, status, description)
+    return description.value
+
+
+terminate
+................
+
+:Call: terminate(vi, degree, job_id)
+:VISA name: viterminate
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viTerminate(vi, degree, job_id)
+
+
+uninstall_handler
+................
+
+:Call: uninstall_handler(vi, event_type, handler, user_handle)
+:VISA name: viuninstall_handler
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viUninstallHandler(vi, event_type, handler, user_handle)
+
+
+unlock
+................
+
+:Call: unlock(vi)
+:VISA name: viunlock
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viUnlock(vi)
+
+
+unmap_address
+................
+
+:Call: unmap_address(vi)
+:VISA name: viunmap_address
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    visa_library().viUnmapAddress(vi)
+
+
+unmap_trigger
+.............
+
+:Call: unmap_trigger(vi, trigger_source, trigger_destination)
+:VISA name: viUnmapTrigger
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `trigger_sourcer` : integer
+        Source line used in previous map.
+    `trigger_destination` : integer
+        Destination line used in previous map.
+:Return values:
+    None.
+
+
+usb_control_in
+..............
+
+Request arbitrary data from the USB device on the control port.
+
+:Call: buffer = usb_control_in(vi, request_type_bitmap_field,
+		   request_id, request_value, index, length)
+:VISA name: viUsbControlIn
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `request_type_bitmap_field` : integer
+        Bitmap field for defining the USB control port request.  The bitmap
+        fields are as defined by the USB specification.  The direction bit must
+        be device-to-host.
+    `request_id` : integer
+        Request ID for this transfer.  The meaning of this value depends on
+        `request_type_bitmap_field`.
+    `request_value` : integer
+        Request value for this transfer.
+    `index` : integer
+        Specifies the interface or endpoint index number, depending on
+        `request_type_bitmap_field`.
+    `length` : integer : optional
+        Number of data in bytes to request from the device during the Data
+        stage.  If this value is not given or 0, an empty string is returned.
+:Return values:
+    `buffer` : string
+        Actual data received from the device during the Data stage.  If
+        `length` is not given or 0, an empty string is returned.
+
+
+usb_control_out
+...............
+
+Send arbitrary data to the USB device on the control port.
+
+:Call: usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
+		    index, buffer)
+:VISA name: viUsbControlOut
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `request_type_bitmap_field` : integer
+        Bitmap field for defining the USB control port request.  The bitmap
+        fields are as defined by the USB specification.  The direction bit must
+        be host-to-device.
+    `request_id` : integer
+        Request ID for this transfer.  The meaning of this value depends on
+        `request_type_bitmap_field`.
+    `request_value` : integer
+        Request value for this transfer.
+    `index` : integer
+        Specifies the interface or endpoint index number, depending on
+        `request_type_bitmap_field`.
+    `buffer` : string : optional
+        Actual data to send to the device during the Data stage.  If not given,
+        nothing is sent.
+:Return values:
+    None.
+
+
+vprintf, vqueryf, vscanf, vsprintf, vsscanf
+...........................................
+
+These variants make no sense in Python, so I realised them as mere aliases
+(just drop the "v").
+
+
+vxi_command_query
+................
+
+:Call: vxi_command_query(vi, mode, command)
+:VISA name: vivxi_command_query
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    response = ViUInt32()
+    visa_library().viVxiCommandQuery(vi, mode, command, byref(response))
+    return response.value
+
+
+wait_on_event
+................
+
+:Call: wait_on_event(vi, in_event_type, timeout)
+:VISA name: viwait_on_event
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    out_event_type = ViEventType()
+    out_context = ViEvent()
+    visa_library().viWaitOnEvent(vi, in_event_type, timeout,
+				 byref(out_event_type), byref(out_context))
+    return (out_event_type, out_context)
+
+
+write
+................
+
+:Call: write(vi, buffer)
+:VISA name: viwrite
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    return_count = ViUInt32()
+    visa_library().viWrite(vi, buffer, len(buffer), byref(return_count))
+    return return_count.value
+
+
+write_asynchronously
+................
+
+:Call: write_asynchronously(vi, buffer)
+:VISA name: viwrite_asynchronously
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    job_id = ViJobId()
+    visa_library().viWriteAsync(vi, buffer, len(buffer), byref(job_id))
+    return job_id
+
+
+write_from_file
+................
+
+:Call: write_from_file(vi, filename, count)
+:VISA name: viwrite_from_file
+:Parameters:
+    `vi` : ViSession
+        Unique logical identifier to a session.
+    `` : integer
+:Return values:
+    None.
+
+    return_count = ViUInt32()
+    visa_library().viWriteFromFile(vi, filename, count, return_count)
+    return return_count
+
+
+..  LocalWords:  rst british vpp PyVISA ies dll
