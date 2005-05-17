@@ -180,7 +180,7 @@ class VisaLibrary(Singleton):
 	self.__lib.viBufWrite.argtypes = \
 	    [ViSession, ViBuf, ViUInt32, ViPUInt32]
 	self.__lib.viClear.argtypes = [ViSession]
-	self.__lib.viClose.argtypes = [ViSession]
+	self.__lib.viClose.argtypes = [ViObject]
 	self.__lib.viDisableEvent.argtypes = [ViSession, ViEventType, ViUInt16]
 	self.__lib.viDiscardEvents.argtypes = [ViSession, ViEventType,
 					       ViUInt16]
@@ -190,7 +190,7 @@ class VisaLibrary(Singleton):
 	self.__lib.viFindRsrc.argtypes = [ViSession, ViString, ViPFindList,
 					  ViPUInt32, ViAChar]
 	self.__lib.viFlush.argtypes = [ViSession, ViUInt16]
-	self.__lib.viGetAttribute.argtypes = [ViSession, ViAttr, c_void_p]
+	self.__lib.viGetAttribute.argtypes = [ViObject, ViAttr, c_void_p]
 	self.__lib.viGpibCommand.argtypes = [ViSession, ViBuf, ViUInt32,
 					     ViPUInt32]
 	self.__lib.viGpibControlATN.argtypes = [ViSession, ViUInt16]
@@ -261,11 +261,11 @@ class VisaLibrary(Singleton):
 	self.__lib.viReadToFile.argtypes = [ViSession, ViString, ViUInt32,
 					    ViPUInt32]
 	self.__cdecl_lib.viScanf.argtypes = [ViSession, ViString]
-	self.__lib.viSetAttribute.argtypes = [ViSession, ViAttr, ViAttrState]
+	self.__lib.viSetAttribute.argtypes = [ViObject, ViAttr, ViAttrState]
 	self.__lib.viSetBuf.argtypes = [ViSession, ViUInt16, ViUInt32]
 	self.__cdecl_lib.viSPrintf.argtypes = [ViSession, ViPBuf, ViString]
 	self.__cdecl_lib.viSScanf.argtypes = [ViSession, ViBuf, ViString]
-	self.__lib.viStatusDesc.argtypes = [ViSession, ViStatus, ViAChar]
+	self.__lib.viStatusDesc.argtypes = [ViObject, ViStatus, ViAChar]
 	self.__lib.viTerminate.argtypes = [ViSession, ViUInt16, ViJobId]
 	self.__lib.viUninstallHandler.argtypes = [ViSession, ViEventType,
 						  ViHndlr, ViAddr]
@@ -278,7 +278,7 @@ class VisaLibrary(Singleton):
 	self.__lib.viUsbControlOut.argtypes = [ViSession, ViInt16, ViInt16,
 					       ViUInt16, ViUInt16, ViUInt16,
 					       ViPBuf]
-	# The folloowing "V" routines are *not* implemented in pyvisa, and will
+	# The following "V" routines are *not* implemented in pyvisa, and will
 	# never be.  They are listed here to implement a poor man's alert
 	# mechanism.
 	self.__lib.viVPrintf.argtypes = \
@@ -400,7 +400,7 @@ def buffer_read(vi, count):
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
     visa_library().viBufRead(vi, buffer, count, byref(return_count))
-    return (buffer.raw[:return_count.value], return_count.value)
+    return buffer.raw[:return_count.value]
 
 def buffer_write(vi, buffer):
     return_count = ViUInt32()
@@ -419,13 +419,13 @@ def disable_event(vi, event_type, mechanism):
 def discard_events(vi, event_type, mechanism):
     visa_library().viDiscardEvents(vi, event_type, mechanism)
 
-def enable_event(vi, event_type, mechanism, context):
+def enable_event(vi, event_type, mechanism, context = VI_NULL):
     context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
     visa_library().viEnableEvent(vi, event_type, mechanism, context)
 
 def find_next(find_list):
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
-    visa_library().viFindNext(ViFindList(find_list), instrument_description)
+    visa_library().viFindNext(find_list, instrument_description)
     return instrument_description.value
 
 def find_resources(session, regular_expression):
@@ -436,8 +436,7 @@ def find_resources(session, regular_expression):
     visa_library().viFindRsrc(session, regular_expression,
 			      byref(find_list), byref(return_counter),
 			      instrument_description)
-    return (find_list.value, return_counter.value,
-	    instrument_description.value)
+    return (find_list, return_counter.value, instrument_description.value)
 
 def flush(vi, mask):
     visa_library().viFlush(vi, mask)
@@ -479,10 +478,10 @@ def in_32(vi, space, offset):
     visa_library().viIn32(vi, space, offset, byref(value_32))
     return value_32.value
 
-def install_handler(vi, event_type, handler, user_handle):
+def install_handler(vi, event_type, handler, user_handle = 0):
     visa_library().viInstallHandler(vi, event_type, handler, user_handle)
 
-def lock(vi, lock_type, timeout, requested_key):
+def lock(vi, lock_type, timeout, requested_key = None):
     if lock_type == VI_EXCLUSIVE_LOCK:
 	requested_key = None
 	access_key = None
@@ -550,7 +549,8 @@ def move_out_32(vi, space, offset, length, buffer_16):
     converted_buffer = (ViUInt32 * length)(*tuple(buffer_32))
     visa_library().viMoveOut32(vi, space, offset, length, converted_buffer)
 
-def open(session, resource_name, access_mode, timeout):
+def open(session, resource_name, access_mode = VI_NO_LOCK, timeout =
+	 VI_TMO_IMMEDIATE):
     ensure_string_type(resource_name)
     vi = ViSession()
     visa_library().viOpen(session, resource_name, access_mode, timeout,
@@ -576,14 +576,14 @@ def out_32(vi, space, offset, value_32):
 
 def parse_resource(session, resource_name):
     interface_type = ViUInt16()
-    interface_board_number = ViUInt16
+    interface_board_number = ViUInt16()
     visa_library().viParseRsrc(session, resource_name, byref(interface_type),
 			       byref(interface_board_number))
-    return (interface_type, interface_board_number)
+    return (interface_type.value, interface_board_number.value)
 
 def parse_resource_extended(session, resource_name):
     interface_type = ViUInt16()
-    interface_board_number = ViUInt16
+    interface_board_number = ViUInt16()
     resource_class = create_string_buffer(VI_FIND_BUFLEN)
     unaliased_expanded_resource_name = create_string_buffer(VI_FIND_BUFLEN)
     alias_if_exists = create_string_buffer(VI_FIND_BUFLEN)
@@ -633,7 +633,7 @@ def read(vi, count):
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
     visa_library().viRead(vi, buffer, count, byref(return_count))
-    return (buffer.raw[:return_count.value], return_count.value)
+    return buffer.raw[:return_count.value]
 
 def read_asynchronously(vi, count):
     buffer = create_string_buffer(count)
@@ -684,7 +684,7 @@ def status_description(vi, status):
 def terminate(vi, degree, job_id):
     visa_library().viTerminate(vi, degree, job_id)
 
-def uninstall_handler(vi, event_type, handler, user_handle):
+def uninstall_handler(vi, event_type, handler, user_handle = 0):
     visa_library().viUninstallHandler(vi, event_type, handler, user_handle)
 
 def unlock(vi):
@@ -696,13 +696,14 @@ def unmap_address(vi):
 def unmap_trigger(vi, trigger_source, trigger_destination):
     visa_library().viUnmapTrigger(vi, trigger_source, trigger_destination)
 
-def usb_control_in(vi, bm_request_type, b_request, w_value, w_index, w_length):
-    buffer = create_string_buffer(w_length)
+def usb_control_in(vi, request_type_bitmap_field, request_id, request_value,
+		   index, length = 0):
+    buffer = create_string_buffer(length)
     return_count = ViUInt16()
-    visa_library().viUsbControlIn(vi, bm_request_type, b_request, w_value,
-				  w_index, w_length, buffer,
+    visa_library().viUsbControlIn(vi, request_type_bitmap_field, request_id,
+				  request_value, index, length, buffer,
 				  byref(return_count))
-    return (buffer.raw[:return_count.value], return_count.value)
+    return buffer.raw[:return_count.value]
 
 def usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
 		    index, buffer = ""):
@@ -729,7 +730,7 @@ def wait_on_event(vi, in_event_type, timeout):
     out_context = ViEvent()
     visa_library().viWaitOnEvent(vi, in_event_type, timeout,
 				 byref(out_event_type), byref(out_context))
-    return (out_event_type, out_context)
+    return (out_event_type.value, out_context)
 
 def write(vi, buffer):
     return_count = ViUInt32()
