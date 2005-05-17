@@ -1,11 +1,33 @@
 .. -*- mode: rst; coding: iso-8859-1; ispell-local-dictionary: "british"; -*-
+.. 
+..   vpp43.txt - VISA VPP-4.3.2 functions documentation
+.. 
+..   Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
+..                    Torsten Bronger <bronger@physik.rwth-aachen.de>.
+.. 
+..   This file is part of pyvisa.
+.. 
+..   pyvisa is free software; you can redistribute it and/or modify it under
+..   the terms of the GNU General Public License as published by the Free
+..   Software Foundation; either version 2 of the License, or (at your option)
+..   any later version.
+.. 
+..   pyvisa is distributed in the hope that it will be useful, but WITHOUT ANY
+..   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+..   FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+..   details.
+.. 
+..   You should have received a copy of the GNU General Public License along
+..   with pyvisa; if not, write to the Free Software Foundation, Inc., 59
+..   Temple Place, Suite 330, Boston, MA 02111-1307 USA
+.. 
 
 =========================================
 The VISA low-level implementation
 =========================================
 
-:Date: 2005-05-16
-:Version: 1
+:Date: $Date$
+:Version: $Revision$
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
 :Abstract: This document covers the ``vpp43.py`` module, which is part of the
   PyVISA_ package.  This module implements thin wrappers around all functions
@@ -107,16 +129,19 @@ Asserts the specified device interrupt or signal.
 assert_trigger
 ..............
 
+Assert software or hardware trigger.
+
 :Call: assert_trigger(vi, protocol)
-:VISA name: viassert_trigger
+:VISA name: viAssertTrigger
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `protocol` : integer
+        Trigger protocol to use during assertion.  Valid values are:
+	``VI_TRIG_PROT_DEFAULT``, ``VI_TRIG_PROT_ON``, ``VI_TRIG_PROT_OFF``,
+	and ``VI_TRIG_PROT_SYNC``.
 :Return values:
     None.
-
-    visa_library().viAssertTrigger(vi, protocol)
 
 
 assert_utility_signal
@@ -175,16 +200,15 @@ buffer_write
 clear
 .....
 
+Clear a device.
+
 :Call: clear(vi)
-:VISA name: viclear
+:VISA name: viClear
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
 :Return values:
     None.
-
-    visa_library().viClear(vi)
 
 
 close
@@ -280,7 +304,7 @@ find_next
 :Parameters:
     `find_list` : ViFindList
         Describes a find list.  This parameter must be created by
-	`find_resource`_.
+	`find_resources`_.
 :Return values:
     `instrument_description` : string
         Returns a string identifying the location of a device. Strings can then
@@ -314,16 +338,18 @@ find_resources
 flush
 .....
 
+Manually flush the specified buffers associated with formatted I/O operations
+and/or serial communication.
+
 :Call: flush(vi, mask)
-:VISA name: viflush
+:VISA name: viFlush
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `mask` : integer
+        Specifies the action to be taken with flushing the buffer.
 :Return values:
     None.
-
-    visa_library().viFlush(vi, mask)
 
 
 get_attribute
@@ -985,16 +1011,20 @@ poke_32
 printf
 ......
 
-:Call: printf(vi, write_format, *args)
-:VISA name: viprintf
+Convert, format, and send the parameters ``...`` to the device as specified by
+the format string.
+
+:Call: printf(vi, write_format, ...)
+:VISA name: viPrintf
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `write_format` : string
+        String describing the format for arguments.
+    `...` : integers, floats, or strings
+        Arguments sent to the device according to `write_format`.
 :Return values:
     None.
-
-    visa_library(True).viPrintf(vi, write_format, *convert_argument_list(args))
 
 
 queryf
@@ -1056,18 +1086,16 @@ Read data from device asynchronously.
 read_stb
 ........
 
-:Call: read_stb(vi)
-:VISA name: viread_stb
+Read a status byte of the service request.
+
+:Call: status = read_stb(vi)
+:VISA name: viReadSTB
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
 :Return values:
-    None.
-
-    status = ViUInt16()
-    visa_library().viReadSTB(vi, byref(status))
-    return status.value
+    `status` : integer
+        Service request status byte.
 
 
 read_to_file
@@ -1130,16 +1158,19 @@ Set the state of an attribute.
 set_buffer
 ..........
 
+Set the size for the formatted I/O and/or serial communication buffer(s).
+
 :Call: set_buffer(vi, mask, size)
-:VISA name: viset_buffer
+:VISA name: viSetBuf
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `mask` : integer
+        Specifies the type of buffer.
+    `size` : integer
+        The size to be set for the specified buffer(s).
 :Return values:
     None.
-
-    visa_library().viSetBuf(vi, mask, size)
 
 
 sprintf
@@ -1391,52 +1422,54 @@ Wait for an occurrence of the specified event for a given session.
 write
 .....
 
-:Call: write(vi, buffer)
-:VISA name: viwrite
+Write data to device synchronously.
+
+:Call: return_count = write(vi, buffer)
+:VISA name: viWrite
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `buffer` : string
+        Contains the data block to be sent to the device.
 :Return values:
-    None.
-
-    return_count = ViUInt32()
-    visa_library().viWrite(vi, buffer, len(buffer), byref(return_count))
-    return return_count.value
+    `return_count` : integer
+        The number of bytes actually transferred.
 
 
 write_asynchronously
 ....................
 
-:Call: write_asynchronously(vi, buffer)
-:VISA name: viwrite_asynchronously
+Write data to device asynchronously.
+
+:Call: job_id = write_asynchronously(vi, buffer)
+:VISA name: viWriteAsync
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `buffer` : string
+        Contains the data block to be sent to the device.
 :Return values:
-    None.
-
-    job_id = ViJobId()
-    visa_library().viWriteAsync(vi, buffer, len(buffer), byref(job_id))
-    return job_id
+    `job_id` : ViJobId
+        The job identifier of this asynchronous write operation.
 
 
 write_from_file
 ...............
 
-:Call: write_from_file(vi, filename, count)
-:VISA name: viwrite_from_file
+Take data from a file and write it out synchronously.
+
+:Call: return_count = write_from_file(vi, filename, count)
+:VISA name: viWriteFromFile
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `filename` : string
+        Name of file from which data will be read.
+    `count` : integer
+        Maximal number of bytes to be written.
 :Return values:
-    None.
-
-    return_count = ViUInt32()
-    visa_library().viWriteFromFile(vi, filename, count, return_count)
-    return return_count
+    `return_count` : integer
+        Number of bytes actually transferred.
 
 
 ..  LocalWords:  rst british vpp PyVISA ies dll
