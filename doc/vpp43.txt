@@ -81,8 +81,8 @@ For Windows, PyVISA expects a file called ``visa32.dll`` in the PATH.  For
 Linux, it's the file ``/usr/local/vxipnp/linux/bin/libvisa.so.7`` by default.
 
 
-The VISA functions
-=======================
+The PyVISA functions
+=========================
 
 
 assert_interrupt_signal
@@ -188,64 +188,88 @@ clear
 
 
 close
-................
+.....
+
+Close the specified session, event, or find list.
 
 :Call: close(vi)
-:VISA name: viclose
+:VISA name: viClose
 :Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
+    `vi` : ViSession, ViEvent, or ViFindList
+        Unique logical identifier to a session, event, or find list.
 :Return values:
     None.
-
-    visa_library().viClose(vi)
 
 
 disable_event
-................
+.............
+
+Disable notification of an event type by the specified mechanisms.
 
 :Call: disable_event(vi, event_type, mechanism)
-:VISA name: vidisable_event
+:VISA name: viDisableEvent
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `event_type` : integer
+        Logical event identifier.
+    `mechanism` : integer
+        Specifies event handling mechanisms to be disabled. The queuing
+	mechanism is disabled by specifying ``VI_QUEUE``, and the callback
+	mechanism is disabled by specifying ``VI_HNDLR`` or
+	``VI_SUSPEND_HNDLR``. It is possible to disable both mechanisms
+	simultaneously by specifying ``VI_ALL_MECH``.
 :Return values:
     None.
 
-    visa_library().viDisableEvent(vi, event_type, mechanism)
-
 
 discard_events
-................
+..............
+
+Discard event occurrences for specified event types and mechanisms in a
+session.
 
 :Call: discard_events(vi, event_type, mechanism)
 :VISA name: vidiscard_events
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `event_type` : integer
+        Logical event identifier.
+    `mechanism` : integer
+        Specifies the mechanisms for which the events are to be discarded.  The
+	``VI_QUEUE`` value is specified for the queuing mechanism and the
+	``VI_SUSPEND_HNDLR`` value is specified for the pending events in the
+	callback mechanism.  It is possible to specify both mechanisms
+	simultaneously by specifying ``VI_ALL_MECH``.
 :Return values:
     None.
-
-    visa_library().viDiscardEvents(vi, event_type, mechanism)
 
 
 enable_event
-................
+............
+
+Enable notification of a specified event.
 
 :Call: enable_event(vi, event_type, mechanism, context)
-:VISA name: vienable_event
+:VISA name: viEnableEvent
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `event_type` : integer
+        Logical event identifier.
+    `mechanism` : integer
+        Specifies event handling mechanisms to be enabled.  The queuing
+	mechanism is enabled by specifying ``VI_QUEUE``, and the callback
+	mechanism is enabled by specifying ``VI_HNDLR`` or
+	``VI_SUSPEND_HNDLR``.  It is possible to enable both mechanisms
+	simultaneously by specifying bit-wise "or" of ``VI_QUEUE`` and one of
+	the two mode values for the callback mechanism.
+    `context` : integer : optional
+        According to the VISA specification, this must be ``Vi_NULL`` always.
+	(This is also the default value, of course.)
 :Return values:
     None.
-
-    context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
-    visa_library().viEnableEvent(vi, event_type, mechanism, context)
 
 
 find_next
@@ -304,20 +328,23 @@ flush
 
 
 get_attribute
-................
+.............
 
-:Call: get_attribute(vi, attribute)
-:VISA name: viget_attribute
+Retrieve the state of an attribute.
+
+:Call: attribute_state = get_attribute(vi, attribute)
+:VISA name: viGetAttribute
 :Parameters:
-    `vi` : ViSession
+    `vi` : ViSession, ViEvent, or ViFindList
         Unique logical identifier to a session.
-    `` : integer
+    `attribute` : integer
+        Session, event, or find list attribute for which the state query is
+	made.
 :Return values:
-    None.
-
-    attribute_state = ViAttrState()
-    visa_library().viGetAttribute(vi, attribute, byref(attribute_state))
-    return attribute_state.value
+    `attribute_state` : integer
+        The state of the queried attribute for a specified resource. The
+	interpretation of the returned value is defined by the individual
+	resource.
 
 
 gpib_command
@@ -449,43 +476,61 @@ in_32
 
 
 install_handler
-................
+...............
+
+Install handlers for event callbacks.
 
 :Call: install_handler(vi, event_type, handler, user_handle)
-:VISA name: viinstall_handler
+:VISA name: viInstallHandler
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `event_type` : integer
+        Logical event identifier.
+    `handler` : ViHndlr
+        Interpreted as a valid reference to a handler to be installed by a
+	client application.
+    `user_handle` : integer : optional
+        A value specified by an application that can be used for identifying
+	handlers uniquely for an event type.  It defaults to 0.
 :Return values:
     None.
-
-    visa_library().viInstallHandler(vi, event_type, handler, user_handle)
 
 
 lock
-................
+....
 
-:Call: lock(vi, lock_type, timeout, requested_key)
-:VISA name: vilock
+Establish an access mode to the specified resource.
+
+:Call: access_key = lock(vi, lock_type, timeout, requested_key)
+:VISA name: viLock
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `lock_type` : integer
+        Specifies the type of lock requested, which can be either
+	``VI_EXCLUSIVE_LOCK`` or ``VI_SHARED_LOCK``.
+    `timeout` : integer
+        Absolute time period in milliseconds that a resource waits to get
+	unlocked by the locking session before returning this operation with an
+	error.
+    `requested_key` : string : optional
+        This parameter is not used if `lock_type` is ``VI_EXCLUSIVE_LOCK``
+	(exclusive locks).  When trying to lock the resource as
+	``VI_SHARED_LOCK`` (shared), you can either omit it so that VISA
+	generates an `access_key` for the session, or you can suggest an
+	`access_key` to use for the shared lock.
 :Return values:
-    None.
-
-    if lock_type == VI_EXCLUSIVE_LOCK:
-	requested_key = None
-	access_key = None
-    else:
-	access_key = create_string_buffer(256)
-    visa_library().viLock(vi, lock_type, timeout, requested_key, access_key)
-    return access_key
+    `access_key` : string : optional
+        This value is ``None`` if `lock_type` is ``VI_EXCLUSIVE_LOCK``
+	(exclusive locks).  When trying to lock the resource as
+	``VI_SHARED_LOCK`` (shared), the function returns a unique access key
+	for the lock if the operation succeeds.  This `access_key` can then be
+	passed to other sessions to share the lock.
 
 
 map_address
-................
+...........
 
 :Call: map_address(vi, map_space, map_base, map_size, access, suggested)
 :VISA name: vimap_address
@@ -693,42 +738,56 @@ move_out_32
 
 
 open
-................
+....
+
+Open a session to the specified device.
 
 :Call: open(session, resource_name, access_mode, timeout)
-:VISA name: viopen
+:VISA name: viOpen
 :Parameters:
     `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
+        Resource Manager session (should always be the Default Resource Manager
+	for VISA returned from `open_default_resource_manager`_).
+    `resource_name` : string
+        Unique symbolic name of a resource.
+    `access_mode` : integer : optional
+        Defaults to ``VI_NO_LOCK``.  Specifies the modes by which the resource
+	is to be accessed.  The value ``VI_EXCLUSIVE_LOCK`` is used to acquire
+	an exclusive lock immediately upon opening a session; if a lock cannot
+	be acquired, the session is closed and an error is returned.  The value
+	``VI_LOAD_CONFIG`` is used to configure attributes to values specified
+	by some external configuration utility; if this value is not used, the
+	session uses the default values provided by this
+	specification.  Multiple access modes can be used simultaneously by
+	specifying a "bitwise OR" of the above values.
+    `timeout` : integer : optional
+        If the `access_mode` parameter requests a lock, then this parameter
+	specifies the absolute time period in milliseconds that the resource
+	waits to get unlocked before this operation returns an error;
+	otherwise, this parameter is ignored.  Defaults to
+	``VI_TMO_IMMEDIATE``.
 :Return values:
-    None.
-
-    ensure_string_type(resource_name)
-    vi = ViSession()
-    visa_library().viOpen(session, resource_name, access_mode, timeout,
-			  byref(vi))
-    return vi
+    `vi` : ViSession
+        Unique logical identifier reference to a session.
 
 
 open_default_resource_manager
-................
+.............................
 
-:Call: open_default_resource_manager()
-:VISA name: viopen_default_resource_manager
+Return a session to the Default Resource Manager resource.
+
+:Call: session = open_default_resource_manager()
+:VISA name: viOpenDefaultRM
 :Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
     None.
+:Return values:
+    `session` : ViSession
+        Unique logical identifier to a Default Resource Manager session.
 
-    session = ViSession()
-    visa_library().viOpenDefaultRM(byref(session))
-    return session
+get_default_resource_manager
+............................
 
-get_default_resource_manager = open_default_resource_manager
-"""A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
+This is a deprecated alias for `open_default_resource_manager`_.
 
 
 out_8
@@ -1042,18 +1101,24 @@ scanf
 
 
 set_attribute
-................
+.............
+
+Set the state of an attribute.
 
 :Call: set_attribute(vi, attribute, attribute_state)
-:VISA name: viset_attribute
+:VISA name: viSetAttribute
 :Parameters:
-    `vi` : ViSession
+    `vi` : ViSession, ViEvent, or ViFindList
         Unique logical identifier to a session.
-    `` : integer
+    `attribute` : integer
+        Session, event, or find list attribute for which the state is
+	modified.
+    `attribute_state` : integer
+        The state of the attribute to be set for the specified resource.  The
+	interpretation of the individual attribute value is defined by the
+	resource.
 :Return values:
     None.
-
-    visa_library().viSetAttribute(vi, attribute, attribute_state)
 
 
 set_buffer
@@ -1107,65 +1172,75 @@ sscanf
 
 
 status_description
-................
+..................
 
-:Call: status_description(vi, status)
-:VISA name: vistatus_description
+Return a user-readable description of the status code passed to the operation.
+
+:Call: description = status_description(vi, status)
+:VISA name: viStatusDesc
 :Parameters:
-    `vi` : ViSession
+    `vi` : ViSession, ViEvent, or ViFindList
         Unique logical identifier to a session.
-    `` : integer
+    `status` : integer
+        Status code to interpret.
 :Return values:
-    None.
-
-    description = create_string_buffer(256)
-    visa_library().viStatusDesc(vi, status, description)
-    return description.value
+    `description` : string
+        The user-readable string interpretation of the status code passed to
+	the operation.
 
 
 terminate
-................
+.........
+
+Request a VISA session to terminate normal execution of an operation.
 
 :Call: terminate(vi, degree, job_id)
 :VISA name: viterminate
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `degree` : integer
+        ``VI_NULL``
+    `job_id` : ViJobId
+        Specifies an operation identifier.
 :Return values:
     None.
-
-    visa_library().viTerminate(vi, degree, job_id)
 
 
 uninstall_handler
-................
+.................
+
+Uninstall handlers for events.
 
 :Call: uninstall_handler(vi, event_type, handler, user_handle)
-:VISA name: viuninstall_handler
+:VISA name: viUninstallHandler
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `event_type` : integer
+        Logical event identifier.
+    `handler` : ViHndlr
+        Interpreted as a valid reference to a handler to be uninstalled by a
+	client application.
+    `user_handle` : integer : optional
+        A value specified by an application that can be used for identifying
+	handlers uniquely in a session for an event.
 :Return values:
     None.
-
-    visa_library().viUninstallHandler(vi, event_type, handler, user_handle)
 
 
 unlock
-................
+......
+
+Relinquish a lock for the specified resource.
 
 :Call: unlock(vi)
-:VISA name: viunlock
+:VISA name: viUnlock
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
 :Return values:
     None.
-
-    visa_library().viUnlock(vi)
 
 
 unmap_address
@@ -1286,26 +1361,29 @@ vxi_command_query
 
 
 wait_on_event
-................
+.............
 
-:Call: wait_on_event(vi, in_event_type, timeout)
-:VISA name: viwait_on_event
+Wait for an occurrence of the specified event for a given session.
+
+:Call: out_event_type, out_context = wait_on_event(vi, in_event_type, timeout)
+:VISA name: viWaitOnEvent
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `in_event_type` : integer
+        Logical identifier of the event(s) to wait for.
+    `timeout` : integer
+        Absolute time period in milliseconds that the resource shall wait for a
+	specified event to occur before returning the time elapsed error.
 :Return values:
-    None.
-
-    out_event_type = ViEventType()
-    out_context = ViEvent()
-    visa_library().viWaitOnEvent(vi, in_event_type, timeout,
-				 byref(out_event_type), byref(out_context))
-    return (out_event_type, out_context)
+    `out_event_type` : integer
+        Logical identifier of the event actually received.
+    `out_context` : ViEvent
+        A handle specifying the unique occurrence of an event.
 
 
 write
-................
+.....
 
 :Call: write(vi, buffer)
 :VISA name: viwrite
