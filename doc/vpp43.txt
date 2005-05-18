@@ -5,20 +5,20 @@
 ..   Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
 ..                    Torsten Bronger <bronger@physik.rwth-aachen.de>.
 .. 
-..   This file is part of pyvisa.
+..   This file is part of PyVISA.
 .. 
-..   pyvisa is free software; you can redistribute it and/or modify it under
+..   PyVISA is free software; you can redistribute it and/or modify it under
 ..   the terms of the GNU General Public License as published by the Free
 ..   Software Foundation; either version 2 of the License, or (at your option)
 ..   any later version.
 .. 
-..   pyvisa is distributed in the hope that it will be useful, but WITHOUT ANY
+..   PyVISA is distributed in the hope that it will be useful, but WITHOUT ANY
 ..   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 ..   FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 ..   details.
 .. 
 ..   You should have received a copy of the GNU General Public License along
-..   with pyvisa; if not, write to the Free Software Foundation, Inc., 59
+..   with PyVISA; if not, write to the Free Software Foundation, Inc., 59
 ..   Temple Place, Suite 330, Boston, MA 02111-1307 USA
 .. 
 
@@ -257,7 +257,7 @@ Discard event occurrences for specified event types and mechanisms in a
 session.
 
 :Call: discard_events(vi, event_type, mechanism)
-:VISA name: vidiscard_events
+:VISA name: viDiscardEvents
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
@@ -303,7 +303,7 @@ find_next
 .........
 
 :Call: instrument_description = find_next(find_list)
-:VISA name: vifind_next
+:VISA name: viFindNext
 :Parameters:
     `find_list` : ViFindList
         Describes a find list.  This parameter must be created by
@@ -1036,7 +1036,7 @@ read_to_file
 Read data synchronously, and store the transferred data in a file.
 
 :Call: return_count = read_to_file(vi, filename, count)
-:VISA name: viread_to_file
+:VISA name: viReadToFile
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
@@ -1217,7 +1217,7 @@ terminate
 Request a VISA session to terminate normal execution of an operation.
 
 :Call: terminate(vi, degree, job_id)
-:VISA name: viterminate
+:VISA name: viTerminate
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
@@ -1290,7 +1290,7 @@ destination line.
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `trigger_sourcer` : integer
+    `trigger_source` : integer
         Source line used in previous map.
     `trigger_destination` : integer
         Destination line used in previous map.
@@ -1463,4 +1463,20 @@ Take data from a file and write it out synchronously.
         Number of bytes actually transferred.
 
 
-..  LocalWords:  rst british vpp PyVISA ies dll
+..  LocalWords:  rst british vpp PyVISA ies dll Gregor Thalhammer ViSession atn
+..  LocalWords:  viAssertIntrSignal viAssertTrigger PROT viAssertUtilSignal ren
+..  LocalWords:  viBufRead viBufWrite viClear viClose ViEvent ViFindList HNDLR
+..  LocalWords:  viDisableEvent viDiscardEvents viEnableEvent viFindNext gpib
+..  LocalWords:  viFindRsrc viFlush viGetAttribute viGpibCommand ADDR ifc viIn
+..  LocalWords:  viGpibControlATN viGpibControlREN viGpibPassControl ViHndlr
+..  LocalWords:  viGpibSendIFC viInstallHandler viLock viMapAddress ViAddr TMO
+..  LocalWords:  ViBusAddress viMapTrigger viMemAlloc viMemFree viMove ViJobId
+..  LocalWords:  viMoveAsync viMoveIn viMoveOut viOpen viOpenDefaultRM viOut
+..  LocalWords:  viParseRsrc unaliased viParseRsrcEx INSTR viPeek vipoke printf
+..  LocalWords:  scanf viPrintf queryf viQueryf viRead viReadAsync stb viScanf
+..  LocalWords:  viReadSTB viReadToFile viSetAttribute viSetBuf sprintf sscanf
+..  LocalWords:  viSPrintf viSScanf viStatusDesc viTerminate viUninstallHandler
+..  LocalWords:  viUnlock viUnmapAddress viUnmapTrigger usb viUsbControlIn vxi
+..  LocalWords:  viUsbControlOut vprintf vqueryf vscanf vsprintf vsscanf
+..  LocalWords:  viVxiCommandQuery viWaitOnEvent viWrite viWriteAsync
+..  LocalWords:  viWriteFromFile
