@@ -26,9 +26,9 @@
 The VISA low-level implementation
 =========================================
 
---------------------------
+---------------------------------
 Part of the PyVISA package
---------------------------
+---------------------------------
 
 :Date: $Date$
 :Version: $Revision$
@@ -43,7 +43,7 @@ Part of the PyVISA package
 
 
 Overview
-===========
+========
 
 The programming of measurement instruments can be real pain.  There are many
 different protocols, sent over many different interface and bus systems.  For
@@ -65,7 +65,7 @@ capable of calling functions in a DLL.  Python is such a language.
 
 
 VISA and Python
-====================
+===============
 
 Python has a couple of features that make it very interesting for measurement
 controlling:
@@ -94,8 +94,42 @@ Python module has been created called ``visa.py``.  In case of doubt, use
 people who need full control or the official VISA functions for some reason.
 
 
+About the vpp43 module
+......................
+
+This module ``vpp43`` is a cautious yet thorough adaption of the VISA
+specification for Python.  The "textual languages" VISA specification can't be
+implemented as is because Python is rather different from C and Visual Basic,
+most notably because of lacking call-by-reference.  The second important
+difference are strings: In C they are null-terminated whereas Python doesn't
+have this constraint.
+
+The slightly odd name ``vpp43`` for this module derives from the necessity to
+make (name)space for the ``visa`` module that is supposed to realise the actual
+high-level VISA access in Python.  The `VXIplug&play Systems Alliance`_ used to
+maintain the VISA specifications, and, although today the `IVI foundation`_ is
+responsible for this task, the files are still called ``vpp43.doc`` etc.  So I
+thought ``vpp43`` was a catchy name.
+
+.. _`VXIplug&play Systems Alliance`: http://www.vxipnp.org/
+.. _`IVI foundation`: http://ivifoundation.org
+
+You may wonder why I did choose new names for all routines.  I did so because
+Python has its own naming guidelines, and because it shows that the routines
+had to be adapted.  However, I didn't change them really: Every routine is a
+1:1 counterpart.  By calling them from C, you could even create a C-based VISA
+implementation with the original function signatures and semantics.  Moreover,
+the new names are mere expansions of the original ones.
+
+
+Diagnostics
+===========
+
+FixMe: Yet to be written.
+
+
 Prerequisites
-================
+=============
 
 The PyVISA package doesn't include a VISA library itself.  You have to download
 it from one of the VISA vendors, e.g. `National Instruments' VISA pages`_.
@@ -103,12 +137,42 @@ Please install it properly before you proceed.
 
 .. _`National Instruments' VISA pages`: http://ni.com/visa/
 
-For Windows, PyVISA expects a file called ``visa32.dll`` in the PATH.  For
-Linux, it's the file ``/usr/local/vxipnp/linux/bin/libvisa.so.7`` by default.
+
+Setting up the module
+=====================
+
+Windows
+.......
+
+PyVISA expects a file called ``visa32.dll`` in the PATH.  You must assure that
+this is the case.  For example, on my system you find this file in
+``C:\WINNT\system32\``.  Either copy it there or expand your PATH.
 
 
-The PyVISA functions
-==========================
+Linux
+.....
+
+For Linux, the default VISA library is
+``/usr/local/vxipnp/linux/bin/libvisa.so.7``.  However, here you have the
+choice.  If it's called differently on your system, or is placed in another
+directory, you can tell PyVISA so by saying::
+
+    from vpp43 import *
+
+    visa_library.load_library("/usr/local/visa/libvisa.so.7")
+
+Of course, you must set the path according to your installation.  You must do
+this before any VISA function call.
+
+
+The PyVISA function reference
+=============================
+
+Please note that all descriptions given in this reference serve mostly as
+reminder.  For real descriptions consult a `VISA specification`_.  However,
+whenever there are PyVISA-specific semantics, they are listed here, too.
+
+.. _`VISA specification`: http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
 
 
 assert_interrupt_signal
@@ -1477,6 +1541,6 @@ Take data from a file and write it out synchronously.
 ..  LocalWords:  viReadSTB viReadToFile viSetAttribute viSetBuf sprintf sscanf
 ..  LocalWords:  viSPrintf viSScanf viStatusDesc viTerminate viUninstallHandler
 ..  LocalWords:  viUnlock viUnmapAddress viUnmapTrigger usb viUsbControlIn vxi
-..  LocalWords:  viUsbControlOut vprintf vqueryf vscanf vsprintf vsscanf
-..  LocalWords:  viVxiCommandQuery viWaitOnEvent viWrite viWriteAsync
+..  LocalWords:  viUsbControlOut vprintf vqueryf vscanf vsprintf vsscanf IVI
+..  LocalWords:  viVxiCommandQuery viWaitOnEvent viWrite viWriteAsync WINNT
 ..  LocalWords:  viWriteFromFile
