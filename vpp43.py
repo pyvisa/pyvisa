@@ -26,8 +26,6 @@
 #
 # * Test as many routines as possible, audit the rest
 #
-# * Sort everything by alphabet
-#
 
 
 """Main module of the implementation of the original VISA routines.
@@ -318,13 +316,15 @@ def get_status():
     return visa_status
 
 # convert_argument_list is used for VISA routines with variable argument list,
-# which means that also the types are unknown.  While ctypes can deal with
-# strings and integers, it is unable to dealt with all other types, in
-# particular doubles.  Since I expect doubles to be a rather frequent type in
-# the application of VISA, I convert them here.
+# which means that also the types are unknown.  Therefore I convert the Python
+# types to well-defined ctypes types.
 #
-# Attention: This means that only double can be used in format strings!  No
-# floats, no long doubles.
+# Attention: This means that only C doubles, C long ints, and strings can be
+# used in format strings!  No "float"s, no "long doubles", not "int"s etc.
+# Further, only floats, integers and strings can be passed to printf and
+# scanf, but neither unicode strings nor sequence types.
+#
+# All of these restrictions may be removed in the future.
 
 def convert_argument_list(original_arguments):
     """Converts a Python arguments list to the equivalent ctypes list.
@@ -340,10 +340,35 @@ def convert_argument_list(original_arguments):
     for argument in original_arguments:
 	if isinstance(argument, float):
 	    argument_list.append(_ctypes.c_double(argument))
-	else:
+	elif isinstance(argument, int):
+	    argument_list.append(_ctypes.c_long(argument))
+	elif isinstance(argument, str):    
 	    argument_list.append(argument)
+	else:
+	    raise "Invalid type in scanf/printf: %s" % type(argument)
     return tuple(converted_arguments)
 
+def convert_to_byref(byvalue_arguments):
+    """Converts a sequence of ctypes objects to a tuple with ctypes references
+    (pointers) to them, for use in scanf-like functions.
+
+    Arguments:
+    byvalue_arguments -- a sequence type with the original arguments.  They
+        must be ctypes objects or Python strings.
+
+    Return value: a tuple with the by-references arguments.
+
+    """
+    converted_arguments = []
+    for argument in byvalue_arguments:
+	if isinstance(argument, str):
+	    converted_arguments.append(argument)
+	elif isinstance(argument, _ctypes._SimpleCData):
+	    converted_arguments.append(byref(argument))
+	else:
+	    raise "Invalid type in scanf: %s" % type(argument)
+    return tuple(converted_arguments)
+	
 
 # The VPP-4.3.2 routines
 
@@ -452,7 +477,7 @@ def gpib_command(vi, buffer):
     return return_count.value
 
 def gpib_control_atn(vi, mode):
-    visa_library().viGpibControlATN(vi, ViUInt16(mode))
+    visa_library().viGpibControlATN(vi, mode)
 
 def gpib_control_ren(vi, mode):
     visa_library().viGpibControlREN(vi, mode)
