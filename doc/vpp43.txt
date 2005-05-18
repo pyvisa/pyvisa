@@ -26,6 +26,10 @@
 The VISA low-level implementation
 =========================================
 
+--------------------------
+Part of the PyVISA package
+--------------------------
+
 :Date: $Date$
 :Version: $Revision$
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
@@ -48,15 +52,15 @@ support both your device and its bus system.
 
 In order to ease this unfortunate situation, the VISA [#]_ specification was
 defined in the middle of the 90ies.  Today VISA is implemented on all
-significant operating systems.  Many vendors offer VISA libraries, albeit
-mostly in binary form.  A VISA library works together with arbitrary
-peripherical devices, although it may be limited to certain interface devices,
-such as the vendor's GPIB card.
+significant operating systems.  A couple of vendors offer VISA libraries,
+albeit mostly in binary form.  These libraries work together with arbitrary
+peripherical devices, although they may be limited to certain interface
+devices, such as the vendor's GPIB card.
 
 .. [#] Virtual Instrument Software Architecture
 
 The VISA specification has explicit bindings to Visual Basic, C, and G
-(LabVIEW's graphical language).  However, you can use VISA from any language
+(LabVIEW's graphical language).  However, you can use VISA with any language
 capable of calling functions in a DLL.  Python is such a language.
 
 
@@ -68,14 +72,14 @@ controlling:
 
 * Python is an easy-to-learn scripting language with short development cycles.
 
-* A large set of books (in many languages) and on-line publications is
-  available.
-
 * It represents a high abstraction level [#]_, which perfectly blends with the
   abstraction level of measurement programs.
 
 * It has a very rich set of native libraries, including numerical and plotting
   modules for data analysis and visualisation.
+
+* A large set of books (in many languages) and on-line publications is
+  available.
 
 * You can download it for free at http://www.python.org.
 
@@ -95,7 +99,7 @@ Prerequisites
 
 The PyVISA package doesn't include a VISA library itself.  You have to download
 it from one of the VISA vendors, e.g. `National Instruments' VISA pages`_.
-Please install it properly as documented there or within the packages.
+Please install it properly before you proceed.
 
 .. _`National Instruments' VISA pages`: http://ni.com/visa/
 
@@ -165,36 +169,37 @@ Asserts the specified utility bus signal.
 buffer_read
 ...........
 
-:Call: buffer_read(vi, count)
-:VISA name: vibuffer_read
+Similar to `read`_, except that the operation uses the formatted I/O read
+buffer for holding data read from the device.
+
+:Call: buffer = buffer_read(vi, count)
+:VISA name: viBufRead
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `count` : integer
+        Maximal number of bytes to be read.
 :Return values:
-    None.
-
-    buffer = create_string_buffer(count)
-    return_count = ViUInt32()
-    visa_library().viBufRead(vi, buffer, count, byref(return_count))
-    return buffer.raw[:return_count.value]
+    `buffer` : string
+        The buffer with the received data from device.
 
 
 buffer_write
 ............
 
-:Call: buffer_write(vi, buffer)
-:VISA name: vibuffer_write
+Similar to `write`_, except the data is written to the formatted I/O write
+buffer rather than directly to the device.
+
+:Call: return_count = buffer_write(vi, buffer)
+:VISA name: viBufWrite
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `buffer` : string
+        The data block to be sent to device.
 :Return values:
-    None.
-
-    return_count = ViUInt32()
-    visa_library().viBufWrite(vi, buffer, len(buffer), byref(return_count))
-    return return_count.value
+    `return_count` : integer
+        The number of bytes actually transferred.
 
 
 clear
@@ -375,14 +380,14 @@ Retrieve the state of an attribute.
 gpib_command
 ............
 
-:Call: gpib_command(vi, buffer)
-:VISA name: vigpib_command
+:Call: return_count = gpib_command(vi, buffer)
+:VISA name: viGpibCommand
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `buffer` : string
 :Return values:
-    None.
+    `return_count` : integer
 
     return_count = ViUInt32()
     visa_library().viGpibCommand(vi, buffer, len(buffer), byref(return_count))
@@ -393,11 +398,11 @@ gpib_control_atn
 ................
 
 :Call: gpib_control_atn(vi, mode)
-:VISA name: vigpib_control_atn
+:VISA name: viGpibControlATN
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `mode` : integer
 :Return values:
     None.
 
@@ -408,11 +413,11 @@ gpib_control_ren
 ................
 
 :Call: gpib_control_ren(vi, mode)
-:VISA name: vigpib_control_ren
+:VISA name: viGpibControlREN
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `mode` : integer
 :Return values:
     None.
 
@@ -423,11 +428,12 @@ gpib_pass_control
 .................
 
 :Call: gpib_pass_control(vi, primary_address, secondary_address)
-:VISA name: vigpib_pass_control
+:VISA name: viGpibPassControl
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `primary_address` : integer
+    `secondary_address` : integer
 :Return values:
     None.
 
@@ -438,66 +444,37 @@ gpib_send_ifc
 .............
 
 :Call: gpib_send_ifc(vi)
-:VISA name: vigpib_send_ifc
+:VISA name: viGpibSendIFC
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
 :Return values:
     None.
 
     visa_library().viGpibSendIFC(vi)
 
 
-in_8
-....
+in_8, in_16, in_32
+..................
 
-:Call: in_8(vi, space, offset)
-:VISA name: viin_8
+Read in an 8-bit, 16-bit, or 32-bit value from the specified memory space and
+offset.
+
+:Call: | value_8 = in_8(vi, space, offset)
+       | value_16 = in_16(vi, space, offset)
+       | value_32 = in_32(vi, space, offset)
+:VISA name: viIn8, viIn16, viIn32
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `space` : integer
+        Specifies the address space.
+    `offset` : integer
+        Offset in bytes of the address or register from which to read.
 :Return values:
-    None.
-
-    value_8 = ViUInt8()
-    visa_library().viIn8(vi, space, offset, byref(value_8))
-    return value_8.value
-
-
-in_16
-.....
-
-:Call: in_16(vi, space, offset)
-:VISA name: viin_16
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    value_16 = ViUInt16()
-    visa_library().viIn16(vi, space, offset, byref(value_16))
-    return value_8.value
-
-
-in_32
-.....
-
-:Call: in_32(vi, space, offset)
-:VISA name: viin_32
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    value_32 = ViUInt32()
-    visa_library().viIn32(vi, space, offset, byref(value_32))
-    return value_32.value
+    `value_8`, `value_16`, `value_32` : integer
+        Data read from bus (8 bits for `in_8`, 16 bits for `in_16`, and 32
+	bits for `in_32`).
 
 
 install_handler
@@ -556,6 +533,8 @@ Establish an access mode to the specified resource.
 
 map_address
 ...........
+
+Map the specified memory space into the process's address space.
 
 :Call: map_address(vi, map_space, map_base, map_size, access, suggested)
 :VISA name: vimap_address
@@ -627,139 +606,121 @@ memory_free
 move
 ....
 
+Move a block of data.
+
 :Call: move(vi, source_space, source_offset, source_width, destination_space,
 	 destination_offset, destination_width, length)
-:VISA name: vimove
+:VISA name: viMove
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `source_space` : integer
+        Specifies the address space of the source.
+    `source_offset` : integer
+        Offset in bytes of the starting address or register from which to
+        read.
+    `source_width` : integer
+        Specifies the data width of the source.
+    `destination_space` : integer
+        Specifies the address space of the destination.
+    `destination_offset` : integer
+        Offset in bytes of the starting address or register to which to write.
+    `destination_width` : integer
+        Specifies the data width of the destination.
+    `length` : integer
+        Number of elements to transfer, where the data width of the elements to
+	transfer is identical to source data width.
 :Return values:
     None.
-
-    visa_library().viMove(vi, source_space, source_offset, source_width,
-			  destination_space, destination_offset,
-			  destination_width, length)
 
 
 move_asynchronously
 ...................
 
-:Call: move_asynchronously(vi, source_space, source_offset, source_width,
-			destination_space, destination_offset,
-			destination_width, length)
-:VISA name: vimove_asynchronously
+Move a block of data asynchronously.
+
+:Call: job_id = move_asynchronously(vi, source_space, source_offset,
+       source_width, destination_space, destination_offset, destination_width,
+       length)
+:VISA name: viMoveAsync
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `source_space` : integer
+        Specifies the address space of the source.
+    `source_offset` : integer
+        Offset in bytes of the starting address or register from which to
+        read.
+    `source_width` : integer
+        Specifies the data width of the source.
+    `destination_space` : integer
+        Specifies the address space of the destination.
+    `destination_offset` : integer
+        Offset in bytes of the starting address or register to which to write.
+    `destination_width` : integer
+        Specifies the data width of the destination.
+    `length` : integer
+        Number of elements to transfer, where the data width of the elements to
+	transfer is identical to source data width.
 :Return values:
-    None.
-
-    job_id = ViJobId()
-    visa_library().viMoveAsync(vi, source_space, source_offset, source_width,
-			       destination_space, destination_offset,
-			       destination_width, length, byref(job_id))
-    return job_id
+    `job_id` : ViJobId
+        The job identifier of this asynchronous move operation. Each time an
+        asynchronous move operation is called, it is assigned a unique job
+        identifier.
 
 
-move_in_8
-.........
+move_in_8, move_in_16, move_in_32
+.................................
 
-:Call: move_in_8(vi, space, offset, length)
-:VISA name: vimove_in_8
+Move a block of data from the specified address space and offset to local
+memory in increments of 8, 16, or 32 bits.
+
+:Call: | buffer_8 = move_in_8(vi, space, offset, length)
+       | buffer_16 = move_in_16(vi, space, offset, length)
+       | buffer_32 = move_in_32(vi, space, offset, length)
+:VISA name: viMoveIn8, viMoveIn16, viMoveIn32
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `space` : integer
+        Specifies the address space.
+    `offset` : integer
+        Offset in bytes of the starting address or register from which to
+	read.
+    `length` : integer
+        Number of elements to transfer, where the data width of the elements to
+	transfer is identical to data width (8, 16, or 32 bits).
 :Return values:
-    None.
-
-    buffer_8 = (ViUInt8 * length)();
-    visa_library().viMoveIn8(vi, space, offset, length, buffer_8)
-    return list(buffer_8)
-
-
-move_in_16
-..........
-
-:Call: move_in_16(vi, space, offset, length)
-:VISA name: vimove_in_16
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    buffer_16 = (ViUInt16 * length)();
-    visa_library().viMoveIn16(vi, space, offset, length, buffer_16)
-    return list(buffer_16)
-
-
-move_in_32
-..........
-
-:Call: move_in_32(vi, space, offset, length)
-:VISA name: vimove_in_32
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    buffer_32 = (ViUInt32 * length)();
-    visa_library().viMoveIn32(vi, space, offset, length, buffer_32)
-    return list(buffer_32)
+    `buffer_8`, `buffer_16`, `buffer_32` : list of integers
+        Data read from bus as a Python list of values.
 
 
 move_out_8
 ..........
 
-:Call: move_out_8(vi, space, offset, length, buffer_8)
-:VISA name: vimove_out_8
+Move a block of data from local memory to the specified address space and
+offset in increments of 8, 16, or 32 bits.
+
+:Call: | move_out_8(vi, space, offset, length, buffer_8)
+       | move_out_16(vi, space, offset, length, buffer_16)
+       | move_out_32(vi, space, offset, length, buffer_32)
+:VISA name: viMoveOut8, viMoveOut16, viMoveOut32
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `space` : integer
+        Specifies the address space.
+    `offset` : integer
+        Offset in bytes of the starting address or register from which to
+	write.
+    `length` : integer
+        Number of elements to transfer, where the data width of the elements to
+	transfer is identical to data width (8, 16, or 32 bits).
+    `buffer_8`, `buffer_16`, `buffer_32` : sequence of integers
+        Data to write to bus.  This may be a list or a tuple, however in any
+	case in must contain integers.
 :Return values:
     None.
-
-    converted_buffer = (ViUInt8 * length)(*tuple(buffer_8))
-    visa_library().viMoveOut8(vi, space, offset, length, converted_buffer)
-
-
-move_out_16
-...........
-
-:Call: move_out_16(vi, space, offset, length, buffer_16)
-:VISA name: vimove_out_16
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    converted_buffer = (ViUInt16 * length)(*tuple(buffer_16))
-    visa_library().viMoveOut16(vi, space, offset, length, converted_buffer)
-
-
-move_out_32
-...........
-
-:Call: move_out_32(vi, space, offset, length, buffer_16)
-:VISA name: vimove_out_32
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    converted_buffer = (ViUInt32 * length)(*tuple(buffer_32))
-    visa_library().viMoveOut32(vi, space, offset, length, converted_buffer)
 
 
 open
@@ -815,49 +776,25 @@ get_default_resource_manager
 This is a deprecated alias for `open_default_resource_manager`_.
 
 
-out_8
-.....
+out_8, out_16, out_32
+.....................
 
-:Call: out_8(vi, space, offset, value_8)
-:VISA name: viout_8
+:Call: | out_8(vi, space, offset, value_8)
+       | out_16(vi, space, offset, value_16)
+       | out_32(vi, space, offset, value_32)
+:VISA name: viOut8, viOut16, viOut32
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `space` : integer
+        Specifies the address space.
+    `offset` : integer
+        Offset in bytes of the address or register to which to write.
+    `value_8`, `value_16`, `value_32`: integer
+        Data to write to bus (8 bits for out_8, 16 bits for out_16, and 32 bits
+	for out_32).
 :Return values:
     None.
-
-    visa_library().viOut8(vi, space, offset, value_8)
-
-
-out_16
-......
-
-:Call: out_16(vi, space, offset, value_16)
-:VISA name: viout_16
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    visa_library().viOut16(vi, space, offset, value_16)
-
-
-out_32
-......
-
-:Call: out_32(vi, space, offset, value_32)
-:VISA name: viout_32
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    visa_library().viOut32(vi, space, offset, value_32)
 
 
 parse_resource
@@ -1014,6 +951,11 @@ printf
 Convert, format, and send the parameters ``...`` to the device as specified by
 the format string.
 
+.. Warning::
+    The current implementation only supports the following C data types:
+    ``long``, ``double`` and ``char*`` (strings).  Thus, you can only use these
+    three data types in format strings for printf, scanf and the like.
+
 :Call: printf(vi, write_format, ...)
 :VISA name: viPrintf
 :Parameters:
@@ -1030,20 +972,43 @@ the format string.
 queryf
 ......
 
-:Call: queryf(vi, write_format, read_format, write_args, *read_args)
-:VISA name: viqueryf
+Perform a formatted write and read through a single operation invocation.
+
+.. Warning::
+    The current implementation only supports the following C data types:
+    ``long``, ``double`` and ``char*`` (strings).  Thus, you can only use these
+    three data types in format strings for printf, scanf and the like.
+
+:Call: value1, value2, ... = queryf(vi, write_format, read_format, (...), ...,
+       maximal_string_length = 1024)
+:VISA name: viQueryf
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
+    `write_format` : string
+        String describing the format for arguments.
+    `read_format` : string
+        String describing the format for arguments.
+    `(...)` : tuple of integers, floats, or strings
+        Arguments sent to the device according to `write_format`.  May be
+        ``None``.
+    `...` : integers, floats, or strings
+        Arguments to be read from the device according to `read_format`.  It's
+	totally insignificant which values they have, they serve just as a
+	cheap way to determine what types are to be expected.  So actually this
+	argument list shouldn't be necessary, but with the current
+	implementation, it is, sorry.
 
-    argument_list = convert_argument_list(read_args)
-    if write_args is None: write_args = ()
-    visa_library(True).viQueryf(vi, write_format, read_format,
-				*(write_args + argument_list))
-    return tuple([argument.value for argument in argument_list])
+        These arguments may be (however needn't be) the same names used for
+	storing the result values.  Alternatively, you can give literals.
+    `maximal_string_length` : integer : keyword argument
+        The maximal length assumed for string result arguments.  Note that
+	string results must *never* exceed this length.  It defaults to 1024.
+:Return values:
+    `value1`, `value2`, ... : integers, floats, or strings
+        Arguments read from the device according to `read_format`.  Of course,
+	this must be the same sequence (as far as data types are concerned) as
+	the given argument list `...` above.
 
 
 read
@@ -1120,18 +1085,39 @@ Read data synchronously, and store the transferred data in a file.
 scanf
 .....
 
-:Call: scanf(vi, read_format, *args)
-:VISA name: viscanf
+Read, convert, and format data using the format specifier.  Store the formatted
+data in the given optional parameters.
+
+.. Warning::
+    The current implementation only supports the following C data types:
+    ``long``, ``double`` and ``char*`` (strings).  Thus, you can only use these
+    three data types in format strings for printf, scanf and the like.
+
+:Call: value1, value2, ... = scanf(vi, read_format, ..., maximal_string_length
+       = 1024)
+:VISA name: viScanf
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
+    `read_format` : string
+        String describing the format for arguments.
+    `...` : integers, floats, or strings
+        Arguments to be read from the device according to `read_format`.  It's
+	totally insignificant which values they have, they serve just as a
+	cheap way to determine what types are to be expected.  So actually this
+	argument list shouldn't be necessary, but with the current
+	implementation, it is, sorry.
 
-    argument_list = convert_argument_list(args)
-    visa_library(True).viScanf(vi, read_format, *argument_list)
-    return tuple([argument.value for argument in argument_list])
+        These arguments may be (however needn't be) the same names used for
+	storing the result values.  Alternatively, you can give literals.
+    `maximal_string_length` : integer : keyword argument
+        The maximal length assumed for string result arguments.  Note that
+	string results must *never* exceed this length.  It defaults to 1024.
+:Return values:
+    `value1`, `value2`, ... : integers, floats, or strings
+        Arguments read from the device according to `read_format`.  Of course,
+	this must be the same sequence (as far as data types are concerned) as
+	the given argument list `...` above.
 
 
 set_attribute
@@ -1176,36 +1162,68 @@ Set the size for the formatted I/O and/or serial communication buffer(s).
 sprintf
 .......
 
-:Call: sprintf(vi, write_format, *args, **keyw)
-:VISA name: visprintf
+Same as `printf`_, except the data is written to a user-specified buffer rather
+than the device.
+
+.. Warning::
+    The current implementation only supports the following C data types:
+    ``long``, ``double`` and ``char*`` (strings).  Thus, you can only use these
+    three data types in format strings for printf, scanf and the like.
+
+:Call: buffer = sprintf(vi, write_format, ..., buffer_length = 1024)
+:VISA name: viSPrintf
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `write_format` : string
+        String describing the format for arguments.
+    `...` : integers, floats, or strings
+        Arguments sent to the buffer according to `write_format`.
+    `buffer_length` : integer : keyword argument
+        Length of the user-specified buffer in bytes.  Defaults to 1024.
 :Return values:
-    None.
-
-    buffer = create_string_buffer(keyw.get("buffer_length", 1024))
-    visa_library(True).viSPrintf(vi, buffer, write_format,
-				 *convert_argument_list(args))
-    return buffer.raw
+    `buffer` : string
+        Buffer where the formatted data was written to.
 
 
 sscanf
 ......
 
-:Call: sscanf(vi, buffer, read_format, *args)
-:VISA name: visscanf
+Same as `scanf`_, except that the data is read from a user-specified buffer
+instead of a device.
+
+.. Warning::
+    The current implementation only supports the following C data types:
+    ``long``, ``double`` and ``char*`` (strings).  Thus, you can only use these
+    three data types in format strings for printf, scanf and the like.
+
+:Call: value1, value2, ... = sscanf(vi, buffer, read_format, ...,
+       maximal_string_length = 1024)
+:VISA name: viSScanf
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
+    `buffer` : string
+        Buffer from which data is read and formatted.
+    `read_format` : string
+        String describing the format for arguments.
+    `...` : integers, floats, or strings
+        Arguments to be read from the device according to `read_format`.  It's
+	totally insignificant which values they have, they serve just as a
+	cheap way to determine what types are to be expected.  So actually this
+	argument list shouldn't be necessary, but with the current
+	implementation, it is, sorry.
 
-    argument_list = convert_argument_list(args)
-    visa_library(True).viSScanf(vi, buffer, read_format, *argument_list)
-    return tuple([argument.value for argument in argument_list])
+        These arguments may be (however needn't be) the same names used for
+	storing the result values.  Alternatively, you can give literals.
+    `maximal_string_length` : integer : keyword argument
+        The maximal length assumed for string result arguments.  Note that
+	string results must *never* exceed this length.  It defaults to 1024.
+:Return values:
+    `value1`, `value2`, ... : integers, floats, or strings
+        Arguments read from the device according to `read_format`.  Of course,
+	this must be the same sequence (as far as data types are concerned) as
+	the given argument list `...` above.
 
 
 status_description
