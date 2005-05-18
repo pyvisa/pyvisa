@@ -125,7 +125,7 @@ Asserts the specified device interrupt or signal.
         This specifies how to assert the interrupt.
     `status_id` : integer
         This is the status value to be presented during an interrupt
-	acknowledge cycle.
+        acknowledge cycle.
 :Return values:
     None.
 
@@ -142,8 +142,8 @@ Assert software or hardware trigger.
         Unique logical identifier to a session.
     `protocol` : integer
         Trigger protocol to use during assertion.  Valid values are:
-	``VI_TRIG_PROT_DEFAULT``, ``VI_TRIG_PROT_ON``, ``VI_TRIG_PROT_OFF``,
-	and ``VI_TRIG_PROT_SYNC``.
+        ``VI_TRIG_PROT_DEFAULT``, ``VI_TRIG_PROT_ON``, ``VI_TRIG_PROT_OFF``,
+        and ``VI_TRIG_PROT_SYNC``.
 :Return values:
     None.
 
@@ -154,7 +154,7 @@ assert_utility_signal
 Asserts the specified utility bus signal.
 
 :Call: assert_utility_signal(vi, line)
-:VISA name: viassert_utility_signal
+:VISA name: viAssertUtilSignal
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
@@ -162,8 +162,6 @@ Asserts the specified utility bus signal.
         Specifies the utility bus signal to assert.
 :Return values:
     None.
-
-    visa_library().viAssertUtilSignal(vi, line)
 
 
 buffer_read
@@ -244,10 +242,10 @@ Disable notification of an event type by the specified mechanisms.
         Logical event identifier.
     `mechanism` : integer
         Specifies event handling mechanisms to be disabled. The queuing
-	mechanism is disabled by specifying ``VI_QUEUE``, and the callback
-	mechanism is disabled by specifying ``VI_HNDLR`` or
-	``VI_SUSPEND_HNDLR``. It is possible to disable both mechanisms
-	simultaneously by specifying ``VI_ALL_MECH``.
+        mechanism is disabled by specifying ``VI_QUEUE``, and the callback
+        mechanism is disabled by specifying ``VI_HNDLR`` or
+        ``VI_SUSPEND_HNDLR``. It is possible to disable both mechanisms
+        simultaneously by specifying ``VI_ALL_MECH``.
 :Return values:
     None.
 
@@ -267,10 +265,10 @@ session.
         Logical event identifier.
     `mechanism` : integer
         Specifies the mechanisms for which the events are to be discarded.  The
-	``VI_QUEUE`` value is specified for the queuing mechanism and the
-	``VI_SUSPEND_HNDLR`` value is specified for the pending events in the
-	callback mechanism.  It is possible to specify both mechanisms
-	simultaneously by specifying ``VI_ALL_MECH``.
+        ``VI_QUEUE`` value is specified for the queuing mechanism and the
+        ``VI_SUSPEND_HNDLR`` value is specified for the pending events in the
+        callback mechanism.  It is possible to specify both mechanisms
+        simultaneously by specifying ``VI_ALL_MECH``.
 :Return values:
     None.
 
@@ -289,14 +287,14 @@ Enable notification of a specified event.
         Logical event identifier.
     `mechanism` : integer
         Specifies event handling mechanisms to be enabled.  The queuing
-	mechanism is enabled by specifying ``VI_QUEUE``, and the callback
-	mechanism is enabled by specifying ``VI_HNDLR`` or
-	``VI_SUSPEND_HNDLR``.  It is possible to enable both mechanisms
-	simultaneously by specifying bit-wise "or" of ``VI_QUEUE`` and one of
-	the two mode values for the callback mechanism.
+        mechanism is enabled by specifying ``VI_QUEUE``, and the callback
+        mechanism is enabled by specifying ``VI_HNDLR`` or
+        ``VI_SUSPEND_HNDLR``.  It is possible to enable both mechanisms
+        simultaneously by specifying bit-wise "or" of ``VI_QUEUE`` and one of
+        the two mode values for the callback mechanism.
     `context` : integer : optional
         According to the VISA specification, this must be ``Vi_NULL`` always.
-	(This is also the default value, of course.)
+        (This is also the default value, of course.)
 :Return values:
     None.
 
@@ -309,11 +307,11 @@ find_next
 :Parameters:
     `find_list` : ViFindList
         Describes a find list.  This parameter must be created by
-	`find_resources`_.
+        `find_resources`_.
 :Return values:
     `instrument_description` : string
         Returns a string identifying the location of a device. Strings can then
-	be passed to `open`_ to establish a session to the given device.
+        be passed to `open`_ to establish a session to the given device.
 
 
 find_resources
@@ -325,14 +323,14 @@ find_resources
 :Parameters:
     `session` : ViSession
         Resource Manager session (should always be the Default Resource Manager
-	for VISA returned from `open_default_resource_manager`_).
+        for VISA returned from `open_default_resource_manager`_).
     `regular_expression` : integer
         This is a regular expression followed by an optional logical
-	expression.  The grammar for this expression is given below.
+        expression.  The grammar for this expression is given below.
 :Return values:
     `find_list` : ViFindList
         Returns a handle identifying this search session. This handle will be
-	used as an input in `find_next`_.
+        used as an input in `find_next`_.
     `return_counter` : integer
         Number of matches.
     `instrument_description` : string
@@ -369,16 +367,18 @@ Retrieve the state of an attribute.
         Unique logical identifier to a session.
     `attribute` : integer
         Session, event, or find list attribute for which the state query is
-	made.
+        made.
 :Return values:
     `attribute_state` : integer
         The state of the queried attribute for a specified resource. The
-	interpretation of the returned value is defined by the individual
-	resource.
+        interpretation of the returned value is defined by the individual
+        resource.
 
 
 gpib_command
 ............
+
+Write GPIB command bytes on the bus.
 
 :Call: return_count = gpib_command(vi, buffer)
 :VISA name: viGpibCommand
@@ -386,16 +386,17 @@ gpib_command
     `vi` : ViSession
         Unique logical identifier to a session.
     `buffer` : string
+        Buffer containing valid GPIB commands.
 :Return values:
     `return_count` : integer
-
-    return_count = ViUInt32()
-    visa_library().viGpibCommand(vi, buffer, len(buffer), byref(return_count))
-    return return_count.value
+        Number of bytes actually transferred.
 
 
 gpib_control_atn
 ................
+
+Controls the state of the GPIB ATN interface line, and optionally the active
+controller state of the local interface board.
 
 :Call: gpib_control_atn(vi, mode)
 :VISA name: viGpibControlATN
@@ -403,14 +404,17 @@ gpib_control_atn
     `vi` : ViSession
         Unique logical identifier to a session.
     `mode` : integer
+        Specifies the state of the ATN line and optionally the local active
+	controller state. See the Description section for actual values.
 :Return values:
     None.
-
-    visa_library().viGpibControlATN(vi, ViUInt16(mode))
 
 
 gpib_control_ren
 ................
+
+Controls the state of the GPIB REN interface line, and optionally the
+remote/local state of the device.
 
 :Call: gpib_control_ren(vi, mode)
 :VISA name: viGpibControlREN
@@ -418,14 +422,17 @@ gpib_control_ren
     `vi` : ViSession
         Unique logical identifier to a session.
     `mode` : integer
+        Specifies the state of the REN line and optionally the device
+	remote/local state. See the Description section for actual values.
 :Return values:
     None.
-
-    visa_library().viGpibControlREN(vi, mode)
 
 
 gpib_pass_control
 .................
+
+Tell the GPIB device at the specified address to become controller in charge
+(CIC).
 
 :Call: gpib_pass_control(vi, primary_address, secondary_address)
 :VISA name: viGpibPassControl
@@ -433,15 +440,19 @@ gpib_pass_control
     `vi` : ViSession
         Unique logical identifier to a session.
     `primary_address` : integer
+        Primary address of the GPIB device to which you want to pass control.
     `secondary_address` : integer
+        Secondary address of the targeted GPIB device. If the targeted device
+	does not have a secondary address, this parameter should contain the
+	value ``VI_NO_SEC_ADDR``.
 :Return values:
     None.
-
-    visa_library().viGpibPassControl(vi, primary_address, secondary_address)
 
 
 gpib_send_ifc
 .............
+
+Pulse the interface clear line (IFC) for at least 100 microseconds.
 
 :Call: gpib_send_ifc(vi)
 :VISA name: viGpibSendIFC
@@ -450,8 +461,6 @@ gpib_send_ifc
         Unique logical identifier to a session.
 :Return values:
     None.
-
-    visa_library().viGpibSendIFC(vi)
 
 
 in_8, in_16, in_32
@@ -474,7 +483,7 @@ offset.
 :Return values:
     `value_8`, `value_16`, `value_32` : integer
         Data read from bus (8 bits for `in_8`, 16 bits for `in_16`, and 32
-	bits for `in_32`).
+        bits for `in_32`).
 
 
 install_handler
@@ -491,10 +500,10 @@ Install handlers for event callbacks.
         Logical event identifier.
     `handler` : ViHndlr
         Interpreted as a valid reference to a handler to be installed by a
-	client application.
+        client application.
     `user_handle` : integer : optional
         A value specified by an application that can be used for identifying
-	handlers uniquely for an event type.  It defaults to 0.
+        handlers uniquely for an event type.  It defaults to 0.
 :Return values:
     None.
 
@@ -511,24 +520,24 @@ Establish an access mode to the specified resource.
         Unique logical identifier to a session.
     `lock_type` : integer
         Specifies the type of lock requested, which can be either
-	``VI_EXCLUSIVE_LOCK`` or ``VI_SHARED_LOCK``.
+        ``VI_EXCLUSIVE_LOCK`` or ``VI_SHARED_LOCK``.
     `timeout` : integer
         Absolute time period in milliseconds that a resource waits to get
-	unlocked by the locking session before returning this operation with an
-	error.
+        unlocked by the locking session before returning this operation with an
+        error.
     `requested_key` : string : optional
         This parameter is not used if `lock_type` is ``VI_EXCLUSIVE_LOCK``
-	(exclusive locks).  When trying to lock the resource as
-	``VI_SHARED_LOCK`` (shared), you can either omit it so that VISA
-	generates an `access_key` for the session, or you can suggest an
-	`access_key` to use for the shared lock.
+        (exclusive locks).  When trying to lock the resource as
+        ``VI_SHARED_LOCK`` (shared), you can either omit it so that VISA
+        generates an `access_key` for the session, or you can suggest an
+        `access_key` to use for the shared lock.
 :Return values:
     `access_key` : string : optional
         This value is ``None`` if `lock_type` is ``VI_EXCLUSIVE_LOCK``
-	(exclusive locks).  When trying to lock the resource as
-	``VI_SHARED_LOCK`` (shared), the function returns a unique access key
-	for the lock if the operation succeeds.  This `access_key` can then be
-	passed to other sessions to share the lock.
+        (exclusive locks).  When trying to lock the resource as
+        ``VI_SHARED_LOCK`` (shared), the function returns a unique access key
+        for the lock if the operation succeeds.  This `access_key` can then be
+        passed to other sessions to share the lock.
 
 
 map_address
@@ -536,19 +545,29 @@ map_address
 
 Map the specified memory space into the process's address space.
 
-:Call: map_address(vi, map_space, map_base, map_size, access, suggested)
-:VISA name: vimap_address
+:Call: address = map_address(vi, map_space, map_base, map_size, access,
+       suggested)
+:VISA name: viMapAddress
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `map_space` : integer
+        Specifies the address space to map.
+    `map_base` : ViBusAddress
+        Offset in bytes of the memory to be mapped.
+    `map_size` : integer
+        Amount of memory to map in bytes.
+    `access` : integer : optional
+        Must be ``VI_FALSE``.
+    `suggested` : integer : optional
+        If not ``VI_NULL`` (the default), the operating system attempts to map
+        the memory to the address specified in suggested. There is no
+        guarantee, however, that the memory will be mapped to that
+        address. This operation may map the memory into an address region
+        different from suggested.
 :Return values:
-    None.
-
-    address = ViAddr()
-    visa_library().viMapAddress(vi, map_space, map_base, map_size, access,
-				suggested, byref(address))
-    return address.value
+    `address` : ViAddr
+        Address in your process space where the memory was mapped.
 
 
 map_trigger
@@ -574,33 +593,34 @@ Map the specified trigger source line to the specified destination line.
 memory_allocation
 .................
 
+Allocate memory from a device's memory region.
+
 :Call: memory_allocation(vi, size)
-:VISA name: vimemory_allocation
+:VISA name: viMemAlloc
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `size` : integer
+        Specifies the size of the allocation.
 :Return values:
-    None.
-
-    offset = ViBusAddress()
-    visa_library().viMemAlloc(vi, size, byref(offset))
-    return offset.value
+    offset : ViBusAddress
+        Returns the offset of the allocated device memory.
 
 
 memory_free
 ...........
 
+Free memory previously allocated using `memory_allocation`_.
+
 :Call: memory_free(vi, offset)
-:VISA name: vimemory_free
+:VISA name: viMemFree
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `offset` : ViBusAddress
+        Specifies the memory previously allocated with `memory_allocation`_.
 :Return values:
     None.
-
-    visa_library().viMemFree(vi, offset)
 
 
 move
@@ -609,7 +629,7 @@ move
 Move a block of data.
 
 :Call: move(vi, source_space, source_offset, source_width, destination_space,
-	 destination_offset, destination_width, length)
+         destination_offset, destination_width, length)
 :VISA name: viMove
 :Parameters:
     `vi` : ViSession
@@ -629,7 +649,7 @@ Move a block of data.
         Specifies the data width of the destination.
     `length` : integer
         Number of elements to transfer, where the data width of the elements to
-	transfer is identical to source data width.
+        transfer is identical to source data width.
 :Return values:
     None.
 
@@ -661,7 +681,7 @@ Move a block of data asynchronously.
         Specifies the data width of the destination.
     `length` : integer
         Number of elements to transfer, where the data width of the elements to
-	transfer is identical to source data width.
+        transfer is identical to source data width.
 :Return values:
     `job_id` : ViJobId
         The job identifier of this asynchronous move operation. Each time an
@@ -684,19 +704,19 @@ memory in increments of 8, 16, or 32 bits.
         Unique logical identifier to a session.
     `space` : integer
         Specifies the address space.
-    `offset` : integer
+    `offset` : ViBusAddress
         Offset in bytes of the starting address or register from which to
-	read.
+        read.
     `length` : integer
         Number of elements to transfer, where the data width of the elements to
-	transfer is identical to data width (8, 16, or 32 bits).
+        transfer is identical to data width (8, 16, or 32 bits).
 :Return values:
     `buffer_8`, `buffer_16`, `buffer_32` : list of integers
         Data read from bus as a Python list of values.
 
 
-move_out_8
-..........
+move_out_8, move_out_16, move_out_32
+....................................
 
 Move a block of data from local memory to the specified address space and
 offset in increments of 8, 16, or 32 bits.
@@ -710,15 +730,15 @@ offset in increments of 8, 16, or 32 bits.
         Unique logical identifier to a session.
     `space` : integer
         Specifies the address space.
-    `offset` : integer
+    `offset` : ViBusAddress
         Offset in bytes of the starting address or register from which to
-	write.
+        write.
     `length` : integer
         Number of elements to transfer, where the data width of the elements to
-	transfer is identical to data width (8, 16, or 32 bits).
+        transfer is identical to data width (8, 16, or 32 bits).
     `buffer_8`, `buffer_16`, `buffer_32` : sequence of integers
         Data to write to bus.  This may be a list or a tuple, however in any
-	case in must contain integers.
+        case in must contain integers.
 :Return values:
     None.
 
@@ -733,25 +753,25 @@ Open a session to the specified device.
 :Parameters:
     `session` : ViSession
         Resource Manager session (should always be the Default Resource Manager
-	for VISA returned from `open_default_resource_manager`_).
+        for VISA returned from `open_default_resource_manager`_).
     `resource_name` : string
         Unique symbolic name of a resource.
     `access_mode` : integer : optional
         Defaults to ``VI_NO_LOCK``.  Specifies the modes by which the resource
-	is to be accessed.  The value ``VI_EXCLUSIVE_LOCK`` is used to acquire
-	an exclusive lock immediately upon opening a session; if a lock cannot
-	be acquired, the session is closed and an error is returned.  The value
-	``VI_LOAD_CONFIG`` is used to configure attributes to values specified
-	by some external configuration utility; if this value is not used, the
-	session uses the default values provided by this
-	specification.  Multiple access modes can be used simultaneously by
-	specifying a "bitwise OR" of the above values.
+        is to be accessed.  The value ``VI_EXCLUSIVE_LOCK`` is used to acquire
+        an exclusive lock immediately upon opening a session; if a lock cannot
+        be acquired, the session is closed and an error is returned.  The value
+        ``VI_LOAD_CONFIG`` is used to configure attributes to values specified
+        by some external configuration utility; if this value is not used, the
+        session uses the default values provided by this
+        specification.  Multiple access modes can be used simultaneously by
+        specifying a "bitwise OR" of the above values.
     `timeout` : integer : optional
         If the `access_mode` parameter requests a lock, then this parameter
-	specifies the absolute time period in milliseconds that the resource
-	waits to get unlocked before this operation returns an error;
-	otherwise, this parameter is ignored.  Defaults to
-	``VI_TMO_IMMEDIATE``.
+        specifies the absolute time period in milliseconds that the resource
+        waits to get unlocked before this operation returns an error;
+        otherwise, this parameter is ignored.  Defaults to
+        ``VI_TMO_IMMEDIATE``.
 :Return values:
     `vi` : ViSession
         Unique logical identifier reference to a session.
@@ -769,6 +789,7 @@ Return a session to the Default Resource Manager resource.
 :Return values:
     `session` : ViSession
         Unique logical identifier to a Default Resource Manager session.
+
 
 get_default_resource_manager
 ............................
@@ -792,7 +813,7 @@ out_8, out_16, out_32
         Offset in bytes of the address or register to which to write.
     `value_8`, `value_16`, `value_32`: integer
         Data to write to bus (8 bits for out_8, 16 bits for out_16, and 32 bits
-	for out_32).
+        for out_32).
 :Return values:
     None.
 
@@ -808,7 +829,7 @@ Parse a resource string to get the interface information.
 :Parameters:
     `session` : ViSession
         Resource Manager session (should always be the Default Resource Manager
-	for VISA returned from `open_default_resource_manager`_).
+        for VISA returned from `open_default_resource_manager`_).
     `resource_name` : string
         Unique symbolic name of a resource.
 :Return values:
@@ -830,8 +851,9 @@ Parse a resource string to get extended interface information.
 :Parameters:
     `session` : ViSession
         Resource Manager session (should always be the Default Resource Manager
-	for VISA returned from `open_default_resource_manager`_).
+        for VISA returned from `open_default_resource_manager`_).
     `resource_name` : string
+        Unique symbolic name of a resource.
 :Return values:
     `interface_type` : integer
         Interface type of the given resource string.
@@ -839,110 +861,55 @@ Parse a resource string to get extended interface information.
         Board number of the interface of the given resource string.
     `resource_class` : string
         Specifies the resource class (for example "INSTR") of the given
-	resource string.
+        resource string.
     `unaliased_expanded_resource_name` : string
         This is the expanded version of the given resource string. The format
-	should be similar to the VISA-defined canonical resource name.
+        should be similar to the VISA-defined canonical resource name.
     `alias_if_exists` : string
         Specifies the user-defined alias for the given resource string, if a
-	VISA implementation allows aliases and an alias exists for the given
-	resource string.
+        VISA implementation allows aliases and an alias exists for the given
+        resource string.
+        
 
+peek_8, peek_16, peek_32
+........................
 
-peek_8
-......
+Read an 8-bit, 16-bit, or 32-bit value from the specified address.
 
-:Call: peek_8(vi, address)
-:VISA name: vipeek_8
+:Call: | value_8 = peek_8(vi, address)
+       | value_16 = peek_16(vi, address)
+       | value_32 = peek_32(vi, address)
+:VISA name: viPeek8, viPeek16, viPeek32
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `address` : ViAddr
+        Specifies the source address to read the value.
 :Return values:
-    None.
-
-    value_8 = ViUInt8()
-    visa_library().viPeek8(vi, address, byref(value_8))
-    return value_8.value
+    `value_8`, `value_16`, `value_32` : integer
+        Data read from bus (8 bits for peek_8, 16 bits for peek_16, and 32 bits
+	for peek_32).
 
 
-peek_16
-.......
+poke_8, poke_16, poke_32
+........................
 
-:Call: peek_16(vi, address)
-:VISA name: vipeek_16
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
+Write an 8-bit, 16-bit, or 32-bit value to the specified address.
 
-    value_16 = ViUInt16()
-    visa_library().viPeek16(vi, address, byref(value_16))
-    return value_16.value
-
-
-peek_32
-.......
-
-:Call: peek_32(vi, address)
-:VISA name: vipeek_32
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    value_32 = ViUInt32()
-    visa_library().viPeek32(vi, address, byref(value_32))
-    return value_32.value
-
-
-poke_8
-......
-
-:Call: poke_8(vi, address, value_8)
+:Call: | poke_8(vi, address, value_8)
+       | poke_16(vi, address, value_16)
+       | poke_32(vi, address, value_32)
 :VISA name: vipoke_8
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `address` : integer
+        Specifies the destination address to store the value.
+    `value_8`, `value_16`, `value_32` : integer
+        Data to write to bus (8 bits for poke_8, 16 bits for poke_16, and 32
+	bits for poke_32).
 :Return values:
     None.
-
-    visa_library().viPoke8(vi, address, value_8)
-
-
-poke_16
-.......
-
-:Call: poke_16(vi, address, value_16)
-:VISA name: vipoke_16
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    visa_library().viPoke16(vi, address, value_16)
-
-
-poke_32
-.......
-
-:Call: poke_32(vi, address, value_32)
-:VISA name: vipoke_32
-:Parameters:
-    `vi` : ViSession
-        Unique logical identifier to a session.
-    `` : integer
-:Return values:
-    None.
-
-    visa_library().viPoke32(vi, address, value_32)
 
 
 printf
@@ -994,21 +961,21 @@ Perform a formatted write and read through a single operation invocation.
         ``None``.
     `...` : integers, floats, or strings
         Arguments to be read from the device according to `read_format`.  It's
-	totally insignificant which values they have, they serve just as a
-	cheap way to determine what types are to be expected.  So actually this
-	argument list shouldn't be necessary, but with the current
-	implementation, it is, sorry.
+        totally insignificant which values they have, they serve just as a
+        cheap way to determine what types are to be expected.  So actually this
+        argument list shouldn't be necessary, but with the current
+        implementation, it is, sorry.
 
         These arguments may be (however needn't be) the same names used for
-	storing the result values.  Alternatively, you can give literals.
+        storing the result values.  Alternatively, you can give literals.
     `maximal_string_length` : integer : keyword argument
         The maximal length assumed for string result arguments.  Note that
-	string results must *never* exceed this length.  It defaults to 1024.
+        string results must *never* exceed this length.  It defaults to 1024.
 :Return values:
     `value1`, `value2`, ... : integers, floats, or strings
         Arguments read from the device according to `read_format`.  Of course,
-	this must be the same sequence (as far as data types are concerned) as
-	the given argument list `...` above.
+        this must be the same sequence (as far as data types are concerned) as
+        the given argument list `...` above.
 
 
 read
@@ -1045,7 +1012,7 @@ Read data from device asynchronously.
         Represents the buffer with the received data from device.
     `job_id` : ViJobId
         Represents the location of a variable that will be set to the job
-	identifier of this asynchronous read operation.
+        identifier of this asynchronous read operation.
 
 
 read_stb
@@ -1103,21 +1070,21 @@ data in the given optional parameters.
         String describing the format for arguments.
     `...` : integers, floats, or strings
         Arguments to be read from the device according to `read_format`.  It's
-	totally insignificant which values they have, they serve just as a
-	cheap way to determine what types are to be expected.  So actually this
-	argument list shouldn't be necessary, but with the current
-	implementation, it is, sorry.
+        totally insignificant which values they have, they serve just as a
+        cheap way to determine what types are to be expected.  So actually this
+        argument list shouldn't be necessary, but with the current
+        implementation, it is, sorry.
 
         These arguments may be (however needn't be) the same names used for
-	storing the result values.  Alternatively, you can give literals.
+        storing the result values.  Alternatively, you can give literals.
     `maximal_string_length` : integer : keyword argument
         The maximal length assumed for string result arguments.  Note that
-	string results must *never* exceed this length.  It defaults to 1024.
+        string results must *never* exceed this length.  It defaults to 1024.
 :Return values:
     `value1`, `value2`, ... : integers, floats, or strings
         Arguments read from the device according to `read_format`.  Of course,
-	this must be the same sequence (as far as data types are concerned) as
-	the given argument list `...` above.
+        this must be the same sequence (as far as data types are concerned) as
+        the given argument list `...` above.
 
 
 set_attribute
@@ -1132,11 +1099,11 @@ Set the state of an attribute.
         Unique logical identifier to a session.
     `attribute` : integer
         Session, event, or find list attribute for which the state is
-	modified.
+        modified.
     `attribute_state` : integer
         The state of the attribute to be set for the specified resource.  The
-	interpretation of the individual attribute value is defined by the
-	resource.
+        interpretation of the individual attribute value is defined by the
+        resource.
 :Return values:
     None.
 
@@ -1209,21 +1176,21 @@ instead of a device.
         String describing the format for arguments.
     `...` : integers, floats, or strings
         Arguments to be read from the device according to `read_format`.  It's
-	totally insignificant which values they have, they serve just as a
-	cheap way to determine what types are to be expected.  So actually this
-	argument list shouldn't be necessary, but with the current
-	implementation, it is, sorry.
+        totally insignificant which values they have, they serve just as a
+        cheap way to determine what types are to be expected.  So actually this
+        argument list shouldn't be necessary, but with the current
+        implementation, it is, sorry.
 
         These arguments may be (however needn't be) the same names used for
-	storing the result values.  Alternatively, you can give literals.
+        storing the result values.  Alternatively, you can give literals.
     `maximal_string_length` : integer : keyword argument
         The maximal length assumed for string result arguments.  Note that
-	string results must *never* exceed this length.  It defaults to 1024.
+        string results must *never* exceed this length.  It defaults to 1024.
 :Return values:
     `value1`, `value2`, ... : integers, floats, or strings
         Arguments read from the device according to `read_format`.  Of course,
-	this must be the same sequence (as far as data types are concerned) as
-	the given argument list `...` above.
+        this must be the same sequence (as far as data types are concerned) as
+        the given argument list `...` above.
 
 
 status_description
@@ -1241,7 +1208,7 @@ Return a user-readable description of the status code passed to the operation.
 :Return values:
     `description` : string
         The user-readable string interpretation of the status code passed to
-	the operation.
+        the operation.
 
 
 terminate
@@ -1276,10 +1243,10 @@ Uninstall handlers for events.
         Logical event identifier.
     `handler` : ViHndlr
         Interpreted as a valid reference to a handler to be uninstalled by a
-	client application.
+        client application.
     `user_handle` : integer : optional
         A value specified by an application that can be used for identifying
-	handlers uniquely in a session for an event.
+        handlers uniquely in a session for an event.
 :Return values:
     None.
 
@@ -1301,20 +1268,22 @@ Relinquish a lock for the specified resource.
 unmap_address
 .............
 
+Unmap memory space previously mapped by `map_address`_.
+
 :Call: unmap_address(vi)
-:VISA name: viunmap_address
+:VISA name: viUnmapAddress
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
 :Return values:
     None.
-
-    visa_library().viUnmapAddress(vi)
 
 
 unmap_trigger
 .............
+
+Undo a previous map from the specified trigger source line to the specified
+destination line.
 
 :Call: unmap_trigger(vi, trigger_source, trigger_destination)
 :VISA name: viUnmapTrigger
@@ -1335,7 +1304,7 @@ usb_control_in
 Request arbitrary data from the USB device on the control port.
 
 :Call: buffer = usb_control_in(vi, request_type_bitmap_field,
-		   request_id, request_value, index, length)
+                   request_id, request_value, index, length)
 :VISA name: viUsbControlIn
 :Parameters:
     `vi` : ViSession
@@ -1367,7 +1336,7 @@ usb_control_out
 Send arbitrary data to the USB device on the control port.
 
 :Call: usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
-		    index, buffer)
+                    index, buffer)
 :VISA name: viUsbControlOut
 :Parameters:
     `vi` : ViSession
@@ -1401,18 +1370,22 @@ These variants make no sense in Python, so I realised them as mere aliases
 vxi_command_query
 .................
 
+Send the device a miscellaneous command or query and/or retrieve the response
+to a previous query.
+
 :Call: vxi_command_query(vi, mode, command)
-:VISA name: vivxi_command_query
+:VISA name: viVxiCommandQuery
 :Parameters:
     `vi` : ViSession
         Unique logical identifier to a session.
-    `` : integer
+    `mode` : integer
+        Specifies whether to issue a command and/or retrieve a response.
+    `command` : integer
+        The miscellaneous command to send.
 :Return values:
-    None.
-
-    response = ViUInt32()
-    visa_library().viVxiCommandQuery(vi, mode, command, byref(response))
-    return response.value
+    `response` : integer
+        The response retrieved from the device.  If the mode specifies just
+	sending a command, this parameter may be ``VI_NULL``.
 
 
 wait_on_event
@@ -1429,7 +1402,7 @@ Wait for an occurrence of the specified event for a given session.
         Logical identifier of the event(s) to wait for.
     `timeout` : integer
         Absolute time period in milliseconds that the resource shall wait for a
-	specified event to occur before returning the time elapsed error.
+        specified event to occur before returning the time elapsed error.
 :Return values:
     `out_event_type` : integer
         Logical identifier of the event actually received.
