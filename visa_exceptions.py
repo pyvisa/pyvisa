@@ -48,6 +48,17 @@ class VisaIOError(Error):
 	Error.__init__(self, abbreviation + ": " + description)
 	self.error_code = error_code
 
+class VisaTypeError(Error):
+    """Exception class for wrong types in VISA function argument lists.
+
+    Raised if unsupported types are given to scanf, sscanf, printf, sprintf,
+    and queryf.  Because the current implementation doesn't analyse the farmat
+    strings, it can only deal with integers, floats, and strings.
+
+    """
+    def __init__(self, description):
+	Error.__init__(self, description)
+
 class OSNotSupported(Error):
     def __init__(self, os):
-	VisaError.__init__(self, os + " is not yet supported by pyvisa")
+	Error.__init__(self, os + " is not yet supported by pyvisa")
