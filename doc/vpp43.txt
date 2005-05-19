@@ -124,6 +124,52 @@ implementation with the original function signatures and semantics.  Moreover,
 the new names are mere expansions of the original ones.
 
 
+Prerequisites
+=============
+
+The PyVISA package doesn't include a VISA library itself.  You have to download
+it from one of the VISA vendors, e.g. `National Instruments' VISA pages`_.
+Please install it properly before you proceed.
+
+.. _`National Instruments' VISA pages`: http://ni.com/visa/
+
+Additionally, your Python installation needs a fresh version of `ctypes`_.  By
+the way, if you use Windows, it may be convenient to install
+`Enthought-Python`_.  It is a special Python version with all-included
+philosophy for scientific and engineering applications. [#]_
+
+.. _`ctypes`: http://starship.python.net/crew/theller/ctypes/
+.. _`Enthought-Python`: http://www.enthought.com/python/
+.. [#] Of course, it's highly advisable not to have installed another version
+       of Python on your system before you install Enthought-Python.
+
+Setting up the module
+=====================
+
+Windows
+.......
+
+PyVISA expects a file called ``visa32.dll`` in the PATH.  You must assure that
+this is the case.  For example, on my system you find this file in
+``C:\WINNT\system32\``.  Either copy it there or expand your PATH.
+
+
+Linux
+.....
+
+For Linux, the default VISA library is
+``/usr/local/vxipnp/linux/bin/libvisa.so.7``.  However, here you have the
+choice.  If it's called differently on your system, or is placed in another
+directory, you can tell PyVISA so by saying::
+
+    from vpp43 import *
+
+    visa_library.load_library("/usr/local/visa/libvisa.so.7")
+
+Of course, you must set the path according to your installation.  You must do
+this before any VISA function call.
+
+
 Diagnostics
 ===========
 
@@ -153,43 +199,6 @@ was not found, but it may also mean a bug in ``vpp43`` itself.  So if you don't
 see why the exception was raised, contact the current maintainers of PyVISA.
 
 
-Prerequisites
-=============
-
-The PyVISA package doesn't include a VISA library itself.  You have to download
-it from one of the VISA vendors, e.g. `National Instruments' VISA pages`_.
-Please install it properly before you proceed.
-
-.. _`National Instruments' VISA pages`: http://ni.com/visa/
-
-
-Setting up the module
-=====================
-
-Windows
-.......
-
-PyVISA expects a file called ``visa32.dll`` in the PATH.  You must assure that
-this is the case.  For example, on my system you find this file in
-``C:\WINNT\system32\``.  Either copy it there or expand your PATH.
-
-
-Linux
-.....
-
-For Linux, the default VISA library is
-``/usr/local/vxipnp/linux/bin/libvisa.so.7``.  However, here you have the
-choice.  If it's called differently on your system, or is placed in another
-directory, you can tell PyVISA so by saying::
-
-    from vpp43 import *
-
-    visa_library.load_library("/usr/local/visa/libvisa.so.7")
-
-Of course, you must set the path according to your installation.  You must do
-this before any VISA function call.
-
-
 The PyVISA function reference
 =============================
 
@@ -197,7 +206,8 @@ Please note that all descriptions given in this reference serve mostly as
 reminder.  For real descriptions consult a `VISA specification`_.  However,
 whenever there are PyVISA-specific semantics, they are listed here, too.
 
-.. _`VISA specification`: http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
+.. _`VISA specification`:
+       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
 
 
 assert_interrupt_signal
@@ -1568,4 +1578,5 @@ Take data from a file and write it out synchronously.
 ..  LocalWords:  viUnlock viUnmapAddress viUnmapTrigger usb viUsbControlIn vxi
 ..  LocalWords:  viUsbControlOut vprintf vqueryf vscanf vsprintf vsscanf IVI
 ..  LocalWords:  viVxiCommandQuery viWaitOnEvent viWrite viWriteAsync WINNT
-..  LocalWords:  viWriteFromFile FixMe VisaIOError VisaTypeError
+..  LocalWords:  viWriteFromFile FixMe VisaIOError VisaTypeError ctypes
+..  LocalWords:  Enthought
