@@ -68,12 +68,22 @@ ViReal64, ViPReal64, ViAReal64    = _type_triplet(_ctypes.c_double)
 # the spec and the reference .h file.  Therefore, I can't use _type_triplet.
 
 ViBuf         = ViPByte
-ViPBuf        = ViPByte
+ViPBuf        = ViBuf
 ViABuf        = _ctypes.POINTER(ViBuf)
 
 ViString      = _ctypes.c_char_p  # ViPChar in the spec
 ViPString     = _ctypes.c_char_p  # ViPChar in the spec
 ViAString     = _ctypes.POINTER(ViString)
+
+# It is impractical to have ViBuf defined as an array of unsigned chars,
+# because ctypes forces me then to cast the string buffer to an array type.
+# The only semantic difference is that ViString is null terminated while ViBuf
+# is not (as I understand it).  However, in Python there is no difference.
+# Since the memory representation is the same -- which is guaranteed by the C
+# language specification -- the following ViBuf re-definitions are sensible:
+
+ViBuf = ViPBuf = ViString
+ViABuf        = _ctypes.POINTER(ViBuf)
 
 ViRsrc        = ViString
 ViPRsrc       = ViString
@@ -114,5 +124,5 @@ ViEvent, ViPEvent           = _type_dublet(ViObject)
 ViKeyId, ViPKeyId           = _type_dublet(ViString)
 ViJobId, ViPJobId           = _type_dublet(ViUInt32)
 
-#Class of callback functions for event handling, first type is result type
-ViHndlr       = _ctypes.CFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent, ViAddr)
+# Class of callback functions for event handling, first type is result type
+ViHndlr = _ctypes.CFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent, ViAddr)
