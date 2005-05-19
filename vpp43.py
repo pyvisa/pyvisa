@@ -44,7 +44,8 @@ from visa_exceptions import *
 from vpp43_constants import *
 from vpp43_types import *
 import os
-from ctypes import byref, cdll, create_string_buffer, c_void_p
+from ctypes import byref, cdll, create_string_buffer, \
+    c_void_p, c_double, c_long
 if os.name == 'nt':
     from ctypes import windll
 
@@ -133,7 +134,7 @@ class VisaLibrary(Singleton):
     def __call__(self, force_cdecl = False):
 	"""Returns the ctypes object to the VISA library.
 
-	If "force_cdecl" is True, use the cdecl calling convension even under
+	If "force_cdecl" is True, use the cdecl calling convention even under
 	Windows, where the stdcall convension is the default.  For Linux, this
 	has no effect.
 	
@@ -339,34 +340,44 @@ def convert_argument_list(original_arguments):
     converted_arguments = []
     for argument in original_arguments:
 	if isinstance(argument, float):
-	    argument_list.append(_ctypes.c_double(argument))
+	    argument_list.append(c_double(argument))
 	elif isinstance(argument, int):
-	    argument_list.append(_ctypes.c_long(argument))
+	    argument_list.append(c_long(argument))
 	elif isinstance(argument, str):    
 	    argument_list.append(argument)
 	else:
-	    raise "Invalid type in scanf/printf: %s" % type(argument)
+	    raise visa_exceptions.VisaTypeError, \
+		"Invalid type in scanf/printf: %s" % type(argument)
     return tuple(converted_arguments)
 
-def convert_to_byref(byvalue_arguments):
-    """Converts a sequence of ctypes objects to a tuple with ctypes references
+def convert_to_byref(byvalue_arguments, buffer_length):
+    """Converts a list of ctypes objects to a tuple with ctypes references
     (pointers) to them, for use in scanf-like functions.
 
     Arguments:
-    byvalue_arguments -- a sequence type with the original arguments.  They
-        must be ctypes objects or Python strings.
+    byvalue_arguments -- a list (sic!) with the original arguments.  They must
+        be simple ctypes objects or Python strings.  If there are Python
+        strings, they are converted in place to ctypes buffers of the same
+        length and same contents.
+    buffer_length -- minimal length of ctypes buffers generated from Python
+        strings.
 
     Return value: a tuple with the by-references arguments.
 
     """
     converted_arguments = []
-    for argument in byvalue_arguments:
-	if isinstance(argument, str):
-	    converted_arguments.append(argument)
-	elif isinstance(argument, _ctypes._SimpleCData):
-	    converted_arguments.append(byref(argument))
+    for i in range(len(byvalue_arguments)):
+	if isinstance(byvalue_arguments[i], str):
+	    byvalue_arguments[i] = \
+		create_string_buffer(byvalue_arguments[i],
+				     max(len(byvalue_arguments[i]) + 1,
+					 buffer_length))
+	    converted_arguments.append(byvalue_arguments[i])
+	elif isinstance(byvalue_arguments[i], (c_long, c_double))
+	    converted_arguments.append(byref(byvalue_arguments[i]))
 	else:
-	    raise "Invalid type in scanf: %s" % type(argument)
+	    raise visa_exceptions.VisaTypeError, \
+		"Invalid type in scanf: %s" % type(argument)
     return tuple(converted_arguments)
 	
 
@@ -515,11 +526,13 @@ def lock(vi, lock_type, timeout, requested_key = None):
     visa_library().viLock(vi, lock_type, timeout, requested_key, access_key)
     return access_key
 
-def map_address(vi, map_space, map_base, map_size, access, suggested):
+def map_address(vi, map_space, map_base, map_size, access = VI_FALSE, suggested
+		= VI_NULL):
+    access = VI_FALSE
     address = ViAddr()
     visa_library().viMapAddress(vi, map_space, map_base, map_size, access,
 				suggested, byref(address))
-    return address.value
+    return address
 
 def map_trigger(vi, trigger_source, trigger_destination, mode):
     visa_library().viMapTrigger(vi, trigger_source, trigger_destination, mode)
@@ -527,7 +540,7 @@ def map_trigger(vi, trigger_source, trigger_destination, mode):
 def memory_allocation(vi, size):
     offset = ViBusAddress()
     visa_library().viMemAlloc(vi, size, byref(offset))
-    return offset.value
+    return offset
 
 def memory_free(vi, offset):
     visa_library().viMemFree(vi, offset)
@@ -647,11 +660,13 @@ def poke_32(vi, address, value_32):
 def printf(vi, write_format, *args):
     visa_library(True).viPrintf(vi, write_format, *convert_argument_list(args))
 
-def queryf(vi, write_format, read_format, write_args, *read_args):
-    argument_list = convert_argument_list(read_args)
+def queryf(vi, write_format, read_format, write_args, *read_args,
+	   maxmial_string_length = 1024):
+    argument_list = list(convert_argument_list(read_args))
     if write_args is None: write_args = ()
     visa_library(True).viQueryf(vi, write_format, read_format,
-				*(write_args + argument_list))
+				*(convert_argument_list(write_args) +
+				  convert_to_byref(argument_list)))
     return tuple([argument.value for argument in argument_list])
 
 def read(vi, count):
@@ -679,9 +694,11 @@ def read_to_file(vi, filename, count):
 # FixMe: I have to test whether the results are really written to
 # "argument_list" rather than only to a local copy within "viScanf".
 
-def scanf(vi, read_format, *args):
-    argument_list = convert_argument_list(args)
-    visa_library(True).viScanf(vi, read_format, *argument_list)
+def scanf(vi, read_format, *args, maximal_string_length = 1024):
+    argument_list = list(convert_argument_list(args))
+    visa_library(True).viScanf(vi, read_format,
+			       *convert_to_byref(argument_list,
+						 maximal_string_length))
     return tuple([argument.value for argument in argument_list])
 
 def set_attribute(vi, attribute, attribute_state):
@@ -696,9 +713,11 @@ def sprintf(vi, write_format, *args, **keyw):
 				 *convert_argument_list(args))
     return buffer.raw
 
-def sscanf(vi, buffer, read_format, *args):
-    argument_list = convert_argument_list(args)
-    visa_library(True).viSScanf(vi, buffer, read_format, *argument_list)
+def sscanf(vi, buffer, read_format, *args, maximal_string_length = 1024):
+    argument_list = list(convert_argument_list(args))
+    visa_library(True).viSScanf(vi, buffer, read_format,
+				*convert_to_byref(argument_list,
+						  maximal_string_length))
     return tuple([argument.value for argument in argument_list])
 
 def status_description(vi, status):
