@@ -466,7 +466,6 @@ def find_next(find_list):
     return instrument_description.value
 
 def find_resources(session, regular_expression):
-    ensure_string_type(regular_expression)
     find_list = ViFindList()
     return_counter = ViUInt32()
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
@@ -479,8 +478,19 @@ def flush(vi, mask):
     visa_library().viFlush(vi, mask)
 
 def get_attribute(vi, attribute):
-    attribute_state = attributes[attribute]()
-    visa_library().viGetAttribute(vi, attribute, byref(attribute_state))
+    # FixMe: How to deal with ViBuf?
+    datatype = attributes[attribute]
+    if datatype == ViString:
+	attribute_state = create_string_buffer(256)
+	visa_library().viGetAttribute(vi, attribute, attribute_state)
+    elif datatype == ViAUInt8:
+	length = get_attribute(vi, VI_ATTR_USB_RECV_INTR_SIZE)
+	attribute_state = (ViUInt8 * length)()
+	visa_library().viGetAttribute(vi, attribute, byref(attribute_state))
+	return list(attribute_state)
+    else:
+	attribute_state = datatype()
+	visa_library().viGetAttribute(vi, attribute, byref(attribute_state))
     return attribute_state.value
 
 def gpib_command(vi, buffer):
@@ -590,7 +600,6 @@ def move_out_32(vi, space, offset, length, buffer_16):
 
 def open(session, resource_name, access_mode = VI_NO_LOCK, timeout =
 	 VI_TMO_IMMEDIATE):
-    ensure_string_type(resource_name)
     vi = ViSession()
     visa_library().viOpen(session, resource_name, access_mode, timeout,
 			  byref(vi))
