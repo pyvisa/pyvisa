@@ -43,6 +43,7 @@ VI_SPEC_VERSION = 0x00300000
 from visa_exceptions import *
 from vpp43_constants import *
 from vpp43_types import *
+from vpp43_attributes import attributes
 import os
 from ctypes import byref, cdll, create_string_buffer, \
     c_void_p, c_double, c_long
@@ -62,7 +63,7 @@ visa_functions = [
     "open_default_resource_manager", "out_16", "out_32", "out_8",
     "parse_resource", "parse_resource_extended", "peek_16", "peek_32",
     "peek_8", "poke_16", "poke_32", "poke_8", "printf", "queryf", "read",
-    "read_asynchronously", "read_from_file", "read_stb", "scanf",
+    "read_asynchronously", "read_to_file", "read_stb", "scanf",
     "set_attribute", "set_buffer", "sprintf", "sscanf", "status_description",
     "terminate", "uninstall_handler", "unlock", "unmap_address",
     "unmap_trigger", "usb_control_in", "usb_control_out", "vprintf", "vqueryf",
@@ -373,7 +374,7 @@ def convert_to_byref(byvalue_arguments, buffer_length):
 				     max(len(byvalue_arguments[i]) + 1,
 					 buffer_length))
 	    converted_arguments.append(byvalue_arguments[i])
-	elif isinstance(byvalue_arguments[i], (c_long, c_double))
+	elif isinstance(byvalue_arguments[i], (c_long, c_double)):
 	    converted_arguments.append(byref(byvalue_arguments[i]))
 	else:
 	    raise visa_exceptions.VisaTypeError, \
@@ -478,7 +479,7 @@ def flush(vi, mask):
     visa_library().viFlush(vi, mask)
 
 def get_attribute(vi, attribute):
-    attribute_state = ViAttrState()
+    attribute_state = attributes[attribute]()
     visa_library().viGetAttribute(vi, attribute, byref(attribute_state))
     return attribute_state.value
 
@@ -660,13 +661,14 @@ def poke_32(vi, address, value_32):
 def printf(vi, write_format, *args):
     visa_library(True).viPrintf(vi, write_format, *convert_argument_list(args))
 
-def queryf(vi, write_format, read_format, write_args, *read_args,
-	   maxmial_string_length = 1024):
+def queryf(vi, write_format, read_format, write_args, *read_args, **keyw):
+    maximal_string_length = keyw.get("maxmial_string_length", 1024)
     argument_list = list(convert_argument_list(read_args))
     if write_args is None: write_args = ()
     visa_library(True).viQueryf(vi, write_format, read_format,
 				*(convert_argument_list(write_args) +
-				  convert_to_byref(argument_list)))
+				  convert_to_byref(argument_list,
+						   maximal_string_length)))
     return tuple([argument.value for argument in argument_list])
 
 def read(vi, count):
@@ -694,7 +696,8 @@ def read_to_file(vi, filename, count):
 # FixMe: I have to test whether the results are really written to
 # "argument_list" rather than only to a local copy within "viScanf".
 
-def scanf(vi, read_format, *args, maximal_string_length = 1024):
+def scanf(vi, read_format, *args, **keyw):
+    maximal_string_length = keyw.get("maxmial_string_length", 1024)
     argument_list = list(convert_argument_list(args))
     visa_library(True).viScanf(vi, read_format,
 			       *convert_to_byref(argument_list,
@@ -713,7 +716,8 @@ def sprintf(vi, write_format, *args, **keyw):
 				 *convert_argument_list(args))
     return buffer.raw
 
-def sscanf(vi, buffer, read_format, *args, maximal_string_length = 1024):
+def sscanf(vi, buffer, read_format, *args, **keyw):
+    maximal_string_length = keyw.get("maxmial_string_length", 1024)
     argument_list = list(convert_argument_list(args))
     visa_library(True).viSScanf(vi, buffer, read_format,
 				*convert_to_byref(argument_list,
