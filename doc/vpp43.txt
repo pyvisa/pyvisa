@@ -203,12 +203,14 @@ The PyVISA function reference
 =============================
 
 Please note that all descriptions given in this reference serve mostly as
-reminder.  For real descriptions consult a `VISA specification`_.  However,
-whenever there are PyVISA-specific semantics, they are listed here, too.
+reminder.  For real descriptions consult a `VISA specification`_ or `NI-VISA
+Programmer Reference Manual`_.  However, whenever there are PyVISA-specific
+semantics, they are listed here, too.
 
 .. _`VISA specification`:
        http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
-
+.. _`NI-VISA Programmer Reference Manual`:
+       http://digital.ni.com/manuals.nsf/websearch/87E52268CF9ACCEE86256D0F006E860D
 
 assert_interrupt_signal
 .......................
@@ -468,10 +470,8 @@ Retrieve the state of an attribute.
         Session, event, or find list attribute for which the state query is
         made.
 :Return values:
-    `attribute_state` : integer
-        The state of the queried attribute for a specified resource. The
-        interpretation of the returned value is defined by the individual
-        resource.
+    `attribute_state` : integer, string, or list of integers
+        The state of the queried attribute for a specified resource.
 
 
 gpib_command
