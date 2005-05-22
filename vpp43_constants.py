@@ -35,136 +35,129 @@ __version__ = "$Revision$"
 # $Source$
 
 
-# _to_int() is necessary because the VISA specification is flawed: It defines
+# The following codes are not printed in hexadecimal form because they can be
+# negative.  In my opinion, the VISA specification is flawed here: It defines
 # the VISA codes, which have a value less than zero, in their internal 32-bit
 # signed integer representation.  However, this is positive.  ctypes doesn't
 # care about that and (correctly) returns the negative value, which is left as
 # such by Python.
 #
-# FixMe: Get rid of it.  It slows down only.  Instead, the negative values
-# should be coded directly.
+# We used to have a function "_to_int" that did the conversion, however, this
+# caused crashes of Python 2.3.
+#
 
-def _to_int(x):
-    """Converts a completion and error code as it is listed in 32-bit notation
-    in the VPP-4.3.2 specification to the actual integer value.
-    """
-    if x > 0x7fffffff:
-        return int(x - 0x100000000)
-    else:
-        return int(x)
+VI_SUCCESS                   = 0
+VI_SUCCESS_EVENT_EN          = 1073676290
+VI_SUCCESS_EVENT_DIS         = 1073676291
+VI_SUCCESS_QUEUE_EMPTY       = 1073676292
+VI_SUCCESS_TERM_CHAR         = 1073676293
+VI_SUCCESS_MAX_CNT           = 1073676294
+VI_SUCCESS_DEV_NPRESENT      = 1073676413
+VI_SUCCESS_TRIG_MAPPED       = 1073676414
+VI_SUCCESS_QUEUE_NEMPTY      = 1073676416
+VI_SUCCESS_NCHAIN            = 1073676440
+VI_SUCCESS_NESTED_SHARED     = 1073676441
+VI_SUCCESS_NESTED_EXCLUSIVE  = 1073676442
+VI_SUCCESS_SYNC              = 1073676443
 
-VI_SUCCESS                   = _to_int(0x00000000)
-VI_SUCCESS_EVENT_EN          = _to_int(0x3FFF0002)
-VI_SUCCESS_EVENT_DIS         = _to_int(0x3FFF0003)
-VI_SUCCESS_QUEUE_EMPTY       = _to_int(0x3FFF0004)
-VI_SUCCESS_TERM_CHAR         = _to_int(0x3FFF0005)
-VI_SUCCESS_MAX_CNT           = _to_int(0x3FFF0006)
-VI_SUCCESS_DEV_NPRESENT      = _to_int(0x3FFF007D)
-VI_SUCCESS_TRIG_MAPPED       = _to_int(0x3FFF007E)
-VI_SUCCESS_QUEUE_NEMPTY      = _to_int(0x3FFF0080)
-VI_SUCCESS_NCHAIN            = _to_int(0x3FFF0098)
-VI_SUCCESS_NESTED_SHARED     = _to_int(0x3FFF0099)
-VI_SUCCESS_NESTED_EXCLUSIVE  = _to_int(0x3FFF009A)
-VI_SUCCESS_SYNC              = _to_int(0x3FFF009B)
-
-VI_WARN_QUEUE_OVERFLOW       = _to_int(0x3FFF000C)
-VI_WARN_CONFIG_NLOADED       = _to_int(0x3FFF0077)
-VI_WARN_NULL_OBJECT          = _to_int(0x3FFF0082)
-VI_WARN_NSUP_ATTR_STATE      = _to_int(0x3FFF0084)
-VI_WARN_UNKNOWN_STATUS       = _to_int(0x3FFF0085)
-VI_WARN_NSUP_BUF             = _to_int(0x3FFF0088)
+VI_WARN_QUEUE_OVERFLOW       = 1073676300
+VI_WARN_CONFIG_NLOADED       = 1073676407
+VI_WARN_NULL_OBJECT          = 1073676418
+VI_WARN_NSUP_ATTR_STATE      = 1073676420
+VI_WARN_UNKNOWN_STATUS       = 1073676421
+VI_WARN_NSUP_BUF             = 1073676424
 
 # The following one is a non-standard NI extension
-VI_WARN_EXT_FUNC_NIMPL       = _to_int(0x3FFF00A9)
+VI_WARN_EXT_FUNC_NIMPL       = 1073676457
 
-VI_ERROR_SYSTEM_ERROR        = _to_int(0xBFFF0000)
-VI_ERROR_INV_OBJECT          = _to_int(0xBFFF000E)
-VI_ERROR_RSRC_LOCKED         = _to_int(0xBFFF000F)
-VI_ERROR_INV_EXPR            = _to_int(0xBFFF0010)
-VI_ERROR_RSRC_NFOUND         = _to_int(0xBFFF0011)
-VI_ERROR_INV_RSRC_NAME       = _to_int(0xBFFF0012)
-VI_ERROR_INV_ACC_MODE        = _to_int(0xBFFF0013)
-VI_ERROR_TMO                 = _to_int(0xBFFF0015)
-VI_ERROR_CLOSING_FAILED      = _to_int(0xBFFF0016)
-VI_ERROR_INV_DEGREE          = _to_int(0xBFFF001B)
-VI_ERROR_INV_JOB_ID          = _to_int(0xBFFF001C)
-VI_ERROR_NSUP_ATTR           = _to_int(0xBFFF001D)
-VI_ERROR_NSUP_ATTR_STATE     = _to_int(0xBFFF001E)
-VI_ERROR_ATTR_READONLY       = _to_int(0xBFFF001F)
-VI_ERROR_INV_LOCK_TYPE       = _to_int(0xBFFF0020)
-VI_ERROR_INV_ACCESS_KEY      = _to_int(0xBFFF0021)
-VI_ERROR_INV_EVENT           = _to_int(0xBFFF0026)
-VI_ERROR_INV_MECH            = _to_int(0xBFFF0027)
-VI_ERROR_HNDLR_NINSTALLED    = _to_int(0xBFFF0028)
-VI_ERROR_INV_HNDLR_REF       = _to_int(0xBFFF0029)
-VI_ERROR_INV_CONTEXT         = _to_int(0xBFFF002A)
-VI_ERROR_QUEUE_OVERFLOW      = _to_int(0xBFFF002D)
-VI_ERROR_NENABLED            = _to_int(0xBFFF002F)
-VI_ERROR_ABORT               = _to_int(0xBFFF0030)
-VI_ERROR_RAW_WR_PROT_VIOL    = _to_int(0xBFFF0034)
-VI_ERROR_RAW_RD_PROT_VIOL    = _to_int(0xBFFF0035)
-VI_ERROR_OUTP_PROT_VIOL      = _to_int(0xBFFF0036)
-VI_ERROR_INP_PROT_VIOL       = _to_int(0xBFFF0037)
-VI_ERROR_BERR                = _to_int(0xBFFF0038)
-VI_ERROR_IN_PROGRESS         = _to_int(0xBFFF0039)
-VI_ERROR_INV_SETUP           = _to_int(0xBFFF003A)
-VI_ERROR_QUEUE_ERROR         = _to_int(0xBFFF003B)
-VI_ERROR_ALLOC               = _to_int(0xBFFF003C)
-VI_ERROR_INV_MASK            = _to_int(0xBFFF003D)
-VI_ERROR_IO                  = _to_int(0xBFFF003E)
-VI_ERROR_INV_FMT             = _to_int(0xBFFF003F)
-VI_ERROR_NSUP_FMT            = _to_int(0xBFFF0041)
-VI_ERROR_LINE_IN_USE         = _to_int(0xBFFF0042)
-VI_ERROR_NSUP_MODE           = _to_int(0xBFFF0046)
-VI_ERROR_SRQ_NOCCURRED       = _to_int(0xBFFF004A)
-VI_ERROR_INV_SPACE           = _to_int(0xBFFF004E)
-VI_ERROR_INV_OFFSET          = _to_int(0xBFFF0051)
-VI_ERROR_INV_WIDTH           = _to_int(0xBFFF0052)
-VI_ERROR_NSUP_OFFSET         = _to_int(0xBFFF0054)
-VI_ERROR_NSUP_VAR_WIDTH      = _to_int(0xBFFF0055)
-VI_ERROR_WINDOW_NMAPPED      = _to_int(0xBFFF0057)
-VI_ERROR_RESP_PENDING        = _to_int(0xBFFF0059)
-VI_ERROR_NLISTENERS          = _to_int(0xBFFF005F)
-VI_ERROR_NCIC                = _to_int(0xBFFF0060)
-VI_ERROR_NSYS_CNTLR          = _to_int(0xBFFF0061)
-VI_ERROR_NSUP_OPER           = _to_int(0xBFFF0067)
-VI_ERROR_INTR_PENDING        = _to_int(0xBFFF0068)
-VI_ERROR_ASRL_PARITY         = _to_int(0xBFFF006A)
-VI_ERROR_ASRL_FRAMING        = _to_int(0xBFFF006B)
-VI_ERROR_ASRL_OVERRUN        = _to_int(0xBFFF006C)
-VI_ERROR_TRIG_NMAPPED        = _to_int(0xBFFF006E)
-VI_ERROR_NSUP_ALIGN_OFFSET   = _to_int(0xBFFF0070)
-VI_ERROR_USER_BUF            = _to_int(0xBFFF0071)
-VI_ERROR_RSRC_BUSY           = _to_int(0xBFFF0072)
-VI_ERROR_NSUP_WIDTH          = _to_int(0xBFFF0076)
-VI_ERROR_INV_PARAMETER       = _to_int(0xBFFF0078)
-VI_ERROR_INV_PROT            = _to_int(0xBFFF0079)
-VI_ERROR_INV_SIZE            = _to_int(0xBFFF007B)
-VI_ERROR_WINDOW_MAPPED       = _to_int(0xBFFF0080)
-VI_ERROR_NIMPL_OPER          = _to_int(0xBFFF0081)
-VI_ERROR_INV_LENGTH          = _to_int(0xBFFF0083)
-VI_ERROR_INV_MODE            = _to_int(0xBFFF0091)
-VI_ERROR_SESN_NLOCKED        = _to_int(0xBFFF009C)
-VI_ERROR_MEM_NSHARED         = _to_int(0xBFFF009D)
-VI_ERROR_LIBRARY_NFOUND      = _to_int(0xBFFF009E)
-VI_ERROR_NSUP_INTR           = _to_int(0xBFFF009F)
-VI_ERROR_INV_LINE            = _to_int(0xBFFF00A0)
-VI_ERROR_FILE_ACCESS         = _to_int(0xBFFF00A1)
-VI_ERROR_FILE_IO             = _to_int(0xBFFF00A2)
-VI_ERROR_NSUP_LINE           = _to_int(0xBFFF00A3)
-VI_ERROR_NSUP_MECH           = _to_int(0xBFFF00A4)
-VI_ERROR_INTF_NUM_NCONFIG    = _to_int(0xBFFF00A5)
-VI_ERROR_CONN_LOST           = _to_int(0xBFFF00A6)
+VI_ERROR_SYSTEM_ERROR        = -1073807360
+VI_ERROR_INV_OBJECT          = -1073807346
+VI_ERROR_RSRC_LOCKED         = -1073807345
+VI_ERROR_INV_EXPR            = -1073807344
+VI_ERROR_RSRC_NFOUND         = -1073807343
+VI_ERROR_INV_RSRC_NAME       = -1073807342
+VI_ERROR_INV_ACC_MODE        = -1073807341
+VI_ERROR_TMO                 = -1073807339
+VI_ERROR_CLOSING_FAILED      = -1073807338
+VI_ERROR_INV_DEGREE          = -1073807333
+VI_ERROR_INV_JOB_ID          = -1073807332
+VI_ERROR_NSUP_ATTR           = -1073807331
+VI_ERROR_NSUP_ATTR_STATE     = -1073807330
+VI_ERROR_ATTR_READONLY       = -1073807329
+VI_ERROR_INV_LOCK_TYPE       = -1073807328
+VI_ERROR_INV_ACCESS_KEY      = -1073807327
+VI_ERROR_INV_EVENT           = -1073807322
+VI_ERROR_INV_MECH            = -1073807321
+VI_ERROR_HNDLR_NINSTALLED    = -1073807320
+VI_ERROR_INV_HNDLR_REF       = -1073807319
+VI_ERROR_INV_CONTEXT         = -1073807318
+VI_ERROR_QUEUE_OVERFLOW      = -1073807315
+VI_ERROR_NENABLED            = -1073807313
+VI_ERROR_ABORT               = -1073807312
+VI_ERROR_RAW_WR_PROT_VIOL    = -1073807308
+VI_ERROR_RAW_RD_PROT_VIOL    = -1073807307
+VI_ERROR_OUTP_PROT_VIOL      = -1073807306
+VI_ERROR_INP_PROT_VIOL       = -1073807305
+VI_ERROR_BERR                = -1073807304
+VI_ERROR_IN_PROGRESS         = -1073807303
+VI_ERROR_INV_SETUP           = -1073807302
+VI_ERROR_QUEUE_ERROR         = -1073807301
+VI_ERROR_ALLOC               = -1073807300
+VI_ERROR_INV_MASK            = -1073807299
+VI_ERROR_IO                  = -1073807298
+VI_ERROR_INV_FMT             = -1073807297
+VI_ERROR_NSUP_FMT            = -1073807295
+VI_ERROR_LINE_IN_USE         = -1073807294
+VI_ERROR_NSUP_MODE           = -1073807290
+VI_ERROR_SRQ_NOCCURRED       = -1073807286
+VI_ERROR_INV_SPACE           = -1073807282
+VI_ERROR_INV_OFFSET          = -1073807279
+VI_ERROR_INV_WIDTH           = -1073807278
+VI_ERROR_NSUP_OFFSET         = -1073807276
+VI_ERROR_NSUP_VAR_WIDTH      = -1073807275
+VI_ERROR_WINDOW_NMAPPED      = -1073807273
+VI_ERROR_RESP_PENDING        = -1073807271
+VI_ERROR_NLISTENERS          = -1073807265
+VI_ERROR_NCIC                = -1073807264
+VI_ERROR_NSYS_CNTLR          = -1073807263
+VI_ERROR_NSUP_OPER           = -1073807257
+VI_ERROR_INTR_PENDING        = -1073807256
+VI_ERROR_ASRL_PARITY         = -1073807254
+VI_ERROR_ASRL_FRAMING        = -1073807253
+VI_ERROR_ASRL_OVERRUN        = -1073807252
+VI_ERROR_TRIG_NMAPPED        = -1073807250
+VI_ERROR_NSUP_ALIGN_OFFSET   = -1073807248
+VI_ERROR_USER_BUF            = -1073807247
+VI_ERROR_RSRC_BUSY           = -1073807246
+VI_ERROR_NSUP_WIDTH          = -1073807242
+VI_ERROR_INV_PARAMETER       = -1073807240
+VI_ERROR_INV_PROT            = -1073807239
+VI_ERROR_INV_SIZE            = -1073807237
+VI_ERROR_WINDOW_MAPPED       = -1073807232
+VI_ERROR_NIMPL_OPER          = -1073807231
+VI_ERROR_INV_LENGTH          = -1073807229
+VI_ERROR_INV_MODE            = -1073807215
+VI_ERROR_SESN_NLOCKED        = -1073807204
+VI_ERROR_MEM_NSHARED         = -1073807203
+VI_ERROR_LIBRARY_NFOUND      = -1073807202
+VI_ERROR_NSUP_INTR           = -1073807201
+VI_ERROR_INV_LINE            = -1073807200
+VI_ERROR_FILE_ACCESS         = -1073807199
+VI_ERROR_FILE_IO             = -1073807198
+VI_ERROR_NSUP_LINE           = -1073807197
+VI_ERROR_NSUP_MECH           = -1073807196
+VI_ERROR_INTF_NUM_NCONFIG    = -1073807195
+VI_ERROR_CONN_LOST           = -1073807194
 
 # The following two are a non-standard NI extensions
-VI_ERROR_MACHINE_NAVAIL      = _to_int(0xBFFF00A7)
-VI_ERROR_NPERMISSION         = _to_int(0xBFFF00A8)
+VI_ERROR_MACHINE_NAVAIL      = -1073807193
+VI_ERROR_NPERMISSION         = -1073807192
 
 
 #
 # Attribute constants
 #
-# All attribute codes are unsigned long, so no _to_int() is necessary.
+# All attribute codes are unsigned long
 #
 
 VI_ATTR_RSRC_CLASS          = 0xBFFF0001
@@ -287,7 +280,7 @@ VI_ATTR_USB_RECV_INTR_DATA  = 0xBFFF41B1
 #
 # Event Types
 #
-# All event codes are unsigned long, so no _to_int() is necessary.
+# All event codes are unsigned long
 #
 
 VI_EVENT_IO_COMPLETION      = 0x3FFF2009
