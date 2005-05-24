@@ -45,8 +45,8 @@ from vpp43_constants import *
 from vpp43_types import *
 from vpp43_attributes import attributes
 import os
-from ctypes import byref, cdll, create_string_buffer, \
-    c_void_p, c_double, c_long
+from ctypes import byref, cdll, c_void_p, c_double, c_long, \
+    create_string_buffer
 if os.name == 'nt':
     from ctypes import windll
 
@@ -525,8 +525,43 @@ def in_32(vi, space, offset):
     visa_library().viIn32(vi, space, offset, byref(value_32))
     return value_32.value
 
-def install_handler(vi, event_type, handler, user_handle = 0):
-    visa_library().viInstallHandler(vi, event_type, handler, user_handle)
+handlers = []
+"""Contains all installed event handlers.
+
+Its elements are tuples with three elements: The handler itself (a Python
+callable), the user handle (as a ctypes object) and the handler again, this
+time as a ctypes object created with CFUNCTYPE.
+
+"""
+
+def install_handler(vi, event_type, handler, user_handle = None):
+    converted_handler = ViHndlr(handler)
+    if user_handle is None:
+	converted_user_handle = None
+	visa_library().viInstallHandler(vi, event_type, converted_handler,
+					None)
+    else:
+	if isinstance(user_handle, int):
+	    converted_user_handle = c_long(user_handle)
+	elif isinstance(user_handle, float):
+	    converted_user_handle = c_double(user_handle)
+	elif isinstance(user_handle, string):
+	    converted_user_handle = c_create_string_buffer(user_handle)
+	elif isinstance(user_handle, list):
+	    for element in user_handle:
+		if not isinstance(element, int):
+		    converted_user_handle = \
+			(c_double * len(user_handle))(tuple(user_handle))
+		    break
+	    else:
+		converted_user_handle = \
+		    (c_long * len(user_handle))(tuple(user_handle))
+	else:
+	    raise "Type not allowed as user handle"
+	visa_library().viInstallHandler(vi, event_type, converted_handler,
+					byref(converted_user_handle))
+    handlers.append((handler, converted_user_handle, converted_handler))
+    return converted_user_handle
 
 def lock(vi, lock_type, timeout, requested_key = None):
     if lock_type == VI_EXCLUSIVE_LOCK:
@@ -741,8 +776,16 @@ def status_description(vi, status):
 def terminate(vi, degree, job_id):
     visa_library().viTerminate(vi, degree, job_id)
 
-def uninstall_handler(vi, event_type, handler, user_handle = 0):
-    visa_library().viUninstallHandler(vi, event_type, handler, user_handle)
+def uninstall_handler(vi, event_type, handler, user_handle = None):
+    for i in xrange(len(handlers)):
+	element = handlers[i]
+	if element[0] is handler and element[1] is user_handle:
+	    del handlers[i]
+	    break
+    else:
+	raise "Handler not found"
+    visa_library().viUninstallHandler(vi, event_type, element[2],
+				      byref(element[1]))
 
 def unlock(vi):
     visa_library().viUnlock(vi)
