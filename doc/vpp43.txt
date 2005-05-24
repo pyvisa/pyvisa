@@ -597,14 +597,32 @@ Install handlers for event callbacks.
         Unique logical identifier to a session.
     `event_type` : integer
         Logical event identifier.
-    `handler` : ViHndlr
+    `handler` : callable
         Interpreted as a valid reference to a handler to be installed by a
         client application.
-    `user_handle` : integer : optional
+    `user_handle` : ``None``, float, integer, string, or list of floats or integers : optional
         A value specified by an application that can be used for identifying
-        handlers uniquely for an event type.  It defaults to 0.
+        handlers uniquely for an event type.  It defaults to ``None``.
 :Return values:
-    None.
+    `converted_user_handle` : ctypes type
+        An object representing the user_handle.  Use it to communicate with
+	your handler.  If your user_handle was a list, you get its elements as
+	usual with ``converted_user_handle[index]``.  You can even convert it
+	to a list with ``list(converted_user_handle)`` (however, this yields a
+	copy).
+
+        For strings, use ``converted_user_handle.value`` if it's supposed to be
+        interpreted as a null-terminated string, or
+        ``converted_user_handle.raw`` if you want to see *all* bytes.  You can
+        also write to both expressions, however, slicing is only possible for
+        reading.
+
+        For simple types, you can say ``converted_user_handle.value`` (read and
+        write).
+
+        You must assure that never values are written to converted_user_data
+        which are longer (in bytes) than the original values.  So be careful
+        not to write a string longer than the original one, or an longer list.
 
 
 lock
@@ -1340,12 +1358,14 @@ Uninstall handlers for events.
         Unique logical identifier to a session.
     `event_type` : integer
         Logical event identifier.
-    `handler` : ViHndlr
+    `handler` : callable
         Interpreted as a valid reference to a handler to be uninstalled by a
         client application.
-    `user_handle` : integer : optional
+    `user_handle` : ctypes type : optional
         A value specified by an application that can be used for identifying
-        handlers uniquely in a session for an event.
+        handlers uniquely in a session for an event.  It *must* be the object
+	returned by `install_handler`_.  Consequently, it defaults to
+	``None``.
 :Return values:
     None.
 
