@@ -34,8 +34,9 @@ __version__ = "$Revision$"
 # $Source$
 
 
-# ctypes shouldn't be re-exported.
+# ctypes and os shouldn't be re-exported.
 import ctypes as _ctypes
+import os as _os
 
 
 # Part One: Type Assignments for VISA and Instrument Drivers, see spec table
@@ -125,4 +126,9 @@ ViKeyId, ViPKeyId           = _type_dublet(ViString)
 ViJobId, ViPJobId           = _type_dublet(ViUInt32)
 
 # Class of callback functions for event handling, first type is result type
-ViHndlr = _ctypes.CFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent, ViAddr)
+if _os.name == 'nt':
+    ViHndlr = _ctypes.WINFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
+				  ViAddr)
+else:
+    ViHndlr = _ctypes.CFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
+				ViAddr)
