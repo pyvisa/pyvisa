@@ -588,9 +588,26 @@ offset.
 install_handler
 ...............
 
-Install handlers for event callbacks.
+Install handlers for event callbacks.  A handler must have the following
+signature::
 
-:Call: install_handler(vi, event_type, handler, user_handle)
+    def event_handler(vi, event_type, context, user_handle):
+        ...
+
+Its parameters mean the following:
+
+`vi` : ViSession
+    Unique logical identifier to a session.
+`event_type` : ViEvent
+    Logical event identifier.  With ``event_type.value`` you get its value as
+    an integer.
+`context` : ViEvent
+    A handle specifying the unique occurrence of an event.
+`user_handle` : ctypes type
+    The user handle in ctypes form.  See below for how to use it.
+
+:Call: converted_user_handle = install_handler(vi, event_type, handler,
+       user_handle)
 :VISA name: viInstallHandler
 :Parameters:
     `vi` : ViSession
@@ -620,9 +637,10 @@ Install handlers for event callbacks.
         For simple types, you can say ``converted_user_handle.value`` (read and
         write).
 
-        You must assure that never values are written to converted_user_data
-        which are longer (in bytes) than the original values.  So be careful
-        not to write a string longer than the original one, or an longer list.
+        **Attention:** You must assure that you never write values to
+        converted_user_data which are longer (in bytes) than the initial
+        values.  So be careful not to write a string longer than the original
+        one, nor a longer list.  You'd be alerted by exceptions, though.
 
 
 lock
@@ -642,14 +660,14 @@ Establish an access mode to the specified resource.
         Absolute time period in milliseconds that a resource waits to get
         unlocked by the locking session before returning this operation with an
         error.
-    `requested_key` : string : optional
+    `requested_key` : ctypes string : optional
         This parameter is not used if `lock_type` is ``VI_EXCLUSIVE_LOCK``
         (exclusive locks).  When trying to lock the resource as
         ``VI_SHARED_LOCK`` (shared), you can either omit it so that VISA
         generates an `access_key` for the session, or you can suggest an
         `access_key` to use for the shared lock.
 :Return values:
-    `access_key` : string : optional
+    `access_key` : ctypes string : optional
         This value is ``None`` if `lock_type` is ``VI_EXCLUSIVE_LOCK``
         (exclusive locks).  When trying to lock the resource as
         ``VI_SHARED_LOCK`` (shared), the function returns a unique access key
