@@ -603,8 +603,10 @@ Its parameters mean the following:
     an integer.
 `context` : ViEvent
     A handle specifying the unique occurrence of an event.
-`user_handle` : ctypes type
-    The user handle in ctypes form.  See below for how to use it.
+`user_handle` : ctypes pointer type
+    A *pointer* to the user handle in ctypes form.  See below at "Return
+    values" for how to use it, however, you have to substitute
+    ``user_handle.contents`` for ``converted_user_handle`` in the explanation.
 
 :Call: converted_user_handle = install_handler(vi, event_type, handler,
        user_handle)
@@ -1615,6 +1617,6 @@ Take data from a file and write it out synchronously.
 ..  LocalWords:  viSPrintf viSScanf viStatusDesc viTerminate viUninstallHandler
 ..  LocalWords:  viUnlock viUnmapAddress viUnmapTrigger usb viUsbControlIn vxi
 ..  LocalWords:  viUsbControlOut vprintf vqueryf vscanf vsprintf vsscanf IVI
-..  LocalWords:  viVxiCommandQuery viWaitOnEvent viWrite viWriteAsync WINNT
+..  LocalWords:  viVxiCommandQuery viWaitOnEvent viWrite viWriteAsync WINNT def
 ..  LocalWords:  viWriteFromFile FixMe VisaIOError VisaTypeError ctypes
 ..  LocalWords:  Enthought
