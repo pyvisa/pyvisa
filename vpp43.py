@@ -6,9 +6,9 @@
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
 #                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
 #
-#    This file is part of pyvisa.
+#    This file is part of PyVISA.
 #
-#    pyvisa is free software; you can redistribute it and/or modify it under
+#    PyVISA is free software; you can redistribute it and/or modify it under
 #    the terms of the GNU General Public License as published by the Free
 #    Software Foundation; either version 2 of the License, or (at your option)
 #    any later version.
@@ -46,9 +46,11 @@ from vpp43_types import *
 from vpp43_attributes import attributes
 import os
 from ctypes import byref, cdll, c_void_p, c_double, c_long, \
-    create_string_buffer
+    create_string_buffer, POINTER
 if os.name == 'nt':
-    from ctypes import windll
+    from ctypes import windll, WINFUNCTYPE as FUNCTYPE
+else:
+    from ctypes import CFUNCTYPE as FUNCTYPE
 
 visa_functions = [
     "assert_interrupt_signal", "assert_trigger", "assert_utility_signal",
@@ -132,6 +134,21 @@ class VisaLibrary(Singleton):
 	    self.__lib = self.__cdecl_lib = None
 	    raise visa_exceptions.OSNotSupported, os.name
 	self.__set_argument_types()
+    def set_user_handle_type(self, user_handle):
+	# Actually, it's not necessary to change ViHndlr *globally*.  However,
+	# I don't want to break symmetry too much with all the other VPP43
+	# routines.
+	global ViHndlr
+	if user_handle is None:
+	    user_handle_p = c_void_p
+	else:
+	    user_handle_p = POINTER(type(user_handle))
+	ViHndlr = FUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
+			   user_handle_p)
+	self.__lib.viInstallHandler.argtypes = [ViSession, ViEventType,
+						ViHndlr, user_handle_p]
+	self.__lib.viUninstallHandler.argtypes = [ViSession, ViEventType,
+						  ViHndlr, user_handle_p]
     def __call__(self, force_cdecl = False):
 	"""Returns the ctypes object to the VISA library.
 
@@ -535,17 +552,14 @@ time as a ctypes object created with CFUNCTYPE.
 """
 
 def install_handler(vi, event_type, handler, user_handle = None):
-    converted_handler = ViHndlr(handler)
     if user_handle is None:
 	converted_user_handle = None
-	visa_library().viInstallHandler(vi, event_type, converted_handler,
-					None)
     else:
 	if isinstance(user_handle, int):
 	    converted_user_handle = c_long(user_handle)
 	elif isinstance(user_handle, float):
 	    converted_user_handle = c_double(user_handle)
-	elif isinstance(user_handle, string):
+	elif isinstance(user_handle, str):
 	    converted_user_handle = c_create_string_buffer(user_handle)
 	elif isinstance(user_handle, list):
 	    for element in user_handle:
@@ -555,9 +569,15 @@ def install_handler(vi, event_type, handler, user_handle = None):
 		    break
 	    else:
 		converted_user_handle = \
-		    (c_long * len(user_handle))(tuple(user_handle))
+		    (c_long * len(user_handle))(*tuple(user_handle))
 	else:
 	    raise "Type not allowed as user handle"
+    visa_library.set_user_handle_type(converted_user_handle)
+    converted_handler = ViHndlr(handler)
+    if user_handle is None:
+	visa_library().viInstallHandler(vi, event_type, converted_handler,
+					None)
+    else:
 	visa_library().viInstallHandler(vi, event_type, converted_handler,
 					byref(converted_user_handle))
     handlers.append((handler, converted_user_handle, converted_handler))
