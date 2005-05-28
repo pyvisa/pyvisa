@@ -358,11 +358,11 @@ def convert_argument_list(original_arguments):
     converted_arguments = []
     for argument in original_arguments:
 	if isinstance(argument, float):
-	    argument_list.append(c_double(argument))
+	    converted_arguments.append(c_double(argument))
 	elif isinstance(argument, int):
-	    argument_list.append(c_long(argument))
+	    converted_arguments.append(c_long(argument))
 	elif isinstance(argument, str):    
-	    argument_list.append(argument)
+	    converted_arguments.append(argument)
 	else:
 	    raise visa_exceptions.TypeError, \
 		"Invalid type in scanf/printf: %s" % type(argument)
@@ -398,6 +398,26 @@ def convert_to_byref(byvalue_arguments, buffer_length):
 		"Invalid type in scanf: %s" % type(argument)
     return tuple(converted_arguments)
 	
+def construct_return_tuple(original_ctypes_sequence):
+    """Generate a return value for queryf(), scanf(), and sscanf() out of the
+    list of ctypes objects.
+
+    Arguments:
+    original_ctypes_sequence -- a sequence of ctypes objects, i.e. c_long,
+        c_double, and ctypes strings.
+
+    Return value: The pythonic variants of the ctypes objects, in a form
+        suitable to be returned by a function: None if empty, single value, or
+        tuple of all values.
+
+    """
+    length = len(original_ctypes_sequence)
+    if length == 0:
+	return None
+    elif length == 1:
+	return original_ctypes_sequence[0].value
+    else:
+	return tuple([argument.value for argument in original_ctypes_sequence])
 
 # The VPP-4.3.2 routines
 
@@ -734,7 +754,7 @@ def queryf(vi, write_format, read_format, write_args, *read_args, **keyw):
 				*(convert_argument_list(write_args) +
 				  convert_to_byref(argument_list,
 						   maximal_string_length)))
-    return tuple([argument.value for argument in argument_list])
+    return construct_return_tuple(argument_list)
 
 def read(vi, count):
     buffer = create_string_buffer(count)
@@ -767,7 +787,7 @@ def scanf(vi, read_format, *args, **keyw):
     visa_library(True).viScanf(vi, read_format,
 			       *convert_to_byref(argument_list,
 						 maximal_string_length))
-    return tuple([argument.value for argument in argument_list])
+    return construct_return_tuple(argument_list)
 
 def set_attribute(vi, attribute, attribute_state):
     visa_library().viSetAttribute(vi, attribute, attribute_state)
@@ -787,7 +807,7 @@ def sscanf(vi, buffer, read_format, *args, **keyw):
     visa_library(True).viSScanf(vi, buffer, read_format,
 				*convert_to_byref(argument_list,
 						  maximal_string_length))
-    return tuple([argument.value for argument in argument_list])
+    return construct_return_tuple(argument_list)
 
 def status_description(vi, status):
     description = create_string_buffer(256)
