@@ -23,6 +23,6 @@ setup(name = 'pyvisa',
       author_email = 'Gregor.Thalhammer@uibk.ac.at',
       url = 'http://sourceforge.net/projects/pyvisa',
       classifiers = classifiers,
-      py_modules = ['visa', 'visa_messages', 'visa_attributes', 'vpp43',
+      py_modules = ['visa', 'vpp43', 'visa_messages', 'visa_attributes',
 		    'vpp43_attributes', 'visa_exceptions', 'vpp43_types',
 		    'vpp43_constants'])
