@@ -47,6 +47,15 @@ class VisaIOError(Error):
 	Error.__init__(self, abbreviation + ": " + description)
 	self.error_code = error_code
 
+class VisaIOWarning(Warning):
+    """Exception class for VISA I/O warnings.
+
+    According to the specification VPP-4.3.2 and the NI implementation.
+
+    """
+    def __init__(self, description):
+	Warning.__init__(self, description)
+
 class TypeError(Error):
     """Exception class for wrong types in VISA function argument lists.
 
