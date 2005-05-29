@@ -22,9 +22,9 @@
 ..   Temple Place, Suite 330, Boston, MA 02111-1307 USA
 .. 
 
-=========================================
-The VISA low-level implementation
-=========================================
+======================================
+The VISA library implementation
+======================================
 
 ---------------------------------
 Part of the PyVISA package
@@ -181,6 +181,21 @@ the ``visa_exceptions`` module.
     table 3.3.1 in the `VISA specification for textual languages`_.  The
     exception member ``error_code`` contains the (always negative) VISA error
     number, as listed in that table.
+
+:Name: VisaIOWarning
+:Description: This is a warning of the underlying VISA library, as described in
+    table 3.3.1 in the `VISA specification for textual languages`_.  The
+    exception member ``completion_code`` contains the (always positive) VISA
+    completion number, as listed in that table.
+
+    Normally you don't see these warnings.  You can turn them into exceptions
+    with::
+
+        import warnings
+        warnings.filterwarnings("error")
+
+    Consult the description of the ``warnings`` package for further
+    information.
 
 .. _`VISA specification for textual languages`:
        http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp432.doc
@@ -1627,3 +1642,4 @@ Take data from a file and write it out synchronously.
 ..  LocalWords:  viUsbControlOut vprintf vqueryf vscanf vsprintf vsscanf IVI
 ..  LocalWords:  viVxiCommandQuery viWaitOnEvent viWrite viWriteAsync WINNT def
 ..  LocalWords:  viWriteFromFile FixMe VisaIOError TypeError ctypes Enthought
+..  LocalWords:  VisaIOWarning UnknownHandler
