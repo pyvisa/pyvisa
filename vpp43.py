@@ -51,6 +51,8 @@ if os.name == 'nt':
     from ctypes import windll, WINFUNCTYPE as FUNCTYPE
 else:
     from ctypes import CFUNCTYPE as FUNCTYPE
+import warnings
+from visa_messages import completion_and_error_messages
 
 visa_functions = [
     "assert_interrupt_signal", "assert_trigger", "assert_utility_signal",
@@ -329,6 +331,9 @@ def check_status(status):
     visa_status = status
     if status < 0:
         raise visa_exceptions.VisaIOError, status
+    if status > 0:
+	abbreviation, description = completion_and_error_messages[status]
+	warnings.warn("VISA I/O warning: %s: %s" % (abbreviation, description))
     return status
 
 def get_status():
@@ -339,9 +344,9 @@ def get_status():
 # types to well-defined ctypes types.
 #
 # Attention: This means that only C doubles, C long ints, and strings can be
-# used in format strings!  No "float"s, no "long doubles", not "int"s etc.
-# Further, only floats, integers and strings can be passed to printf and
-# scanf, but neither unicode strings nor sequence types.
+# used in format strings!  No "float"s, no "long doubles", no "int"s etc.
+# Further, only floats, integers and strings can be passed to printf and scanf,
+# but neither unicode strings nor sequence types.
 #
 # All of these restrictions may be removed in the future.
 
