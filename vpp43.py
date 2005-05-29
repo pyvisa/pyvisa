@@ -333,7 +333,8 @@ def check_status(status):
         raise visa_exceptions.VisaIOError, status
     if status > 0:
 	abbreviation, description = completion_and_error_messages[status]
-	warnings.warn("VISA I/O warning: %s: %s" % (abbreviation, description))
+	warnings.warn("%s: %s" % (abbreviation, description),
+		      visa_exceptions.VisaIOWarning)
     return status
 
 def get_status():
