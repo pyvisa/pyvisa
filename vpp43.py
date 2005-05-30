@@ -326,7 +326,7 @@ visa_library = VisaLibrary()
 visa_status = 0
 
 def check_status(status):
-    """Check return values for errors."""
+    """Check return values for errors and warnings."""
     global visa_status
     visa_status = status
     if status < 0:
