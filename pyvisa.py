@@ -50,10 +50,6 @@ class Instrument(object):
                 raise "read string doesn't end with termination characters"
             return buffer[:-len(self.__termination_characters)]
         return buffer
-    def get_attribute(self, attribute_code):
-        return vpp43.get_attribute(self.vi, attribute_code)
-    def set_attribute(self, attribute_code, attribute_value):
-        vpp43.set_attribute(self.vi, attribute_code, attribute_value)
     def __set_termination_characters(self, termination_characters):
         self.__termination_characters = ""
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
@@ -88,6 +84,18 @@ class Instrument(object):
         return self.__termination_characters
     termination_characters = property(__get_termination_characters,
                                       __set_termination_characters, None, None)
+
+class Interface(object):
+    def __init__(self, interface_name):
+        self.vi = vpp43.open(resource_manager.session,
+                             interface_name + "::INTFC")
+        self.interface_name = interface_name
+        self.__close = vpp43.close  # needed for __del__
+    def __del__(self):
+        self.__close(self.vi)
+    def __repr__(self):
+        return "Interface(%s)" % self.interface_name
+        
 
 def testpyvisa():
     print "Test start"
