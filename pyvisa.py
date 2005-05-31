@@ -31,7 +31,7 @@ class Instrument(object):
            not message.endswith(self.__termination_characters):
             message += self.__termination_characters
         vpp43.write(self.vi, message)
-        if self.__delay:
+        if self.__delay > 0.0:
             time.sleep(self.__delay)
     def read(self):
         generate_warnings_original = vpp43.generate_warnings
@@ -56,11 +56,14 @@ class Instrument(object):
         vpp43.set_attribute(self.vi, attribute_code, attribute_value)
     def __set_termination_characters(self, termination_characters):
         self.__termination_characters = ""
-        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, 0)
+        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
         if termination_characters == "":
             return
-        match = re.match(r"(?P<main>.*?)(?:\s+(?P<NOEND>NOEND))?"\
-                         "(?:\s+DELAY\s+(?P<DELAY>\d+(\.\d*)?|\d*\.\d+)\s*)?$",
+        match = re.match(r"(?P<main>.*?)"\
+                         "(((?<=.) +|\A)"\
+                         "(?P<NOEND>NOEND))?"\
+                         "(((?<=.) +|\A)DELAY\s+"\
+                         "(?P<DELAY>\d+(\.\d*)?|\d*\.\d+)\s*)?$",
                          termination_characters, re.DOTALL)
         if match is None:
             raise "termination characters were malformed"
@@ -69,8 +72,12 @@ class Instrument(object):
         else:
             vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
         if match.group("DELAY"):
-            __delay = float(match.group("DELAY"))
+            self.__delay = float(match.group("DELAY"))
+        else:
+            self.__delay = 0.0
         termination_characters = match.group("main")
+        if not termination_characters:
+            return
         last_char = termination_characters[-1]
         if termination_characters[:-1].find(last_char) != -1:
             raise "ambiguous ending in termination characters"
@@ -85,12 +92,10 @@ class Instrument(object):
 def testpyvisa():
     print "Test start"
     maid = Instrument("GPIB::10")
-    maid.termination_characters = "\r NOEND DELAY 3"
+    maid.termination_characters = "\r"
     maid.write("VER")
     result = maid.read()
     print result, len(result)
-    print maid.get_attribute(VI_ATTR_TERMCHAR)
-    print maid.get_attribute(VI_ATTR_TERMCHAR_EN)
     print "Test end"
 
 if __name__ == '__main__':
