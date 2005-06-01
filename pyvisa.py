@@ -2,28 +2,37 @@ import vpp43
 from vpp43_constants import *
 import re, time
 
-class ResourceManager(object):
+class ResourceTemplate(object):
     def __init__(self):
-        self.session = vpp43.open_default_resource_manager()
+        if self.__class__ is ResourceTemplate:
+            raise TypeError, "trying to instantiate an abstract class"
         self.__close = vpp43.close  # needed for __del__
     def __del__(self):
-        self.__close(self.session)
+        self.__close(self.vi)
+
+class ResourceManager(ResourceTemplate):
+    def __init__(self):
+        ResourceTemplate.__init__(self)
+        self.session = vpp43.open_default_resource_manager()
     def __repr__(self):
         return "ResourceManager()"
+    def __del__(self):
+        # Must be re-defined because the specification calls the "vi" handle
+        # "session" for the resource manager.
+        self.vi = self.session
+        ResourceTemplate.__del__(self)
 
 resource_manager = ResourceManager()
 
-class Instrument(object):
+class Instrument(ResourceTemplate):
     chunk_size = 1024
     __termination_characters = ""
     __delay = 0.0
     def __init__(self, instrument_name, timeout = VI_TMO_IMMEDIATE):
+        ResourceTemplate.__init__(self)
         self.vi = vpp43.open(resource_manager.session, instrument_name + "::INSTR",
                              VI_NO_LOCK, timeout)
         self.instrument_name = instrument_name
-        self.__close = vpp43.close  # needed for __del__
-    def __del__(self):
-        self.__close(self.vi)
     def __repr__(self):
         return "Instrument(%s)" % self.instrument_name
     def write(self, message):
@@ -85,14 +94,12 @@ class Instrument(object):
     termination_characters = property(__get_termination_characters,
                                       __set_termination_characters, None, None)
 
-class Interface(object):
+class Interface(ResourceTemplate):
     def __init__(self, interface_name):
+        ResourceTemplate.__init__(self)
         self.vi = vpp43.open(resource_manager.session,
                              interface_name + "::INTFC")
         self.interface_name = interface_name
-        self.__close = vpp43.close  # needed for __del__
-    def __del__(self):
-        self.__close(self.vi)
     def __repr__(self):
         return "Interface(%s)" % self.interface_name
         
