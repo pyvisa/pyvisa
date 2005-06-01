@@ -60,6 +60,10 @@ class Instrument(ResourceTemplate):
             return buffer[:-len(self.__termination_characters)]
         return buffer
     def __set_termination_characters(self, termination_characters):
+        """Set a new termination character sequence.  See below the property
+        "termination_character".
+
+        """
         self.__termination_characters = ""
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
         if termination_characters == "":
@@ -93,6 +97,26 @@ class Instrument(ResourceTemplate):
         return self.__termination_characters
     termination_characters = property(__get_termination_characters,
                                       __set_termination_characters, None, None)
+    r"""Set or read a new termination character sequence (property).
+
+    Normally, you just give the new termination sequence, which is appended
+    to each write operation (unless it's already there), and expected as
+    the ending mark during each read operation.  A typical example is
+    "\n\r" or just "\r".  If you assign "" to this property, the
+    termination sequence is deleted.
+
+    There are two further options, which are inspired by HTBasic (yuck),
+    that you can append to the string: "NOEND" disables the asserting of
+    the EOI line after each write operation (thus, enabled by default), and
+    "DELAY <float>" sets a delay time in seconds that is waited after each
+    write operation.  So you could give "\r NOEND DELAY 0.5" as the new
+    termination character sequence.  Spaces before "NOEND" and "DELAY"
+    are ignored, but only if non-spaces preceed it.  Therefore, " NOEND" is
+    interpreted as a six-character termination sequence.
+
+    The default is "".
+
+    """
 
 class Interface(ResourceTemplate):
     def __init__(self, interface_name):
@@ -102,7 +126,15 @@ class Interface(ResourceTemplate):
         self.interface_name = interface_name
     def __repr__(self):
         return "Interface(%s)" % self.interface_name
-        
+
+class Gpib(Interface):
+    def __init__(self, board_number = 0):
+        Interface.__init__("GPIB" + str(board_number))
+        self.board_number = board_number
+    def __repr__(self):
+        return "Gpib(%s)" % self.board_number
+    def send_ifc(self):
+        vpp43.gpib_send_ifc(self.vi)
 
 def testpyvisa():
     print "Test start"
