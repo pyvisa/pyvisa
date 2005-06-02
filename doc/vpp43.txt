@@ -450,7 +450,7 @@ find_resources
         for VISA returned from `open_default_resource_manager`_).
     `regular_expression` : integer
         This is a regular expression followed by an optional logical
-        expression.  The grammar for this expression is given below.
+        expression.
 :Return values:
     `find_list` : ViFindList
         Returns a handle identifying this search session. This handle will be
@@ -1028,7 +1028,7 @@ Parse a resource string to get extended interface information.
     `alias_if_exists` : string
         Specifies the user-defined alias for the given resource string, if a
         VISA implementation allows aliases and an alias exists for the given
-        resource string.
+        resource string.  If not, this is ``None``.
         
 
 peek_8, peek_16, peek_32
