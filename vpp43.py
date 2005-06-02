@@ -721,13 +721,17 @@ def parse_resource_extended(session, resource_name):
     resource_class = create_string_buffer(VI_FIND_BUFLEN)
     unaliased_expanded_resource_name = create_string_buffer(VI_FIND_BUFLEN)
     alias_if_exists = create_string_buffer(VI_FIND_BUFLEN)
-    visa_library().viParseRsrc(session, resource_name, byref(interface_type),
-			       byref(interface_board_number), resource_class,
-			       unaliased_expanded_resource_name,
-			       alias_if_exists)
+    visa_library().viParseRsrcEx(session, resource_name, byref(interface_type),
+                                 byref(interface_board_number), resource_class,
+                                 unaliased_expanded_resource_name,
+                                 alias_if_exists)
+    if alias_if_exists.value == "":
+        alias_if_exists = None
+    else:
+        alias_if_exists = alias_if_exists.value
     return (interface_type.value, interface_board_number.value,
 	    resource_class.value, unaliased_expanded_resource_name.value,
-	    alias_if_exists.value)
+	    alias_if_exists)
 
 def peek_8(vi, address):
     value_8 = ViUInt8()
