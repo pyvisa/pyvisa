@@ -89,7 +89,8 @@ __all__.extend([name for name in vpp43_constants.__dict__.keys() +
 class Singleton(object):
     """Base class for singleton classes.
 
-    Taken from <http://www.python.org/2.2.3/descrintro.html>.
+    Taken from <http://www.python.org/2.2.3/descrintro.html>.  I added the
+    definition of __init__.
 
     """
     def __new__(cls, *args, **kwds):
@@ -100,6 +101,8 @@ class Singleton(object):
         it.init(*args, **kwds)
         return it
     def init(self, *args, **kwds):
+        pass
+    def __init__(self, *args, **kwds):
         pass
 
 class VisaLibrary(Singleton):
