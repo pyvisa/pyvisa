@@ -33,12 +33,12 @@ resource_manager = ResourceManager()
 
 def get_instruments_list(use_aliases = True):
     resource_names = []
-    result = []
     find_list, return_counter, instrument_description = \
                vpp43.find_resources(resource_manager.session, "?*::INSTR")
     resource_names.append(instrument_description)
     for i in xrange(return_counter - 1):
         resource_names.append(vpp43.find_next(find_list))
+    result = []
     for resource_name in resource_names:
         interface_type, interface_board_number, resource_class, \
          unaliased_expanded_resource_name, alias_if_exists  = \
@@ -52,9 +52,10 @@ def get_instruments_list(use_aliases = True):
 
 class Instrument(ResourceTemplate):
     chunk_size = 1024
-    __termination_characters = ""
+    __term_chars = ""
     delay = 0.0
-    def __init__(self, instrument_name, timeout = VI_TMO_IMMEDIATE):
+    def __init__(self, instrument_name, **keyw):
+        timeout = keyw.get("timeout", VI_TMO_IMMEDIATE)
         if instrument_name.find("::") == -1:
             resource_name = instrument_name  # probably an alias
         elif instrument_name[-7:].upper() == "::INSTR":
@@ -62,13 +63,14 @@ class Instrument(ResourceTemplate):
         else:
             resource_name = instrument_name + "::INSTR"
         ResourceTemplate.__init__(self, resource_name, VI_NO_LOCK, timeout)
+        self.term_chars = keyw.get("term_chars", "")
         self.instrument_name = instrument_name
     def __repr__(self):
         return "Instrument(%s)" % self.instrument_name
     def write(self, message):
-        if self.__termination_characters and \
-           not message.endswith(self.__termination_characters):
-            message += self.__termination_characters
+        if self.__term_chars and \
+           not message.endswith(self.__term_chars):
+            message += self.__term_chars
         vpp43.write(self.vi, message)
         if self.delay > 0.0:
             time.sleep(self.delay)
@@ -84,26 +86,26 @@ class Instrument(ResourceTemplate):
                 buffer += chunk
         finally:
             vpp43.generate_warnings = generate_warnings_original
-        if self.__termination_characters != "":
-            if not buffer.endswith(self.__termination_characters):
+        if self.__term_chars != "":
+            if not buffer.endswith(self.__term_chars):
                 raise "read string doesn't end with termination characters"
-            return buffer[:-len(self.__termination_characters)]
+            return buffer[:-len(self.__term_chars)]
         return buffer
-    def __set_termination_characters(self, termination_characters):
+    def __set_term_chars(self, term_chars):
         """Set a new termination character sequence.  See below the property
-        "termination_character".
+        "term_char".
 
         """
-        self.__termination_characters = ""
+        self.__term_chars = ""
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
-        if termination_characters == "":
+        if term_chars == "":
             return
         match = re.match(r"(?P<main>.*?)"\
                          "(((?<=.) +|\A)"\
                          "(?P<NOEND>NOEND))?"\
                          "(((?<=.) +|\A)DELAY\s+"\
                          "(?P<DELAY>\d+(\.\d*)?|\d*\.\d+)\s*)?$",
-                         termination_characters, re.DOTALL)
+                         term_chars, re.DOTALL)
         if match is None:
             raise "termination characters were malformed"
         if match.group("NOEND"):
@@ -114,19 +116,19 @@ class Instrument(ResourceTemplate):
             self.delay = float(match.group("DELAY"))
         else:
             self.delay = 0.0
-        termination_characters = match.group("main")
-        if not termination_characters:
+        term_chars = match.group("main")
+        if not term_chars:
             return
-        last_char = termination_characters[-1]
-        if termination_characters[:-1].find(last_char) != -1:
+        last_char = term_chars[-1]
+        if term_chars[:-1].find(last_char) != -1:
             raise "ambiguous ending in termination characters"
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR, ord(last_char))
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_TRUE)
-        self.__termination_characters = termination_characters
-    def __get_termination_characters(self):
-        return self.__termination_characters
-    termination_characters = property(__get_termination_characters,
-                                      __set_termination_characters, None, None)
+        self.__term_chars = term_chars
+    def __get_term_chars(self):
+        return self.__term_chars
+    term_chars = property(__get_term_chars,
+                                      __set_term_chars, None, None)
     r"""Set or read a new termination character sequence (property).
 
     Normally, you just give the new termination sequence, which is appended
@@ -157,7 +159,7 @@ class Interface(ResourceTemplate):
 
 class Gpib(Interface):
     def __init__(self, board_number = 0):
-        Interface.__init__("GPIB" + str(board_number))
+        Interface.__init__(self, "GPIB" + str(board_number))
         self.board_number = board_number
     def __repr__(self):
         return "Gpib(%s)" % self.board_number
@@ -167,8 +169,9 @@ class Gpib(Interface):
 def testpyvisa():
     print "Test start"
     print get_instruments_list()
-    maid = Instrument("maid")
-    maid.termination_characters = "\r"
+    Gpib().send_ifc()
+    time.sleep(20)
+    maid = Instrument("maid", term_chars = "\r")
     maid.write("VER")
     result = maid.read()
     print result, len(result)
