@@ -31,13 +31,37 @@ class ResourceManager(vpp43.Singleton, ResourceTemplate):
 
 resource_manager = ResourceManager()
 
+def get_instruments_list(use_aliases = True):
+    resource_names = []
+    result = []
+    find_list, return_counter, instrument_description = \
+               vpp43.find_resources(resource_manager.session, "?*::INSTR")
+    resource_names.append(instrument_description)
+    for i in xrange(return_counter - 1):
+        resource_names.append(vpp43.find_next(find_list))
+    for resource_name in resource_names:
+        interface_type, interface_board_number, resource_class, \
+         unaliased_expanded_resource_name, alias_if_exists  = \
+         vpp43.parse_resource_extended(resource_manager.session, resource_name)
+        if alias_if_exists and use_aliases:
+            result.append(alias_if_exists)
+        else:
+            result.append(resource_name[:-7])
+    return result
+        
+
 class Instrument(ResourceTemplate):
     chunk_size = 1024
     __termination_characters = ""
     delay = 0.0
     def __init__(self, instrument_name, timeout = VI_TMO_IMMEDIATE):
-        ResourceTemplate.__init__(self, instrument_name + "::INSTR",
-                                  VI_NO_LOCK, timeout)
+        if instrument_name.find("::") == -1:
+            resource_name = instrument_name  # probably an alias
+        elif instrument_name[-7:].upper() == "::INSTR":
+            resource_name = instrument_name
+        else:
+            resource_name = instrument_name + "::INSTR"
+        ResourceTemplate.__init__(self, resource_name, VI_NO_LOCK, timeout)
         self.instrument_name = instrument_name
     def __repr__(self):
         return "Instrument(%s)" % self.instrument_name
@@ -142,7 +166,8 @@ class Gpib(Interface):
 
 def testpyvisa():
     print "Test start"
-    maid = Instrument("GPIB::10")
+    print get_instruments_list()
+    maid = Instrument("maid")
     maid.termination_characters = "\r"
     maid.write("VER")
     result = maid.read()
