@@ -114,7 +114,7 @@ class VisaLibrary(Singleton):
     __call__     -- returns the ctypes object holding the VISA library
 
     """
-    def __init__(self):
+    def init(self):
 	self.__lib = self.__cdecl_lib = None
     def load_library(self, path = "/usr/local/vxipnp/linux/bin/libvisa.so.7"):
 	"""(Re-)loads the VISA library.
