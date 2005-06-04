@@ -74,7 +74,7 @@ visa_functions = [
     "vscanf", "vsprintf", "vsscanf", "vxi_command_query", "wait_on_event",
     "write", "write_asynchronously", "write_from_file"]
 
-__all__ = ["visa_library", "get_status", "generate_warnings"] + visa_functions
+__all__ = ["visa_library", "get_status"] + visa_functions
 
 
 # Add all symbols from #visa_exceptions# and #vpp43_constants# to the list of
@@ -327,7 +327,6 @@ class VisaLibrary(Singleton):
 visa_library = VisaLibrary()
 
 visa_status = 0
-generate_warnings = True
 
 def check_status(status):
     """Check return values for errors and warnings."""
@@ -335,10 +334,10 @@ def check_status(status):
     visa_status = status
     if status < 0:
         raise visa_exceptions.VisaIOError, status
-    if generate_warnings and status > 0:
+    if status > 0:
 	abbreviation, description = completion_and_error_messages[status]
 	warnings.warn("%s: %s" % (abbreviation, description),
-		      visa_exceptions.VisaIOWarning)
+		      visa_exceptions.VisaIOWarning, stacklevel = 2)
     return status
 
 def get_status():
