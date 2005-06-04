@@ -1,6 +1,27 @@
 import vpp43
 from vpp43_constants import *
-import re, time
+from visa_exceptions import *
+import re, time, warnings
+
+def removefilter(action, message="", category=Warning, module="", lineno=0,
+		 append=0):
+    """Remove all entries from the list of warnings filters that match the
+    given filter."""
+    import re
+    item = (action, re.compile(message, re.I), category, re.compile(module),
+	    lineno)
+    new_filters = []
+    for filter in warnings.filters:
+	equal = 1
+	for j in xrange(len(item)):
+	    if item[j] != filter[j]:
+		equal = 0
+		break
+	if not equal:
+	    new_filters.append(filter)
+    if len(warnings.filters) == len(new_filters):
+	warnings.warn("Warning filter not found", stacklevel = 2)
+    warnings.filters = new_filters
 
 class ResourceTemplate(object):
     """The abstract base class of the VISA implementation.  It covers
@@ -10,12 +31,32 @@ class ResourceTemplate(object):
     vi = None
     def __init__(self, resource_name = None, lock = VI_NO_LOCK, timeout =
                  VI_TMO_IMMEDIATE):
+        self.__close = vpp43.close  # needed for __del__
         if self.__class__ is ResourceTemplate:
             raise TypeError, "trying to instantiate an abstract class"
         if resource_name is not None:
+	    warnings.filterwarnings("ignore", "VI_SUCCESS_DEV_NPRESENT")
             self.vi = vpp43.open(resource_manager.session, resource_name, lock,
                                  timeout)
-        self.__close = vpp43.close  # needed for __del__
+	    if vpp43.get_status() == VI_SUCCESS_DEV_NPRESENT:
+		passed_time = 0  # in seconds
+		while passed_time < 5.0:
+		    time.sleep(0.1)
+		    passed_time += 0.1
+		    try:
+			vpp43.clear(self.vi)
+		    except VisaIOError, error:
+			if error.error_code == VI_ERROR_NLISTENERS:
+			    continue
+		        else:
+			    raise
+		    break
+		else:
+		    # Very last try, without exception handling
+		    time.sleep(0.1)
+		    passed_time += 0.1
+		    vpp43.clear(self.vi)
+	    removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
     def __del__(self):
         if self.vi is not None:
             self.__close(self.vi)
@@ -75,8 +116,7 @@ class Instrument(ResourceTemplate):
         if self.delay > 0.0:
             time.sleep(self.delay)
     def read(self):
-        generate_warnings_original = vpp43.generate_warnings
-        vpp43.generate_warnings = False
+	warnings.filterwarnings("ignore", "VI_SUCCESS_MAX_CNT")
         try:
             buffer = ""
             chunk = vpp43.read(self.vi, self.chunk_size)
@@ -85,7 +125,7 @@ class Instrument(ResourceTemplate):
                 chunk = vpp43.read(self.vi, self.chunk_size)
                 buffer += chunk
         finally:
-            vpp43.generate_warnings = generate_warnings_original
+            removefilter("ignore", "VI_SUCCESS_MAX_CNT")
         if self.__term_chars != "":
             if not buffer.endswith(self.__term_chars):
                 raise "read string doesn't end with termination characters"
@@ -168,9 +208,9 @@ class Gpib(Interface):
 
 def testpyvisa():
     print "Test start"
-    print get_instruments_list()
-    Gpib().send_ifc()
-    time.sleep(20)
+#     print get_instruments_list()
+#     Gpib().send_ifc()
+#     time.sleep(20)
     maid = Instrument("maid", term_chars = "\r")
     maid.write("VER")
     result = maid.read()
