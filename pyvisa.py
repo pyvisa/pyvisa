@@ -211,10 +211,10 @@ class Instrument(ResourceTemplate):
 	# Second, parse the parameter term_chars.  There are three parts, the
 	# last two optional: the sequence itself ("main"), the "NOEND", and the
 	# "DELAY" options.
-        match = re.match(r"(?P<main>.*?)"\
-                         "(((?<=.) +|\A)"\
-                         "(?P<NOEND>NOEND))?"\
-                         "(((?<=.) +|\A)DELAY\s+"\
+        match = re.match(r"(?P<main>.*?)"
+                         "(((?<=.) +|\A)"
+                         "(?P<NOEND>NOEND))?"
+                         "(((?<=.) +|\A)DELAY\s+"
                          "(?P<DELAY>\d+(\.\d*)?|\d*\.\d+)\s*)?$",
                          term_chars, re.DOTALL)
         if match is None:
@@ -268,7 +268,25 @@ class Instrument(ResourceTemplate):
     """
 
 class GpibInstrument(Instrument):
+    """Class for GPIB instruments.
+
+    This class extents the Instrument class with special operations and
+    properties of GPIB instruments.
+
+    """
     def __init__(self, gpib_identifier, bus_number = 0, **keyw):
+        """Class constructor.
+
+        parameters:
+        gpib_identifier -- if it's a string, it is interpreted as the
+            instrument's VISA resource name.  If it's a number, it's the
+            instrument's GPIB number.
+        bus_number -- (default: 0) the number of the GPIB bus.
+
+        Other keyword arguments are passed to the constructor of class
+        Instrument.
+
+        """
         if isinstance(gpib_identifier, int):
             resource_name = "GPIB%d::%d" % (bus_number, gpib_identifier)
         else:
@@ -278,10 +296,12 @@ class GpibInstrument(Instrument):
         resource_name = vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
         # FixMe: Apparently it's not guaranteed that VISA returns the
         # *complete* resource name?
-        if not re.match("(visa://[a-z0-9/]+/)?GPIB[0-9]?::[0-9]+::INSTR$",
+        if not re.match(r"(visa://[a-z0-9/]+/)?GPIB[0-9]?"
+                        "::[0-9]+(::[0-9]+)?::INSTR$",
                         resource_name, re.IGNORECASE):
             raise "invalid GPIB instrument"
     def trigger(self):
+        """Sends a software trigger to the device."""
         vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
         vpp43.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
 
