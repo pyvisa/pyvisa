@@ -129,11 +129,11 @@ class Instrument(ResourceTemplate):
     chunk_size = 1024  # How many bytes are read per low-level call
     __term_chars = ""  # See below
     delay = 0.0        # Seconds to wait after each high-level write
-    def __init__(self, instrument_name, **keyw):
+    def __init__(self, resource_name, **keyw):
 	"""Constructor method.
 
 	Parameters:
-	instrument_name -- the instrument's resource name or an alias, may be
+	resource_name -- the instrument's resource name or an alias, may be
 	    taken from the list from get_instruments_list().
         
         Keyword arguments:
@@ -144,17 +144,17 @@ class Instrument(ResourceTemplate):
 
         """
         timeout = keyw.get("timeout", VI_TMO_IMMEDIATE)
-        if instrument_name.find("::") == -1:
-            resource_name = instrument_name  # probably an alias
-        elif instrument_name[-7:].upper() == "::INSTR":
-            resource_name = instrument_name
-        else:
-            resource_name = instrument_name + "::INSTR"
         ResourceTemplate.__init__(self, resource_name, VI_NO_LOCK, timeout)
+        self.resource_name = resource_name
         self.term_chars = keyw.get("term_chars", "")
-        self.instrument_name = instrument_name
+        # I validate the resource name by requesting it from the instrument
+        resource_name = vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
+        # FixMe: Apparently it's not guaranteed that VISA returns the
+        # *complete* resource name?
+        if not resource_name.upper().endswith("::INSTR"):
+            raise "resource is not an instrument"
     def __repr__(self):
-        return "Instrument(%s)" % self.instrument_name
+        return "Instrument(%s)" % self.resource_name
     def write(self, message):
 	"""Write a string message to the device.
 
@@ -176,7 +176,7 @@ class Instrument(ResourceTemplate):
 	appropriate bus lines), or the termination characters sequence was
 	detected.  Attention: Only the last characters of the termination
 	characters is really used to stop reading, however, the whole sequence
-	is compared to the ending of the read string message.  If the don't
+	is compared to the ending of the read string message.  If they don't
 	match, an exception is raised.
 
 	Parameters: None
@@ -267,6 +267,24 @@ class Instrument(ResourceTemplate):
 
     """
 
+class GpibInstrument(Instrument):
+    def __init__(self, gpib_identifier, bus_number = 0, **keyw):
+        if isinstance(gpib_identifier, int):
+            resource_name = "GPIB%d::%d" % (bus_number, gpib_identifier)
+        else:
+            resource_name = gpib_identifier
+        Instrument.__init__(self, resource_name, **keyw)
+        # Now check whether the instrument is really valid
+        resource_name = vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
+        # FixMe: Apparently it's not guaranteed that VISA returns the
+        # *complete* resource name?
+        if not re.match("(visa://[a-z0-9/]+/)?GPIB[0-9]?::[0-9]+::INSTR$",
+                        resource_name, re.IGNORECASE):
+            raise "invalid GPIB instrument"
+    def trigger(self):
+        vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
+        vpp43.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
+
 class Interface(ResourceTemplate):
     """Base class for GPIB interfaces.
 
@@ -316,7 +334,7 @@ def testpyvisa():
 #     print get_instruments_list()
 #     Gpib().send_ifc()
 #     time.sleep(20)
-    maid = Instrument("maid", term_chars = "\r")
+    maid = GpibInstrument("maid", term_chars = "\r")
     maid.write("VER")
     result = maid.read()
     print result, len(result)
