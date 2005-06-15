@@ -27,6 +27,8 @@ def removefilter(action, message="", category=Warning, module="", lineno=0,
     warnings.filters = new_filters
 
 _resources = {}
+"""Holds all session vi's.  The keys are the session vi's, the items the object
+instances.  Managed by ResourceTemplate."""
 
 class ResourceTemplate(object):
     """The abstract base class of the VISA implementation.  It covers
@@ -279,7 +281,7 @@ class GpibInstrument(Instrument):
 
     """
     def _srq_event_handler(vi, event_type, context, user_handle):
-	
+	pass
     _srq_event_handler = staticmethod(_srq_event_handler)
     def __init__(self, gpib_identifier, bus_number = 0, **keyw):
 	"""Class constructor.
