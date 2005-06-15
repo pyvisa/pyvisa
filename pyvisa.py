@@ -281,8 +281,28 @@ class GpibInstrument(Instrument):
 
     """
     def _srq_event_handler(vi, event_type, context, user_handle):
-	pass
+	for instrument in [resource for resource in _resources.keys() if
+			   isinstance(resource, GpibInstrument)]:
+	    if vpp43.read_stb(instrument.vi) & 0x40:
+		_resource[vi].__srq_handler()
     _srq_event_handler = staticmethod(_srq_event_handler)
+    def __srq_default_handler(self):
+	"""Default handler, which is invalid."""
+	raise "No handler defined."
+    __srq_handler = __srq_default_handler
+    def __set_srq_handler(self, handler):
+	if not callable(handler):
+	    raise "handler argument not callable"
+	__srq_handler = handler
+	vpp43.install_handler(self.vi, VI_EVENT_SERVICE_REQ,
+			      self._srq_event_handler)
+	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_HNDLR)
+    def __del_srq_handler(self):
+	vpp43.disable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_HNDLR)
+	vpp43.uninstall_handler(self.vi, VI_EVENT_SERVICE_REQ,
+				self._srq_event_handler)
+	self.__srq_handler = self.__srq_default_handler
+    srq_handler = property(None, __set_srq_handler, __del_srq_handler, None)
     def __init__(self, gpib_identifier, bus_number = 0, **keyw):
 	"""Class constructor.
 
