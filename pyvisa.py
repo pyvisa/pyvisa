@@ -38,8 +38,8 @@ class ResourceTemplate(object):
 
     """
     vi = None
-    def __init__(self, resource_name=None, lock=VI_NO_LOCK,
-		 timeout=VI_TMO_IMMEDIATE):
+    def __init__(self, resource_name = None, lock = VI_NO_LOCK,
+		 timeout = VI_TMO_IMMEDIATE):
 	# needed for __del__ when script is being terminated
 	self.__close = vpp43.close
 	if self.__class__ is ResourceTemplate:
