@@ -779,7 +779,7 @@ def read_asynchronously(vi, count):
     buffer = create_string_buffer(count)
     job_id = ViJobId()
     visa_library().viReadAsync(vi, buffer, count, byref(job_id))
-    return (buffer.raw[:return_count.value], job_id)
+    return (buffer, job_id)
 
 def read_stb(vi):
     status = ViUInt16()
