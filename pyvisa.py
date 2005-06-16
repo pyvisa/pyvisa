@@ -180,7 +180,7 @@ class Instrument(ResourceTemplate):
 
 	Reading stops when the device stops sending (e.g. by setting
 	appropriate bus lines), or the termination characters sequence was
-	detected.  Attention: Only the last characters of the termination
+	detected.  Attention: Only the last character of the termination
 	characters is really used to stop reading, however, the whole sequence
 	is compared to the ending of the read string message.  If they don't
 	match, an exception is raised.
@@ -212,6 +212,7 @@ class Instrument(ResourceTemplate):
 	# First, reset termination characters, in case something bad happens.
 	self.__term_chars = ""
 	vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
+	vpp43.set_attribute(self.vi, VI_ATTR_SUPPRESS_END_EN, VI_FALSE)
 	if term_chars == "":
 	    return
 	# Second, parse the parameter term_chars.  There are three parts, the
@@ -226,7 +227,10 @@ class Instrument(ResourceTemplate):
 	if match is None:
 	    raise "termination characters were malformed"
 	if match.group("NOEND"):
+	    if not term_chars:
+		raise "NOEND only allowed with termination sequence"
 	    vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_FALSE)
+	    vpp43.set_attribute(self.vi, VI_ATTR_SUPPRESS_END_EN, VI_TRUE)
 	else:
 	    vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
 	if match.group("DELAY"):
