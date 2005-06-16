@@ -1168,11 +1168,22 @@ Read data from device asynchronously.
     `count` : integer
         Maximal number of bytes to be read.
 :Return values:
-    `buffer` : string
-        Represents the buffer with the received data from device.
+    `buffer` : ctypes string buffer
+        Represents the buffer with the data received from device.  It's not a
+        native Python data type because it's filled in the background
+        (i.e. asynchronously).  After you assured that the reading is finished,
+        you get its value with::
+
+            buffer.raw[:return_count]
+
+        You get ``return_count`` via the attribute ``VI_ATTR_RET_COUNT``.  See
+        the `VISA reference`_ for further information.
     `job_id` : ViJobId
         Represents the location of a variable that will be set to the job
         identifier of this asynchronous read operation.
+
+.. _`VISA reference`:
+       http://digital.ni.com/manuals.nsf/websearch/87E52268CF9ACCEE86256D0F006E860D
 
 
 read_stb
