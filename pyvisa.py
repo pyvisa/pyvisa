@@ -420,8 +420,7 @@ def testpyvisa():
 #     time.sleep(20)
     maid = GpibInstrument(10, term_chars = "\r")
     maid.write("VER")
-    result = maid.read()
-    print result, len(result)
+    print maid.read()
     print "Test end"
 
 if __name__ == '__main__':
