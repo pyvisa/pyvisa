@@ -688,12 +688,12 @@ def open(session, resource_name, access_mode = VI_NO_LOCK, timeout =
     vi = ViSession()
     visa_library().viOpen(session, resource_name, access_mode, timeout,
 			  byref(vi))
-    return vi
+    return vi.value
 
 def open_default_resource_manager():
     session = ViSession()
     visa_library().viOpenDefaultRM(byref(session))
-    return session
+    return session.value
 
 get_default_resource_manager = open_default_resource_manager
 """A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
