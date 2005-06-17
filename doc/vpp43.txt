@@ -243,7 +243,7 @@ Asserts the specified device interrupt or signal.
 :Call: assert_interrupt_signal(vi, mode, status_id)
 :VISA name: viAssertIntrSignal
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `mode` : integer
         This specifies how to assert the interrupt.
@@ -262,7 +262,7 @@ Assert software or hardware trigger.
 :Call: assert_trigger(vi, protocol)
 :VISA name: viAssertTrigger
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `protocol` : integer
         Trigger protocol to use during assertion.  Valid values are:
@@ -280,7 +280,7 @@ Asserts the specified utility bus signal.
 :Call: assert_utility_signal(vi, line)
 :VISA name: viAssertUtilSignal
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `line` : integer
         Specifies the utility bus signal to assert.
@@ -297,7 +297,7 @@ buffer for holding data read from the device.
 :Call: buffer = buffer_read(vi, count)
 :VISA name: viBufRead
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `count` : integer
         Maximal number of bytes to be read.
@@ -315,7 +315,7 @@ buffer rather than directly to the device.
 :Call: return_count = buffer_write(vi, buffer)
 :VISA name: viBufWrite
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `buffer` : string
         The data block to be sent to device.
@@ -332,7 +332,7 @@ Clear a device.
 :Call: clear(vi)
 :VISA name: viClear
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
 :Return values:
     None.
@@ -346,7 +346,7 @@ Close the specified session, event, or find list.
 :Call: close(vi)
 :VISA name: viClose
 :Parameters:
-    `vi` : ViSession, ViEvent, or ViFindList
+    `vi` : integer, ViEvent, or ViFindList
         Unique logical identifier to a session, event, or find list.
 :Return values:
     None.
@@ -360,7 +360,7 @@ Disable notification of an event type by the specified mechanisms.
 :Call: disable_event(vi, event_type, mechanism)
 :VISA name: viDisableEvent
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `event_type` : integer
         Logical event identifier.
@@ -383,7 +383,7 @@ session.
 :Call: discard_events(vi, event_type, mechanism)
 :VISA name: viDiscardEvents
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `event_type` : integer
         Logical event identifier.
@@ -405,7 +405,7 @@ Enable notification of a specified event.
 :Call: enable_event(vi, event_type, mechanism, context)
 :VISA name: viEnableEvent
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `event_type` : integer
         Logical event identifier.
@@ -445,7 +445,7 @@ find_resources
        find_resources(session, regular_expression)
 :VISA name: viFindRsrc
 :Parameters:
-    `session` : ViSession
+    `session` : integer
         Resource Manager session (should always be the Default Resource Manager
         for VISA returned from `open_default_resource_manager`_).
     `regular_expression` : integer
@@ -471,7 +471,7 @@ and/or serial communication.
 :Call: flush(vi, mask)
 :VISA name: viFlush
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `mask` : integer
         Specifies the action to be taken with flushing the buffer.
@@ -487,7 +487,7 @@ Retrieve the state of an attribute.
 :Call: attribute_state = get_attribute(vi, attribute)
 :VISA name: viGetAttribute
 :Parameters:
-    `vi` : ViSession, ViEvent, or ViFindList
+    `vi` : integer, ViEvent, or ViFindList
         Unique logical identifier to a session.
     `attribute` : integer
         Session, event, or find list attribute for which the state query is
@@ -505,7 +505,7 @@ Write GPIB command bytes on the bus.
 :Call: return_count = gpib_command(vi, buffer)
 :VISA name: viGpibCommand
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `buffer` : string
         Buffer containing valid GPIB commands.
@@ -523,7 +523,7 @@ controller state of the local interface board.
 :Call: gpib_control_atn(vi, mode)
 :VISA name: viGpibControlATN
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `mode` : integer
         Specifies the state of the ATN line and optionally the local active
@@ -541,7 +541,7 @@ remote/local state of the device.
 :Call: gpib_control_ren(vi, mode)
 :VISA name: viGpibControlREN
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `mode` : integer
         Specifies the state of the REN line and optionally the device
@@ -559,7 +559,7 @@ Tell the GPIB device at the specified address to become controller in charge
 :Call: gpib_pass_control(vi, primary_address, secondary_address)
 :VISA name: viGpibPassControl
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `primary_address` : integer
         Primary address of the GPIB device to which you want to pass control.
@@ -579,7 +579,7 @@ Pulse the interface clear line (IFC) for at least 100 microseconds.
 :Call: gpib_send_ifc(vi)
 :VISA name: viGpibSendIFC
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
 :Return values:
     None.
@@ -596,7 +596,7 @@ offset.
        | value_32 = in_32(vi, space, offset)
 :VISA name: viIn8, viIn16, viIn32
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `space` : integer
         Specifies the address space.
@@ -619,7 +619,7 @@ signature::
 
 Its parameters mean the following:
 
-`vi` : ViSession
+`vi` : integer
     Unique logical identifier to a session.
 `event_type` : ViEvent
     Logical event identifier.  With ``event_type.value`` you get its value as
@@ -635,7 +635,7 @@ Its parameters mean the following:
        user_handle)
 :VISA name: viInstallHandler
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `event_type` : integer
         Logical event identifier.
@@ -676,7 +676,7 @@ Establish an access mode to the specified resource.
 :Call: access_key = lock(vi, lock_type, timeout, requested_key)
 :VISA name: viLock
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `lock_type` : integer
         Specifies the type of lock requested, which can be either
@@ -709,7 +709,7 @@ Map the specified memory space into the process's address space.
        suggested)
 :VISA name: viMapAddress
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `map_space` : integer
         Specifies the address space to map.
@@ -738,7 +738,7 @@ Map the specified trigger source line to the specified destination line.
 :Call: map_trigger(vi, trigger_source, trigger_destination, mode)
 :VISA name: viMapTrigger
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `trigger_source` : integer
         Source line from which to map.
@@ -758,7 +758,7 @@ Allocate memory from a device's memory region.
 :Call: memory_allocation(vi, size)
 :VISA name: viMemAlloc
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `size` : integer
         Specifies the size of the allocation.
@@ -775,7 +775,7 @@ Free memory previously allocated using `memory_allocation`_.
 :Call: memory_free(vi, offset)
 :VISA name: viMemFree
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `offset` : ViBusAddress
         Specifies the memory previously allocated with `memory_allocation`_.
@@ -792,7 +792,7 @@ Move a block of data.
          destination_offset, destination_width, length)
 :VISA name: viMove
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `source_space` : integer
         Specifies the address space of the source.
@@ -824,7 +824,7 @@ Move a block of data asynchronously.
        length)
 :VISA name: viMoveAsync
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `source_space` : integer
         Specifies the address space of the source.
@@ -860,7 +860,7 @@ memory in increments of 8, 16, or 32 bits.
        | buffer_32 = move_in_32(vi, space, offset, length)
 :VISA name: viMoveIn8, viMoveIn16, viMoveIn32
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `space` : integer
         Specifies the address space.
@@ -886,7 +886,7 @@ offset in increments of 8, 16, or 32 bits.
        | move_out_32(vi, space, offset, length, buffer_32)
 :VISA name: viMoveOut8, viMoveOut16, viMoveOut32
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `space` : integer
         Specifies the address space.
@@ -911,7 +911,7 @@ Open a session to the specified device.
 :Call: vi = open(session, resource_name, access_mode, timeout)
 :VISA name: viOpen
 :Parameters:
-    `session` : ViSession
+    `session` : integer
         Resource Manager session (should always be the Default Resource Manager
         for VISA returned from `open_default_resource_manager`_).
     `resource_name` : string
@@ -933,7 +933,7 @@ Open a session to the specified device.
         otherwise, this parameter is ignored.  Defaults to
         ``VI_TMO_IMMEDIATE``.
 :Return values:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier reference to a session.
 
 
@@ -947,7 +947,7 @@ Return a session to the Default Resource Manager resource.
 :Parameters:
     None.
 :Return values:
-    `session` : ViSession
+    `session` : integer
         Unique logical identifier to a Default Resource Manager session.
 
 
@@ -965,7 +965,7 @@ out_8, out_16, out_32
        | out_32(vi, space, offset, value_32)
 :VISA name: viOut8, viOut16, viOut32
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `space` : integer
         Specifies the address space.
@@ -987,7 +987,7 @@ Parse a resource string to get the interface information.
        resource_name)
 :VISA name: viParseRsrc
 :Parameters:
-    `session` : ViSession
+    `session` : integer
         Resource Manager session (should always be the Default Resource Manager
         for VISA returned from `open_default_resource_manager`_).
     `resource_name` : string
@@ -1009,7 +1009,7 @@ Parse a resource string to get extended interface information.
        parse_resource_extended(session, resource_name)
 :VISA name: viParseRsrcEx
 :Parameters:
-    `session` : ViSession
+    `session` : integer
         Resource Manager session (should always be the Default Resource Manager
         for VISA returned from `open_default_resource_manager`_).
     `resource_name` : string
@@ -1041,7 +1041,7 @@ Read an 8-bit, 16-bit, or 32-bit value from the specified address.
        | value_32 = peek_32(vi, address)
 :VISA name: viPeek8, viPeek16, viPeek32
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `address` : ViAddr
         Specifies the source address to read the value.
@@ -1061,7 +1061,7 @@ Write an 8-bit, 16-bit, or 32-bit value to the specified address.
        | poke_32(vi, address, value_32)
 :VISA name: vipoke_8
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `address` : integer
         Specifies the destination address to store the value.
@@ -1086,7 +1086,7 @@ the format string.
 :Call: printf(vi, write_format, ...)
 :VISA name: viPrintf
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `write_format` : string
         String describing the format for arguments.
@@ -1110,7 +1110,7 @@ Perform a formatted write and read through a single operation invocation.
        maximal_string_length = 1024)
 :VISA name: viQueryf
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `write_format` : string
         String describing the format for arguments.
@@ -1146,7 +1146,7 @@ Read data from device synchronously.
 :Call: buffer = read(vi, count)
 :VISA name: viRead
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `count` : integer
         Maximal number of bytes to be read.
@@ -1163,7 +1163,7 @@ Read data from device asynchronously.
 :Call: buffer, job_id = read_asynchronously(vi, count)
 :VISA name: viReadAsync
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `count` : integer
         Maximal number of bytes to be read.
@@ -1194,7 +1194,7 @@ Read a status byte of the service request.
 :Call: status = read_stb(vi)
 :VISA name: viReadSTB
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
 :Return values:
     `status` : integer
@@ -1209,7 +1209,7 @@ Read data synchronously, and store the transferred data in a file.
 :Call: return_count = read_to_file(vi, filename, count)
 :VISA name: viReadToFile
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `file_name` : string
         Name of file to which data will be written.
@@ -1235,7 +1235,7 @@ data in the given optional parameters.
        = 1024)
 :VISA name: viScanf
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `read_format` : string
         String describing the format for arguments.
@@ -1266,7 +1266,7 @@ Set the state of an attribute.
 :Call: set_attribute(vi, attribute, attribute_state)
 :VISA name: viSetAttribute
 :Parameters:
-    `vi` : ViSession, ViEvent, or ViFindList
+    `vi` : integer, ViEvent, or ViFindList
         Unique logical identifier to a session.
     `attribute` : integer
         Session, event, or find list attribute for which the state is
@@ -1287,7 +1287,7 @@ Set the size for the formatted I/O and/or serial communication buffer(s).
 :Call: set_buffer(vi, mask, size)
 :VISA name: viSetBuf
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `mask` : integer
         Specifies the type of buffer.
@@ -1311,7 +1311,7 @@ than the device.
 :Call: buffer = sprintf(vi, write_format, ..., buffer_length = 1024)
 :VISA name: viSPrintf
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `write_format` : string
         String describing the format for arguments.
@@ -1339,7 +1339,7 @@ instead of a device.
        maximal_string_length = 1024)
 :VISA name: viSScanf
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `buffer` : string
         Buffer from which data is read and formatted.
@@ -1372,7 +1372,7 @@ Return a user-readable description of the status code passed to the operation.
 :Call: description = status_description(vi, status)
 :VISA name: viStatusDesc
 :Parameters:
-    `vi` : ViSession, ViEvent, or ViFindList
+    `vi` : integer, ViEvent, or ViFindList
         Unique logical identifier to a session.
     `status` : integer
         Status code to interpret.
@@ -1390,7 +1390,7 @@ Request a VISA session to terminate normal execution of an operation.
 :Call: terminate(vi, degree, job_id)
 :VISA name: viTerminate
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `degree` : integer
         ``VI_NULL``
@@ -1408,7 +1408,7 @@ Uninstall handlers for events.
 :Call: uninstall_handler(vi, event_type, handler, user_handle)
 :VISA name: viUninstallHandler
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `event_type` : integer
         Logical event identifier.
@@ -1432,7 +1432,7 @@ Relinquish a lock for the specified resource.
 :Call: unlock(vi)
 :VISA name: viUnlock
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
 :Return values:
     None.
@@ -1446,7 +1446,7 @@ Unmap memory space previously mapped by `map_address`_.
 :Call: unmap_address(vi)
 :VISA name: viUnmapAddress
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
 :Return values:
     None.
@@ -1461,7 +1461,7 @@ destination line.
 :Call: unmap_trigger(vi, trigger_source, trigger_destination)
 :VISA name: viUnmapTrigger
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `trigger_source` : integer
         Source line used in previous map.
@@ -1480,7 +1480,7 @@ Request arbitrary data from the USB device on the control port.
                    request_id, request_value, index, length)
 :VISA name: viUsbControlIn
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `request_type_bitmap_field` : integer
         Bitmap field for defining the USB control port request.  The bitmap
@@ -1512,7 +1512,7 @@ Send arbitrary data to the USB device on the control port.
                     index, buffer)
 :VISA name: viUsbControlOut
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `request_type_bitmap_field` : integer
         Bitmap field for defining the USB control port request.  The bitmap
@@ -1549,7 +1549,7 @@ to a previous query.
 :Call: vxi_command_query(vi, mode, command)
 :VISA name: viVxiCommandQuery
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `mode` : integer
         Specifies whether to issue a command and/or retrieve a response.
@@ -1569,7 +1569,7 @@ Wait for an occurrence of the specified event for a given session.
 :Call: out_event_type, out_context = wait_on_event(vi, in_event_type, timeout)
 :VISA name: viWaitOnEvent
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `in_event_type` : integer
         Logical identifier of the event(s) to wait for.
@@ -1591,7 +1591,7 @@ Write data to device synchronously.
 :Call: return_count = write(vi, buffer)
 :VISA name: viWrite
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `buffer` : string
         Contains the data block to be sent to the device.
@@ -1608,7 +1608,7 @@ Write data to device asynchronously.
 :Call: job_id = write_asynchronously(vi, buffer)
 :VISA name: viWriteAsync
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `buffer` : string
         Contains the data block to be sent to the device.
@@ -1625,7 +1625,7 @@ Take data from a file and write it out synchronously.
 :Call: return_count = write_from_file(vi, filename, count)
 :VISA name: viWriteFromFile
 :Parameters:
-    `vi` : ViSession
+    `vi` : integer
         Unique logical identifier to a session.
     `filename` : string
         Name of file from which data will be read.
