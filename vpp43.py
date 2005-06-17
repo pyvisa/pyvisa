@@ -4,7 +4,7 @@
 #    vpp43.py - VISA VPP-4.3.2 functions implementation
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-#                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
+#		      Torsten Bronger <bronger@physik.rwth-aachen.de>.
 #
 #    This file is part of PyVISA.
 #
@@ -15,7 +15,7 @@
 #
 #    pyvisa is distributed in the hope that it will be useful, but WITHOUT ANY
 #    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-#    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+#    FOR A PARTICULAR PURPOSE.	See the GNU General Public License for more
 #    details.
 #
 #    You should have received a copy of the GNU General Public License along
@@ -94,16 +94,16 @@ class Singleton(object):
 
     """
     def __new__(cls, *args, **kwds):
-        it = cls.__dict__.get("__it__")
-        if it is not None:
-            return it
-        cls.__it__ = it = object.__new__(cls)
-        it.init(*args, **kwds)
-        return it
+	it = cls.__dict__.get("__it__")
+	if it is not None:
+	    return it
+	cls.__it__ = it = object.__new__(cls)
+	it.init(*args, **kwds)
+	return it
     def init(self, *args, **kwds):
-        pass
+	pass
     def __init__(self, *args, **kwds):
-        pass
+	pass
 
 class VisaLibrary(Singleton):
     """Singleton class for VISA ctypes library handle.
@@ -114,7 +114,7 @@ class VisaLibrary(Singleton):
 
     Public methods:
     load_library -- (re-)loads the VISA library
-    __call__     -- returns the ctypes object holding the VISA library
+    __call__	 -- returns the ctypes object holding the VISA library
 
     """
     def init(self):
@@ -131,7 +131,7 @@ class VisaLibrary(Singleton):
 
 	"""
 	if os.name == 'nt':
-	    self.__lib       = windll.visa32
+	    self.__lib	     = windll.visa32
 	    self.__cdecl_lib = cdll.visa32
 	elif os.name == 'posix':
 	    self.__lib = self.__cdecl_lib = cdll.LoadLibrary(path)
@@ -328,13 +328,22 @@ visa_library = VisaLibrary()
 
 visa_status = 0
 
+dodgy_completion_codes = \
+    [VI_SUCCESS_MAX_CNT, VI_WARN_QUEUE_OVERFLOW, VI_WARN_CONFIG_NLOADED,
+    VI_SUCCESS_DEV_NPRESENT, VI_WARN_NULL_OBJECT, VI_WARN_NSUP_ATTR_STATE,
+    VI_WARN_UNKNOWN_STATUS, VI_WARN_NSUP_BUF, VI_SUCCESS_SYNC,
+    VI_WARN_EXT_FUNC_NIMPL,
+    VI_WARN_QUEUE_OVERFLOW, VI_WARN_CONFIG_NLOADED, VI_WARN_NULL_OBJECT,
+    VI_WARN_NSUP_ATTR_STATE, VI_WARN_UNKNOWN_STATUS, VI_WARN_NSUP_BUF]
+"""For these completion codes, warnings are issued."""
+
 def check_status(status):
     """Check return values for errors and warnings."""
     global visa_status
     visa_status = status
     if status < 0:
-        raise visa_exceptions.VisaIOError, status
-    if status > 0:
+	raise visa_exceptions.VisaIOError, status
+    if status in dodgy_completion_codes:
 	abbreviation, description = completion_and_error_messages[status]
 	warnings.warn("%s: %s" % (abbreviation, description),
 		      visa_exceptions.VisaIOWarning, stacklevel = 2)
@@ -343,8 +352,9 @@ def check_status(status):
 def get_status():
     return visa_status
 
+
 # convert_argument_list is used for VISA routines with variable argument list,
-# which means that also the types are unknown.  Therefore I convert the Python
+# which means that also the types are unknown.	Therefore I convert the Python
 # types to well-defined ctypes types.
 #
 # Attention: This means that only C doubles, C long ints, and strings can be
@@ -359,7 +369,7 @@ def convert_argument_list(original_arguments):
 
     Arguments:
     original_arguments -- a sequence type with the arguments that should be
-        used with ctypes.
+	used with ctypes.
 
     Return value: a tuple with the ctypes version of the argument list.
 
@@ -370,7 +380,7 @@ def convert_argument_list(original_arguments):
 	    converted_arguments.append(c_double(argument))
 	elif isinstance(argument, int):
 	    converted_arguments.append(c_long(argument))
-	elif isinstance(argument, str):    
+	elif isinstance(argument, str):	   
 	    converted_arguments.append(argument)
 	else:
 	    raise visa_exceptions.TypeError, \
@@ -383,11 +393,11 @@ def convert_to_byref(byvalue_arguments, buffer_length):
 
     Arguments:
     byvalue_arguments -- a list (sic!) with the original arguments.  They must
-        be simple ctypes objects or Python strings.  If there are Python
-        strings, they are converted in place to ctypes buffers of the same
-        length and same contents.
+	be simple ctypes objects or Python strings.  If there are Python
+	strings, they are converted in place to ctypes buffers of the same
+	length and same contents.
     buffer_length -- minimal length of ctypes buffers generated from Python
-        strings.
+	strings.
 
     Return value: a tuple with the by-references arguments.
 
@@ -413,11 +423,11 @@ def construct_return_tuple(original_ctypes_sequence):
 
     Arguments:
     original_ctypes_sequence -- a sequence of ctypes objects, i.e. c_long,
-        c_double, and ctypes strings.
+	c_double, and ctypes strings.
 
     Return value: The pythonic variants of the ctypes objects, in a form
-        suitable to be returned by a function: None if empty, single value, or
-        tuple of all values.
+	suitable to be returned by a function: None if empty, single value, or
+	tuple of all values.
 
     """
     length = len(original_ctypes_sequence)
@@ -433,14 +443,14 @@ def construct_return_tuple(original_ctypes_sequence):
 # Usually, there is more than one way to pass parameters to ctypes calls.  The
 # ctypes policy used in this code goes as follows:
 #
-# * Null pointers are passed as "None" rather than "0".  This is a little bit
+# * Null pointers are passed as "None" rather than "0".	 This is a little bit
 #   unfortunate, since the VPP specification calls this "VI_NULL", but I can't
 #   use "VI_NULL" since it's an integer and may not be compatible with a
 #   pointer type (don't know whether this is really dangerous).
 #
 # * Strings must have been created with "create_string_buffer" and are passed
 #   without any further conversion; they stand in the parameter list as is.
-#   The same applies to pseudo-string types as ViRsrc or VuBuf.  Their Pythonic
+#   The same applies to pseudo-string types as ViRsrc or VuBuf.	 Their Pythonic
 #   counterpats are strings as well.
 #
 # * All other types are explicitly cast using the types defined by ctypes'
@@ -453,7 +463,7 @@ def construct_return_tuple(original_ctypes_sequence):
 #   point in converting them to Python strings or integers.
 #
 # * All other parameters are natural Python types, i.e. strings (may contain
-#   binary data) and integers.  The same is true for return values.
+#   binary data) and integers.	The same is true for return values.
 #
 # * The original VPP function signatures cannot be realised in Python, at least
 #   not in a sensible way, because a) Python has no real call-by-reference, and
@@ -696,7 +706,7 @@ def open_default_resource_manager():
     return session.value
 
 get_default_resource_manager = open_default_resource_manager
-"""A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
+"""A deprecated alias.	See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
 
 def out_8(vi, space, offset, value_8):
     visa_library().viOut8(vi, space, offset, value_8)
@@ -721,13 +731,13 @@ def parse_resource_extended(session, resource_name):
     unaliased_expanded_resource_name = create_string_buffer(VI_FIND_BUFLEN)
     alias_if_exists = create_string_buffer(VI_FIND_BUFLEN)
     visa_library().viParseRsrcEx(session, resource_name, byref(interface_type),
-                                 byref(interface_board_number), resource_class,
-                                 unaliased_expanded_resource_name,
-                                 alias_if_exists)
+				 byref(interface_board_number), resource_class,
+				 unaliased_expanded_resource_name,
+				 alias_if_exists)
     if alias_if_exists.value == "":
-        alias_if_exists = None
+	alias_if_exists = None
     else:
-        alias_if_exists = alias_if_exists.value
+	alias_if_exists = alias_if_exists.value
     return (interface_type.value, interface_board_number.value,
 	    resource_class.value, unaliased_expanded_resource_name.value,
 	    alias_if_exists)
@@ -868,11 +878,11 @@ def usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
 # The following variants make no sense in Python, so I realise them as mere
 # aliases.
 
-vprintf  = printf
-vqueryf  = queryf
-vscanf   = scanf
+vprintf	 = printf
+vqueryf	 = queryf
+vscanf	 = scanf
 vsprintf = sprintf
-vsscanf  = sscanf
+vsscanf	 = sscanf
 
 def vxi_command_query(vi, mode, command):
     response = ViUInt32()
