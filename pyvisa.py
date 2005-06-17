@@ -38,16 +38,14 @@ class ResourceTemplate(object):
 
     """
     vi = None
-    def __init__(self, resource_name = None, lock = VI_NO_LOCK,
-		 timeout = VI_TMO_IMMEDIATE):
-	# needed for __del__ when script is being terminated
-	self.__close = vpp43.close
+    def __init__(self, resource_name = None, **keyw):
 	if self.__class__ is ResourceTemplate:
 	    raise TypeError, "trying to instantiate an abstract class"
 	if resource_name is not None:  # is none for the resource manager
 	    warnings.filterwarnings("ignore", "VI_SUCCESS_DEV_NPRESENT")
-	    self.vi = vpp43.open(resource_manager.session, resource_name, lock,
-				 timeout)
+	    self.vi = vpp43.open(resource_manager.session, resource_name,
+				 keyw.get("lock", VI_NO_LOCK),
+				 VI_TMO_IMMEDIATE)
 	    if vpp43.get_status() == VI_SUCCESS_DEV_NPRESENT:
 		# okay, the device was not ready when we opened the session.
 		# Now it gets five seconds more to become ready.  Every 0.1
@@ -70,13 +68,26 @@ class ResourceTemplate(object):
 		    passed_time += 0.1
 		    vpp43.clear(self.vi)
 	    removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
+	    self.timeout = keyw.get("timeout", 2)
 	_resources[self.vi] = self
     def __del__(self):
-	# vpp43.close() may be already unbound when the script is being shut
-	# down, so I use its alias self.__close().
 	if self.vi is not None:
 	    del _resources[self.vi]
-	    self.__close(self.vi)
+	    vpp43.close(self.vi)
+    def __set_timeout(self, timeout = 2):
+	if not(0 <= timeout <= 4294967):
+	    raise ValueError("timeout value is invalid")
+	vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
+    def __get_timeout(self):
+	timeout = vpp43.get_attribute(self.vi, VI_ATTR_TMO_VALUE)
+	if timeout == VI_TMO_INFINITE:
+	    raise NameError("no timeout is specified")
+	return timeout / 1000.0
+    def __del_timeout(self):
+	timeout = self.__get_timeout()	# just to test whether it's defined
+	vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
+    timeout = property(__get_timeout, __set_timeout, __del_timeout, None)
+
 
 class ResourceManager(vpp43.Singleton, ResourceTemplate):
     """Singleton class for the default resource manager."""
@@ -149,8 +160,7 @@ class Instrument(ResourceTemplate):
 	    description of class property "term_chars".
 
 	"""
-	timeout = keyw.get("timeout", VI_TMO_IMMEDIATE)
-	ResourceTemplate.__init__(self, resource_name, VI_NO_LOCK, timeout)
+	ResourceTemplate.__init__(self, resource_name, **keyw)
 	self.resource_name = resource_name
 	self.term_chars = keyw.get("term_chars", "")
 	# I validate the resource name by requesting it from the instrument
@@ -254,8 +264,7 @@ class Instrument(ResourceTemplate):
     def __get_term_chars(self):
 	"""Return the current termination characters for the device."""
 	return self.__term_chars
-    term_chars = property(__get_term_chars,
-				      __set_term_chars, None, None)
+    term_chars = property(__get_term_chars, __set_term_chars, None, None)
     r"""Set or read a new termination character sequence (property).
 
     Normally, you just give the new termination sequence, which is appended
@@ -284,27 +293,6 @@ class GpibInstrument(Instrument):
     properties of GPIB instruments.
 
     """
-    def _srq_event_handler(vi, event_type, context, user_handle):
-	for instrument in [resource for resource in _resources.keys() if
-			   isinstance(resource, GpibInstrument)]:
-	    if vpp43.read_stb(instrument.vi) & 0x40:
-		_resource[vi].__srq_handler()
-    _srq_event_handler = staticmethod(_srq_event_handler)
-    def __set_srq_handler(self, handler):
-	if not callable(handler):
-	    raise "handler argument not callable"
-	if self.__srq_handler:
-	    del self.__srq_handler
-	self.__srq_handler = handler
-	vpp43.install_handler(self.vi, VI_EVENT_SERVICE_REQ,
-			      self._srq_event_handler)
-	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_HNDLR)
-    def __del_srq_handler(self):
-	vpp43.disable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_HNDLR)
-	vpp43.uninstall_handler(self.vi, VI_EVENT_SERVICE_REQ,
-				self._srq_event_handler)
-	del self.__srq_handler
-    srq_handler = property(None, __set_srq_handler, __del_srq_handler, None)
     def __init__(self, gpib_identifier, bus_number = 0, **keyw):
 	"""Class constructor.
 
@@ -331,6 +319,50 @@ class GpibInstrument(Instrument):
 			"::[0-9]+(::[0-9]+)?::INSTR$",
 			resource_name, re.IGNORECASE):
 	    raise "invalid GPIB instrument"
+	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+    def __del__(self):
+	if hasattr(self, "__srq_handler"):
+	    del self.srq_handler
+	self.__switch_events_off()
+    def __switch_events_off(self):
+	warnings.filterwarnings("ignore", "VI_SUCCESS_EVENT_DIS")
+	vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+	removefilter("ignore", "VI_SUCCESS_EVENT_DIS")
+	warnings.filterwarnings("ignore", "VI_SUCCESS_QUEUE_EMPTY")
+	vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+	removefilter("ignore", "VI_SUCCESS_QUEUE_EMPTY")
+    def __switch_event_mechanism(self, event_type, mechanism):
+	self.__switch_events_off()
+	vpp43.enable_event(self.vi, event_type, mechanism)
+    def _srq_event_handler(vi, event_type, context, user_handle):
+	for instrument in [resource for resource in _resources.items() if
+			   isinstance(resource, GpibInstrument)]:
+	    if vpp43.read_stb(instrument.vi) & 0x40:
+		_resource[instrument.vi].__srq_handler()
+    _srq_event_handler = staticmethod(_srq_event_handler)
+    def __set_srq_handler(self, handler):
+	if not callable(handler):
+	    raise "handler argument not callable"
+	if hasattr(self, "__srq_handler"):
+	    del self.srq_handler
+	self.__srq_handler = handler
+	vpp43.install_handler(self.vi, VI_EVENT_SERVICE_REQ,
+			      self._srq_event_handler)
+	self.__switch_event_mechanism(VI_EVENT_SERVICE_REQ, VI_HNDLR)
+    def __del_srq_handler(self):
+	self.__switch_event_mechanism(VI_EVENT_SERVICE_REQ, VI_QUEUE)
+	del self.__srq_handler
+	vpp43.uninstall_handler(self.vi, VI_EVENT_SERVICE_REQ,
+				self._srq_event_handler)
+    srq_handler = property(None, __set_srq_handler, __del_srq_handler, None)
+    def wait_for_srq(self, timeout = VI_TMO_INFINITE):
+	if hasattr(self, "__srq_handler"):
+	    self.__switch_event_mechanism(VI_EVENT_SERVICE_REQ, VI_QUEUE)
+	event_type, context = \
+	    vpp43.wait_on_event(self.vi, VI_EVENT_SERVICE_REQ, timeout)
+	vpp43.close(context)
+	if hasattr(self, "__srq_handler"):
+	    self.__switch_event_mechanism(VI_EVENT_SERVICE_REQ, VI_HNDLR)
     def trigger(self):
 	"""Sends a software trigger to the device."""
 	vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
@@ -340,8 +372,9 @@ class Interface(ResourceTemplate):
     """Base class for GPIB interfaces.
 
     You may wonder why this exists since the only child class is Gpib().  I
-    don't know either, but the VISA specification says that there are attribute
-    that only "interfaces that support GPIB" have and other that "all" have.
+    don't know either, but the VISA specification says that there are
+    attributes that only"interfaces that support GPIB" have and other that
+    "all" have.
 
     FixMe: However, maybe it's better to merge both classes.  In any case you
     should not instantiate this class."""
@@ -385,7 +418,7 @@ def testpyvisa():
 #     print get_instruments_list()
 #     Gpib().send_ifc()
 #     time.sleep(20)
-    maid = GpibInstrument("maid", term_chars = "\r")
+    maid = GpibInstrument(10, term_chars = "\r")
     maid.write("VER")
     result = maid.read()
     print result, len(result)
