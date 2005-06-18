@@ -320,17 +320,14 @@ class GpibInstrument(Instrument):
 			resource_name, re.IGNORECASE):
 	    raise "invalid GPIB instrument"
 	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+	self.term_chars = "\r\n"
     def __del__(self):
 	if hasattr(self, "__srq_handler"):
 	    del self.srq_handler
 	self.__switch_events_off()
     def __switch_events_off(self):
-	warnings.filterwarnings("ignore", "VI_SUCCESS_EVENT_DIS")
 	vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
-	removefilter("ignore", "VI_SUCCESS_EVENT_DIS")
-	warnings.filterwarnings("ignore", "VI_SUCCESS_QUEUE_EMPTY")
 	vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
-	removefilter("ignore", "VI_SUCCESS_QUEUE_EMPTY")
     def __switch_event_mechanism(self, event_type, mechanism):
 	self.__switch_events_off()
 	vpp43.enable_event(self.vi, event_type, mechanism)
@@ -418,9 +415,9 @@ def testpyvisa():
 #     print get_instruments_list()
 #     Gpib().send_ifc()
 #     time.sleep(20)
-    maid = GpibInstrument(10, term_chars = "\r")
-    maid.write("VER")
-    print maid.read()
+    keythley = GpibInstrument(14)
+    keythley.write("*IDN?")
+    print keythley.read()
     print "Test end"
 
 if __name__ == '__main__':
