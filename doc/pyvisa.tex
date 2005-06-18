@@ -1,0 +1,183 @@
+% -*- mode: LaTeX; coding: us-ascii; ispell-local-dictionary: "british"; -*-
+\documentclass{howto}
+
+\title{PyVISA\\[0.5ex]\large measurement and test equipment control with Python}
+\release{0.9}
+
+\author{Torsten Bronger}
+\authoraddress{
+	Aachen, Germany\\
+	Email: \email{bronger@physik.rwth-aachen.de}
+}
+
+\date{17 June 2005}
+
+\makeindex
+
+\begin{document}
+
+\maketitle
+
+\ifhtml
+\chapter*{Front Matter\label{front}}
+\fi
+
+Copyright \copyright{} 2005 Torsten Bronger.  All rights reserved.
+
+\begin{abstract}
+
+\noindent
+This document covers the PyVISA module.  It bases on the VISA library and
+implements control of measurement devices in a convenient way.
+\end{abstract}
+
+\tableofcontents
+
+\declaremodule{extension}{pyvisa}
+  \platform{Linux,Windows}
+\modulesynopsis{Controlling measurement and test equipment using VISA.}
+\moduleauthor{Gregor Thalhammer}{gth@users.sourceforge.net}
+\moduleauthor{Torsten Bronger}{bronger@physik.rwth-aachen.de}
+\sectionauthor{Torsten Bronger}{bronger@physik.rwth-aachen.de}
+
+\section{An example}
+
+Let's go \emph{in medias res} and have a look at a simple example:
+\begin{verbatim}
+from pyvisa import *
+
+my_instrument = GpibInstrument(14)
+my_instrument.write("*IDN?")
+print my_instrument.read()
+\end{verbatim}
+This example already shows the two main design goals of PyVISA: preferring
+simplicity over generality, and doing it the object-oriented way.
+
+Every instrument is represented in the source by an object instance.  In this case,
+I have a GPIB instrument with instrument number~14.
+
+\section{Module classes}
+
+\begin{classdesc}{Instrument}{resource_name\optional{, **keyw}}
+  represents an instrument, e.\,g.\ a measurement device.  It is independent of
+  a particular bus system, i.\,e.\ it may be a GPIB, USB, or whatever
+  instrument.  However, it is not possible to perform bus-specific operations
+  on instruments created by this class.  For this, have a look at the
+  specialised classes like \class{GpibInstrument}.
+
+  The \var{resource_name} takes the same syntax as resource specifiers in
+  VISA\@.  Thus, it begins with the bus system, followed by ``\verb|::|'',
+  followed by the location of the device within the bus system, and ended with
+  an optional ``\verb|::INSTR|''.
+
+  Possible keyword arguments are:
+  \begin{tableii}{ll}{var}{Keyword}{Description}
+    \lineii{term_char}{termination characters, see
+      section~\ref{sec:termchars}. Default: \code{""} \emph{(empty)}}
+    \lineii{timeout}{timeout in seconds for all device operations, see
+      section~\ref{sec:timeouts}. Default:~2}
+  \end{tableii}
+\end{classdesc}
+
+For example, the above mentioned GPIB instrument with number~14 could also be
+created with
+\begin{verbatim}
+my_instrument = Instrument("GPIB::14")
+\end{verbatim}
+or even more explicitly with
+\begin{verbatim}
+my_instrument = Instrument("GPIB0::14::INSTR")
+\end{verbatim}
+
+The class \class{Instrument} defines the following methods:
+
+\begin{methoddesc}{write}{message}
+  writes the string \var{message} to the instrument.
+\end{methoddesc}
+
+\begin{methoddesc}{read}{}
+  returns a string send from the instrument.
+\end{methoddesc}
+
+
+\subsection{Termination characters}
+\label{sec:termchars}
+
+Somehow the computer must detect when the device is finished with sending a
+message.  It does so by using different methods, depending on the bus system.
+However, you may influence this behaviour by setting termination characters.
+
+Termination characters may be one character or a sequence of characters.
+Whenever this character or sequence occurs in the input stream, the read
+operation is terminated and the read message is given to the calling
+application.  The next read operation continues with the imput stream
+immediately after the last termination characters.
+
+In PyVISA, the termination characters are stripped off the message before it is
+given to you.
+
+You may set termination characters for each instrument, e.\,g.
+\begin{verbatim}
+my_instrument.term_chars = "\r"
+\end{verbatim}
+Alternatively you can give it when creating your instrument object:
+\begin{verbatim}
+my_instrument = Instrument("GPIB::10", term_chars = "\r")
+\end{verbatim}
+The default value depends on the bus system.  Generally, the sequence is empty.
+For GPIB instruments however, it's set to \verb|"\r\n"| (i.\,e.~``CR\,LF'')\@.
+For RS232 (once it's supported), it's just \verb|"\n"|~(LF)\@.
+
+You may add two options to the termination characters: \code{NOEND} and
+\code{DELAY}.  They are inspired from
+
+\subsection{Timeouts}
+\label{sec:timeouts}
+
+Very most VISA I/O operations may be performed with a timeout.  If a timeout is
+set, every operation that takes longer than the timeout is aborted and an
+exception is raised.  Timeouts are given per instrument.
+
+For all PyVISA objects, a timeout is set with
+\begin{verbatim}
+my_resource.timeout = 25
+\end{verbatim}
+Here, \var{my_resource} may be a device, an interface or whatever, and its
+timeout is set to 25~seconds.  Floating-point values are allowed.  If you set
+it to zero, all operations must succeed instantaneously.  You remove a timeout
+with
+\begin{verbatim}
+del my_resource.timeout
+\end{verbatim}
+Now every operation of the resource is tried as long as it takes, even
+indefinitely if necessary.
+
+The default timeout is 2~seconds, but you can change it when creating the
+device object:
+\begin{verbatim}
+my_instrument = Instrument("ASRL1", timeout = 5)
+\end{verbatim}
+This creates \var{my_instrument} and sets its timeout to 5~seconds.  In this
+and only in this context, a timeout value of \code{None} is allowed which
+removes the timeout for this device.
+
+\section{Module functions}
+
+\section{Exceptions}
+
+
+\section{Installation}
+
+
+\section{About PyVISA}
+
+PyVISA was originally programmed by Gregor Thalhammer, Innsbruck/Austria, and
+Torsten Bronger, Aachen/\hskip0pt Germany.  It bases on earlier experiences by
+Thalhammer.
+
+Its homepage is \url{http://sourceforge.net/projects/pyvisa/}.  Please report
+bugs there.
+
+\end{document}
+
+% LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var
