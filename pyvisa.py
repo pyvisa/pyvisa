@@ -68,7 +68,12 @@ class ResourceTemplate(object):
 		    passed_time += 0.1
 		    vpp43.clear(self.vi)
 	    removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
-	    self.timeout = keyw.get("timeout", 2)
+	    timeout = keyw.get("timeout", 2)
+	    if timeout is None:
+	        vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE,
+				    VI_TMO_INFINITE)
+	    else:
+		self.timeout = timeout
 	_resources[self.vi] = self
     def __del__(self):
 	if self.vi is not None:
@@ -412,9 +417,6 @@ class Gpib(Interface):
 
 def testpyvisa():
     print "Test start"
-#     print get_instruments_list()
-#     Gpib().send_ifc()
-#     time.sleep(20)
     keythley = GpibInstrument(14)
     keythley.write("*IDN?")
     print keythley.read()
