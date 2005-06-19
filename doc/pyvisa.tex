@@ -96,7 +96,7 @@ The class \class{Instrument} defines the following methods:
 \end{methoddesc}
 
 \begin{methoddesc}{read}{}
-  returns a string send from the instrument.
+  returns a string sent from the instrument.
 \end{methoddesc}
 
 
@@ -110,11 +110,9 @@ However, you may influence this behaviour by setting termination characters.
 Termination characters may be one character or a sequence of characters.
 Whenever this character or sequence occurs in the input stream, the read
 operation is terminated and the read message is given to the calling
-application.  The next read operation continues with the imput stream
-immediately after the last termination characters.
-
-In PyVISA, the termination characters are stripped off the message before it is
-given to you.
+application.  The next read operation continues with the input stream
+immediately after the last termination sequence.  In PyVISA, the termination
+characters are stripped off the message before it is given to you.
 
 You may set termination characters for each instrument, e.\,g.
 \begin{verbatim}
@@ -129,7 +127,23 @@ For GPIB instruments however, it's set to \verb|"\r\n"| (i.\,e.~``CR\,LF'')\@.
 For RS232 (once it's supported), it's just \verb|"\n"|~(LF)\@.
 
 You may add two options to the termination characters: \code{NOEND} and
-\code{DELAY}.  They are inspired from
+\code{DELAY}.  They are inspired by HT~Basic.  \code{NOEND} makes only sense
+for GPIB instruments.  It switches off detection of the end of a message using
+the EOI bus line.  (This means that by default the observance of this line is
+on.)
+
+\code{DELAY} takes a numeric argument that denotes the time in seconds to wait
+after each write operation.  So you could write:
+\begin{verbatim}
+my_instrument = Instrument("GPIB::10", term_chars = "\r NOEND DELAY 1.2")
+\end{verbatim}
+This will set the delay to 1.2~seconds, and the EOI line is ignored.  Note that
+spaces before the options are ignored, and that at least one space must be
+there, unless the termination sequence itself is empty.  So, \code{"\e
+  rNOEND"}, \code{" NOEND"}, and \code{"noend"} are all illegal in the sense
+that they will be interpreted as one long termination sequence, which is
+probably not what you want.  The correct variants are \code{"\e r NOEND"},
+\code{"NOEND"}, and \code{"NOEND"}.
 
 \subsection{Timeouts}
 \label{sec:timeouts}
@@ -180,4 +194,5 @@ bugs there.
 
 \end{document}
 
-% LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var
+% LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
+% LocalWords:  rNOEND noend
