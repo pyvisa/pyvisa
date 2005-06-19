@@ -58,6 +58,8 @@ I have a GPIB instrument with instrument number~14.
 
 \section{Module classes}
 
+\subsection{General devices}
+
 \begin{classdesc}{Instrument}{resource_name\optional{, **keyw}}
   represents an instrument, e.\,g.\ a measurement device.  It is independent of
   a particular bus system, i.\,e.\ it may be a GPIB, USB, or whatever
@@ -98,6 +100,31 @@ The class \class{Instrument} defines the following methods:
 \begin{methoddesc}{read}{}
   returns a string sent from the instrument.
 \end{methoddesc}
+
+\begin{memberdesc}{timeout}
+  The timeout in seconds for each I/O operation.  See
+  section~\ref{sec:timeouts} for further information.
+\end{memberdesc}
+
+\begin{memberdesc}{term_chars}
+  The termination characters for each read and write operation.  See
+  section~\ref{sec:termchars} for further information.
+\end{memberdesc}
+
+
+\begin{classdesc}{Interface}{interface_name}
+\end{classdesc}
+
+
+\subsection{GPIB devices}
+
+\begin{classdesc}{GpibInstrument}{gpib_identifier\optional{,
+      board_number\optional{, **keyw}}}
+\end{classdesc}
+
+
+\begin{classdesc}{Gpib}{\optional{board_number}}
+\end{classdesc}
 
 
 \subsection{Termination characters}
@@ -177,10 +204,88 @@ removes the timeout for this device.
 
 \section{Module functions}
 
+\begin{funcdesc}{get_instruments_list}{\optional{use_aliases}}
+  returns a list with all instruments that are known to the local VISA system.
+  If you're lucky, these are all instruments connected with the computer.
+
+  The boolean \var{use_aliases} is \code{True} by default, which means that the
+  more human-friendly aliases like ``\code{COM1}'' instead of ``\code{ASRL1}''
+  are returned.  With some VISA systems\footnote{such as the ``Measurement and
+    Automation Center'' by National Instruments} you can define your own
+  aliases for each device, e.\,g.\ ``\code{keithley617}'' for
+  ``\code{GPIB0::15::INSTR}''.  If \var{use_aliases} is \code{False}, only
+  standard resource names are returned.
+\end{funcdesc}
+
 \section{Exceptions}
 
 
+\section{Mixing with direct VISA commands}
+
+You can mix the high-level object-oriented approach described in this document
+with middle-level VISA function calls as described in
+\citetitle[http://pyvisa.sourceforge.net/vpp43.html]{The VISA library
+  implementation} which is also part of the PyVISA package.  By doing so you
+have full control of your VISA implementation.
+
+The VISA functions need to know what session you are referring to.  PyVISA
+opens exactly one session for each instrument or interface and stores its
+session handle in the instance attribute~\var{vi}.  Thus you can write
+\begin{verbatim}
+from pyvisa import *
+my_instrument = GpibInstrument(14)
+vpp43.clear(my_instrument.vi)
+\end{verbatim}
+
+In case you need the session handle for the default resource manager, it's
+stored in \var{resource_manager.session}:
+\begin{verbatim}
+from pyvisa import *
+my_instrument_handle = vpp43.open(resource_manager.session, "GPIB::14",
+                                  VI_EXCLUSIVE_LOCK)
+\end{verbatim}
+
 \section{Installation}
+
+\subsection{Prerequisites}
+
+The PyVISA package doesn't include a low-level VISA implementation itself.  You
+have to download it from one of the VISA vendors, e.\,g.\ \ulink{National Instruments
+VISA pages}{http://ni.com/visa/}.  Please install it properly before you proceed.
+
+Additionally, your Python installation needs a fresh version of
+\ulink{ctypes}{http://starship.python.net/crew/theller/ctypes/}.  By the way,
+if you use Windows, it may be convenient to install
+\ulink{Enthought Python}{http://www.enthought.com/python/}.  It is a special
+Python version with all-included philosophy for scientific and engineering
+applications.\footnote{Of course, it's highly advisable not to have installed
+  another version of Python on your system before you install
+  Enthought-Python.}
+
+
+\subsection{Setting up the module}
+
+\subsubsection{Windows}
+
+PyVISA expects a file called \file{visa32.dll} in the \envvar{PATH}\@.  You
+must assure that this is the case.  For example, on my system you find this
+file in \file{C:\e WINNT\e system32\e}.  Either copy it there or expand your
+\envvar{PATH}\@.
+
+
+\subsubsection{Linux}
+
+For Linux, the default VISA library is
+\file{/usr/local/vxipnp/linux/bin/libvisa.so.7}.  However, here you have the
+choice.  If it's called differently on your system, or is placed in another
+directory, you can tell PyVISA so by saying
+\begin{verbatim}
+from vpp43 import *
+
+visa_library.load_library("/usr/local/visa/libvisa.so.7")
+\end{verbatim}
+Of course, you must set the path according to your installation.  You must do
+this before any VISA function call.
 
 
 \section{About PyVISA}
@@ -195,4 +300,4 @@ bugs there.
 \end{document}
 
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
-% LocalWords:  rNOEND noend
+% LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT
