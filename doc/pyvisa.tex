@@ -7,7 +7,7 @@
 \author{Torsten Bronger}
 \authoraddress{
 	Aachen, Germany\\
-	Email: \email{bronger@physik.rwth-aachen.de}
+	\email{bronger@physik.rwth-aachen.de}
 }
 
 \date{17 June 2005}
@@ -22,7 +22,12 @@
 \chapter*{Front Matter\label{front}}
 \fi
 
-Copyright \copyright{} 2005 Torsten Bronger.  All rights reserved.
+Copyright \copyright{} 2005 Torsten Bronger.\\
+Permission is granted to copy, distribute and/or modify this document under the
+terms of the GNU Free Documentation License, Version~1.2 or any later version
+published by the Free Software Foundation; with no Invariant Sections, no
+Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included
+as a separate file \file{LICENSE} in the PyVISA distribution.
 
 \begin{abstract}
 
@@ -181,16 +186,16 @@ exception is raised.  Timeouts are given per instrument.
 
 For all PyVISA objects, a timeout is set with
 \begin{verbatim}
-my_resource.timeout = 25
+my_device.timeout = 25
 \end{verbatim}
-Here, \var{my_resource} may be a device, an interface or whatever, and its
+Here, \var{my_device} may be a device, an interface or whatever, and its
 timeout is set to 25~seconds.  Floating-point values are allowed.  If you set
 it to zero, all operations must succeed instantaneously.  You remove a timeout
 with
 \begin{verbatim}
-del my_resource.timeout
+del my_device.timeout
 \end{verbatim}
-Now every operation of the resource is tried as long as it takes, even
+Now every operation of the resource takes as long as it takes, even
 indefinitely if necessary.
 
 The default timeout is 2~seconds, but you can change it when creating the
@@ -255,12 +260,12 @@ VISA pages}{http://ni.com/visa/}.  Please install it properly before you proceed
 
 Additionally, your Python installation needs a fresh version of
 \ulink{ctypes}{http://starship.python.net/crew/theller/ctypes/}.  By the way,
-if you use Windows, it may be convenient to install
-\ulink{Enthought Python}{http://www.enthought.com/python/}.  It is a special
-Python version with all-included philosophy for scientific and engineering
+if you use Windows, it may be convenient to install \ulink{Enthought
+  Python}{http://www.enthought.com/python/}.  It is a special Python version
+with all-included philosophy for scientific and engineering
 applications.\footnote{Of course, it's highly advisable not to have installed
-  another version of Python on your system before you install
-  Enthought-Python.}
+  another version of Python on your system before you install Enthought
+  Python.}
 
 
 \subsection{Setting up the module}
