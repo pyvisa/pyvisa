@@ -70,12 +70,13 @@ I have a GPIB instrument with instrument number~14.
   a particular bus system, i.\,e.\ it may be a GPIB, USB, or whatever
   instrument.  However, it is not possible to perform bus-specific operations
   on instruments created by this class.  For this, have a look at the
-  specialised classes like \class{GpibInstrument}.
+  specialised classes like \class{GpibInstrument}
+  (section~\ref{sec:gpib-devices}).
 
-  The \var{resource_name} takes the same syntax as resource specifiers in
-  VISA\@.  Thus, it begins with the bus system, followed by ``\verb|::|'',
-  followed by the location of the device within the bus system, and ended with
-  an optional ``\verb|::INSTR|''.
+  The parameter \var{resource_name} takes the same syntax as resource
+  specifiers in VISA\@.  Thus, it begins with the bus system, followed by
+  ``\verb|::|'', followed by the location of the device within the bus system,
+  and ended with an optional ``\verb|::INSTR|''.
 
   Possible keyword arguments are:
   \begin{tableii}{ll}{var}{Keyword}{Description}
@@ -122,6 +123,7 @@ The class \class{Instrument} defines the following methods:
 
 
 \subsection{GPIB devices}
+\label{sec:gpib-devices}
 
 \begin{classdesc}{GpibInstrument}{gpib_identifier\optional{,
       board_number\optional{, **keyw}}}
@@ -203,9 +205,9 @@ device object:
 \begin{verbatim}
 my_instrument = Instrument("ASRL1", timeout = 5)
 \end{verbatim}
-This creates \var{my_instrument} and sets its timeout to 5~seconds.  In this
-and only in this context, a timeout value of \code{None} is allowed which
-removes the timeout for this device.
+This creates the object variable \var{my_instrument} and sets its timeout to
+5~seconds.  In this and only in this context, a timeout value of \code{None} is
+allowed which removes the timeout for this device.
 
 \section{Module functions}
 
@@ -228,14 +230,14 @@ removes the timeout for this device.
 \section{Mixing with direct VISA commands}
 
 You can mix the high-level object-oriented approach described in this document
-with middle-level VISA function calls as described in
+with middle-level VISA function calls in module \module{vpp43} as described in
 \citetitle[http://pyvisa.sourceforge.net/vpp43.html]{The VISA library
   implementation} which is also part of the PyVISA package.  By doing so you
 have full control of your VISA implementation.
 
 The VISA functions need to know what session you are referring to.  PyVISA
 opens exactly one session for each instrument or interface and stores its
-session handle in the instance attribute~\var{vi}.  Thus you can write
+session handle in the instance attribute~\member{vi}.  Thus you can write
 \begin{verbatim}
 from pyvisa import *
 my_instrument = GpibInstrument(14)
@@ -243,7 +245,7 @@ vpp43.clear(my_instrument.vi)
 \end{verbatim}
 
 In case you need the session handle for the default resource manager, it's
-stored in \var{resource_manager.session}:
+stored in \member{resource_manager.session}:
 \begin{verbatim}
 from pyvisa import *
 my_instrument_handle = vpp43.open(resource_manager.session, "GPIB::14",
