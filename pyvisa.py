@@ -322,8 +322,6 @@ class GpibInstrument(Instrument):
 	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
 	self.term_chars = "\r\n"
     def __del__(self):
-	if hasattr(self, "__srq_handler"):
-	    del self.srq_handler
 	self.__switch_events_off()
 	Instrument.__del__(self)
     def __switch_events_off(self):
