@@ -1,7 +1,7 @@
 import vpp43
 from vpp43_constants import *
 from visa_exceptions import *
-import re, time, warnings
+import re, time, warnings, atexit
 
 def _removefilter(action, message="", category=Warning, module="", lineno=0,
 		 append=0):
@@ -102,6 +102,11 @@ class ResourceManager(vpp43.Singleton, ResourceTemplate):
 	return "ResourceManager()"
 
 resource_manager = ResourceManager()
+
+def _destroy_resource_manager():
+    # delete self-reference
+    del ResourceManager.__it__
+atexit.register(_destroy_resource_manager)
 
 def get_instruments_list(use_aliases = True):
     """Get a list of all connected devices.
