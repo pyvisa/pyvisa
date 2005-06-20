@@ -72,8 +72,7 @@ class ResourceTemplate(object):
 	    else:
 		self.timeout = timeout
     def __del__(self):
-	if self.vi is not None:
-	    self._vpp43.close(self.vi)
+	self.close()
     def __set_timeout(self, timeout = 2):
 	if not(0 <= timeout <= 4294967):
 	    raise ValueError("timeout value is invalid")
@@ -87,6 +86,10 @@ class ResourceTemplate(object):
 	timeout = self.__get_timeout()	# just to test whether it's defined
 	vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
     timeout = property(__get_timeout, __set_timeout, __del_timeout, None)
+    def close(self):
+	if self.vi is not None:
+	    self._vpp43.close(self.vi)
+	    self.vi = None
 
 
 class ResourceManager(vpp43.Singleton, ResourceTemplate):
@@ -138,7 +141,7 @@ def get_instruments_list(use_aliases = True):
 	else:
 	    result.append(resource_name[:-7])
     return result
-	
+
 
 class Instrument(ResourceTemplate):
     """Class for all kinds of Instruments.
