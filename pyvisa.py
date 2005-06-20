@@ -26,10 +26,6 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
 	warnings.warn("Warning filter not found", stacklevel = 2)
     warnings.filters = new_filters
 
-_resources = {}
-"""Holds all session vi's.  The keys are the session vi's, the items the object
-instances.  Managed by ResourceTemplate."""
-
 class ResourceTemplate(object):
     """The abstract base class of the VISA implementation.  It covers
     life-cycle services: opening and closing of vi's.
@@ -74,11 +70,10 @@ class ResourceTemplate(object):
 				    VI_TMO_INFINITE)
 	    else:
 		self.timeout = timeout
-	_resources[self.vi] = self
     def __del__(self):
 	if self.vi is not None:
-	    del _resources[self.vi]
 	    vpp43.close(self.vi)
+	print self.__class__
     def __set_timeout(self, timeout = 2):
 	if not(0 <= timeout <= 4294967):
 	    raise ValueError("timeout value is invalid")
@@ -334,38 +329,16 @@ class GpibInstrument(Instrument):
     def __switch_events_off(self):
 	vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
 	vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
-    def __switch_event_mechanism(self, event_type, mechanism):
-	self.__switch_events_off()
-	vpp43.enable_event(self.vi, event_type, mechanism)
-    def _srq_event_handler(vi, event_type, context, user_handle):
-	for instrument in [resource for resource in _resources.items() if
-			   isinstance(resource, GpibInstrument)]:
-	    if vpp43.read_stb(instrument.vi) & 0x40:
-		_resource[instrument.vi].__srq_handler()
-    _srq_event_handler = staticmethod(_srq_event_handler)
-    def __set_srq_handler(self, handler):
-	if not callable(handler):
-	    raise "handler argument not callable"
-	if hasattr(self, "__srq_handler"):
-	    del self.srq_handler
-	self.__srq_handler = handler
-	vpp43.install_handler(self.vi, VI_EVENT_SERVICE_REQ,
-			      self._srq_event_handler)
-	self.__switch_event_mechanism(VI_EVENT_SERVICE_REQ, VI_HNDLR)
-    def __del_srq_handler(self):
-	self.__switch_event_mechanism(VI_EVENT_SERVICE_REQ, VI_QUEUE)
-	del self.__srq_handler
-	vpp43.uninstall_handler(self.vi, VI_EVENT_SERVICE_REQ,
-				self._srq_event_handler)
-    srq_handler = property(None, __set_srq_handler, __del_srq_handler, None)
-    def wait_for_srq(self, timeout = VI_TMO_INFINITE):
-	if hasattr(self, "__srq_handler"):
-	    self.__switch_event_mechanism(VI_EVENT_SERVICE_REQ, VI_QUEUE)
+    def wait_for_srq(self, **keyw):
+	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+	try:
+	    timeout = keyw.get("timeout", self.timeout)
+	except NameError:
+	    timeout = VI_TMO_INFINITE
 	event_type, context = \
 	    vpp43.wait_on_event(self.vi, VI_EVENT_SERVICE_REQ, timeout)
 	vpp43.close(context)
-	if hasattr(self, "__srq_handler"):
-	    self.__switch_event_mechanism(VI_EVENT_SERVICE_REQ, VI_HNDLR)
+	vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
     def trigger(self):
 	"""Sends a software trigger to the device."""
 	vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
