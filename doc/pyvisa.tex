@@ -59,11 +59,27 @@ This example already shows the two main design goals of PyVISA: preferring
 simplicity over generality, and doing it the object-oriented way.
 
 Every instrument is represented in the source by an object instance.  In this case,
-I have a GPIB instrument with instrument number~14.
+I have a GPIB instrument with instrument number~14, so I create the instance
+(i.\,e.\ variable) called \var{my_instrument} accordingly:
+\begin{verbatim}
+my_instrument = GpibInstrument(14)
+\end{verbatim}
+Then, I send the message ``*IDN?''\ to the device, which is the standard GPIB
+message for ``what are you?''\ or -- in many cases -- ``what's on your display
+at the moment?'':
+\begin{verbatim}
+my_instrument.write("*IDN?")
+\end{verbatim}
+Finally, I print the instrument's answer on the screen:
+\begin{verbatim}
+print my_instrument.read()
+\end{verbatim}
+
 
 \section{Module classes}
 
 \subsection{General devices}
+\label{sec:general-devices}
 
 \begin{classdesc}{Instrument}{resource_name\optional{, **keyw}}
   represents an instrument, e.\,g.\ a measurement device.  It is independent of
@@ -76,7 +92,7 @@ I have a GPIB instrument with instrument number~14.
   The parameter \var{resource_name} takes the same syntax as resource
   specifiers in VISA\@.  Thus, it begins with the bus system, followed by
   ``\verb|::|'', followed by the location of the device within the bus system,
-  and ended with an optional ``\verb|::INSTR|''.
+  and ends with an optional ``\verb|::INSTR|''.
 
   Possible keyword arguments are:
   \begin{tableii}{ll}{var}{Keyword}{Description}
@@ -84,7 +100,14 @@ I have a GPIB instrument with instrument number~14.
       section~\ref{sec:termchars}. Default: \code{""} \emph{(empty)}}
     \lineii{timeout}{timeout in seconds for all device operations, see
       section~\ref{sec:timeouts}. Default:~2}
+    \lineii{lock}{whether you want to have exclusive access to the device.
+      Default: \code{VI_NO_LOCK}}
   \end{tableii}
+
+  \vspace{1ex}
+  For further information about the locking mechanism,
+  see~\citetitle[http://pyvisa.sourceforge.net/vpp43.html]{The VISA library
+    implementation}.
 \end{classdesc}
 
 For example, the above mentioned GPIB instrument with number~14 could also be
@@ -107,6 +130,8 @@ The class \class{Instrument} defines the following methods:
   returns a string sent from the instrument.
 \end{methoddesc}
 
+The class \class{Instrument} has the following attributes:
+
 \begin{memberdesc}{timeout}
   The timeout in seconds for each I/O operation.  See
   section~\ref{sec:timeouts} for further information.
@@ -118,20 +143,53 @@ The class \class{Instrument} defines the following methods:
 \end{memberdesc}
 
 
-\begin{classdesc}{Interface}{interface_name}
-\end{classdesc}
-
-
 \subsection{GPIB devices}
 \label{sec:gpib-devices}
 
 \begin{classdesc}{GpibInstrument}{gpib_identifier\optional{,
       board_number\optional{, **keyw}}}
+  Since this class is derived from the class \class{Instrument}, please refer
+  to section~\ref{sec:general-devices} for the basic operations.  Here I will
+  only explain methods and attributes that are special to GPIB devices.
 \end{classdesc}
 
+The class \class{GpibInstrument} defines the following methods:
 
+\begin{methoddesc}{wait_for_srq}{\optional{timeout}}
+  waits for a serial request (SRQ) coming from the instrument.  Note that this
+  method is not ended when \emph{another} instrument signals an SRQ, only
+  \emph{this} instrument.
+  
+  If you don't give a value for \var{timeout} (in seconds), this method waits
+  as long as when an SRQ arrives.  Otherwise, \var{timeout} is interpreted as
+  the maximal waiting time in seconds.
+\end{methoddesc}
+
+\begin{methoddesc}{trigger}{}
+  sends a trigger signal to the instrument.
+\end{methoddesc}
+
+\bigskip
 \begin{classdesc}{Gpib}{\optional{board_number}}
+  represents a GPIB board.  Although most setups have at most one GPIB
+  interface card or USB-GPIB device (with board number~0), theoretically you
+  may have more.  Be that as it may, for board-level operations, i.\,e.\
+  operations that affect the whole bus with all connected devices, you must
+  create an instance of this class.
+
+  The optional GPIB board number \var{board_number} defaults to~0.
 \end{classdesc}
+
+The class \class{Gpib} defines the following methods:
+
+\begin{methoddesc}{send_ifc}{}
+  pulses the interface clear line (IFC) for at least 0.1~seconds.
+\end{methoddesc}
+
+\begin{raggedright}
+You needn't store the board instance in a variable.  Instead, you may send an
+IFC signal just by saying \samp{Gpib().send_ifc()}.\par
+\end{raggedright}
 
 
 \subsection{Termination characters}
@@ -178,6 +236,7 @@ there, unless the termination sequence itself is empty.  So, \code{"\e
 that they will be interpreted as one long termination sequence, which is
 probably not what you want.  The correct variants are \code{"\e r NOEND"},
 \code{"NOEND"}, and \code{"NOEND"}.
+
 
 \subsection{Timeouts}
 \label{sec:timeouts}
@@ -257,8 +316,9 @@ my_instrument_handle = vpp43.open(resource_manager.session, "GPIB::14",
 \subsection{Prerequisites}
 
 The PyVISA package doesn't include a low-level VISA implementation itself.  You
-have to download it from one of the VISA vendors, e.\,g.\ \ulink{National Instruments
-VISA pages}{http://ni.com/visa/}.  Please install it properly before you proceed.
+have to download it from one of the VISA vendors, e.\,g.\ from the
+\ulink{National Instruments VISA pages}{http://ni.com/visa/}.  Please install
+it properly before you proceed.
 
 Additionally, your Python installation needs a fresh version of
 \ulink{ctypes}{http://starship.python.net/crew/theller/ctypes/}.  By the way,
@@ -287,12 +347,12 @@ For Linux, the default VISA library is
 choice.  If it's called differently on your system, or is placed in another
 directory, you can tell PyVISA so by saying
 \begin{verbatim}
-from vpp43 import *
-
-visa_library.load_library("/usr/local/visa/libvisa.so.7")
+import vpp43
+vpp43.visa_library.load_library("/usr/local/visa/libvisa.so.7")
+from pyvisa import *
+...
 \end{verbatim}
-Of course, you must set the path according to your installation.  You must do
-this before any VISA function call.
+Of course, you must set the path according to your installation.
 
 
 \section{About PyVISA}
@@ -307,4 +367,5 @@ bugs there.
 \end{document}
 
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
-% LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT
+% LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
+% LocalWords:  ifc
