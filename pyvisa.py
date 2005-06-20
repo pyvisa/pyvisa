@@ -337,15 +337,23 @@ class GpibInstrument(Instrument):
 	self._vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
     def wait_for_srq(self, timeout = None):
 	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
-	if timeout is None:
-	    timeout = VI_TMO_INFINITE
-	elif not(0 <= timeout <= 4294967):
+	if timeout and not(0 <= timeout <= 4294967):
 	    raise ValueError("timeout value is invalid")
-	else:
-	    timeout = int(timeout * 1000)
-	event_type, context = \
-	    vpp43.wait_on_event(self.vi, VI_EVENT_SERVICE_REQ, timeout)
-	vpp43.close(context)
+	starting_time = time.clock()
+	while True:
+	    if timeout is None:
+		adjusted_timeout = VI_TMO_INFINITE
+	    else:
+		adjusted_timeout = int((starting_time + timeout - time.clock())
+				       * 1000)
+		if adjusted_timeout < 0:
+		    adjusted_timeout = 0
+	    event_type, context = \
+		vpp43.wait_on_event(self.vi, VI_EVENT_SERVICE_REQ,
+				    adjusted_timeout)
+	    vpp43.close(context)
+	    if vpp43.read_stb(self.vi) & 0x40:
+		break
 	vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
     def trigger(self):
 	"""Sends a software trigger to the device."""
@@ -357,7 +365,7 @@ class Interface(ResourceTemplate):
 
     You may wonder why this exists since the only child class is Gpib().  I
     don't know either, but the VISA specification says that there are
-    attributes that only"interfaces that support GPIB" have and other that
+    attributes that only "interfaces that support GPIB" have and other that
     "all" have.
 
     FixMe: However, maybe it's better to merge both classes.  In any case you
