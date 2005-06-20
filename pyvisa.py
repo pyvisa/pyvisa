@@ -3,7 +3,7 @@ from vpp43_constants import *
 from visa_exceptions import *
 import re, time, warnings
 
-def removefilter(action, message="", category=Warning, module="", lineno=0,
+def _removefilter(action, message="", category=Warning, module="", lineno=0,
 		 append=0):
     """Remove all entries from the list of warnings filters that match the
     given filter.
@@ -67,10 +67,10 @@ class ResourceTemplate(object):
 		    time.sleep(0.1)
 		    passed_time += 0.1
 		    vpp43.clear(self.vi)
-	    removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
+	    _removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
 	    timeout = keyw.get("timeout", 2)
 	    if timeout is None:
-	        vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE,
+		vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE,
 				    VI_TMO_INFINITE)
 	    else:
 		self.timeout = timeout
@@ -215,7 +215,7 @@ class Instrument(ResourceTemplate):
 		chunk = vpp43.read(self.vi, self.chunk_size)
 		buffer += chunk
 	finally:
-	    removefilter("ignore", "VI_SUCCESS_MAX_CNT")
+	    _removefilter("ignore", "VI_SUCCESS_MAX_CNT")
 	if self.__term_chars != "":
 	    if not buffer.endswith(self.__term_chars):
 		raise "read string doesn't end with termination characters"
@@ -298,21 +298,21 @@ class GpibInstrument(Instrument):
     properties of GPIB instruments.
 
     """
-    def __init__(self, gpib_identifier, bus_number = 0, **keyw):
+    def __init__(self, gpib_identifier, board_number = 0, **keyw):
 	"""Class constructor.
 
 	parameters:
 	gpib_identifier -- if it's a string, it is interpreted as the
 	    instrument's VISA resource name.  If it's a number, it's the
 	    instrument's GPIB number.
-	bus_number -- (default: 0) the number of the GPIB bus.
+	board_number -- (default: 0) the number of the GPIB bus.
 
 	Other keyword arguments are passed to the constructor of class
 	Instrument.
 
 	"""
 	if isinstance(gpib_identifier, int):
-	    resource_name = "GPIB%d::%d" % (bus_number, gpib_identifier)
+	    resource_name = "GPIB%d::%d" % (board_number, gpib_identifier)
 	else:
 	    resource_name = gpib_identifier
 	Instrument.__init__(self, resource_name, **keyw)
@@ -330,6 +330,7 @@ class GpibInstrument(Instrument):
 	if hasattr(self, "__srq_handler"):
 	    del self.srq_handler
 	self.__switch_events_off()
+	Instrument.__del__(self)
     def __switch_events_off(self):
 	vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
 	vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
