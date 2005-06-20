@@ -74,7 +74,6 @@ class ResourceTemplate(object):
     def __del__(self):
 	if self.vi is not None:
 	    self._vpp43.close(self.vi)
-	print self.__class__
     def __set_timeout(self, timeout = 2):
 	if not(0 <= timeout <= 4294967):
 	    raise ValueError("timeout value is invalid")
