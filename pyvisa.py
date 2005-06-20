@@ -27,6 +27,7 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
     warnings.filters = new_filters
 
 class ResourceTemplate(object):
+    import vpp43 as _vpp43
     """The abstract base class of the VISA implementation.  It covers
     life-cycle services: opening and closing of vi's.
 
@@ -72,7 +73,7 @@ class ResourceTemplate(object):
 		self.timeout = timeout
     def __del__(self):
 	if self.vi is not None:
-	    vpp43.close(self.vi)
+	    self._vpp43.close(self.vi)
 	print self.__class__
     def __set_timeout(self, timeout = 2):
 	if not(0 <= timeout <= 4294967):
@@ -325,8 +326,8 @@ class GpibInstrument(Instrument):
 	self.__switch_events_off()
 	Instrument.__del__(self)
     def __switch_events_off(self):
-	vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
-	vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+	self._vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+	self._vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
     def wait_for_srq(self, **keyw):
 	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
 	try:
