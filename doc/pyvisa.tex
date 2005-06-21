@@ -1,8 +1,31 @@
-% -*- mode: LaTeX; coding: us-ascii; ispell-local-dictionary: "british"; -*-
+% -*- mode: LaTeX; coding: utf-8; ispell-local-dictionary: "british"; -*-
+% 
+%   pyvisa.tex - high-level OO instrument access on top of VISA
+% 
+%   Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
+%                    Torsten Bronger <bronger@physik.rwth-aachen.de>.
+% 
+%   This file is part of PyVISA.
+% 
+%   PyVISA is free software; you can redistribute it and/or modify it under
+%   the terms of the GNU General Public License as published by the Free
+%   Software Foundation; either version 2 of the License, or (at your option)
+%   any later version.
+% 
+%   PyVISA is distributed in the hope that it will be useful, but WITHOUT ANY
+%   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%   FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+%   details.
+% 
+%   You should have received a copy of the GNU General Public License along
+%   with PyVISA; if not, write to the Free Software Foundation, Inc., 59
+%   Temple Place, Suite 330, Boston, MA 02111-1307 USA
+% 
+
 \documentclass{howto}
 
 \title{PyVISA\\[0.5ex]\large measurement and test equipment control with Python}
-\release{0.9}
+\release{0.2}
 
 \author{Torsten Bronger}
 \authoraddress{
@@ -381,10 +404,10 @@ have full control of your devices.
 
 The VISA functions need to know what session you are referring to.  PyVISA
 opens exactly one session for each instrument or interface and stores its
-session handle in the instance attribute~\member{vi}.  Thus you can write
+session handle in the instance attribute~\member{vi}.  For example, the
+following two lines are equivalent:
 \begin{verbatim}
-from pyvisa import *
-my_instrument = GpibInstrument(14)
+my_instrument.clear()
 vpp43.clear(my_instrument.vi)
 \end{verbatim}
 
