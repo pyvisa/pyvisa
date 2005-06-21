@@ -224,6 +224,18 @@ class Instrument(ResourceTemplate):
 		raise "read string doesn't end with termination characters"
 	    return buffer[:-len(self.__term_chars)]
 	return buffer
+    def read_floats(self):
+	float_regex = re.compile(r"[-+]?(\d+(\.\d*)?|\d*\.\d+)([eE][-+]?\d+)?")
+	values = []
+	for raw_value in re.split("[,\s]+", self.read()):
+	    values.append(float(float_regex.search(raw_value).group()))
+	if len(values) == 0:
+	    return None
+	if len(values) == 1:
+	    return values[0]
+	return values
+    def clear(self):
+	vpp43.clear(self.vi)
     def __set_term_chars(self, term_chars):
 	"""Set a new termination character sequence.  See below the property
 	"term_char"."""
@@ -407,9 +419,14 @@ class Gpib(Interface):
 
 def testpyvisa():
     print "Test start"
-    keythley = GpibInstrument(14)
-    keythley.write("*IDN?")
-    print keythley.read()
+    keithley = GpibInstrument(12)
+    milliseconds = 500
+    number_of_values = 10
+    keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
+    keithley.trigger()
+    keithley.wait_for_srq()
+    print keithley.read_floats()
+    print "Average: ", sum(voltages) / len(voltages)
     print "Test end"
 
 if __name__ == '__main__':
