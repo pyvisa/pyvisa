@@ -32,8 +32,14 @@ as a separate file \file{LICENSE} in the PyVISA distribution.
 \begin{abstract}
 
 \noindent
-This document covers the PyVISA module.  It bases on the VISA library and
-implements control of measurement devices in a convenient way.
+This document covers the object-oriented layer of the PyVISA package as
+realised in the \module{pyvisa} module.  It bases on the \module{vpp43} module
+of the same package and implements control of measurement devices in a simple
+and convenient way.  The design goal is to combine HT~Basic's ease and
+implicitness with Python's modern syntax and powerful set of libraries.
+
+This module is still under construction.  In particular, RS\,232 and USB are
+only supported as far as basic I/O is concerned.
 \end{abstract}
 
 \tableofcontents
@@ -65,7 +71,7 @@ I have a GPIB instrument with instrument number~14, so I create the instance
 my_instrument = GpibInstrument(14)
 \end{verbatim}
 Then, I send the message ``*IDN?''\ to the device, which is the standard GPIB
-message for ``what are you?''\ or -- in many cases -- ``what's on your display
+message for ``what are you?''\ or -- in some cases -- ``what's on your display
 at the moment?'':
 \begin{verbatim}
 my_instrument.write("*IDN?")
@@ -74,6 +80,62 @@ Finally, I print the instrument's answer on the screen:
 \begin{verbatim}
 print my_instrument.read()
 \end{verbatim}
+
+
+\subsection{A more complex example}
+\label{sec:more-complex-example}
+
+The following code works for a Keithley 2000 multimeter in ``language 199
+mode'' (in contrast to ``SCPI mode'').  It advises the multimeter to measure
+10~voltages.  After having read them, the program calculates the average
+voltage and prints it on the screen.
+\begin{verbatim}
+from pyvisa import *
+
+keithley = GpibInstrument(12)
+interval_in_ms = 500
+number_of_readings = 10
+keithley.write("F0B2M2G0T2Q%dI%dX" % (interval_in_ms, number_of_readings))
+keithley.trigger()
+keithley.wait_for_srq()
+voltages = keithley.read_floats()
+print "Average voltage: ", sum(voltages) / len(voltages)
+\end{verbatim}
+Let's have a look at the command string \code{"F0B2M2G0T2Q\%dI\%dX"}:
+\begin{tableii}{ll}{code}{Code}{Description}
+  \lineii{F0}{we want to measure \emph{voltages}}
+  \lineii{B2}{we want to read the entire data buffer}
+  \lineii{M2}{send SRQ when finished measuring}
+  \lineii{G0}{neat number format}
+  \lineii{T2}{start when triggered}
+  \lineii{Q\%d}{set number of readings}
+  \lineii{I\%d}{set time interval between readings}
+  \lineii{X}{execute all commands}
+\end{tableii}
+
+After this string has been sent to the device, we start the measurement with
+\begin{verbatim}
+keithley.trigger()
+\end{verbatim}
+and wait for the end of data acquisition with
+\begin{verbatim}
+keithley.wait_for_srq()
+\end{verbatim}
+Now I must read the result from the device.  I could use the \code{read()}
+method as in the first example, but then I'd get
+\begin{verbatim}
+NDCV-000.0004E+0,NDCV-000.0005E+0,NDCV-000.0004E+0,NDCV-000.0007E+0,
+NDCV-000.0000E+0,NDCV-000.0007E+0,NDCV-000.0008E+0,NDCV-000.0004E+0,
+NDCV-000.0002E+0,NDCV-000.0005E+0
+\end{verbatim}
+which I would have to convert to numbers.  Fortunately, the
+\code{read_floats()} method does this work for us, and so the variable
+\var{voltages} contains
+\begin{verbatim}
+[-0.0004, -0.0005, -0.0004, -0.0007, 0, -0.0007, -0.0008, -0.0004,
+ -0.0002, -0.0005]
+\end{verbatim}
+which is much better.  The rest of the example is straightforward Python.
 
 
 \section{Module classes}
@@ -90,9 +152,9 @@ print my_instrument.read()
   (section~\ref{sec:gpib-devices}).
 
   The parameter \var{resource_name} takes the same syntax as resource
-  specifiers in VISA\@.  Thus, it begins with the bus system, followed by
-  ``\verb|::|'', followed by the location of the device within the bus system,
-  and ends with an optional ``\verb|::INSTR|''.
+  specifiers in VISA\@.  Thus, it begins with the bus system followed by
+  ``\verb|::|'', continues with the location of the device within the bus
+  system, and ends with an optional ``\verb|::INSTR|''.
 
   Possible keyword arguments are:
   \begin{tableii}{ll}{var}{Keyword}{Description}
@@ -120,17 +182,28 @@ or even more explicitly with
 my_instrument = Instrument("GPIB0::14::INSTR")
 \end{verbatim}
 
-The class \class{Instrument} defines the following methods:
+The class \class{Instrument} defines the following methods and attributes:
 
 \begin{methoddesc}{write}{message}
   writes the string \var{message} to the instrument.
 \end{methoddesc}
 
 \begin{methoddesc}{read}{}
-  returns a string sent from the instrument.
+  returns a string sent from the instrument to the computer.
 \end{methoddesc}
 
-The class \class{Instrument} has the following attributes:
+\begin{methoddesc}{read_floats}{}
+  returns a list of decimal values (floats) sent from the instrument to the
+  computer.  See section~\ref{sec:more-complex-example} above.  If only one
+  value has been found, it is returned as such (i\,e.\ not as a list), and if
+  no float has been found, \code{None} is returned.
+\end{methoddesc}
+
+\begin{methoddesc}{clear}{}
+  resets the device.  This operation is highly bus-dependent.  I refer you to
+  the original VISA documentation, which explains how this is achieved for VXI,
+  GPIB, serial, etc.
+\end{methoddesc}
 
 \begin{memberdesc}{timeout}
   The timeout in seconds for each I/O operation.  See
@@ -148,10 +221,24 @@ The class \class{Instrument} has the following attributes:
 
 \begin{classdesc}{GpibInstrument}{gpib_identifier\optional{,
       board_number\optional{, **keyw}}}
-  Since this class is derived from the class \class{Instrument}, please refer
-  to section~\ref{sec:general-devices} for the basic operations.  Here I will
-  only explain methods and attributes that are special to GPIB devices.
+  represents a GPIB instrument.  If \var{gpib_identifier} is a string, it is
+  interpreted as a VISA resource name.  If it is a number, it denotes the
+  device number at the GPIB bus.
+
+  The optional \var{board_number} defaults to zero.  If you have more that one
+  GPIB bus system attached to the computer, you can select the bus with this
+  parameter.
+
+  The keyword arguments are interpreted the same as with the class
+  \class{Instrument}.
 \end{classdesc}
+
+\begin{notice}
+  Since this class is derived from the class \class{Instrument}, please refer
+  to section~\ref{sec:general-devices} for the basic operations.
+  \class{GpibInstrument} can do everything that \class{Instrument} can do, so
+  it simply extends the original class with GPIB-specific operations.
+\end{notice}
 
 The class \class{GpibInstrument} defines the following methods:
 
@@ -180,16 +267,16 @@ The class \class{GpibInstrument} defines the following methods:
   The optional GPIB board number \var{board_number} defaults to~0.
 \end{classdesc}
 
-The class \class{Gpib} defines the following methods:
+The class \class{Gpib} defines the following method:
 
 \begin{methoddesc}{send_ifc}{}
   pulses the interface clear line (IFC) for at least 0.1~seconds.
 \end{methoddesc}
 
-\begin{raggedright}
+\begin{notice}
 You needn't store the board instance in a variable.  Instead, you may send an
-IFC signal just by saying \samp{Gpib().send_ifc()}.\par
-\end{raggedright}
+IFC signal just by saying \samp{Gpib().send_ifc()}.
+\end{notice}
 
 
 \subsection{Termination characters}
@@ -266,7 +353,7 @@ my_instrument = Instrument("ASRL1", timeout = 5)
 \end{verbatim}
 This creates the object variable \var{my_instrument} and sets its timeout to
 5~seconds.  In this and only in this context, a timeout value of \code{None} is
-allowed which removes the timeout for this device.
+allowed, which removes the timeout for this device.
 
 \section{Module functions}
 
@@ -283,16 +370,14 @@ allowed which removes the timeout for this device.
   standard resource names are returned.
 \end{funcdesc}
 
-\section{Exceptions}
-
 
 \section{Mixing with direct VISA commands}
 
 You can mix the high-level object-oriented approach described in this document
 with middle-level VISA function calls in module \module{vpp43} as described in
 \citetitle[http://pyvisa.sourceforge.net/vpp43.html]{The VISA library
-  implementation} which is also part of the PyVISA package.  By doing so you
-have full control of your VISA implementation.
+  implementation} which is also part of the PyVISA package.  By doing so, you
+have full control of your devices.
 
 The VISA functions need to know what session you are referring to.  PyVISA
 opens exactly one session for each instrument or interface and stores its
@@ -368,4 +453,4 @@ bugs there.
 
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
 % LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
-% LocalWords:  ifc
+% LocalWords:  ifc SCPI srq
