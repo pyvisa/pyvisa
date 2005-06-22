@@ -1,0 +1,103 @@
+.. -*- mode: rst; coding: iso-8859-1; ispell-local-dictionary: "british"; -*-
+.. 
+..   homepage.txt - The reST source code of PyVISA's homepage
+.. 
+..   Copyright © 2005 Torsten Bronger <bronger@physik.rwth-aachen.de>.
+.. 
+..   This file is part of PyVISA.
+.. 
+..   PyVISA is free software; you can redistribute it and/or modify it under
+..   the terms of the GNU General Public License as published by the Free
+..   Software Foundation; either version 2 of the License, or (at your option)
+..   any later version.
+.. 
+..   PyVISA is distributed in the hope that it will be useful, but WITHOUT ANY
+..   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+..   FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+..   details.
+.. 
+..   You should have received a copy of the GNU General Public License along
+..   with PyVISA; if not, write to the Free Software Foundation, Inc., 59
+..   Temple Place, Suite 330, Boston, MA 02111-1307 USA
+.. 
+
+==========
+PyVISA
+==========
+
+------------------------------------------------
+Measurement and test equipment control
+------------------------------------------------
+
+:Date: $Date$
+:Version: $Revision$
+:Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
+
+
+Overview
+========
+
+The programming of measurement instruments can be real pain.  There are many
+different protocols, sent over many different interface and bus systems.  For
+every programming language you want to use, you have to find libraries that
+support both your device and its bus system.
+
+In order to ease this unfortunate situation, the VISA [#]_ specification was
+defined in the middle of the 90ies.  Today VISA is implemented on all
+significant operating systems.  A couple of vendors offer VISA libraries,
+albeit mostly in binary form.  These libraries work together with arbitrary
+peripherical devices, although they may be limited to certain interface
+devices, such as the vendor's GPIB card.
+
+.. [#] Virtual Instrument Software Architecture
+
+The VISA specification has explicit bindings to Visual Basic, C, and G
+(LabVIEW's graphical language).  However, you can use VISA with any language
+capable of calling functions in a DLL.  Python is such a language.
+
+
+VISA and Python
+===============
+
+Python has a couple of features that make it very interesting for measurement
+controlling:
+
+* Python is an easy-to-learn scripting language with short development cycles.
+
+* It represents a high abstraction level [#]_, which perfectly blends with the
+  abstraction level of measurement programs.
+
+* It has a very rich set of native libraries, including numerical and plotting
+  modules for data analysis and visualisation.
+
+* A large set of books (in many languages) and on-line publications is
+  available.
+
+* You can download it for free at http://www.python.org.
+
+.. [#] For example, you don't need to care about the underlying operating
+       system with all its peculiarities.
+
+The PyVISA package is a VISA binding for Python.  It is implemented in two
+layers.  First, there is the lower level ``vpp43.py``, which directly accesses
+the VISA functions from Python.  On top of it, an object-oriented Python module
+has been created called ``pyvisa.py``.  In case of doubt, use ``pyvisa.py``
+because it is easier and more convenient. ``vpp43.py`` is only for people who
+need full control or the official VISA functions for some reason.
+
+
+Links
+=====
+
+.. _PyVISA: http://sourceforge.net/projects/pyvisa/
+.. _`VISA specification`:
+       http://www.ivifoundation.org/Downloads/Class%20Specifications/
+.. _`VISA library specification`:
+       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
+.. _`VISA specification for textual languages`:
+       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp432.doc
+.. _`NI-VISA Programmer Reference Manual`:
+       http://digital.ni.com/manuals.nsf/websearch/87E52268CF9ACCEE86256D0F006E860D
+
+
+..  LocalWords:  rst british reST ies vpp pyvisa
