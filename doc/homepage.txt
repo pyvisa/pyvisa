@@ -21,9 +21,9 @@
 ..   Temple Place, Suite 330, Boston, MA 02111-1307 USA
 .. 
 
-==========
-PyVISA
-==========
+======================
+PyVISA homepage
+======================
 
 ------------------------------------------------
 Measurement and test equipment control
@@ -78,26 +78,69 @@ controlling:
 .. [#] For example, you don't need to care about the underlying operating
        system with all its peculiarities.
 
+PyVISA
+=======
+
 The PyVISA package is a VISA binding for Python.  It is implemented in two
-layers.  First, there is the lower level ``vpp43.py``, which directly accesses
-the VISA functions from Python.  On top of it, an object-oriented Python module
-has been created called ``pyvisa.py``.  In case of doubt, use ``pyvisa.py``
-because it is easier and more convenient. ``vpp43.py`` is only for people who
-need full control or the official VISA functions for some reason.
+layers:
+
+1. First, there is the lower level ``vpp43``, which directly accesses the VISA
+   functions from Python.  See the `PyVISA low-level implementation`_ for more
+   information.
+
+2. On top of it, an object-oriented Python module has been created called
+   ``pyvisa``.  In case of doubt, use ``pyvisa`` because it is easier and more
+   convenient. ``vpp43`` is only for people who need full control or the
+   official VISA functions for some reason.  See the `PyVISA manual`_ for more
+   information.
+
+The `PyVISA project page`_ contains the bug tracker and the download area.
 
 
 Links
 =====
 
-.. _PyVISA: http://sourceforge.net/projects/pyvisa/
+* PyVISA itself:
+
+  - the `PyVISA manual`_ (also `as PDF`_)
+
+  - the `PyVISA project page`_ with download area and bug tracker
+
+  - the `PyVISA low-level implementation`_ called ``vpp43``
+
+* The original VISA docs:
+
+  - `VISA specification`_ (scroll down to the end)
+
+  - `VISA library specification`_
+
+  - `VISA specification for textual languages`_
+
+* The very good VISA manuals from `National Instruments's VISA pages`_:
+
+  - `NI-VISA User Manual`_
+
+  - `NI-VISA Programmer Reference Manual`_
+
+  - `NI-VISA help file`_ in HTML
+
+.. _`PyVISA manual`: http://pyvisa.sourceforge.net/pyvisa/
+.. _`as PDF`: http://pyvisa.sourceforge.net/pyvisa.pdf
+.. _`PyVISA project page`: http://sourceforge.net/projects/pyvisa/
+.. _`PyVISA low-level implementation`: http://pyvisa.sourceforge.net/vpp43.html
 .. _`VISA specification`:
-       http://www.ivifoundation.org/Downloads/Class%20Specifications/
+       http://www.ivifoundation.org/Downloads/Specifications.htm
 .. _`VISA library specification`:
        http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
 .. _`VISA specification for textual languages`:
        http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp432.doc
+.. _`National Instruments's VISA pages`: http://ni.com/visa/
 .. _`NI-VISA Programmer Reference Manual`:
        http://digital.ni.com/manuals.nsf/websearch/87E52268CF9ACCEE86256D0F006E860D
+.. _`NI-VISA help file`:
+       http://digital.ni.com/manuals.nsf/websearch/21992F3750B967ED86256F47007B00B3
+.. _`NI-VISA User Manual`:
+       http://digital.ni.com/manuals.nsf/websearch/266526277DFF74F786256ADC0065C50C
 
 
-..  LocalWords:  rst british reST ies vpp pyvisa
+..  LocalWords:  rst british reST ies vpp pyvisa docs
