@@ -24,7 +24,7 @@
 
 \documentclass{howto}
 
-\title{PyVISA\\[0.5ex]\large measurement and test equipment control with Python}
+\title{PyVISA}
 \release{0.2}
 
 \author{Torsten Bronger}
@@ -33,7 +33,7 @@
 	\email{bronger@physik.rwth-aachen.de}
 }
 
-\date{17 June 2005}
+\date{22 June 2005}
 
 \makeindex
 
@@ -55,11 +55,14 @@ as a separate file \file{LICENSE} in the PyVISA distribution.
 \begin{abstract}
 
 \noindent
-This document covers the object-oriented layer of the PyVISA package as
-realised in the \module{pyvisa} module.  It bases on the \module{vpp43} module
-of the same package and implements control of measurement devices in a simple
-and convenient way.  The design goal is to combine HT~Basic's ease and
-implicitness with Python's modern syntax and powerful set of libraries.
+PyVISA enables you to control your measurement and test equipment -- digital
+multimeters, motors, sensors and the like.  This document covers the
+simple-to-use \module{pyvisa} module of the PyVISA package.  It implements
+control of measurement devices in a straightforward and convenient way.  The
+design goal is to combine HTBasic's ease and implicitness with Python's modern
+syntax and powerful set of libraries.  Please also have a look at
+\ulink{PyVISA's project page}{http://sourceforge.net/projects/pyvisa} with bug
+tracker and download area.
 
 This module is still under construction.  In particular, RS\,232 and USB are
 only supported as far as basic I/O is concerned.
@@ -329,10 +332,9 @@ For GPIB instruments however, it's set to \verb|"\r\n"| (i.\,e.~``CR\,LF'')\@.
 For RS232 (once it's supported), it's just \verb|"\n"|~(LF)\@.
 
 You may add two options to the termination characters: \code{NOEND} and
-\code{DELAY}.  They are inspired by HT~Basic.  \code{NOEND} makes only sense
-for GPIB instruments.  It switches off detection of the end of a message using
-the EOI bus line.  (This means that by default the observance of this line is
-on.)
+\code{DELAY}.  They are inspired by HTBasic.  \code{NOEND} makes only sense for
+GPIB instruments.  It switches off detection of the end of a message using the
+EOI bus line.  (This means that by default the observance of this line is on.)
 
 \code{DELAY} takes a numeric argument that denotes the time in seconds to wait
 after each write operation.  So you could write:
@@ -476,4 +478,4 @@ bugs there.
 
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
 % LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
-% LocalWords:  ifc SCPI srq
+% LocalWords:  ifc SCPI srq utf tex
