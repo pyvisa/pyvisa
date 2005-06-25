@@ -22,10 +22,6 @@
 #    with pyvisa; if not, write to the Free Software Foundation, Inc., 59
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
-# TODO:
-#
-# * Test as many routines as possible, audit the rest
-#
 
 
 """Main module of the implementation of the original VISA routines.
