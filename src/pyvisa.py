@@ -372,7 +372,7 @@ class GpibInstrument(Instrument):
     def __switch_events_off(self):
 	self._vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
 	self._vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
-    def wait_for_srq(self, timeout = None):
+    def wait_for_srq(self, timeout = 25):
 	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
 	if timeout and not(0 <= timeout <= 4294967):
 	    raise ValueError("timeout value is invalid")
