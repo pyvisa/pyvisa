@@ -1,5 +1,2 @@
-include *.txt
-include test/testvisa.py
-prune .svn
-prune test/.svn
-prune visa/.svn
+include COPYING MANIFEST MANIFEST.in
+include doc/*.css doc/*.txt doc/LICENSE doc/pyvisa.tex doc/upload_homepage.sh
