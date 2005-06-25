@@ -1,0 +1,487 @@
+2005-06-23  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py: Fixed two bugs.
+
+	* setup.py: Brought up-to-date.
+
+2005-06-22  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/.cvsignore: Added manual output file.
+
+	* doc/upload_homepage.sh: Added PDF version.
+
+	* doc/homepage.txt, doc/pyvisa.tex: First usable version.
+
+	* doc/upload_homepage.sh, doc/homepage.txt: New file.
+
+	* doc/vpp43.txt:
+	Deleted the too general stuff (and moved it to homepage.txt).
+
+2005-06-21  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Adjusted version number.  Added copyright notice.
+
+	* pyvisa.py:
+	Added read_floats().  Changed test code to a more sophisticated example.
+
+	* doc/pyvisa.tex: Many additions and improvements.
+
+2005-06-20  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Many improvements and additions.
+
+	* pyvisa.py: Fixed non-working wait_for_srq().
+
+	* pyvisa.py: Fixed bug in wait_for_srq().
+
+	* pyvisa.py: Added close() method.
+
+	* pyvisa.py: Remove debug code.
+
+	* pyvisa.py:
+	The resource_manager is now cleanly deconstructed when the program is
+	terminated.
+
+	* pyvisa.py: Made calles in __del__ secure.
+
+	* pyvisa.py: Deleted remains of SRQ handler.
+
+	* pyvisa.py: Removed SRQ callback handler.
+
+	* pyvisa.py:
+	Renamed some variables.  Added call to mother class in one __del__ routine.
+
+2005-06-19  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Minor markup improvements.
+
+	* doc/pyvisa.tex: Added license.  Minor improvements.
+
+	* doc/LICENSE: New file.
+
+	* doc/pyvisa.tex: Added a lot of contents.
+
+	* doc/pyvisa.tex: Added timeout options.
+
+2005-06-18  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: New file.
+
+	* pyvisa.py:
+	Deleted MAID test routines.  As a constructor keyword argument, "timeout" may
+	be None.
+
+	* pyvisa.py:
+	Removed superfluous supressions of warnings.  Made "\r\n" the default
+	term_chars for GPIB instruments.
+
+2005-06-17  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py: Removed doubled warnings.
+
+	* vpp43.py: Removed some warnings that weren't significant enough.
+
+	* pyvisa.py: Improved example.
+
+	* pyvisa.py: Added timeout property.  Added wait_for_srq().
+
+	* vpp43.py:
+	Removed ViSession from return values (replaced by integers) because it's not
+	hashable.
+
+	* doc/vpp43.txt: Changed all "ViSession" to "integer".
+
+2005-06-16  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* pyvisa.py: Added use of VI_ATTR_SUPPRESS_END_EN.
+
+	* vpp43.py: Fixed read_asynchronously().
+
+	* doc/vpp43.txt: Explained fixed read_asynchronously().
+
+2005-06-15  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* pyvisa.py: Simplified SRQ handling greatly; still untested.
+
+	* pyvisa.py:
+	Very first and untested implementation of service request callbacks.
+
+	* pyvisa.py: Cosmetic improvement.
+
+	* pyvisa.py: Made module runnable.
+
+	* pyvisa.py: Consequent tabify.  Added _resources.
+
+2005-06-14  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* pyvisa.py:
+	Added docstrings.  Removed spurious "\".  Improved test for GPIB instrument.
+
+	* pyvisa.py:
+	Added GpibInstrument with trigger method.  Made the class Instrument more
+	general.
+
+2005-06-05  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* pyvisa.py: Added many docstrings and comments.
+
+2005-06-04  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* pyvisa.py:
+	Added code to wait for device to be present after having opened it.
+
+	* vpp43.py: Removed "generate_warnings"
+
+2005-06-02  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt: Minor improvements.
+
+	* vpp43.py: Fixed bug in parse_resource_extended().
+
+	* pyvisa.py:
+	Renamed termination_characters to term_chars.  Realised term_chars and timeout
+	as keyword arguments.
+
+	* pyvisa.py:
+	Added get_instruments_list().  Added heuristics for aliases in resource names.
+
+	* pyvisa.py: Moved some functionality to ResourceTemplate.
+
+	* vpp43.py: Added __init__ to Singleton.
+
+	* vpp43.py: Fixed wrong constructor call in singleton class.
+
+2005-06-01  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* pyvisa.py: Added Gpib class.  Added a doc string.
+
+	* pyvisa.py: Changed to new-style classes and inheritance structure.
+
+2005-05-31  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* pyvisa.py: Added rudimentary class "Interface".
+
+	* pyvisa.py: Improved regular expression.
+
+2005-05-30  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py: Added generate_warnings.
+
+	* pyvisa.py: New file.
+
+	* vpp43.py: Minor omission in docstring fixed.
+
+2005-05-29  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt: Re-titled document.  Added VisaIOWarning.
+
+	* setup.py: Order now reflects module hierarchy.
+
+	* visa_exceptions.py: Added VisaIOWarning.
+
+	* vpp43.py: Deleted double message.
+
+	* visa_exceptions.py: Tiny code layout improvement.
+
+	* vpp43.py: Added warnings.
+
+2005-05-29  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt: Re-titled document.  Added VisaIOWarning.
+
+	* setup.py: Order now reflects module hierarchy.
+
+	* visa_exceptions.py: Added VisaIOWarning.
+
+	* vpp43.py: Deleted double message.
+
+	* visa_exceptions.py: Tiny code layout improvement.
+
+	* vpp43.py: Added warnings.
+
+2005-05-28  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py: Ordinary update.
+
+	* vpp43.py: Fixed a bug and a weakness in scanf, sscanf, and queryf.
+
+2005-05-27  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt: Added explanations to new exception.
+
+	* vpp43.py: Implemented new non-string exceptions.
+
+	* visa_exceptions.py:
+	Added UnknownHandler.  Renamed VisaTypeError to TypeError.
+
+	* doc/vpp43.txt:
+	Explained the user_handle in an event handler correctly.
+
+	* vpp43.py: Final implementation of install_handler.
+
+2005-05-25  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/.cvsignore: Added "*.out".
+
+	* doc/vpp43.txt: Explaind current version of install_handler.
+
+2005-05-25  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/.cvsignore: Added "*.out".
+
+	* doc/vpp43.txt: Explaind current version of install_handler.
+
+2005-05-24  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/.cvsignore, vpp43_attributes.py: New file.
+
+	* vpp43_types.py:
+	ViHndlr uses the "standard" calling convention on Windows.
+
+	* vpp43.py: New versions of install_handler and uninstall_handler.
+
+	* doc/vpp43.txt: Described new handler installer/uninstaller.
+
+2005-05-22  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43_constants.py:
+	Restored _to_int(), because I found a way to fix it.
+
+	* vpp43_constants.py: Removed _to_int().
+
+2005-05-20  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt:
+	Added reference to NI user reference manual.  Updated description of
+	get_attribute.
+
+	* vpp43.py:
+	First usable version of get_attribute().  Deleted spurious calls to
+	ensure_string_stype().
+
+	* vpp43.py:
+	Fixed various bugs.  First try with the get_attribute function.
+
+2005-05-19  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt:
+	Moved "Diagnostics" section.  Mentioned ctypes and Enthought-Python.
+
+	* doc/vpp43.txt: Fixed minor errors.
+
+	* doc/vpp43.txt: Added description of exceptions.
+
+	* vpp43.py:
+	Fixed a couple of issues in printf, scanf etc. parameters conversion.  A couple
+	of minor bugfixes, after code review due to writing documentation.
+
+	* vpp43_types.py: Made ViBuf equal to ViString.
+
+	* visa_exceptions.py: Fixed unbound name.  Added VisaTypeError.
+
+2005-05-18  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt: Added general documentation.
+
+	* doc/vpp43.txt: Spell-checked.
+
+	* doc/vpp43.txt: First usable version.
+
+	* doc/vpp43.txt: Added further functions.
+
+	* vpp43.py: Added convert_to_byref.  Minor bugfix.
+
+2005-05-17  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt: Implemented further routines.  Added copyright notice.
+
+	* vpp43.py: Fixed many bugs.  Added some default values for parameters.
+
+	* doc/vpp43.txt: Further work on the function descriptions.
+
+	* doc/default.css: New file.
+
+	* doc/vpp43.txt: Prepared a couple of function descriptions.
+
+	* doc/vpp43.txt:
+	Raw version of the function descriptions inserted.  (Full of errors.)
+
+2005-05-16  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt: New file.
+
+	* vpp43.py: Sorted all functions by alphabet.
+
+	* vpp43.py:
+	Fixed a couple of bugs.  Deleted "ensure_string_argument()".
+
+2005-05-15  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* visa.py: Reverted to last version.
+
+	* vpp43.py: Deleded explicit ctypes casts.
+
+	* visa_exceptions.py: Bug fixed.
+
+	* vpp43.py: Many serious fixes.
+
+	* vpp43.py: Added ctypes argtypes (function signatures).
+
+2005-05-14  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* visa.py: Added deprecated type definitions.
+
+	* vpp43.py: Improved formatting.
+
+	* vpp43.py:
+	Deleted all VPP types where not necessary (i.e., string and byte array types).
+
+2005-05-12  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py: ViSession(vi) --> vi.  Added many comments.
+
+2005-05-11  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py: Minor fixes.  Added local TODO list.
+
+2005-05-09  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py: Added correct list for check_status().  Minor corrections.
+
+	* vpp43.py: All functions implemented.
+
+	* vpp43.py: More functions added.
+
+2005-05-08  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py:
+	Added further functions.  Many corrections.  Added support for cdecl in
+	viPrintf etc with Windows.
+
+2005-03-29  gth  <gth@wilson>
+
+	* visa.py:
+	added code for event handling with callback functions, needs more work
+
+	* visa_attributes.py:
+	added class AttrBitSet, added attributes for event IO_COMPLETION
+
+	* vpp43_types.py:
+	fixed bug in definition of ViHndlr, return type was missing
+
+	* setup.py: added visa_messages.py to list of files
+
+2005-03-23  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py: Added more functions.
+
+	* vpp43.py: Added further routines.
+
+2005-03-22  gth  <gth@wilson>
+
+	* visa.py, visa_attributes.py:
+	added setattr (viSetAttribute), with string or numeric arguments
+
+2005-03-20  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* visa_messages.py: Minor changes.
+
+	* visa_exceptions.py: Renamed base exception class to "Error".
+
+	* vpp43.py: Added further routines.
+
+2005-03-19  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* visa_messages.py, vpp43_constants.py, vpp43_types.py:
+	Improved code documentation.
+
+	* vpp43.py:
+	Added first wrapper routines.  Changed export strategy: Instead of underscores,
+	I now use __all__.
+
+	* vpp43.py: Added some documentation.
+
+	* vpp43.py:
+	Moved excaptions to visa_exceptions.py.  Added loading of VISA library.
+
+	* visa_exceptions.py: New file.
+
+2005-03-18  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py:
+	Added exception class and loading of library.  Code is not working yet!
+
+2005-03-18  gth  <gth@wilson>
+
+	* visa.py, visa_attributes.py:
+	started adding attribute handling (viGetAttribute), incomplete
+
+	* vpp43_types.py: resolved conflict (ViString)
+
+2005-03-17  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43_types.py: Added missing qualifier.
+
+	* visa_messages.py: Fixed import error.
+
+2005-03-17  gth  <gth@wilson>
+
+	* MANIFEST.in, readme.txt: New file.
+
+	* .cvsignore: added build, dist (Python setup directories)
+
+	* visa_messages.py:
+	definition of __all__ leads to strange import error, commented out
+
+	* vpp43_types.py: Changed definition of ViString, ViPString
+
+	* setup.py, visa.py: New file
+
+2005-03-17  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py: Added some metadata and imports.
+
+2005-03-16  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* visa_messages.py: Added docstring.
+
+	* vpp43_constants.py:
+	Moves "completion_and_error_messages" to its own file.
+
+	* vpp43_types.py:
+	Added some meta data.  Made ctypes import in a way that it's not re-exported
+	again.
+
+	* visa_messages.py: New file.
+
+2005-03-15  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43_constants.py: Added some comments.
+
+2005-03-14  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43_constants.py:
+	Added attributes, events, and miscellaneous values.
+
+2005-03-13  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43_constants.py: New file.
+
+	* vpp43_types.py: Added encoding declaration.
+
+	* .cvsignore: New file.
+
+	* vpp43.py:
+	Moved type definitions to vpp43_types.py.  Added copyright notice.  Added
+	encoding declaration.
+
+	* vpp43-types.py, vpp43_types.py: File renamed.
+
+	* vpp43-types.py: New file.
+
+2005-03-12  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* vpp43.py: Changed a lot to avoid exec statements.
+
+	* vpp43.py, COPYING: New file.
+
