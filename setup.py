@@ -24,6 +24,7 @@
 #
 
 from distutils.core import setup
+import shutil
 
 def prune_tree(path):
     try:
