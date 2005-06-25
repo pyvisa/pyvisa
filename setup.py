@@ -46,11 +46,12 @@ classifiers = [
     'Topic :: Software Development :: Libraries :: Python Modules']
 
 setup(name = 'pyvisa',
-      description = 'PyVISA, a python package to support the VISA I/O standard',
+      description = 'Python support for the VISA I/O standard',
       version = '0.2',
-      long_description = 'A Python package for support of the "Virtual '\
-	  'Instrument Software Architecture" (VISA), in order to control '\
-	  'measurement devices and test equipment via GPIB, RS232, or USB.',
+      long_description = \
+      """A Python package for support of the "Virtual Instrument Software
+Architecture" (VISA), in order to control measurement devices and test
+equipment via GPIB, RS232, or USB.""",
       author = 'Gregor Thalhammer, Torsten Bronger',
       author_email = 'Gregor.Thalhammer@uibk.ac.at',
       maintainer_email = 'pyvisa-devel@lists.sourceforge.net',
