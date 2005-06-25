@@ -273,9 +273,9 @@ The class \class{GpibInstrument} defines the following methods:
   method is not ended when \emph{another} instrument signals an SRQ, only
   \emph{this} instrument.
   
-  If you don't give a value for \var{timeout} (in seconds), this method waits
-  as long as when an SRQ arrives.  Otherwise, \var{timeout} is interpreted as
-  the maximal waiting time in seconds.
+  The \var{timeout} argument, given in seconds, denotes the maximal waiting
+  time.  The default value is 25~(seconds).  If you pass \code{None} for the
+  timeout, this method waits forever if no SRQ arrives.
 \end{methoddesc}
 
 \begin{methoddesc}{trigger}{}
@@ -363,8 +363,8 @@ my_device.timeout = 25
 \end{verbatim}
 Here, \var{my_device} may be a device, an interface or whatever, and its
 timeout is set to 25~seconds.  Floating-point values are allowed.  If you set
-it to zero, all operations must succeed instantaneously.  You remove a timeout
-with
+it to zero, all operations must succeed instantaneously.  You must not set it
+to \code{None}.  Instead, if you want to remove the timeout, just say
 \begin{verbatim}
 del my_device.timeout
 \end{verbatim}
@@ -377,8 +377,8 @@ device object:
 my_instrument = Instrument("ASRL1", timeout = 5)
 \end{verbatim}
 This creates the object variable \var{my_instrument} and sets its timeout to
-5~seconds.  In this and only in this context, a timeout value of \code{None} is
-allowed, which removes the timeout for this device.
+5~seconds.  In this context, a timeout value of \code{None} is allowed, which
+removes the timeout for this device.
 
 \section{Module functions}
 
