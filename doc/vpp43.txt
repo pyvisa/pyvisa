@@ -72,6 +72,23 @@ implementation with the original function signatures and semantics.  Moreover,
 the new names are mere expansions of the original ones.
 
 
+Connecting to the VISA shared object
+====================================
+
+``vpp43`` tries to find the VISA library for itself.  On Windows, this is not a
+big problem.  ``visa32.dll`` must be in your ``PATH``.  If it isn't, move it
+there or expand your ``PATH``.
+
+However, on Linux you may need to give the explicit path to the shared object
+file.  You do so by saying for example::
+
+    import visa.vpp43 as vpp43
+    vpp43.visa_library.load_library("/path/to/my/libvisa.so.7")
+
+By default, ``vpp43`` looks for the library in
+``/usr/local/vxipnp/linux/bin/libvisa.so.7``.
+
+
 Diagnostics
 ===========
 
