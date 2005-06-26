@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    pyvisa.py - High-level object-oriented VISA implementation
+#    visa.py - High-level object-oriented VISA implementation
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
 #		      Torsten Bronger <bronger@physik.rwth-aachen.de>.

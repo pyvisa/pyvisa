@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    visa.py - VISA completion and error messages
+#    visa_study.py - Alternative high-level VISA implementation
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
 #                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
@@ -23,7 +23,7 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-"""visa.py defines an Python interface to the VISA library
+"""visa_study.py defines an Python interface to the VISA library
 """
 
 __version__ = "$Revision$"
