@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    visa.py - VISA completion and error messages
+#    pyvisa.py - High-level object-oriented VISA implementation
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-#                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
+#		      Torsten Bronger <bronger@physik.rwth-aachen.de>.
 #
-#    This file is part of pyvisa.
+#    This file is part of PyVISA.
 #
-#    pyvisa is free software; you can redistribute it and/or modify it under
+#    PyVISA is free software; you can redistribute it and/or modify it under
 #    the terms of the GNU General Public License as published by the Free
 #    Software Foundation; either version 2 of the License, or (at your option)
 #    any later version.
 #
 #    pyvisa is distributed in the hope that it will be useful, but WITHOUT ANY
 #    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-#    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+#    FOR A PARTICULAR PURPOSE.	See the GNU General Public License for more
 #    details.
 #
 #    You should have received a copy of the GNU General Public License along
@@ -23,446 +23,436 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-"""visa.py defines an Python interface to the VISA library
-"""
-
-__version__ = "$Revision$"
-# $Source$
-
-from ctypes import *
-from visa_messages import *
-from vpp43_types import *
+import vpp43
 from vpp43_constants import *
-from visa_attributes import attributes_s, attributes
-import os
-import types
-import sys
-import logging
+from visa_exceptions import *
+import re, time, warnings, atexit
 
-log = logging.getLogger('visa')
+def _removefilter(action, message="", category=Warning, module="", lineno=0,
+		 append=0):
+    """Remove all entries from the list of warnings filters that match the
+    given filter.
 
+    It is the opposite to warnings.filterwarnings() and has the same parameters
+    as it."""
+    import re
+    item = (action, re.compile(message, re.I), category, re.compile(module),
+	    lineno)
+    new_filters = []
+    for filter in warnings.filters:
+	equal = 1
+	for j in xrange(len(item)):
+	    if item[j] != filter[j]:
+		equal = 0
+		break
+	if not equal:
+	    new_filters.append(filter)
+    if len(warnings.filters) == len(new_filters):
+	warnings.warn("Warning filter not found", stacklevel = 2)
+    warnings.filters = new_filters
 
-#load Visa library
-if os.name == 'nt':
-    visa = windll.visa32
-elif os.name == 'posix':
-    visa = cdll.LoadLibrary('libvisa.so')
-else:
-    raise "No implementation for your platform available."
-    
+class ResourceTemplate(object):
+    import vpp43 as _vpp43
+    """The abstract base class of the VISA implementation.  It covers
+    life-cycle services: opening and closing of vi's.
 
-class VisaError(IOError):
-    """Base class for VISA errors"""
-    def __init__(self, value):
-        self.value = value
-        
-    def __str__(self):
-        if self.value:
-            (shortdesc, longdesc) = completion_and_error_messages[self.value]
-            hexvalue = self.value #convert errorcodes (negative) to long
-            if hexvalue < 0:
-                hexvalue = hexvalue + 0x100000000L
-            return shortdesc + " (%X): "%hexvalue + longdesc
-            
-#Checks return values for errors
-def CheckStatus(status):
-    #status = ViStatus(status).value
-    if status < 0:
-        raise VisaError(status)
-    else:
-        return status
-    
-#implement low level VISA functions
+    Don't instantiate it!
 
-#VISA Resource Management
-visa.viOpenDefaultRM.restype = CheckStatus
-visa.viOpen.restype = CheckStatus
-visa.viFindRsrc.restype = CheckStatus
-visa.viFindNext.restype = CheckStatus
-visa.viParseRsrc.restype = CheckStatus
-visa.viParseRsrcEx.restype = CheckStatus
-visa.viClose.restype    = CheckStatus
-visa.viGetAttribute.restype = CheckStatus
-visa.viSetAttribute.restype = CheckStatus
-
-def OpenDefaultRM():
-    """Return a session to the Default Resource Manager resource."""
-    sesn = ViSession()
-    result = visa.viOpenDefaultRM(byref(sesn))
-    return (result, sesn.value)
-
-def Open(sesn, rsrcName, accessMode, openTimeout):
-    """Open a session to the specified device."""
-    sesn = ViSession(sesn)
-    rsrcName = ViRsrc(rsrcName)
-    accessMode = ViAccessMode(accessMode)
-    openTimout = ViUInt32(openTimeout)
-    vi = ViSession()
-    result = visa.viOpen(sesn, rsrcName, accessMode, openTimeout, byref(vi))
-    return (result, vi.value)
-
-def FindRsrc(session, expr):
-    """Query a VISA system to locate the resources associated with a
-    specified interface.
-
-    This operation matches the value specified in the expr parameter
-    with the resources available for a particular interface.
-
-    In comparison to the original VISA function, this returns the
-    complete list of found resources."""
-
-    sesn = ViSession(session)
-    expr = ViString(expr)
-    findList = ViFindList()
-    retcnt = ViUInt32()
-    instrDesc = c_buffer('\000', 256)
-
-    resource_list = []
-    result = visa.viFindRsrc(sesn, expr, byref(findList), byref(retcnt), instrDesc)
-    if result>=0:
-        resource_list.append(instrDesc.value)
-        for i in range(1, retcnt.value):
-            visa.viFindNext(findList, instrDesc)
-            resource_list.append(instrDesc.value)
-        visa.viClose(findList)
-    return resource_list
-
-def ParseRsrc(sesn, rsrcName):
-    """Parse a resource string to get the interface information."""
-    intfType = ViUInt16()
-    intfNum = ViUInt16()
-    result = visa.viParseRsrc(
-        ViSession(sesn),
-        ViRsrc(rsrcName),
-        byref(intfType),
-        byref(intfNum))
-    return (result, intfType.value, intfNum.value)
-
-def ParseRsrcEx(sesn, rsrcName):
-    """Parse a resource string to get extended interface information."""
-    intfType = ViUInt16()
-    intfNum = ViUInt16()
-    rsrcClass = c_buffer(256)
-    unaliasedExpandedRsrcName = c_buffer(256)
-    aliasIfExists = c_buffer(256)
-    result = visa.viParseRsrcEx(sesn, rsrcName, byref(intfType), byref(intfNum),
-                                rsrcClass, unaliasedExpandedRsrcName, aliasIfExists)
-    return (result, intfType.value, intfNum.value, rsrcClass.value,
-            unaliasedExpandedRsrcName.value, aliasIfExists.value)
-
-
-    
-#VISA Resource Template
-
-def Close(object):
-    """Close the specified session, event, or find list.
-
-    This operation closes a session, event, or a find list. In this
-    process all the data structures that had been allocated for the
-    specified vi are freed."""
-    result = visa.viClose(ViObject(object))
-    return result
-
-def GetAttribute(vi, attribute):
-    """Retrieve the state of an attribute. Argument can be numeric or
-    string argument"""
-    #convert argument to numeric (attr_value)
-    if isinstance(attribute, types.StringTypes):
-        attr_name, attr_info = attribute, attributes_s[attribute]
-        attr_value = attr_info.attribute_value
-    else:
-        attr_value,  attr_info = attribute, attributes[attribute]
-        attr_name = attr_info.attribute_name
-
-    #call viGetAttribute, convert output to proper data type
-    attr_type = attr_info.datatype
-    if attr_type is ViString:
-        attr_val = c_buffer(256)
-        result = visa.viGetAttribute(vi, attr_value, attr_val)
-    elif attr_type is ViBuf:
-        attr_val = c_void_p()
-        result = visa.viGetAttribute(vi, attr_value, byref(attr_val))
-    else:
-        attr_val = attr_type(attr_value)
-        result = visa.viGetAttribute(vi, attr_value, byref(attr_val))
-    val = attr_val.value
-
-    #convert result to string
-    if attr_info.values:
-        value_ext = attr_info.values.tostring(val)
-    else:
-        if isinstance(val, (types.IntType, types.LongType)):
-            value_ext = str(val) + " (%s)"%hex(val)
-        else:
-            value_ext = str(val)
-    
-    return (attr_name, val, value_ext)
-
-def SetAttribute(vi, attribute, value):
-    """Set attribute"""
-    #convert attribute to numeric ('attr_value')
-    if isinstance(attribute, types.StringTypes):
-        attr_name, attr_info = attribute, attributes_s[attribute]
-        attr_value = attr_info.attribute_value
-    else:
-        attr_value,  attr_info = attribute, attributes[attribute]
-        attr_name = attr_info.attribute_name
-
-    #convert value to numeric ('val'), when appropriate
-    if isinstance(value, types.StringTypes):
-        if attr_info.values: 
-            val = attr_info.values.fromstring(value)
-        else: #fallback, FIXME
-            val = str(value)
-            print 'conversion from string argument not possible'
-    else:
-        val = value
-
-    cval = attr_info.datatype(val)
-    result = visa.viSetAttribute(vi, attr_value, cval)
-
-    return result
-
-#Basic I/O
-
-visa.viWrite.restype = CheckStatus
-def Write(vi, buf):
-    vi = ViSession(vi)
-    buf = c_buffer(buf, len(buf))
-    count = ViUInt32(len(buf))
-    retCount = ViUInt32()
-    log.debug("Write: %s", buf)
-    result = visa.viWrite(vi, buf, count, byref(retCount))
-    return retCount.value
-
-visa.viRead.restype = CheckStatus
-def Read(vi, count):
-    vi = ViSession(vi)
-    buf = create_string_buffer(count)
-    count = ViUInt32(count)
-    retCount = ViUInt32()
-    result = visa.viRead(vi, buf, count, byref(retCount))
-    log.debug("Read: buffer length %d at %s", sizeof(buf), hex(addressof(buf)))
-    return (result, buf.raw[0:retCount.value])
-
-visa.viWriteAsync.restype = CheckStatus
-def WriteAsync(vi, buf):
-    vi = ViSession(vi)
-    buf = c_buffer(buf, len(buf))
-    count = ViUInt32(len(buf))
-    jobId = ViJobId()
-    result = visa.viWriteAsync(vi, buf, count, byref(jobId))
-    return jobId.value
-
-visa.viReadAsync.restype = CheckStatus
-def ReadAsync(vi, count):
-    buf = create_string_buffer(count) #FIXME: buffer needs to survive garbage collection!
-    jobId = ViJobId()
-    log.debug("ReadAsync: buffer length %d at %s", sizeof(buf), hex(addressof(buf)))
-    visa.viReadAsync(ViSession(vi),
-                     buf,
-                     ViUInt32(count),
-                     byref(jobId))
-    return jobId.value
-    
-
-#
-
-visa.viGpibControlREN.restype = CheckStatus
-def GpibControlREN(vi, mode):
-    vi = ViSession(vi)
-    mode = ViUInt16(mode)
-    result = visa.viGpibControlREN(vi, mode)
-
-
-#Event management
-
-visa.viEnableEvent.restype = CheckStatus
-def EnableEvent(vi, eventType, mechanism):
-    visa.viEnableEvent(vi, eventType, mechanism, 0)
-
-visa.viInstallHandler.restype = CheckStatus
-visa.viInstallHandler.argtypes = [ViSession, ViEventType, ViHndlr, ViAddr]
-#FIXME: dangerous ViAddr
-def InstallHandler(vi, eventType, handler, userHandle):
-    userHandle = ViAddr(userHandle)
-    visa.viInstallHandler(vi, eventType, handler, userHandle)
-
-
-#higher level classes and metho)ds
-
-class ResourceManager:
-    def __init__(self):
-        result, self.session = OpenDefaultRM()
-
+    """
+    vi = None
+    def __init__(self, resource_name = None, **keyw):
+	if self.__class__ is ResourceTemplate:
+	    raise TypeError, "trying to instantiate an abstract class"
+	if resource_name is not None:  # is none for the resource manager
+	    warnings.filterwarnings("ignore", "VI_SUCCESS_DEV_NPRESENT")
+	    self.vi = vpp43.open(resource_manager.session, resource_name,
+				 keyw.get("lock", VI_NO_LOCK),
+				 VI_TMO_IMMEDIATE)
+	    if vpp43.get_status() == VI_SUCCESS_DEV_NPRESENT:
+		# okay, the device was not ready when we opened the session.
+		# Now it gets five seconds more to become ready.  Every 0.1
+		# seconds we probe it with viClear.
+		passed_time = 0	 # in seconds
+		while passed_time < 5.0:
+		    time.sleep(0.1)
+		    passed_time += 0.1
+		    try:
+			vpp43.clear(self.vi)
+		    except VisaIOError, error:
+			if error.error_code == VI_ERROR_NLISTENERS:
+			    continue
+			else:
+			    raise
+		    break
+		else:
+		    # Very last chance, this time without exception handling
+		    time.sleep(0.1)
+		    passed_time += 0.1
+		    vpp43.clear(self.vi)
+	    _removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
+	    timeout = keyw.get("timeout", 2)
+	    if timeout is None:
+		vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE,
+				    VI_TMO_INFINITE)
+	    else:
+		self.timeout = timeout
     def __del__(self):
-        Close(self.session)
-
-    def find_resource(self, expression):
-        resource_list = FindRsrc(self.session, expression)
-        return resource_list
-
-    def parse_resource(self, resource_name):
-        """give information about resource"""
-        result, interface_type, interface_number, \
-                rsrcClass, unaliasedExpandedRsrcName, \
-                aliasIfExists = ParseRsrcEx(self.session, resource_name)
-        return interface_type, interface_number, \
-               rsrcClass, unaliasedExpandedRsrcName, \
-               aliasIfExists
-
-    def open(self, resourceName, exclusiveLock = None, loadConfig = None, openTimeout = 1000):
-        accessMode = 0
-        if exclusiveLock:
-            accessMode = accessMode | VI_EXCLUSIVE_LOCK
-        if loadConfig:
-            accessMode = accessMode | VI_LOAD_CONFIG
-        result, vi = Open(self.session, resourceName, accessMode, openTimeout)
-        return Resource(vi)
-
-
-class Resource:
-    def __init__(self, vi):
-        self.session = vi
-
-    #def __del__(self): #shit happens
-    #    self.close()
-
-    def write(self, buf):
-        return Write(self.session, buf)
-
-    def read(self, maxcount = None):
-        if maxcount:
-            result, buf = Read(self.session, maxcount)
-            return buf
-        else:
-            accumbuf = ''
-            while 1:
-                result, buf = Read(self.session, 1024)
-                accumbuf = accumbuf + buf
-                if result in (VI_SUCCESS, VI_SUCCESS_TERM_CHAR):
-                    return accumbuf
-
-    def getattr(self, attribute):
-        attrvalue = GetAttribute(self.session, attribute)
-        return attrvalue
-
-    def setattr(self, attribute, value):
-        SetAttribute(self.session, attribute, value)
-
-                
-    def setlocal(self):
-        #VI_GPIB_REN_DEASSERT        = 0 
-        #VI_GPIB_REN_ASSERT          = 1
-        #VI_GPIB_REN_DEASSERT_GTL    = 2
-        #VI_GPIB_REN_ASSERT_ADDRESS  = 3
-        #VI_GPIB_REN_ASSERT_LLO      = 4
-        #VI_GPIB_REN_ASSERT_ADDRESS_LLO = 5
-        #VI_GPIB_REN_ADDRESS_GTL     = 6
-
-        mode = 6
-        #Test Marconi 2019: 0 local, 1 remote, 2 local, 4 local lockout, 5 local, 6 local
-        GpibControlREN(self.session, mode)
-        
+	self.close()
+    def __set_timeout(self, timeout = 2):
+	if not(0 <= timeout <= 4294967):
+	    raise ValueError("timeout value is invalid")
+	vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
+    def __get_timeout(self):
+	timeout = vpp43.get_attribute(self.vi, VI_ATTR_TMO_VALUE)
+	if timeout == VI_TMO_INFINITE:
+	    raise NameError("no timeout is specified")
+	return timeout / 1000.0
+    def __del_timeout(self):
+	timeout = self.__get_timeout()	# just to test whether it's defined
+	vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
+    timeout = property(__get_timeout, __set_timeout, __del_timeout, None)
     def close(self):
-        Close(self.session)
+	if self.vi is not None:
+	    self._vpp43.close(self.vi)
+	    self.vi = None
 
-    def install_handler(self, eventType, handler, user_handle):
-        return InstallHandler(self.session,
-                              eventType,
-                              handler,
-                              user_handle)
 
-    def enable_event(self, eventType, mechanism):
-        return EnableEvent(self.session, eventType, mechanism)
-    
-#_RM = ResourceManager() #liefert Exception in __del__ beim Beenden
-#open = _RM.Open
-#find_resource = _RM.FindResource
+class ResourceManager(vpp43.Singleton, ResourceTemplate):
+    """Singleton class for the default resource manager."""
+    def init(self):
+	"""Singleton class constructor."""
+	ResourceTemplate.__init__(self)
+	# I have "session" as an alias because the specification calls the "vi"
+	# handle "session" for the resource manager.
+	self.session = self.vi = vpp43.open_default_resource_manager()
+    def __repr__(self):
+	return "ResourceManager()"
 
-#for faster testing
-def testvisa():
+resource_manager = ResourceManager()
 
-    logging.basicConfig(level = logging.DEBUG)
-    #log.setLevel(logging.DEBUG) #FIXME
-    
-    #open ResourceManager
-    RM = ResourceManager()
+def _destroy_resource_manager():
+    # delete self-reference
+    del ResourceManager.__it__
+atexit.register(_destroy_resource_manager)
 
-    #find resources
-    resourcelist = RM.find_resource('ASRL?::INSTR')
-    print resourcelist
+def get_instruments_list(use_aliases = True):
+    """Get a list of all connected devices.
 
-    #get some information without opening
-    result = RM.parse_resource('ASRL1::INSTR')
-    print result
+    Parameters:
+    use_aliases -- if True, return an alias name for the device if it has one.
+	Otherwise, always return the standard resource name like "GPIB::10".
 
-    #open
-    device = RM.open('ASRL1::INSTR')
+    Return value:
+    A list of strings with the names of all connected devices, ready for being
+    used to open each of them.
 
-    #high level write
-    device.write('*IDN?')
+    """
+    # Phase I: Get all standard resource names (no aliases here)
+    resource_names = []
+    find_list, return_counter, instrument_description = \
+	vpp43.find_resources(resource_manager.session, "?*::INSTR")
+    resource_names.append(instrument_description)
+    for i in xrange(return_counter - 1):
+	resource_names.append(vpp43.find_next(find_list))
+    # Phase two: If available and use_aliases is True, substitute the alias.
+    # Otherwise, truncate the "::INSTR".
+    result = []
+    for resource_name in resource_names:
+	interface_type, interface_board_number, resource_class, \
+	 unaliased_expanded_resource_name, alias_if_exists  = \
+	 vpp43.parse_resource_extended(resource_manager.session, resource_name)
+	if alias_if_exists and use_aliases:
+	    result.append(alias_if_exists)
+	else:
+	    result.append(resource_name[:-7])
+    return result
 
-    #high level read
-    #print device.read() #don't wan't to wait for timeout...
 
-    #try getting all attributes
-    for key in attributes_s.keys():
-        try:
-            print device.getattr(key)
-        except IOError, value:
-            print "Error retrieving Attribute ", key
+class Instrument(ResourceTemplate):
+    """Class for all kinds of Instruments.
 
-    #set some attributes, try different combinations of numeric/string arguments
-    device.setattr('VI_ATTR_ASRL_DATA_BITS', 7)
-    print device.getattr(VI_ATTR_ASRL_DATA_BITS)
+    It may be instantiated, however, if you want to use special features of a
+    certain interface system (GPIB, USB, RS232, etc), you must instantiate one
+    of its child classes.
 
-    #attribute value, string argument
-    device.setattr(VI_ATTR_ASRL_STOP_BITS, 'VI_ASRL_STOP_TWO')
-    print device.getattr('VI_ATTR_ASRL_STOP_BITS')
-    print
+    """
+    chunk_size = 1024  # How many bytes are read per low-level call
+    __term_chars = ""  # See below
+    delay = 0.0	       # Seconds to wait after each high-level write
+    def __init__(self, resource_name, **keyw):
+	"""Constructor method.
 
-    #bitfields
-    device.setattr('VI_ATTR_ASRL_FLOW_CNTRL', VI_ASRL_FLOW_XON_XOFF | VI_ASRL_FLOW_RTS_CTS)
-    print device.getattr('VI_ATTR_ASRL_FLOW_CNTRL')
+	Parameters:
+	resource_name -- the instrument's resource name or an alias, may be
+	    taken from the list from get_instruments_list().
+	
+	Keyword arguments:
+	timeout -- the VISA timeout for each low-level operation in
+	    milliseconds.
+	term_chars -- the termination characters for this device, see
+	    description of class property "term_chars".
 
-    #bitfield with string argument
-    device.setattr(VI_ATTR_ASRL_FLOW_CNTRL, 'VI_ASRL_FLOW_NONE')
-    print device.getattr('VI_ATTR_ASRL_FLOW_CNTRL')
-    
-    #callback functions
-    
-    def event_handler(vi, event_type, context, userhandle):
-    #def event_handler(vi, event_type, context): #FIX: should accept four arguments
-        sys.stdout.flush()
-        print 'in event handler'
-        print 'vi: ', vi
-        print 'event_type: ', event_type
-        print 'context: ', context
+	"""
+	ResourceTemplate.__init__(self, resource_name, **keyw)
+	self.resource_name = resource_name
+	self.term_chars = keyw.get("term_chars", "")
+	# I validate the resource name by requesting it from the instrument
+	resource_name = vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
+	# FixMe: Apparently it's not guaranteed that VISA returns the
+	# *complete* resource name?
+	if not resource_name.upper().endswith("::INSTR"):
+	    raise "resource is not an instrument"
+    def __repr__(self):
+	return "Instrument(%s)" % self.resource_name
+    def write(self, message):
+	"""Write a string message to the device.
 
-        print GetAttribute(context, VI_ATTR_EVENT_TYPE)
-        print GetAttribute(context, VI_ATTR_STATUS)
-        print GetAttribute(context, VI_ATTR_JOB_ID)
-        print GetAttribute(context, VI_ATTR_BUFFER)
-        print GetAttribute(context, VI_ATTR_RET_COUNT)
-        print GetAttribute(context, VI_ATTR_OPER_NAME)
-        print 'userhandle: ', userhandle
-        print 'leaving event handler'
+	Parameters:
+	message -- the string message to be sent.  The term_chars are appended
+	    to it, unless they are already.
 
-        return VI_SUCCESS
+	"""
+	if self.__term_chars and \
+	   not message.endswith(self.__term_chars):
+	    message += self.__term_chars
+	vpp43.write(self.vi, message)
+	if self.delay > 0.0:
+	    time.sleep(self.delay)
+    def read(self):
+	"""Read a string from the device.
 
-    device.install_handler(VI_EVENT_IO_COMPLETION, ViHndlr(event_handler), 13)
+	Reading stops when the device stops sending (e.g. by setting
+	appropriate bus lines), or the termination characters sequence was
+	detected.  Attention: Only the last character of the termination
+	characters is really used to stop reading, however, the whole sequence
+	is compared to the ending of the read string message.  If they don't
+	match, an exception is raised.
 
-    device.enable_event(VI_EVENT_IO_COMPLETION, VI_HNDLR)
+	Parameters: None
 
-    print 'session', device.session
-    jobId = WriteAsync(device.session, 'going to nowhere city')
-    print "jobId: ", jobId
+	Return value:
+	The string read from the device.
 
-    jobId = ReadAsync(device.session, 10)
-    print "jobId: ", jobId
-        
-    device.close()
+	"""
+	warnings.filterwarnings("ignore", "VI_SUCCESS_MAX_CNT")
+	try:
+	    buffer = ""
+	    chunk = vpp43.read(self.vi, self.chunk_size)
+	    buffer += chunk
+	    while vpp43.get_status() == VI_SUCCESS_MAX_CNT:
+		chunk = vpp43.read(self.vi, self.chunk_size)
+		buffer += chunk
+	finally:
+	    _removefilter("ignore", "VI_SUCCESS_MAX_CNT")
+	if self.__term_chars != "":
+	    if not buffer.endswith(self.__term_chars):
+		raise "read string doesn't end with termination characters"
+	    return buffer[:-len(self.__term_chars)]
+	return buffer
+    def read_floats(self):
+	float_regex = re.compile(r"[-+]?(\d+(\.\d*)?|\d*\.\d+)([eE][-+]?\d+)?")
+	values = []
+	for raw_value in re.split("[,\s]+", self.read()):
+	    values.append(float(float_regex.search(raw_value).group()))
+	if len(values) == 0:
+	    return None
+	if len(values) == 1:
+	    return values[0]
+	return values
+    def clear(self):
+	vpp43.clear(self.vi)
+    def __set_term_chars(self, term_chars):
+	"""Set a new termination character sequence.  See below the property
+	"term_char"."""
+	# First, reset termination characters, in case something bad happens.
+	self.__term_chars = ""
+	vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
+	vpp43.set_attribute(self.vi, VI_ATTR_SUPPRESS_END_EN, VI_FALSE)
+	if term_chars == "":
+	    return
+	# Second, parse the parameter term_chars.  There are three parts, the
+	# last two optional: the sequence itself ("main"), the "NOEND", and the
+	# "DELAY" options.
+	match = re.match(r"(?P<main>.*?)"
+			 "(((?<=.) +|\A)"
+			 "(?P<NOEND>NOEND))?"
+			 "(((?<=.) +|\A)DELAY\s+"
+			 "(?P<DELAY>\d+(\.\d*)?|\d*\.\d+)\s*)?$",
+			 term_chars, re.DOTALL)
+	if match is None:
+	    raise "termination characters were malformed"
+	if match.group("NOEND"):
+	    if not term_chars:
+		raise "NOEND only allowed with termination sequence"
+	    vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_FALSE)
+	    vpp43.set_attribute(self.vi, VI_ATTR_SUPPRESS_END_EN, VI_TRUE)
+	else:
+	    vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
+	if match.group("DELAY"):
+	    self.delay = float(match.group("DELAY"))
+	else:
+	    self.delay = 0.0
+	term_chars = match.group("main")
+	if not term_chars:
+	    return
+	# Only the last character in term_chars is the real low-level
+	# termination character, the rest is just used for verification after
+	# each read operation.
+	last_char = term_chars[-1]
+	# Consequently, it's illogical to have the real termination character
+	# twice in the sequence (otherwise reading would stop prematurely).
+	if term_chars[:-1].find(last_char) != -1:
+	    raise "ambiguous ending in termination characters"
+	vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR, ord(last_char))
+	vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_TRUE)
+	self.__term_chars = term_chars
+    def __get_term_chars(self):
+	"""Return the current termination characters for the device."""
+	return self.__term_chars
+    term_chars = property(__get_term_chars, __set_term_chars, None, None)
+    r"""Set or read a new termination character sequence (property).
+
+    Normally, you just give the new termination sequence, which is appended
+    to each write operation (unless it's already there), and expected as
+    the ending mark during each read operation.	 A typical example is
+    "\n\r" or just "\r".  If you assign "" to this property, the
+    termination sequence is deleted.
+
+    There are two further options, which are inspired by HTBasic (yuck),
+    that you can append to the string: "NOEND" disables the asserting of
+    the EOI line after each write operation (thus, enabled by default), and
+    "DELAY <float>" sets a delay time in seconds that is waited after each
+    write operation.  So you could give "\r NOEND DELAY 0.5" as the new
+    termination character sequence.  Spaces before "NOEND" and "DELAY"
+    are ignored, but only if non-spaces preceed it.  Therefore, " NOEND" is
+    interpreted as a six-character termination sequence.
+
+    The default is "".
+
+    """
+
+class GpibInstrument(Instrument):
+    """Class for GPIB instruments.
+
+    This class extents the Instrument class with special operations and
+    properties of GPIB instruments.
+
+    """
+    def __init__(self, gpib_identifier, board_number = 0, **keyw):
+	"""Class constructor.
+
+	parameters:
+	gpib_identifier -- if it's a string, it is interpreted as the
+	    instrument's VISA resource name.  If it's a number, it's the
+	    instrument's GPIB number.
+	board_number -- (default: 0) the number of the GPIB bus.
+
+	Other keyword arguments are passed to the constructor of class
+	Instrument.
+
+	"""
+	if isinstance(gpib_identifier, int):
+	    resource_name = "GPIB%d::%d" % (board_number, gpib_identifier)
+	else:
+	    resource_name = gpib_identifier
+	Instrument.__init__(self, resource_name, **keyw)
+	# Now check whether the instrument is really valid
+	resource_name = vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
+	# FixMe: Apparently it's not guaranteed that VISA returns the
+	# *complete* resource name?
+	if not re.match(r"(visa://[a-z0-9/]+/)?GPIB[0-9]?"
+			"::[0-9]+(::[0-9]+)?::INSTR$",
+			resource_name, re.IGNORECASE):
+	    raise "invalid GPIB instrument"
+	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+	self.term_chars = "\r\n"
+    def __del__(self):
+	self.__switch_events_off()
+	Instrument.__del__(self)
+    def __switch_events_off(self):
+	self._vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+	self._vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+    def wait_for_srq(self, timeout = 25):
+	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+	if timeout and not(0 <= timeout <= 4294967):
+	    raise ValueError("timeout value is invalid")
+	starting_time = time.clock()
+	while True:
+	    if timeout is None:
+		adjusted_timeout = VI_TMO_INFINITE
+	    else:
+		adjusted_timeout = int((starting_time + timeout - time.clock())
+				       * 1000)
+		if adjusted_timeout < 0:
+		    adjusted_timeout = 0
+	    event_type, context = \
+		vpp43.wait_on_event(self.vi, VI_EVENT_SERVICE_REQ,
+				    adjusted_timeout)
+	    vpp43.close(context)
+	    if vpp43.read_stb(self.vi) & 0x40:
+		break
+	vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+    def trigger(self):
+	"""Sends a software trigger to the device."""
+	vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
+	vpp43.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
+
+class Interface(ResourceTemplate):
+    """Base class for GPIB interfaces.
+
+    You may wonder why this exists since the only child class is Gpib().  I
+    don't know either, but the VISA specification says that there are
+    attributes that only "interfaces that support GPIB" have and other that
+    "all" have.
+
+    FixMe: However, maybe it's better to merge both classes.  In any case you
+    should not instantiate this class."""
+    def __init__(self, interface_name):
+	"""Class constructor.
+
+	Parameters:
+	interface_name -- VISA resource name of the interface.	May be "GPIB0"
+	    or "GPIB1::INTFC".
+
+	"""
+	if interface_name[-7:].upper() == "::INTFC":
+	    resource_name = interface_name
+	else:
+	    resource_name = interface_name + "::INTFC"
+	ResourceTemplate.__init__(self, resource_name)
+	self.interface_name = interface_name
+    def __repr__(self):
+	return "Interface(%s)" % self.interface_name
+
+class Gpib(Interface):
+    """Class for GPIB interfaces (rather than instruments)."""
+    def __init__(self, board_number = 0):
+	"""Class constructor.
+
+	Parameters:
+	board_number -- integer denoting the number of the GPIB board, defaults
+	    to 0.
+	
+	"""
+	Interface.__init__(self, "GPIB" + str(board_number))
+	self.board_number = board_number
+    def __repr__(self):
+	return "Gpib(%s)" % self.board_number
+    def send_ifc(self):
+	"""Send "interface clear" signal to the GPIB."""
+	vpp43.gpib_send_ifc(self.vi)
+
+def testpyvisa():
+    print "Test start"
+    keithley = GpibInstrument(12)
+    milliseconds = 500
+    number_of_values = 10
+    keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
+    keithley.trigger()
+    keithley.wait_for_srq()
+    print keithley.read_floats()
+    print "Average: ", sum(voltages) / len(voltages)
+    print "Test end"
 
 if __name__ == '__main__':
-    testvisa()
+    testpyvisa()
