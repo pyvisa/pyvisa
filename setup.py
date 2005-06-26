@@ -24,7 +24,7 @@
 #
 
 from distutils.core import setup
-import shutil
+import shutil, os.path, atexit
 
 def prune_tree(path):
     try:
@@ -34,16 +34,39 @@ def prune_tree(path):
 
 prune_tree("build")
 
-classifiers = [
-    'Development Status :: 4 - Beta',
-    'Intended Audience :: Developers',
-    'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: GNU General Public License (GPL)',
-    'Operating System :: Microsoft :: Windows',
-    'Operating System :: POSIX :: Linux',
-    'Programming Language :: Python',
-    'Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator',
-    'Topic :: Software Development :: Libraries :: Python Modules']
+# The following code may be very specific to my own home configuration,
+# although I hope that it's useful to other who try to create PyVISA packages,
+# too.
+#
+# The goal is to override an existing local RPM configuration.  Distutils only
+# works togather with a widely untouched configuration, so I have to disable
+# any extisting one represented by the file ~/.rpmmacros.  I look for this file
+# and move it to ~/.rpmmacros.original.  After setup.py is terminated, this
+# renaming is reverted.
+#
+# Additionally, if a file ~/.rpmmacros.distutis exists, it is used for
+# ~/.rpmmacros while setup.py is running.  So you can still make use of things
+# like "%vendor" or "%packager".
+
+home_dir = os.environ['HOME']
+real_rpmmacros_name = os.path.join(home_dir, '.rpmmacros')
+distutils_rpmmacros_name = os.path.join(home_dir, '.rpmmacros.distutils')
+temp_rpmmacros_name = os.path.join(home_dir, '.rpmmacros.original')
+
+def restore_rpmmacros():
+    shutil.move(temp_rpmmacros_name, real_rpmmacros_name)
+
+# I check wheter temp_rpmmacros_name exists for two reasons: First, I don't
+# want to overwrite it, and secondly, I don't want this renaming to take place
+# twice.  This would happen otherwise, because setup.py is called more than
+# once per building session.
+if os.name == 'posix' and os.path.isfile(real_rpmmacros_name) and \
+	not os.path.isfile(temp_rpmmacros_name):
+    shutil.move(real_rpmmacros_name, temp_rpmmacros_name)
+    if os.path.isfile(distutils_rpmmacros_name):
+	shutil.copy(distutils_rpmmacros_name, real_rpmmacros_name)
+    atexit.register(restore_rpmmacros)
+
 
 setup(name = 'pyvisa',
       description = 'Python support for the VISA I/O standard',
@@ -58,6 +81,17 @@ equipment via GPIB, RS232, or USB.""",
       url = 'http://pyvisa.sourceforge.net',
       download_url = 'http://sourceforge.net/projects/pyvisa/',
       keywords = 'VISA GPIB USB serial RS232 measurement acquisition',
-      classifiers = classifiers,
+      license = 'GNU General Public License',
+      classifiers = [
+	'Development Status :: 4 - Beta',
+	'Intended Audience :: Developers',
+	'Intended Audience :: Science/Research',
+	'License :: OSI Approved :: GNU General Public License (GPL)',
+	'Operating System :: Microsoft :: Windows',
+	'Operating System :: POSIX :: Linux',
+	'Programming Language :: Python',
+	'Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator',
+	'Topic :: Software Development :: Libraries :: Python Modules',
+	],
       package_dir = {'visa': 'src'},
       packages = ['visa'])
