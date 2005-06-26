@@ -86,7 +86,9 @@ file.  You do so by saying for example::
     vpp43.visa_library.load_library("/path/to/my/libvisa.so.7")
 
 By default, ``vpp43`` looks for the library in
-``/usr/local/vxipnp/linux/bin/libvisa.so.7``.
+``/usr/local/vxipnp/linux/bin/libvisa.so.7``.  Please pay attention to the fact
+that the library must have been successfully loaded *before* any VISA call is
+made.
 
 
 Diagnostics
