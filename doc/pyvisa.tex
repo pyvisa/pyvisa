@@ -81,7 +81,7 @@ only supported as far as basic I/O is concerned.
 
 Let's go \emph{in medias res} and have a look at a simple example:
 \begin{verbatim}
-from pyvisa import *
+from visa import *
 
 my_instrument = GpibInstrument(14)
 my_instrument.write("*IDN?")
@@ -116,7 +116,7 @@ mode'' (in contrast to ``SCPI mode'').  It advises the multimeter to measure
 10~voltages.  After having read them, the program calculates the average
 voltage and prints it on the screen.
 \begin{verbatim}
-from pyvisa import *
+from visa import *
 
 keithley = GpibInstrument(12)
 interval_in_ms = 500
@@ -416,7 +416,7 @@ vpp43.clear(my_instrument.vi)
 In case you need the session handle for the default resource manager, it's
 stored in \member{resource_manager.session}:
 \begin{verbatim}
-from pyvisa import *
+from visa import *
 my_instrument_handle = vpp43.open(resource_manager.session, "GPIB::14",
                                   VI_EXCLUSIVE_LOCK)
 \end{verbatim}
@@ -455,14 +455,20 @@ file in \file{C:\e WINNT\e system32\e}.  Either copy it there or expand your
 For Linux, the default VISA library is
 \file{/usr/local/vxipnp/linux/bin/libvisa.so.7}.  However, here you have the
 choice.  If it's called differently on your system, or is placed in another
-directory, you can tell PyVISA so by saying
+directory, you can tell PyVISA by creating a file \file{~/.pyvisarc}.  This has
+the format of an INI~file.  For example, if the library is at
+\file{/usr/lib/libvisa.so.7}, the file \file{.pyvisarc} must contain the
+following:
 \begin{verbatim}
-import vpp43
-vpp43.visa_library.load_library("/usr/local/visa/libvisa.so.7")
-from pyvisa import *
-...
+[Paths]
+
+VISA library: /usr/lib/libvisa.so.7
 \end{verbatim}
-Of course, you must set the path according to your installation.
+Please note that ``\code{[Paths]}'' is treated case-sensitively.
+
+You can define a site-wide configuration file at
+\file{/usr/share/pyvisa/.pyvisarc}.  (It may also be \file{/usr/local/\ldots}\
+depending on the location of your Python.)
 
 
 \section{About PyVISA}
@@ -478,4 +484,4 @@ bugs there.
 
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
 % LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
-% LocalWords:  ifc SCPI srq utf tex
+% LocalWords:  ifc SCPI srq utf tex pyvisarc INI
