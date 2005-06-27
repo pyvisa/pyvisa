@@ -24,15 +24,10 @@
 #
 
 from distutils.core import setup
+import distutils.dir_util
 import shutil, os.path, atexit
 
-def prune_tree(path):
-    try:
-	shutil.rmtree(path)
-    except OSError:
-	pass
-
-prune_tree("build")
+distutils.dir_util.remove_tree("build")
 
 # The following code may be very specific to my own home configuration,
 # although I hope that it's useful to other who try to create PyVISA packages,
@@ -67,7 +62,8 @@ if os.name == 'posix' and os.path.isfile(real_rpmmacros_name) and \
 	shutil.copy(distutils_rpmmacros_name, real_rpmmacros_name)
     atexit.register(restore_rpmmacros)
 
-# FixMe: Maybe this should be done in Python itself, eventually.
+# FixMe: Maybe this should be done in Python itself (using distutils.dep_util),
+# eventually.
 if os.name == 'posix':
     os.system("make --directory=doc/")
     os.system("ln -s ../doc src/")
