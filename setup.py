@@ -27,7 +27,10 @@ from distutils.core import setup
 import distutils.dir_util
 import shutil, os.path, atexit
 
-distutils.dir_util.remove_tree("build")
+try:
+    distutils.dir_util.remove_tree("build")
+except:
+    pass
 
 # The following code may be very specific to my own home configuration,
 # although I hope that it's useful to other who try to create PyVISA packages,
@@ -94,7 +97,6 @@ equipment via GPIB, RS232, or USB.""",
 	'Topic :: Software Development :: Libraries :: Python Modules',
 	],
       package_dir = {'pyvisa': 'src'},
-      package_data = {'pyvisa': ['doc/default.css', 'doc/index.html',
-				 'doc/pyvisa.pdf', 'doc/pyvisa/*',
-				 'doc/vpp43.html']},
-      packages = ['pyvisa'])
+      package_data = {'pyvisa': ['doc/pyvisa.pdf', 'doc/vpp43.txt']},
+      packages = ['pyvisa'],
+      py_modules = ['visa'])
