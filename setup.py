@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    setup.py - Distutil setup script for PyVISA
+#    setup.py - Distutils setup script for PyVISA
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
 #		      Torsten Bronger <bronger@physik.rwth-aachen.de>.
@@ -70,6 +70,7 @@ if os.name == 'posix' and os.path.isfile(real_rpmmacros_name) and \
 # FixMe: Maybe this should be done in Python itself, eventually.
 if os.name == 'posix':
     os.system("make --directory=doc/")
+    os.system("ln -s ../doc src/")
 
 setup(name = 'pyvisa',
       description = 'Python support for the VISA I/O standard',
@@ -97,4 +98,7 @@ equipment via GPIB, RS232, or USB.""",
 	'Topic :: Software Development :: Libraries :: Python Modules',
 	],
       package_dir = {'pyvisa': 'src'},
+      package_data = {'pyvisa': ['doc/default.css', 'doc/index.html',
+				 'doc/pyvisa.pdf', 'doc/pyvisa/*',
+				 'doc/vpp43.html']},
       packages = ['pyvisa'])
