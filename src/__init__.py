@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    pyvisa.py - High-level object-oriented VISA implementation
+#    __init__.py - PyVISA's package initialisation.
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
 #		      Torsten Bronger <bronger@physik.rwth-aachen.de>.
@@ -23,4 +23,14 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-from pyvisa import *
+import ConfigParser, os.path
+import vpp43
+
+_config_parser = ConfigParser.SafeConfigParser()
+_config_parser.read(os.path.join(os.environ["HOME"], ".pyvisarc"))
+try:
+    visa_library_path = _config_parser.get("Paths", "visa library")
+except ConfigParser.Error:
+    pass
+else:
+    vpp43.visa_library.load_library(visa_library_path)
