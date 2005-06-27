@@ -23,11 +23,12 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-import ConfigParser, os.path
+import ConfigParser, os, sys
 import vpp43
 
 _config_parser = ConfigParser.SafeConfigParser()
-_config_parser.read(os.path.join(os.environ["HOME"], ".pyvisarc"))
+_config_parser.read([os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
+		     os.path.join(os.environ["HOME"], ".pyvisarc")])
 try:
     visa_library_path = _config_parser.get("Paths", "visa library")
 except ConfigParser.Error:
