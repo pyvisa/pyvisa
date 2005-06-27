@@ -1,6 +1,11 @@
 *.aux
 *.log
 *.out
+*.dvi
+*.idx
+*.pla
+*.syn
+*.toc
 vpp43.html
 vpp43.pdf
 vpp43.tex
