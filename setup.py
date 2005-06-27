@@ -56,7 +56,7 @@ temp_rpmmacros_name = os.path.join(home_dir, '.rpmmacros.original')
 def restore_rpmmacros():
     shutil.move(temp_rpmmacros_name, real_rpmmacros_name)
 
-# I check wheter temp_rpmmacros_name exists for two reasons: First, I don't
+# I check whether temp_rpmmacros_name exists for two reasons: First, I don't
 # want to overwrite it, and secondly, I don't want this renaming to take place
 # twice.  This would happen otherwise, because setup.py is called more than
 # once per building session.
@@ -67,6 +67,9 @@ if os.name == 'posix' and os.path.isfile(real_rpmmacros_name) and \
 	shutil.copy(distutils_rpmmacros_name, real_rpmmacros_name)
     atexit.register(restore_rpmmacros)
 
+# FixMe: Maybe this should be done in Python itself, eventually.
+if os.name == 'posix':
+    os.system("make --directory=doc/")
 
 setup(name = 'pyvisa',
       description = 'Python support for the VISA I/O standard',
@@ -93,5 +96,5 @@ equipment via GPIB, RS232, or USB.""",
 	'Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator',
 	'Topic :: Software Development :: Libraries :: Python Modules',
 	],
-      package_dir = {'visa': 'src'},
-      packages = ['visa'])
+      package_dir = {'pyvisa': 'src'},
+      packages = ['pyvisa'])
