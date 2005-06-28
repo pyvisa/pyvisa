@@ -59,7 +59,7 @@ make (name)space for the ``visa`` module that is supposed to realise the actual
 high-level VISA access in Python.  The `VXIplug&play Systems Alliance`_ used to
 maintain the VISA specifications, and, although today the `IVI foundation`_ is
 responsible for this task, the files are still called ``vpp43.doc`` etc.  So I
-thought ``vpp43`` was a catchy name.
+thought ``vpp43`` was an appropriate name.
 
 .. _`VXIplug&play Systems Alliance`: http://www.vxipnp.org/
 .. _`IVI foundation`: http://ivifoundation.org
@@ -146,7 +146,7 @@ The PyVISA function reference
 =============================
 
 Please note that all descriptions given in this reference serve mostly as
-reminder.  For real descriptions consult a `VISA specification`_ or `NI-VISA
+reminders.  For real descriptions consult a `VISA specification`_ or `NI-VISA
 Programmer Reference Manual`_.  However, whenever there are PyVISA-specific
 semantics, they are listed here, too.
 
@@ -1573,4 +1573,4 @@ Take data from a file and write it out synchronously.
 ..  LocalWords:  viUsbControlOut vprintf vqueryf vscanf vsprintf vsscanf IVI
 ..  LocalWords:  viVxiCommandQuery viWaitOnEvent viWrite viWriteAsync WINNT def
 ..  LocalWords:  viWriteFromFile FixMe VisaIOError TypeError ctypes Enthought
-..  LocalWords:  VisaIOWarning UnknownHandler
+..  LocalWords:  VisaIOWarning UnknownHandler pyvisa

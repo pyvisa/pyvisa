@@ -64,7 +64,12 @@ syntax and powerful set of libraries.  Please also have a look at
 \ulink{PyVISA's project page}{http://sourceforge.net/projects/pyvisa} with bug
 tracker and download area.
 
-This module is still under construction.  In particular, RS\,232 and USB are
+However, it is not a full VISA implementation because it relies on an external
+VISA DLL or ``shared object'' file.  This can be downloaded from your interface
+vendor's web pages (National Instruments, Agilent etc).  PyVISA only makes it
+available for Python code.
+
+This package is still under construction.  In particular, RS\,232 and USB are
 only supported as far as basic I/O is concerned.
 \end{abstract}
 
@@ -116,7 +121,7 @@ mode'' (in contrast to ``SCPI mode'').  It advises the multimeter to measure
 10~voltages.  After having read them, the program calculates the average
 voltage and prints it on the screen.
 \begin{verbatim}
-from visa import *
+from visa import GpibInstrument
 
 keithley = GpibInstrument(12)
 interval_in_ms = 500
@@ -148,13 +153,13 @@ and wait for the end of data acquisition with
 keithley.wait_for_srq()
 \end{verbatim}
 Now I must read the result from the device.  I could use the \code{read()}
-method as in the first example, but then I'd get
+method as in the first example, but then I'd get one big string,
 \begin{verbatim}
 NDCV-000.0004E+0,NDCV-000.0005E+0,NDCV-000.0004E+0,NDCV-000.0007E+0,
 NDCV-000.0000E+0,NDCV-000.0007E+0,NDCV-000.0008E+0,NDCV-000.0004E+0,
 NDCV-000.0002E+0,NDCV-000.0005E+0
 \end{verbatim}
-which I would have to convert to numbers.  Fortunately, the
+which I would have to convert to a list of numbers.  Fortunately, the
 \code{read_floats()} method does this work for us, and so the variable
 \var{voltages} contains
 \begin{verbatim}

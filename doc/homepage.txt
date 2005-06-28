@@ -81,16 +81,18 @@ controlling:
 PyVISA
 =======
 
-The PyVISA package is a VISA binding for Python.  It is implemented in two
-layers:
+The PyVISA package is a VISA binding for Python.  In relies on an external
+library file that you can download from your interface vendor's web pages
+(National Instruments, Agilent, etc).  PyVISA implements a convenient and
+Pythonic access to this library in two layers:
 
-1. First, there is the lower level ``vpp43``, which directly accesses the VISA
+1. First, there is the lower level ``vpp43``, which directly calls the VISA
    functions from Python.  See the `PyVISA low-level implementation`_ for more
    information.
 
 2. On top of it, an object-oriented Python module has been created called
-   ``pyvisa``.  In case of doubt, use ``pyvisa`` because it is easier and more
-   convenient. ``vpp43`` is only for people who need full control or the
+   ``visa`` simply.  In case of doubt, use ``visa`` because it is easier and
+   more convenient. ``vpp43`` is only for people who need full control or the
    official VISA functions for some reason.  See the `PyVISA manual`_ for more
    information.
 
@@ -102,9 +104,9 @@ Links
 
 * PyVISA itself:
 
-  - the `PyVISA manual`_ (also `as PDF`_)
-
   - the `PyVISA project page`_ with download area and bug tracker
+
+  - the `PyVISA manual`_ (also `as PDF`_)
 
   - the `PyVISA low-level implementation`_ called ``vpp43``
 
