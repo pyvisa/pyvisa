@@ -82,7 +82,7 @@ there or expand your ``PATH``.
 However, on Linux you may need to give the explicit path to the shared object
 file.  You do so by saying for example::
 
-    import visa.vpp43 as vpp43
+    import pyvisa.vpp43 as vpp43
     vpp43.visa_library.load_library("/path/to/my/libvisa.so.7")
 
 By default, ``vpp43`` looks for the library in
@@ -94,8 +94,7 @@ made.
 Diagnostics
 ===========
 
-This module can raise two ``vpp43``-specific exceptions.  They are defined in
-the ``visa_exceptions`` module.
+This module can raise a couple of ``vpp43``-specific exceptions.
 
 :Name: VisaIOError
 :Description: This is an error of the underlying VISA library, as described in

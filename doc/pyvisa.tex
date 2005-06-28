@@ -409,6 +409,7 @@ opens exactly one session for each instrument or interface and stores its
 session handle in the instance attribute~\member{vi}.  For example, the
 following two lines are equivalent:
 \begin{verbatim}
+from pyvisa import vpp43
 my_instrument.clear()
 vpp43.clear(my_instrument.vi)
 \end{verbatim}
@@ -417,6 +418,7 @@ In case you need the session handle for the default resource manager, it's
 stored in \member{resource_manager.session}:
 \begin{verbatim}
 from visa import *
+from pyvisa import vpp43
 my_instrument_handle = vpp43.open(resource_manager.session, "GPIB::14",
                                   VI_EXCLUSIVE_LOCK)
 \end{verbatim}
