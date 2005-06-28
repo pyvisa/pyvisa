@@ -90,6 +90,21 @@ By default, ``vpp43`` looks for the library in
 that the library must have been successfully loaded *before* any VISA call is
 made.
 
+Alternatively, you can tell PyVISA so by creating a file ``~/.pyvisarc``.  This
+has the format of an INI file.  For example, if the library is at
+``/usr/lib/libvisa.so.7``, the file ``.pyvisarc`` must contain the following::
+
+    [Paths]
+
+    VISA library: /usr/lib/libvisa.so.7
+
+Please note that ``[Paths]'' is treated case-sensitively.
+
+You can define a site-wide configuration file at
+``/usr/share/pyvisa/.pyvisarc``.  (It may also be ``/usr/local/...`` depending
+on the location of your Python.)
+
+
 
 Diagnostics
 ===========
