@@ -32,6 +32,6 @@ number_of_values = 10
 keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
 keithley.trigger()
 keithley.wait_for_srq()
-print keithley.read_floats()
+voltages = keithley.read_floats()
 print "Average: ", sum(voltages) / len(voltages)
 print "Test end"
