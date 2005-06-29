@@ -73,7 +73,7 @@ if os.name == 'posix':
 
 setup(name = 'pyvisa',
       description = 'Python support for the VISA I/O standard',
-      version = '0.2',
+      version = '0.9',
       long_description = \
       """A Python package for support of the "Virtual Instrument Software
 Architecture" (VISA), in order to control measurement devices and test
