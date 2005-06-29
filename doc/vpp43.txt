@@ -98,12 +98,11 @@ has the format of an INI file.  For example, if the library is at
 
     VISA library: /usr/lib/libvisa.so.7
 
-Please note that ``[Paths]'' is treated case-sensitively.
+Please note that ``[Paths]`` is treated case-sensitively.
 
 You can define a site-wide configuration file at
 ``/usr/share/pyvisa/.pyvisarc``.  (It may also be ``/usr/local/...`` depending
 on the location of your Python.)
-
 
 
 Diagnostics
