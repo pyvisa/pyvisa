@@ -72,7 +72,7 @@ if os.name == 'posix':
     os.system("ln -s ../doc src/")
 
 setup(name = 'pyvisa',
-      description = 'Python support for the VISA I/O standard',
+      description = 'Python bindings for VISA for GPIB, RS232, and USB instruments',
       version = '0.9',
       long_description = \
       """A Python package for support of the "Virtual Instrument Software
