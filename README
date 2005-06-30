@@ -1,8 +1,8 @@
-Python module 'visa'
+Python package 'pyvisa'
 
 A Python package for support of the "Virtual Instrument Software
-Architecture" (VISA), in order to control measurement devices and test
-equipment via GPIB, RS232, Ethernet or USB. 
+Architecture" (VISA), in order to control measurement devices and
+test equipment via GPIB, RS232, Ethernet or USB.
 
 * Prerequisites:
 
@@ -14,10 +14,11 @@ equipment via GPIB, RS232, Ethernet or USB.
 
 unzip source distribution file
 
->python setup.py install
+> python setup.py install
 
 * Description
 
-see examples in directory test. A detailed specification of VISA can
-be found on http://www.ivifoundation.org/Downloads/Specifications.htm
+See examples in directory test/ and documentation in doc/.  A
+detailed specification of VISA can be found on
+http://www.ivifoundation.org/Downloads/Specifications.htm
 
