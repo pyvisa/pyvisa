@@ -25,9 +25,9 @@
 PyVISA homepage
 ======================
 
-------------------------------------------------
-Measurement and test equipment control
-------------------------------------------------
+-------------------------------------------------------
+Controlling GPIB, RS232, and USB instruments
+-------------------------------------------------------
 
 :Date: $Date$
 :Version: $Revision$
@@ -38,9 +38,9 @@ Overview
 ========
 
 The programming of measurement instruments can be real pain.  There are many
-different protocols, sent over many different interface and bus systems.  For
-every programming language you want to use, you have to find libraries that
-support both your device and its bus system.
+different protocols, sent over many different interfaces and bus systems (GPIB,
+RS232, USB).  For every programming language you want to use, you have to find
+libraries that support both your device and its bus system.
 
 In order to ease this unfortunate situation, the VISA [#]_ specification was
 defined in the middle of the 90ies.  Today VISA is implemented on all
