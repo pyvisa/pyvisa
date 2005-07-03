@@ -1,6 +1,6 @@
 % -*- mode: LaTeX; coding: utf-8; ispell-local-dictionary: "british"; -*-
 % 
-%   pyvisa.tex - high-level OO instrument access on top of VISA
+%   pyvisa.tex - Manual for high-level OO instrument access on top of VISA
 % 
 %   Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
 %                    Torsten Bronger <bronger@physik.rwth-aachen.de>.
@@ -33,7 +33,7 @@
 	\email{bronger@physik.rwth-aachen.de}
 }
 
-\date{29 June 2005}
+\date{3 Juli 2005}
 
 \makeindex
 
@@ -69,8 +69,9 @@ VISA DLL or ``shared object'' file.  This can be downloaded from your interface
 vendor's web pages (National Instruments, Agilent etc).  PyVISA only makes it
 available for Python code.
 
-This package is still under construction.  In particular, RS\,232 and USB are
-only supported as far as basic I/O is concerned.
+This package is still under construction.  In particular, I need feedback from
+people who've given it a try.  It works for us, but probably we are not
+representative.
 \end{abstract}
 
 \tableofcontents
@@ -176,7 +177,7 @@ which is much better.  The rest of the example is straightforward Python.
 
 \begin{classdesc}{Instrument}{resource_name\optional{, **keyw}}
   represents an instrument, e.\,g.\ a measurement device.  It is independent of
-  a particular bus system, i.\,e.\ it may be a GPIB, USB, or whatever
+  a particular bus system, i.\,e.\ it may be a GPIB, serial, USB, or whatever
   instrument.  However, it is not possible to perform bus-specific operations
   on instruments created by this class.  For this, have a look at the
   specialised classes like \class{GpibInstrument}
@@ -407,14 +408,18 @@ You can mix the high-level object-oriented approach described in this document
 with middle-level VISA function calls in module \module{vpp43} as described in
 \citetitle[http://pyvisa.sourceforge.net/vpp43.html]{The VISA library
   implementation} which is also part of the PyVISA package.  By doing so, you
-have full control of your devices.
+have full control of your devices.  I recommend to import the VISA functions
+with
+\begin{verbatim}
+from pyvisa import vpp43
+\end{verbatim}
+Then you can use them with \samp{vpp43.\emph{function_name}(...)}.
 
 The VISA functions need to know what session you are referring to.  PyVISA
 opens exactly one session for each instrument or interface and stores its
-session handle in the instance attribute~\member{vi}.  For example, the
-following two lines are equivalent:
+session handle in the instance attribute~\member{vi}.  For example, these two
+lines are equivalent:
 \begin{verbatim}
-from pyvisa import vpp43
 my_instrument.clear()
 vpp43.clear(my_instrument.vi)
 \end{verbatim}
@@ -487,7 +492,8 @@ Torsten Bronger, Aachen/\hskip0pt Germany.  It bases on earlier experiences by
 Thalhammer.
 
 Its homepage is \url{http://sourceforge.net/projects/pyvisa/}.  Please report
-bugs there.
+bugs there.  \textbf{I'm also very keen to know whether PyVISA works for you or
+  not.  Thank you!}
 
 \end{document}
 
