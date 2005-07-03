@@ -13,13 +13,13 @@
 #    Software Foundation; either version 2 of the License, or (at your option)
 #    any later version.
 #
-#    pyvisa is distributed in the hope that it will be useful, but WITHOUT ANY
+#    PyVISA is distributed in the hope that it will be useful, but WITHOUT ANY
 #    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 #    FOR A PARTICULAR PURPOSE.	See the GNU General Public License for more
 #    details.
 #
 #    You should have received a copy of the GNU General Public License along
-#    with pyvisa; if not, write to the Free Software Foundation, Inc., 59
+#    with PyVISA; if not, write to the Free Software Foundation, Inc., 59
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
@@ -111,6 +111,12 @@ class ResourceTemplate(object):
 	timeout = self.__get_timeout()	# just to test whether it's defined
 	vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
     timeout = property(__get_timeout, __set_timeout, __del_timeout, None)
+    def __get_resource_class(self):
+	return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
+    resource_class = property(__get_resource_class, None, None, None)
+    def __get_resource_name(self):
+	return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
+    resource_name = property(__get_resource_name, None, None, None)
     def close(self):
 	if self.vi is not None:
 	    self._vpp43.close(self.vi)
@@ -194,13 +200,9 @@ class Instrument(ResourceTemplate):
 
 	"""
 	ResourceTemplate.__init__(self, resource_name, **keyw)
-	self.resource_name = resource_name
 	self.term_chars = keyw.get("term_chars", "")
-	# I validate the resource name by requesting it from the instrument
-	resource_name = vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
-	# FixMe: Apparently it's not guaranteed that VISA returns the
-	# *complete* resource name?
-	if not resource_name.upper().endswith("::INSTR"):
+	# I validate the resource class by requesting it from the instrument
+	if self.resource_class != "INSTR":
 	    raise "resource is not an instrument"
     def __repr__(self):
 	return "Instrument(%s)" % self.resource_name
@@ -415,14 +417,12 @@ class Interface(ResourceTemplate):
 	    or "GPIB1::INTFC".
 
 	"""
-	if interface_name[-7:].upper() == "::INTFC":
-	    resource_name = interface_name
-	else:
-	    resource_name = interface_name + "::INTFC"
 	ResourceTemplate.__init__(self, resource_name)
-	self.interface_name = interface_name
+	# I validate the resource class by requesting it from the interface
+	if self.resource_class != "INTFC":
+	    raise "resource is not an interface"
     def __repr__(self):
-	return "Interface(%s)" % self.interface_name
+	return "Interface(%s)" % self.resource_name
 
 class Gpib(Interface):
     """Class for GPIB interfaces (rather than instruments)."""
