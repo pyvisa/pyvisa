@@ -74,7 +74,9 @@ people who've given it a try.  It works for us, but probably we are not
 representative.
 \end{abstract}
 
-\tableofcontents
+\begin{samepage}
+  \tableofcontents
+\end{samepage}
 
 \declaremodule{extension}{pyvisa}
   \platform{Linux,Windows}
@@ -111,6 +113,20 @@ my_instrument.write("*IDN?")
 Finally, I print the instrument's answer on the screen:
 \begin{verbatim}
 print my_instrument.read()
+\end{verbatim}
+
+
+\subsection{Example for serial (RS232) device}
+
+The only RS\,232 device in my lab is an old Oxford ITC\,4 temperature
+controller, which is connected through COM\,2 with my computer.  The following
+code prints its self-identification on the screen:
+\begin{verbatim}
+from visa import *
+
+itc4 = Instrument("COM2", term_chars = "\r")
+itc4.write("V")
+print itc4.read()
 \end{verbatim}
 
 
