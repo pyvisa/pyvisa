@@ -417,7 +417,7 @@ class Interface(ResourceTemplate):
 	    or "GPIB1::INTFC".
 
 	"""
-	ResourceTemplate.__init__(self, resource_name)
+	ResourceTemplate.__init__(self, interface_name)
 	# I validate the resource class by requesting it from the interface
 	if self.resource_class != "INTFC":
 	    raise "resource is not an interface"
