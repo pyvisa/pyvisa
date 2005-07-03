@@ -1,4 +1,4 @@
-Python package 'pyvisa'
+Python package 'PyVISA'
 
 A Python package for support of the "Virtual Instrument Software
 Architecture" (VISA), in order to control measurement devices and
@@ -19,6 +19,6 @@ unzip source distribution file
 * Description
 
 See examples in directory test/ and documentation in doc/.  A
-detailed specification of VISA can be found on
+detailed specification of VISA can be found at
 http://www.ivifoundation.org/Downloads/Specifications.htm
 
