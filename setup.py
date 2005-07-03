@@ -71,9 +71,11 @@ if os.name == 'posix':
     os.system("make --directory=doc/")
     os.system("ln -s ../doc src/")
 
+# The release name must be changed here and in doc/pyvisa.tex
+
 setup(name = 'pyvisa',
       description = 'Python VISA bindings for GPIB, RS232, and USB instruments',
-      version = '0.9',
+      version = '0.9.1',
       long_description = \
       """A Python package for support of the "Virtual Instrument Software
 Architecture" (VISA), in order to control measurement devices and test
