@@ -210,6 +210,8 @@ which is much better.  The rest of the example is straightforward Python.
       section~\ref{sec:termchars}. Default: \code{""} \emph{(empty)}}
     \lineii{timeout}{timeout in seconds for all device operations, see
       section~\ref{sec:timeouts}. Default:~2}
+    \lineii{chunk_size}{Length of read data chunks in bytes, see
+      section~\ref{sec:chunk-length}. Default: 20\,kB}
     \lineii{lock}{whether you want to have exclusive access to the device.
       Default: \code{VI_NO_LOCK}}
   \end{tableii}
@@ -401,6 +403,31 @@ my_instrument = Instrument("ASRL1", timeout = 5)
 This creates the object variable \var{my_instrument} and sets its timeout to
 5~seconds.  In this context, a timeout value of \code{None} is allowed, which
 removes the timeout for this device.
+
+
+\subsection{Chunk length}
+\label{sec:chunk-length}
+
+If you read data from a device, you must store it somewhere.  Unfortunately,
+PyVISA must make space for the data \emph{before} it starts reading, which
+means that it must know how much data the device will send.  However, it
+doesn't know a~priori.
+
+Therefore, PyVISA reads from the device in \emph{chunks}.  Each chunk is
+20~kilobytes long by default.  If there's still data to be read, PyVISA repeats
+the procedure and eventually concatenates the results and returns it to you.
+By the way, those 20~kilobytes are large enough so that mostly one read cycle
+is sufficient.
+
+The whole thing happens automatically, as you can see.  Normally you needn't
+worry about it.  However, some devices doesn't like to send data in chunks.  So
+if you have trouble with a certain device and expect data lengths larger than
+the default chunk length, you should increase its value by saying
+\begin{verbatim}
+my_instrument.chunk_size = 102400
+\end{verbatim}
+This example sets it to 100~kilobytes.
+
 
 \section{Module functions}
 
