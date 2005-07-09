@@ -30,8 +30,8 @@ _config_parser = ConfigParser.SafeConfigParser()
 _config_parser.read([os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
 		     os.path.join(os.path.expanduser("~"), ".pyvisarc")])
 try:
-    visa_library_path = _config_parser.get("Paths", "visa library")
+    _visa_library_path = _config_parser.get("Paths", "visa library")
 except ConfigParser.Error:
     pass
 else:
-    vpp43.visa_library.load_library(visa_library_path)
+    vpp43.visa_library.load_library(_visa_library_path)
