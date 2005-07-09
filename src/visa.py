@@ -182,9 +182,9 @@ class Instrument(ResourceTemplate):
     of its child classes.
 
     """
-    chunk_size = 1024  # How many bytes are read per low-level call
-    __term_chars = ""  # See below
-    delay = 0.0	       # Seconds to wait after each high-level write
+    chunk_size = 20*1024  # How many bytes are read per low-level call
+    __term_chars = ""	  # See below
+    delay = 0.0		  # Seconds to wait after each high-level write
     def __init__(self, resource_name, **keyw):
 	"""Constructor method.
 
@@ -197,10 +197,13 @@ class Instrument(ResourceTemplate):
 	    milliseconds.
 	term_chars -- the termination characters for this device, see
 	    description of class property "term_chars".
+        chunk_size -- size of data packets in bytes that are read from the
+	    device.
 
 	"""
 	ResourceTemplate.__init__(self, resource_name, **keyw)
 	self.term_chars = keyw.get("term_chars", "")
+	self.chunk_size = keyw.get("chunk_size", self.chunk_size)
 	# I validate the resource class by requesting it from the instrument
 	if self.resource_class != "INSTR":
 	    raise "resource is not an instrument"
