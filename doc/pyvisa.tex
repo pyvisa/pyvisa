@@ -209,7 +209,7 @@ which is much better.  The rest of the example is straightforward Python.
     \lineii{term_char}{termination characters, see
       section~\ref{sec:termchars}. Default: \code{""} \emph{(empty)}}
     \lineii{timeout}{timeout in seconds for all device operations, see
-      section~\ref{sec:timeouts}. Default:~2}
+      section~\ref{sec:timeouts}. Default:~5}
     \lineii{chunk_size}{Length of read data chunks in bytes, see
       section~\ref{sec:chunk-length}. Default: 20\,kB}
     \lineii{lock}{whether you want to have exclusive access to the device.
@@ -244,15 +244,18 @@ The class \class{Instrument} defines the following methods and attributes:
 
 \begin{methoddesc}{read_floats}{}
   returns a list of decimal values (floats) sent from the instrument to the
-  computer.  See section~\ref{sec:more-complex-example} above.  If only one
-  value has been found, it is returned as such (i\,e.\ not as a list), and if
-  no float has been found, \code{None} is returned.
+  computer.  See section~\ref{sec:more-complex-example} above.  The list may
+  contain only one element or may be empty.
 \end{methoddesc}
 
 \begin{methoddesc}{clear}{}
   resets the device.  This operation is highly bus-dependent.  I refer you to
   the original VISA documentation, which explains how this is achieved for VXI,
   GPIB, serial, etc.
+\end{methoddesc}
+
+\begin{methoddesc}{trigger}{}
+  sends a trigger signal to the instrument.
 \end{methoddesc}
 
 \begin{memberdesc}{timeout}
@@ -300,10 +303,6 @@ The class \class{GpibInstrument} defines the following methods:
   The \var{timeout} argument, given in seconds, denotes the maximal waiting
   time.  The default value is 25~(seconds).  If you pass \code{None} for the
   timeout, this method waits forever if no SRQ arrives.
-\end{methoddesc}
-
-\begin{methoddesc}{trigger}{}
-  sends a trigger signal to the instrument.
 \end{methoddesc}
 
 \bigskip
@@ -395,10 +394,10 @@ del my_device.timeout
 Now every operation of the resource takes as long as it takes, even
 indefinitely if necessary.
 
-The default timeout is 2~seconds, but you can change it when creating the
+The default timeout is 5~seconds, but you can change it when creating the
 device object:
 \begin{verbatim}
-my_instrument = Instrument("ASRL1", timeout = 5)
+my_instrument = Instrument("ASRL1", timeout = 8)
 \end{verbatim}
 This creates the object variable \var{my_instrument} and sets its timeout to
 5~seconds.  In this context, a timeout value of \code{None} is allowed, which
