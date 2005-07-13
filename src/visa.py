@@ -90,7 +90,7 @@ class ResourceTemplate(object):
 		    passed_time += 0.1
 		    vpp43.clear(self.vi)
 	    _removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
-	    timeout = keyw.get("timeout", 2)
+	    timeout = keyw.get("timeout", 5)
 	    if timeout is None:
 		vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE,
 				    VI_TMO_INFINITE)
@@ -98,7 +98,7 @@ class ResourceTemplate(object):
 		self.timeout = timeout
     def __del__(self):
 	self.close()
-    def __set_timeout(self, timeout = 2):
+    def __set_timeout(self, timeout = 5):
 	if not(0 <= timeout <= 4294967):
 	    raise ValueError("timeout value is invalid")
 	vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
@@ -197,7 +197,7 @@ class Instrument(ResourceTemplate):
 	    milliseconds.
 	term_chars -- the termination characters for this device, see
 	    description of class property "term_chars".
-        chunk_size -- size of data packets in bytes that are read from the
+	chunk_size -- size of data packets in bytes that are read from the
 	    device.
 
 	"""
@@ -259,13 +259,13 @@ class Instrument(ResourceTemplate):
 	values = []
 	for raw_value in re.split("[,\s]+", self.read()):
 	    values.append(float(float_regex.search(raw_value).group()))
-	if len(values) == 0:
-	    return None
-	if len(values) == 1:
-	    return values[0]
 	return values
     def clear(self):
 	vpp43.clear(self.vi)
+    def trigger(self):
+	"""Sends a software trigger to the device."""
+	vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
+	vpp43.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
     def __set_term_chars(self, term_chars):
 	"""Set a new termination character sequence.  See below the property
 	"term_char"."""
@@ -282,7 +282,7 @@ class Instrument(ResourceTemplate):
 			 "(((?<=.) +|\A)"
 			 "(?P<NOEND>NOEND))?"
 			 "(((?<=.) +|\A)DELAY\s+"
-			 "(?P<DELAY>\d+(\.\d*)?|\d*\.\d+)\s*)?$",
+			 "(?P<DELAY>\d+(\.\d*)?|\d*\.\d+)\s*)?\Z",
 			 term_chars, re.DOTALL)
 	if match is None:
 	    raise "termination characters were malformed"
@@ -370,10 +370,12 @@ class GpibInstrument(Instrument):
 			resource_name, re.IGNORECASE):
 	    raise "invalid GPIB instrument"
 	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
-	self.term_chars = "\r\n"
+	if not keyw.has_key("term_chars"):
+	    self.term_chars = "\r\n"
     def __del__(self):
-	self.__switch_events_off()
-	Instrument.__del__(self)
+	if self.vi is not None:
+	    self.__switch_events_off()
+	    Instrument.__del__(self)
     def __switch_events_off(self):
 	self._vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
 	self._vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
@@ -397,10 +399,6 @@ class GpibInstrument(Instrument):
 	    if vpp43.read_stb(self.vi) & 0x40:
 		break
 	vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
-    def trigger(self):
-	"""Sends a software trigger to the device."""
-	vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
-	vpp43.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
 
 class Interface(ResourceTemplate):
     """Base class for GPIB interfaces.
