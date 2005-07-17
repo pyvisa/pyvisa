@@ -51,6 +51,18 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
 	warnings.warn("Warning filter not found", stacklevel = 2)
     warnings.filters = new_filters
 
+def _warn_for_invalid_keyword_arguments(keyw, allowed_keys):
+    for key in keyw.iterkeys():
+	if key not in allowed_keys:
+	    warnings.warn("Keyword argument %s unknown" % key, stacklevel = 3)
+
+def _filter_keyword_arguments(keyw, selected_keys):
+    result = {}
+    for key, value in keyw.iteritems():
+	if key in selected_keys:
+	    result[key] = value
+    return result
+
 class ResourceTemplate(object):
     import vpp43 as _vpp43
     """The abstract base class of the VISA implementation.  It covers
@@ -61,6 +73,7 @@ class ResourceTemplate(object):
     """
     vi = None
     def __init__(self, resource_name = None, **keyw):
+	_warn_for_invalid_keyword_arguments(keyw, ("lock", "timeout"))
 	if self.__class__ is ResourceTemplate:
 	    raise TypeError, "trying to instantiate an abstract class"
 	if resource_name is not None:  # is none for the resource manager
@@ -174,6 +187,10 @@ def get_instruments_list(use_aliases = True):
     return result
 
 
+ascii  = 0
+single = 1
+double = 3
+
 class Instrument(ResourceTemplate):
     """Class for all kinds of Instruments.
 
@@ -199,9 +216,15 @@ class Instrument(ResourceTemplate):
 	    description of class property "term_chars".
 	chunk_size -- size of data packets in bytes that are read from the
 	    device.
+        lock -- whether you want to have exclusive access to the device.
+	    Default: VI_NO_LOCK
 
 	"""
-	ResourceTemplate.__init__(self, resource_name, **keyw)
+	_warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
+						   "chunk_size", "lock"))
+	ResourceTemplate.__init__(self, resource_name,
+				  **_filter_keyword_arguments(keyw, "timeout",
+							      "lock"))
 	self.term_chars = keyw.get("term_chars", "")
 	self.chunk_size = keyw.get("chunk_size", self.chunk_size)
 	# I validate the resource class by requesting it from the instrument
@@ -258,7 +281,13 @@ class Instrument(ResourceTemplate):
 	float_regex = re.compile(r"[-+]?(\d+(\.\d*)?|\d*\.\d+)([eE][-+]?\d+)?")
 	values = []
 	for raw_value in re.split("[,\s]+", self.read()):
-	    values.append(float(float_regex.search(raw_value).group()))
+	    match = float_regex.search(raw_value)
+	    if match is None:
+		raise "invalid float value in device result"
+	    try:
+		values.append(float(match.group()))
+	    except ValueError:
+		raise "invalid float value in device result"
 	return values
     def clear(self):
 	vpp43.clear(self.vi)
@@ -313,7 +342,16 @@ class Instrument(ResourceTemplate):
 	self.__term_chars = term_chars
     def __get_term_chars(self):
 	"""Return the current termination characters for the device."""
-	return self.__term_chars
+	result = self.__term_chars
+        if vpp43.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_FALSE:
+	    if result != "":
+		result += " "
+	    result += "NOEND"
+	if self.delay > 0.0:
+	    if result != "":
+		result += " "
+	    result += "DELAY " + str(self.delay)
+	return result
     term_chars = property(__get_term_chars, __set_term_chars, None, None)
     r"""Set or read a new termination character sequence (property).
 
@@ -356,6 +394,8 @@ class GpibInstrument(Instrument):
 	Instrument.
 
 	"""
+	_warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
+						   "chunk_size", "lock"))
 	if isinstance(gpib_identifier, int):
 	    resource_name = "GPIB%d::%d" % (board_number, gpib_identifier)
 	else:
