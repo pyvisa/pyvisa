@@ -214,6 +214,10 @@ which is much better.  The rest of the example is straightforward Python.
       section~\ref{sec:chunk-length}. Default: 20\,kB}
     \lineii{lock}{whether you want to have exclusive access to the device.
       Default: \code{VI_NO_LOCK}}
+    \lineii{send_end}{whether to assert END after each write operation, see
+      section~\ref{sec:termchars}. Default: \code{True}}
+    \lineii{delay}{delay in seconds after each write operation, see
+      section~\ref{sec:termchars}. Default:~0}
   \end{tableii}
 
   \vspace{1ex}
@@ -352,25 +356,21 @@ my_instrument = Instrument("GPIB::10", term_chars = "\r")
 \end{verbatim}
 The default value depends on the bus system.  Generally, the sequence is empty.
 For GPIB instruments however, it's set to \verb|"\r\n"| (i.\,e.~``CR\,LF'')\@.
-For RS232 (once it's supported), it's just \verb|"\n"|~(LF)\@.
+For RS232, it's just \verb|"\n"|~(LF)\@.
 
-You may add two options to the termination characters: \code{NOEND} and
-\code{DELAY}.  They are inspired by HTBasic.  \code{NOEND} makes only sense for
-GPIB instruments.  It switches off detection of the end of a message using the
-EOI bus line.  (This means that by default the observance of this line is on.)
+There are two further options related to this topic, namely \code{send_end} and
+\code{delay}.  They are inspired by HTBasic.  \code{send_end} is a boolean.  If
+it's \code{True} (the default), the EOI line is asserted after each write
+operation, signalling the end of the operation.  EOI is GPIB-specific but
+similar action is taken for other interfaces.
 
-\code{DELAY} takes a numeric argument that denotes the time in seconds to wait
-after each write operation.  So you could write:
+The argument \code{delay} is the time in seconds to wait after each write
+operation.  So you could write:
 \begin{verbatim}
-my_instrument = Instrument("GPIB::10", term_chars = "\r NOEND DELAY 1.2")
+my_instrument = Instrument("GPIB::10", term_chars = "\r", send_end = False,
+                           delay = 1.2")
 \end{verbatim}
-This will set the delay to 1.2~seconds, and the EOI line is ignored.  Note that
-spaces before the options are ignored, and that at least one space must be
-there, unless the termination sequence itself is empty.  So, \code{"\e
-  rNOEND"}, \code{" NOEND"}, and \code{"noend"} are all illegal in the sense
-that they will be interpreted as one long termination sequence, which is
-probably not what you want.  The correct variants are \code{"\e r NOEND"},
-\code{"NOEND"}, and \code{"NOEND"}.
+This will set the delay to 1.2~seconds, and the EOI line is ignored.
 
 
 \subsection{Timeouts}
