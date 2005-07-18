@@ -54,7 +54,8 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
 def _warn_for_invalid_keyword_arguments(keyw, allowed_keys):
     for key in keyw.iterkeys():
 	if key not in allowed_keys:
-	    warnings.warn("Keyword argument %s unknown" % key, stacklevel = 3)
+	    warnings.warn("Keyword argument \"%s\" unknown" % key,
+			  stacklevel = 3)
 
 def _filter_keyword_arguments(keyw, selected_keys):
     result = {}
@@ -218,15 +219,21 @@ class Instrument(ResourceTemplate):
 	    device.
         lock -- whether you want to have exclusive access to the device.
 	    Default: VI_NO_LOCK
+        delay -- waiting time in seconds after each write command. Default: 0
+	send_end -- whether to assert end line after each write command.
+	    Default: True
 
 	"""
 	_warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
-						   "chunk_size", "lock"))
+						   "chunk_size", "lock",
+						   "delay", "send_end"))
 	ResourceTemplate.__init__(self, resource_name,
-				  **_filter_keyword_arguments(keyw, "timeout",
-							      "lock"))
+				  **_filter_keyword_arguments(keyw, ("timeout",
+							      "lock")))
 	self.term_chars = keyw.get("term_chars", "")
 	self.chunk_size = keyw.get("chunk_size", self.chunk_size)
+	self.delay      = keyw.get("delay", 0.0)
+	self.send_end   = keyw.get("send_end", True)
 	# I validate the resource class by requesting it from the instrument
 	if self.resource_class != "INSTR":
 	    raise "resource is not an instrument"
@@ -278,17 +285,10 @@ class Instrument(ResourceTemplate):
 	    return buffer[:-len(self.__term_chars)]
 	return buffer
     def read_floats(self):
-	float_regex = re.compile(r"[-+]?(\d+(\.\d*)?|\d*\.\d+)([eE][-+]?\d+)?")
-	values = []
-	for raw_value in re.split("[,\s]+", self.read()):
-	    match = float_regex.search(raw_value)
-	    if match is None:
-		raise "invalid float value in device result"
-	    try:
-		values.append(float(match.group()))
-	    except ValueError:
-		raise "invalid float value in device result"
-	return values
+	float_regex = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)"
+				 "(?:[eE][-+]?\d+)?")
+	return [float(raw_value) for raw_value in
+		float_regex.findall(self.read())]
     def clear(self):
 	vpp43.clear(self.vi)
     def trigger(self):
@@ -301,33 +301,7 @@ class Instrument(ResourceTemplate):
 	# First, reset termination characters, in case something bad happens.
 	self.__term_chars = ""
 	vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
-	vpp43.set_attribute(self.vi, VI_ATTR_SUPPRESS_END_EN, VI_FALSE)
 	if term_chars == "":
-	    return
-	# Second, parse the parameter term_chars.  There are three parts, the
-	# last two optional: the sequence itself ("main"), the "NOEND", and the
-	# "DELAY" options.
-	match = re.match(r"(?P<main>.*?)"
-			 "(((?<=.) +|\A)"
-			 "(?P<NOEND>NOEND))?"
-			 "(((?<=.) +|\A)DELAY\s+"
-			 "(?P<DELAY>\d+(\.\d*)?|\d*\.\d+)\s*)?\Z",
-			 term_chars, re.DOTALL)
-	if match is None:
-	    raise "termination characters were malformed"
-	if match.group("NOEND"):
-	    if not term_chars:
-		raise "NOEND only allowed with termination sequence"
-	    vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_FALSE)
-	    vpp43.set_attribute(self.vi, VI_ATTR_SUPPRESS_END_EN, VI_TRUE)
-	else:
-	    vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
-	if match.group("DELAY"):
-	    self.delay = float(match.group("DELAY"))
-	else:
-	    self.delay = 0.0
-	term_chars = match.group("main")
-	if not term_chars:
 	    return
 	# Only the last character in term_chars is the real low-level
 	# termination character, the rest is just used for verification after
@@ -342,17 +316,10 @@ class Instrument(ResourceTemplate):
 	self.__term_chars = term_chars
     def __get_term_chars(self):
 	"""Return the current termination characters for the device."""
-	result = self.__term_chars
-        if vpp43.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_FALSE:
-	    if result != "":
-		result += " "
-	    result += "NOEND"
-	if self.delay > 0.0:
-	    if result != "":
-		result += " "
-	    result += "DELAY " + str(self.delay)
-	return result
-    term_chars = property(__get_term_chars, __set_term_chars, None, None)
+	return self.__term_chars
+    def __del_term_chars(self):
+	self.term_chars = ""
+    term_chars = property(__get_term_chars, __set_term_chars, __del_term_chars)
     r"""Set or read a new termination character sequence (property).
 
     Normally, you just give the new termination sequence, which is appended
@@ -361,18 +328,17 @@ class Instrument(ResourceTemplate):
     "\n\r" or just "\r".  If you assign "" to this property, the
     termination sequence is deleted.
 
-    There are two further options, which are inspired by HTBasic (yuck),
-    that you can append to the string: "NOEND" disables the asserting of
-    the EOI line after each write operation (thus, enabled by default), and
-    "DELAY <float>" sets a delay time in seconds that is waited after each
-    write operation.  So you could give "\r NOEND DELAY 0.5" as the new
-    termination character sequence.  Spaces before "NOEND" and "DELAY"
-    are ignored, but only if non-spaces preceed it.  Therefore, " NOEND" is
-    interpreted as a six-character termination sequence.
-
     The default is "".
 
     """
+    def __set_send_end(self, send):
+	if send:
+	    vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
+	else:
+	    vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_FALSE)
+    def __get_send_end(self):
+	return vpp43.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_TRUE
+    send_end = property(__get_send_end, __set_send_end)
 
 class GpibInstrument(Instrument):
     """Class for GPIB instruments.
@@ -395,7 +361,8 @@ class GpibInstrument(Instrument):
 
 	"""
 	_warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
-						   "chunk_size", "lock"))
+						   "chunk_size", "lock",
+						   "delay", "send_end"))
 	if isinstance(gpib_identifier, int):
 	    resource_name = "GPIB%d::%d" % (board_number, gpib_identifier)
 	else:
