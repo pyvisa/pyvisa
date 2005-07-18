@@ -200,9 +200,10 @@ class Instrument(ResourceTemplate):
     of its child classes.
 
     """
-    chunk_size = 20*1024  # How many bytes are read per low-level call
-    __term_chars = ""	  # See below
-    delay = 0.0		  # Seconds to wait after each high-level write
+    chunk_size = 20*1024   # How many bytes are read per low-level call
+    __term_chars = ""	   # See below
+    delay = 0.0		   # Seconds to wait after each high-level write
+    values_format = ascii  # floating point data value format
     def __init__(self, resource_name, **keyw):
 	"""Constructor method.
 
@@ -217,9 +218,9 @@ class Instrument(ResourceTemplate):
 	    description of class property "term_chars".
 	chunk_size -- size of data packets in bytes that are read from the
 	    device.
-        lock -- whether you want to have exclusive access to the device.
+	lock -- whether you want to have exclusive access to the device.
 	    Default: VI_NO_LOCK
-        delay -- waiting time in seconds after each write command. Default: 0
+	delay -- waiting time in seconds after each write command. Default: 0
 	send_end -- whether to assert end line after each write command.
 	    Default: True
 
@@ -232,8 +233,8 @@ class Instrument(ResourceTemplate):
 							      "lock")))
 	self.term_chars = keyw.get("term_chars", "")
 	self.chunk_size = keyw.get("chunk_size", self.chunk_size)
-	self.delay      = keyw.get("delay", 0.0)
-	self.send_end   = keyw.get("send_end", True)
+	self.delay	= keyw.get("delay", 0.0)
+	self.send_end	= keyw.get("send_end", True)
 	# I validate the resource class by requesting it from the instrument
 	if self.resource_class != "INSTR":
 	    raise "resource is not an instrument"
@@ -253,6 +254,14 @@ class Instrument(ResourceTemplate):
 	vpp43.write(self.vi, message)
 	if self.delay > 0.0:
 	    time.sleep(self.delay)
+    def _strip_term_chars(self, buffer):
+	if self.__term_chars != "":
+	    if buffer.endswith(self.__term_chars):
+		return buffer[:-len(self.__term_chars)]
+	    else:
+		warnings.warn("read string doesn't end with "
+			      "termination characters", stacklevel = 2)
+	return buffer
     def read(self):
 	"""Read a string from the device.
 
@@ -279,16 +288,45 @@ class Instrument(ResourceTemplate):
 		buffer += chunk
 	finally:
 	    _removefilter("ignore", "VI_SUCCESS_MAX_CNT")
-	if self.__term_chars != "":
-	    if not buffer.endswith(self.__term_chars):
-		raise "read string doesn't end with termination characters"
-	    return buffer[:-len(self.__term_chars)]
-	return buffer
+	return self._strip_term_chars(buffer)
+    def read_values(self, format = None):
+	if not format:
+	    format = self.values_format
+	if format == ascii:
+	    float_regex = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)"
+				     "(?:[eE][-+]?\d+)?")
+	    return [float(raw_value) for raw_value in
+		    float_regex.findall(self.read())]
+	# Okay, we need to read binary data
+	import ctypes
+	original_term_chars = self.term_chars
+	self.term_chars = ""
+	try:
+	    data = self.read()
+	finally:
+	    self.term_chars = original_term_chars
+	data = self._strip_term_chars(data)
+	if data[0:2] != "#0":
+	    raise "binary values don't start with '#0'"
+	data = data[2:]
+	if format == single:
+	    number_of_values = len(data) / 4
+	    if number_of_values * 4 != len(data):
+		raise "illegal size of data values (assumed single)"
+	    buffer = (ctypes.c_float * number_of_values)()
+	elif format == double:
+	    number_of_values = len(data) / 8
+	    if number_of_values * 8 != len(data):
+		raise "illegal size of data values (assumed double)"
+	    buffer = (ctypes.c_double * number_of_values)()
+	else:
+	    raise "unknown data value format requested"
+	buffer.raw = data
+	return list(buffer)
     def read_floats(self):
-	float_regex = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)"
-				 "(?:[eE][-+]?\d+)?")
-	return [float(raw_value) for raw_value in
-		float_regex.findall(self.read())]
+	warnings.warn("read_floats() is deprecated.  Use read_values()",
+		      stacklevel = 2)
+	return self.read_values(format=ascii)
     def clear(self):
 	vpp43.clear(self.vi)
     def trigger(self):
@@ -458,7 +496,7 @@ def testpyvisa():
     keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
     keithley.trigger()
     keithley.wait_for_srq()
-    print keithley.read_floats()
+    print keithley.read_values()
     print "Average: ", sum(voltages) / len(voltages)
     print "Test end"
 
