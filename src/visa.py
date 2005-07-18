@@ -73,7 +73,7 @@ class ResourceTemplate(object):
 
     """
     vi = None
-    def __init__(self, resource_name = None, **keyw):
+    def __init__(self, resource_name=None, **keyw):
 	_warn_for_invalid_keyword_arguments(keyw, ("lock", "timeout"))
 	if self.__class__ is ResourceTemplate:
 	    raise TypeError, "trying to instantiate an abstract class"
@@ -112,7 +112,7 @@ class ResourceTemplate(object):
 		self.timeout = timeout
     def __del__(self):
 	self.close()
-    def __set_timeout(self, timeout = 5):
+    def __set_timeout(self, timeout=5):
 	if not(0 <= timeout <= 4294967):
 	    raise ValueError("timeout value is invalid")
 	vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
@@ -155,7 +155,7 @@ def _destroy_resource_manager():
     del ResourceManager.__it__
 atexit.register(_destroy_resource_manager)
 
-def get_instruments_list(use_aliases = True):
+def get_instruments_list(use_aliases=True):
     """Get a list of all connected devices.
 
     Parameters:
@@ -289,7 +289,7 @@ class Instrument(ResourceTemplate):
 	finally:
 	    _removefilter("ignore", "VI_SUCCESS_MAX_CNT")
 	return self._strip_term_chars(buffer)
-    def read_values(self, format = None):
+    def read_values(self, format=None):
 	if not format:
 	    format = self.values_format
 	if format == ascii:
@@ -327,6 +327,12 @@ class Instrument(ResourceTemplate):
 	warnings.warn("read_floats() is deprecated.  Use read_values()",
 		      stacklevel = 2)
 	return self.read_values(format=ascii)
+    def ask(self, message):
+	self.write(message)
+	return self.read()
+    def ask_for_values(self, message, format=None):
+	self.write(message)
+	return self.read_values(format)
     def clear(self):
 	vpp43.clear(self.vi)
     def trigger(self):
@@ -385,7 +391,7 @@ class GpibInstrument(Instrument):
     properties of GPIB instruments.
 
     """
-    def __init__(self, gpib_identifier, board_number = 0, **keyw):
+    def __init__(self, gpib_identifier, board_number=0, **keyw):
 	"""Class constructor.
 
 	parameters:
@@ -424,7 +430,7 @@ class GpibInstrument(Instrument):
     def __switch_events_off(self):
 	self._vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
 	self._vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
-    def wait_for_srq(self, timeout = 25):
+    def wait_for_srq(self, timeout=25):
 	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
 	if timeout and not(0 <= timeout <= 4294967):
 	    raise ValueError("timeout value is invalid")
@@ -472,7 +478,7 @@ class Interface(ResourceTemplate):
 
 class Gpib(Interface):
     """Class for GPIB interfaces (rather than instruments)."""
-    def __init__(self, board_number = 0):
+    def __init__(self, board_number=0):
 	"""Class constructor.
 
 	Parameters:
