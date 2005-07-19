@@ -33,7 +33,7 @@
 	\email{bronger@physik.rwth-aachen.de}
 }
 
-\date{9 Juli 2005}
+\date{18 Juli 2005}
 
 \makeindex
 
@@ -57,7 +57,7 @@ as a separate file \file{LICENSE} in the PyVISA distribution.
 \noindent
 PyVISA enables you to control your measurement and test equipment -- digital
 multimeters, motors, sensors and the like.  This document covers the
-simple-to-use \module{pyvisa} module of the PyVISA package.  It implements
+simple-to-use \module{visa} module of the PyVISA package.  It implements
 control of measurement devices in a straightforward and convenient way.  The
 design goal is to combine HTBasic's ease and implicitness with Python's modern
 syntax and powerful set of libraries.  Please also have a look at
@@ -124,10 +124,19 @@ code prints its self-identification on the screen:
 \begin{verbatim}
 from visa import *
 
-itc4 = Instrument("COM2", term_chars = "\r")
+itc4 = Instrument("COM2", term_chars = CR)
 itc4.write("V")
 print itc4.read()
 \end{verbatim}
+Instead of separate write and read operatons, you can do both with one
+\code{ask()} call.  Thus, the above source code is equivalent to
+\begin{verbatim}
+from visa import *
+
+itc4 = Instrument("COM2", term_chars = CR)
+print itc4.ask("V")
+\end{verbatim}
+It couldn't be simpler.
 
 
 \subsection{A more complex example}
@@ -212,6 +221,8 @@ which is much better.  The rest of the example is straightforward Python.
       section~\ref{sec:timeouts}. Default:~5}
     \lineii{chunk_size}{Length of read data chunks in bytes, see
       section~\ref{sec:chunk-length}. Default: 20\,kB}
+    \lineii{values_format}{Data format for lists of read values, see
+      section~\ref{sec:reading-binary-data}. Default: \code{ascii}}
     \lineii{lock}{whether you want to have exclusive access to the device.
       Default: \code{VI_NO_LOCK}}
     \lineii{send_end}{whether to assert END after each write operation, see
@@ -252,6 +263,16 @@ The class \class{Instrument} defines the following methods and attributes:
   contain only one element or may be empty.
 \end{methoddesc}
 
+\begin{methoddesc}{ask}{message}
+  sends the string \var{message} to the instrument and returns the answer
+  string from the instrument.
+\end{methoddesc}
+
+\begin{methoddesc}{ask_for_floats}{message}
+  sends the string \var{message} to the instrument and reads the answer as a
+  list of values, just as \code{read_floats()} does.
+\end{methoddesc}
+
 \begin{methoddesc}{clear}{}
   resets the device.  This operation is highly bus-dependent.  I refer you to
   the original VISA documentation, which explains how this is achieved for VXI,
@@ -270,6 +291,22 @@ The class \class{Instrument} defines the following methods and attributes:
 \begin{memberdesc}{term_chars}
   The termination characters for each read and write operation.  See
   section~\ref{sec:termchars} for further information.
+\end{memberdesc}
+
+\begin{memberdesc}{send_end}
+  Whether or not to assert EOI (or something equivalent, depending on the
+  interface type) after each write operation.  See section~\ref{sec:termchars}
+  for further information.
+\end{memberdesc}
+
+\begin{memberdesc}{delay}
+  Time in seconds to wait after each write operation.  See
+  section~\ref{sec:termchars} for further information.
+\end{memberdesc}
+
+\begin{memberdesc}{values_format}
+  The data format for measurement data sent from the instrument to the
+  computer.  See section~\ref{sec:reading-binary-data} for further information.
 \end{memberdesc}
 
 
@@ -348,15 +385,20 @@ characters are stripped off the message before it is given to you.
 
 You may set termination characters for each instrument, e.\,g.
 \begin{verbatim}
-my_instrument.term_chars = "\r"
+my_instrument.term_chars = CR
 \end{verbatim}
 Alternatively you can give it when creating your instrument object:
 \begin{verbatim}
-my_instrument = Instrument("GPIB::10", term_chars = "\r")
+my_instrument = Instrument("GPIB::10", term_chars = CR)
 \end{verbatim}
 The default value depends on the bus system.  Generally, the sequence is empty.
-For GPIB instruments however, it's set to \verb|"\r\n"| (i.\,e.~``CR\,LF'')\@.
-For RS232, it's just \verb|"\n"|~(LF)\@.
+For GPIB instruments however, it's set to \code{CR+LF}\@.  For RS232 (once it's
+supported), it's just \code{LF}\@.
+
+The termination characters sequence is an ordinary string.  \code{CR} and
+\code{LF} are just string constants that allow readable access to \verb|"\r"|
+and~\verb|"\n"|.  Therefore, instead of \code{CR+LF}, you can also write
+\verb|"\r\n"|, whichever you like more.
 
 There are two further options related to this topic, namely \code{send_end} and
 \code{delay}.  They are inspired by HTBasic.  \code{send_end} is a boolean.  If
@@ -367,7 +409,7 @@ similar action is taken for other interfaces.
 The argument \code{delay} is the time in seconds to wait after each write
 operation.  So you could write:
 \begin{verbatim}
-my_instrument = Instrument("GPIB::10", term_chars = "\r", send_end = False,
+my_instrument = Instrument("GPIB::10", term_chars = CR, send_end = False,
                            delay = 1.2")
 \end{verbatim}
 This will set the delay to 1.2~seconds, and the EOI line is ignored.
@@ -419,13 +461,44 @@ By the way, those 20~kilobytes are large enough so that mostly one read cycle
 is sufficient.
 
 The whole thing happens automatically, as you can see.  Normally you needn't
-worry about it.  However, some devices doesn't like to send data in chunks.  So
+worry about it.  However, some devices don't like to send data in chunks.  So
 if you have trouble with a certain device and expect data lengths larger than
-the default chunk length, you should increase its value by saying
+the default chunk length, you should increase its value by saying e.\,g.
 \begin{verbatim}
 my_instrument.chunk_size = 102400
 \end{verbatim}
 This example sets it to 100~kilobytes.
+
+
+\subsection{Reading binary data}
+\label{sec:reading-binary-data}
+
+Some instruments allow for sending the measured data in binary form.  This has
+the advantage that the data transfer is much shorter and takes less time.
+PyVISA currently supports three forms of transfers:
+
+\begin{description}
+\item[ascii] This is the default mode.  It assumes a normal string with comma-
+  or whitespace-separated values.
+\item[single] The values are expected as IEEE floating point values with single
+  precision (i.\,e.\ four bytes each).  The data must have a
+  prepended~\verb|"#0"| and an appended~\verb|"\n"| (no matter which
+  termination character you have set).
+\item[double] The same as \textbf{single}, but with values of double precision
+  (eight bytes each).
+\end{description}
+
+You can set the form of transfer with the property \code{values_format}, either
+with the generation of the object,
+\begin{verbatim}
+my_instrument = GpibInstrument(12, values_format = single)
+\end{verbatim}
+or later by setting the property directly:
+\begin{verbatim}
+my_instrument.values_format = single
+\end{verbatim}
+Setting this option affects the methods \code{read_values()} and
+\code{ask_for_values()}.
 
 
 \section{Module functions}
@@ -535,7 +608,7 @@ Thalhammer.
 
 Its homepage is \url{http://sourceforge.net/projects/pyvisa/}.  Please report
 bugs there.  \textbf{I'm also very keen to know whether PyVISA works for you or
-  not.  Thank you!}
+  not.  Thank you!}  
 
 \end{document}
 
