@@ -128,7 +128,7 @@ itc4 = Instrument("COM2", term_chars = CR)
 itc4.write("V")
 print itc4.read()
 \end{verbatim}
-Instead of separate write and read operatons, you can do both with one
+Instead of separate write and read operations, you can do both with one
 \code{ask()} call.  Thus, the above source code is equivalent to
 \begin{verbatim}
 from visa import *
@@ -257,10 +257,13 @@ The class \class{Instrument} defines the following methods and attributes:
   returns a string sent from the instrument to the computer.
 \end{methoddesc}
 
-\begin{methoddesc}{read_floats}{}
+\begin{methoddesc}{read_floats}{\optional{format}}
   returns a list of decimal values (floats) sent from the instrument to the
   computer.  See section~\ref{sec:more-complex-example} above.  The list may
   contain only one element or may be empty.
+
+  The optional \var{format} argument overrides the setting of
+  \var{values_format}.
 \end{methoddesc}
 
 \begin{methoddesc}{ask}{message}
@@ -268,9 +271,12 @@ The class \class{Instrument} defines the following methods and attributes:
   string from the instrument.
 \end{methoddesc}
 
-\begin{methoddesc}{ask_for_floats}{message}
+\begin{methoddesc}{ask_for_floats}{message\optional{, format}}
   sends the string \var{message} to the instrument and reads the answer as a
   list of values, just as \code{read_floats()} does.
+
+  The optional \var{format} argument overrides the setting of
+  \var{values_format}.
 \end{methoddesc}
 
 \begin{methoddesc}{clear}{}
@@ -584,8 +590,8 @@ file in \file{C:\e WINNT\e system32\e}.  Either copy it there or expand your
 For Linux, the default VISA library is
 \file{/usr/local/vxipnp/linux/bin/libvisa.so.7}.  However, here you have the
 choice.  If it's called differently on your system, or is placed in another
-directory, you can tell PyVISA by creating a file \file{~/.pyvisarc}.  This has
-the format of an INI~file.  For example, if the library is at
+directory, you can tell PyVISA by creating a file \file{\~{}/.pyvisarc}.  This
+has the format of an INI~file.  For example, if the library is at
 \file{/usr/lib/libvisa.so.7}, the file \file{.pyvisarc} must contain the
 following:
 \begin{verbatim}
