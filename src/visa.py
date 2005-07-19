@@ -26,7 +26,7 @@
 import vpp43
 from vpp43_constants import *
 from visa_exceptions import *
-import re, time, warnings, atexit
+import re, time, warnings, atexit, struct
 
 def _removefilter(action, message="", category=Warning, module="", lineno=0,
 		 append=0):
@@ -191,6 +191,8 @@ def get_instruments_list(use_aliases=True):
 ascii  = 0
 single = 1
 double = 3
+CR = "\r"
+LF = "\n"
 
 class Instrument(ResourceTemplate):
     """Class for all kinds of Instruments.
@@ -223,18 +225,21 @@ class Instrument(ResourceTemplate):
 	delay -- waiting time in seconds after each write command. Default: 0
 	send_end -- whether to assert end line after each write command.
 	    Default: True
+        values_format -- floating point data value format.  Default: ascii (0)
 
 	"""
 	_warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
 						   "chunk_size", "lock",
-						   "delay", "send_end"))
+						   "delay", "send_end",
+						   "values_format"))
 	ResourceTemplate.__init__(self, resource_name,
 				  **_filter_keyword_arguments(keyw, ("timeout",
-							      "lock")))
-	self.term_chars = keyw.get("term_chars", "")
-	self.chunk_size = keyw.get("chunk_size", self.chunk_size)
-	self.delay	= keyw.get("delay", 0.0)
-	self.send_end	= keyw.get("send_end", True)
+								     "lock")))
+	self.term_chars    = keyw.get("term_chars", "")
+	self.chunk_size    = keyw.get("chunk_size", self.chunk_size)
+	self.delay	   = keyw.get("delay", 0.0)
+	self.send_end	   = keyw.get("send_end", True)
+	self.values_format = keyw.get("values_format", self.values_format)
 	# I validate the resource class by requesting it from the instrument
 	if self.resource_class != "INSTR":
 	    raise "resource is not an instrument"
@@ -298,31 +303,25 @@ class Instrument(ResourceTemplate):
 	    return [float(raw_value) for raw_value in
 		    float_regex.findall(self.read())]
 	# Okay, we need to read binary data
-	import ctypes
 	original_term_chars = self.term_chars
 	self.term_chars = ""
 	try:
 	    data = self.read()
 	finally:
 	    self.term_chars = original_term_chars
-	data = self._strip_term_chars(data)
-	if data[0:2] != "#0":
-	    raise "binary values don't start with '#0'"
-	data = data[2:]
-	if format == single:
-	    number_of_values = len(data) / 4
-	    if number_of_values * 4 != len(data):
-		raise "illegal size of data values (assumed single)"
-	    buffer = (ctypes.c_float * number_of_values)()
-	elif format == double:
-	    number_of_values = len(data) / 8
-	    if number_of_values * 8 != len(data):
-		raise "illegal size of data values (assumed double)"
-	    buffer = (ctypes.c_double * number_of_values)()
-	else:
-	    raise "unknown data value format requested"
-	buffer.raw = data
-	return list(buffer)
+	if data[0:2] != "#0" or data[-1] != "\n":
+	    raise "binary data must be enclosed with with '#0' and '\\n'"
+	data = data[2:-1]
+	try:
+	    if format == single:
+		result = list(struct.unpack(len(data)/4 * "f", data))
+	    elif format == double:
+		result = list(struct.unpack(len(data)/8 * "d", data))
+	    else:
+		raise "unknown data value format requested"
+	except struct.error:
+	    raise "binary data was malformed"
+	return result
     def read_floats(self):
 	warnings.warn("read_floats() is deprecated.  Use read_values()",
 		      stacklevel = 2)
@@ -366,11 +365,11 @@ class Instrument(ResourceTemplate):
     term_chars = property(__get_term_chars, __set_term_chars, __del_term_chars)
     r"""Set or read a new termination character sequence (property).
 
-    Normally, you just give the new termination sequence, which is appended
-    to each write operation (unless it's already there), and expected as
-    the ending mark during each read operation.	 A typical example is
-    "\n\r" or just "\r".  If you assign "" to this property, the
-    termination sequence is deleted.
+    Normally, you just give the new termination sequence, which is appended to
+    each write operation (unless it's already there), and expected as the
+    ending mark during each read operation.  A typical example is CR+LF or just
+    CR.  If you assign "" to this property, the termination sequence is
+    deleted.
 
     The default is "".
 
@@ -406,7 +405,8 @@ class GpibInstrument(Instrument):
 	"""
 	_warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
 						   "chunk_size", "lock",
-						   "delay", "send_end"))
+						   "delay", "send_end",
+						   "values_format"))
 	if isinstance(gpib_identifier, int):
 	    resource_name = "GPIB%d::%d" % (board_number, gpib_identifier)
 	else:
@@ -422,7 +422,7 @@ class GpibInstrument(Instrument):
 	    raise "invalid GPIB instrument"
 	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
 	if not keyw.has_key("term_chars"):
-	    self.term_chars = "\r\n"
+	    self.term_chars = CR+LF
     def __del__(self):
 	if self.vi is not None:
 	    self.__switch_events_off()
