@@ -25,7 +25,7 @@
 \documentclass{howto}
 
 \title{PyVISA}
-\release{0.9.2}
+\release{0.9.3}
 
 \author{Torsten Bronger}
 \authoraddress{
@@ -33,7 +33,7 @@
 	\email{bronger@physik.rwth-aachen.de}
 }
 
-\date{18 Juli 2005}
+\date{20 Juli 2005}
 
 \makeindex
 
@@ -289,6 +289,12 @@ The class \class{Instrument} defines the following methods and attributes:
   sends a trigger signal to the instrument.
 \end{methoddesc}
 
+\begin{methoddesc}{read_raw}{}
+  returns a string sent from the instrument to the computer.  In contrast to
+  \code{read()}, no termination characters are checked or stripped.  You get
+  the pristine message.
+\end{methoddesc}
+
 \begin{memberdesc}{timeout}
   The timeout in seconds for each I/O operation.  See
   section~\ref{sec:timeouts} for further information.
@@ -397,9 +403,9 @@ Alternatively you can give it when creating your instrument object:
 \begin{verbatim}
 my_instrument = Instrument("GPIB::10", term_chars = CR)
 \end{verbatim}
-The default value depends on the bus system.  Generally, the sequence is empty.
-For GPIB instruments however, it's set to \code{CR+LF}\@.  For RS232 (once it's
-supported), it's just \code{LF}\@.
+The default value depends on the bus system.  Generally, the sequence is empty,
+in particular for GPIB\@.  For RS232 (once it's supported), it'll
+be~\code{LF}\@.
 
 The termination characters sequence is an ordinary string.  \code{CR} and
 \code{LF} are just string constants that allow readable access to \verb|"\r"|
@@ -418,7 +424,9 @@ operation.  So you could write:
 my_instrument = Instrument("GPIB::10", term_chars = CR, send_end = False,
                            delay = 1.2")
 \end{verbatim}
-This will set the delay to 1.2~seconds, and the EOI line is ignored.
+This will set the delay to 1.2~seconds, and the EOI line is omitted.  By the
+way, omitting EOI is \emph{not} recommended, so if you omit it nevertheless,
+you should know what you're doing.
 
 
 \subsection{Timeouts}
