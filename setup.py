@@ -75,7 +75,7 @@ if os.name == 'posix':
 
 setup(name = 'pyvisa',
       description = 'Python VISA bindings for GPIB, RS232, and USB instruments',
-      version = '0.9.2',
+      version = '0.9.3',
       long_description = \
       """A Python package for support of the "Virtual Instrument Software
 Architecture" (VISA), in order to control measurement devices and test
