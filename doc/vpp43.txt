@@ -31,7 +31,6 @@ Part of the PyVISA package
 ---------------------------------
 
 :Date: $Date$
-:Version: $Revision$
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
 :Abstract: This document covers the ``vpp43.py`` module, which is part of the
   PyVISA_ package.  This module implements thin wrappers around all functions
