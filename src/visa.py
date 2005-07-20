@@ -262,11 +262,11 @@ class Instrument(ResourceTemplate):
     def _strip_term_chars(self, buffer):
 	if self.__term_chars != "":
 	    if buffer.endswith(self.__term_chars):
-		return buffer[:-len(self.__term_chars)]
+		buffer = buffer[:-len(self.__term_chars)]
 	    else:
 		warnings.warn("read string doesn't end with "
 			      "termination characters", stacklevel = 2)
-	return buffer
+	return buffer.rstrip(CR+LF)
     def read(self):
 	"""Read a string from the device.
 
@@ -314,9 +314,9 @@ class Instrument(ResourceTemplate):
 	data = data[2:-1]
 	try:
 	    if format == single:
-		result = list(struct.unpack(len(data)/4 * "f", data))
+		result = list(struct.unpack(str(len(data)/4) + "f", data))
 	    elif format == double:
-		result = list(struct.unpack(len(data)/8 * "d", data))
+		result = list(struct.unpack(str(len(data)/8) + "d", data))
 	    else:
 		raise "unknown data value format requested"
 	except struct.error:
@@ -421,8 +421,6 @@ class GpibInstrument(Instrument):
 			resource_name, re.IGNORECASE):
 	    raise "invalid GPIB instrument"
 	vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
-	if not keyw.has_key("term_chars"):
-	    self.term_chars = CR+LF
     def __del__(self):
 	if self.vi is not None:
 	    self.__switch_events_off()
