@@ -267,22 +267,7 @@ class Instrument(ResourceTemplate):
 		warnings.warn("read string doesn't end with "
 			      "termination characters", stacklevel = 2)
 	return buffer.rstrip(CR+LF)
-    def read(self):
-	"""Read a string from the device.
-
-	Reading stops when the device stops sending (e.g. by setting
-	appropriate bus lines), or the termination characters sequence was
-	detected.  Attention: Only the last character of the termination
-	characters is really used to stop reading, however, the whole sequence
-	is compared to the ending of the read string message.  If they don't
-	match, an exception is raised.
-
-	Parameters: None
-
-	Return value:
-	The string read from the device.
-
-	"""
+    def read_raw(self):
 	warnings.filterwarnings("ignore", "VI_SUCCESS_MAX_CNT")
 	try:
 	    buffer = ""
@@ -293,7 +278,24 @@ class Instrument(ResourceTemplate):
 		buffer += chunk
 	finally:
 	    _removefilter("ignore", "VI_SUCCESS_MAX_CNT")
-	return self._strip_term_chars(buffer)
+	return buffer
+    def read(self):
+	"""Read a string from the device.
+
+	Reading stops when the device stops sending (e.g. by setting
+	appropriate bus lines), or the termination characters sequence was
+	detected.  Attention: Only the last character of the termination
+	characters is really used to stop reading, however, the whole sequence
+	is compared to the ending of the read string message.  If they don't
+	match, a warning is issued.
+
+	Parameters: None
+
+	Return value:
+	The string read from the device.
+
+	"""
+	return self._strip_term_chars(self.read_raw())
     def read_values(self, format=None):
 	if not format:
 	    format = self.values_format
