@@ -30,12 +30,32 @@ Controlling GPIB, RS232, and USB instruments
 -------------------------------------------------------
 
 :Date: $Date$
-:Version: $Revision$
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
 
 
-Overview
-========
+PyVISA
+=======
+
+The PyVISA package is a VISA binding for Python.  In relies on an external
+library file that you can download from your interface vendor's web pages
+(National Instruments, Agilent, etc).  PyVISA implements a convenient and
+Pythonic access to this library in two layers:
+
+1. First, there is the lower level ``vpp43``, which directly calls the VISA
+   functions from Python.  See the `PyVISA low-level implementation`_ for more
+   information.
+
+2. On top of it, an object-oriented Python module has been created called
+   ``visa`` simply.  In case of doubt, use ``visa`` because it is easier and
+   more convenient. ``vpp43`` is only for people who need full control or the
+   official VISA functions for some reason.  See the `PyVISA manual`_ for more
+   information.
+
+The `PyVISA project page`_ contains the bug tracker and the download area.
+
+
+General overview
+================
 
 The programming of measurement instruments can be real pain.  There are many
 different protocols, sent over many different interfaces and bus systems (GPIB,
@@ -77,26 +97,6 @@ controlling:
 
 .. [#] For example, you don't need to care about the underlying operating
        system with all its peculiarities.
-
-PyVISA
-=======
-
-The PyVISA package is a VISA binding for Python.  In relies on an external
-library file that you can download from your interface vendor's web pages
-(National Instruments, Agilent, etc).  PyVISA implements a convenient and
-Pythonic access to this library in two layers:
-
-1. First, there is the lower level ``vpp43``, which directly calls the VISA
-   functions from Python.  See the `PyVISA low-level implementation`_ for more
-   information.
-
-2. On top of it, an object-oriented Python module has been created called
-   ``visa`` simply.  In case of doubt, use ``visa`` because it is easier and
-   more convenient. ``vpp43`` is only for people who need full control or the
-   official VISA functions for some reason.  See the `PyVISA manual`_ for more
-   information.
-
-The `PyVISA project page`_ contains the bug tracker and the download area.
 
 
 Links
