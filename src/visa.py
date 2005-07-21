@@ -311,14 +311,21 @@ class Instrument(ResourceTemplate):
 	    data = self.read()
 	finally:
 	    self.term_chars = original_term_chars
-	if data[0:2] != "#0" or data[-1] != "\n":
-	    raise "binary data must be enclosed with with '#0' and '\\n'"
-	data = data[2:-1]
+	if data[0] == "#" and data[1].isdigit() and int(data[1]) > 0:
+	    number_of_digits = int(data[1])
+	    # I store data and data_length in two separate variables in case
+	    # that data is too short.  FixMe: Maybe I should raise an error if
+	    # it's too long and the trailing part is not just CR/LF.
+	    data_length = int(data[2:2+number_of_digits])
+	    data = data[2+number_of_digits:2+number_of_digits + data_length]
+	elif data[0:2] == "#0" and data[-1] == "\n":
+	    data = data[2:-1]
+	    data_length = len(data)
 	try:
 	    if format == single:
-		result = list(struct.unpack(str(len(data)/4) + "f", data))
+		result = list(struct.unpack(str(data_length/4) + "f", data))
 	    elif format == double:
-		result = list(struct.unpack(str(len(data)/8) + "d", data))
+		result = list(struct.unpack(str(data_length/8) + "d", data))
 	    else:
 		raise "unknown data value format requested"
 	except struct.error:
