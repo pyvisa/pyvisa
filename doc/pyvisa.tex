@@ -514,6 +514,15 @@ my_instrument.values_format = single
 Setting this option affects the methods \code{read_values()} and
 \code{ask_for_values()}.
 
+In some cases it may be necessary to set the \emph{byte order}, also known as
+\emph{endianness}.  PyVISA assumes little-endian as default.  Some instruments
+call this ``swapped'' byte order.  However, there is also big-endian byte
+order.  In this case you have to append \samp{| big_endian} to your values
+format:
+\begin{verbatim}
+my_instrument = GpibInstrument(12, values_format = single | big_endian)
+\end{verbatim}
+
 
 \section{Module functions}
 
