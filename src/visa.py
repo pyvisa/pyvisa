@@ -191,15 +191,15 @@ def get_instruments_list(use_aliases=True):
 # The bits in the bitfield mean the following:
 #
 # bit number   if set / if not set
-#     0          binary/ascii
-#     1          double/single (IEEE floating point)
-#     2          big-endian/little-endian
+#     0		 binary/ascii
+#     1		 double/single (IEEE floating point)
+#     2		 big-endian/little-endian
 #
 # This leads to the following constants:
 
-ascii      = 0
-single     = 1
-double     = 3
+ascii	   = 0
+single	   = 1
+double	   = 3
 big_endian = 4
 
 CR = "\r"
@@ -236,7 +236,7 @@ class Instrument(ResourceTemplate):
 	delay -- waiting time in seconds after each write command. Default: 0
 	send_end -- whether to assert end line after each write command.
 	    Default: True
-        values_format -- floating point data value format.  Default: ascii (0)
+	values_format -- floating point data value format.  Default: ascii (0)
 
 	"""
 	_warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
@@ -246,8 +246,8 @@ class Instrument(ResourceTemplate):
 	ResourceTemplate.__init__(self, resource_name,
 				  **_filter_keyword_arguments(keyw, ("timeout",
 								     "lock")))
-	self.term_chars    = keyw.get("term_chars", "")
-	self.chunk_size    = keyw.get("chunk_size", self.chunk_size)
+	self.term_chars	   = keyw.get("term_chars", "")
+	self.chunk_size	   = keyw.get("chunk_size", self.chunk_size)
 	self.delay	   = keyw.get("delay", 0.0)
 	self.send_end	   = keyw.get("send_end", True)
 	self.values_format = keyw.get("values_format", self.values_format)
@@ -396,7 +396,7 @@ class Instrument(ResourceTemplate):
     Normally, you just give the new termination sequence, which is appended to
     each write operation (unless it's already there), and expected as the
     ending mark during each read operation.  A typical example is CR+LF or just
-    CR.  If you assign "" to this property, the termination sequence is
+    CR.	 If you assign "" to this property, the termination sequence is
     deleted.
 
     The default is "".
