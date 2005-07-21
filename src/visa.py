@@ -322,14 +322,18 @@ class Instrument(ResourceTemplate):
 	    data = self.read_raw()
 	finally:
 	    self.term_chars = original_term_chars
-	if data[0] == "#" and data[1].isdigit() and int(data[1]) > 0:
+	hash_sign_position = data.find("#")
+	if hash_sign_position == -1 or len(data) - hash_sign_position < 2:
+	    raise "unrecognized binary data format"
+	data = data[hash_sign_position:]
+	if data[1].isdigit() and int(data[1]) > 0:
 	    number_of_digits = int(data[1])
 	    # I store data and data_length in two separate variables in case
 	    # that data is too short.  FixMe: Maybe I should raise an error if
 	    # it's too long and the trailing part is not just CR/LF.
 	    data_length = int(data[2:2+number_of_digits])
 	    data = data[2+number_of_digits:2+number_of_digits + data_length]
-	elif data[0:2] == "#0" and data[-1] == "\n":
+	elif data[1] == "0" and data[-1] == "\n":
 	    data = data[2:-1]
 	    data_length = len(data)
 	else:
