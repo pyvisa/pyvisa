@@ -188,16 +188,27 @@ def get_instruments_list(use_aliases=True):
     return result
 
 
-ascii  = 0
-single = 1
-double = 3
+# The bits in the bitfield mean the following:
+#
+# bit number   if set / if not set
+#     0          binary/ascii
+#     1          double/single (IEEE floating point)
+#     2          big-endian/little-endian
+#
+# This leads to the following constants:
+
+ascii      = 0
+single     = 1
+double     = 3
+big_endian = 4
+
 CR = "\r"
 LF = "\n"
 
 class Instrument(ResourceTemplate):
     """Class for all kinds of Instruments.
 
-    It may be instantiated, however, if you want to use special features of a
+    It can be instantiated, however, if you want to use special features of a
     certain interface system (GPIB, USB, RS232, etc), you must instantiate one
     of its child classes.
 
@@ -299,7 +310,7 @@ class Instrument(ResourceTemplate):
     def read_values(self, format=None):
 	if not format:
 	    format = self.values_format
-	if format == ascii:
+	if format & 0x01 == ascii:
 	    float_regex = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)"
 				     "(?:[eE][-+]?\d+)?")
 	    return [float(raw_value) for raw_value in
@@ -308,7 +319,7 @@ class Instrument(ResourceTemplate):
 	original_term_chars = self.term_chars
 	self.term_chars = ""
 	try:
-	    data = self.read()
+	    data = self.read_raw()
 	finally:
 	    self.term_chars = original_term_chars
 	if data[0] == "#" and data[1].isdigit() and int(data[1]) > 0:
@@ -321,13 +332,21 @@ class Instrument(ResourceTemplate):
 	elif data[0:2] == "#0" and data[-1] == "\n":
 	    data = data[2:-1]
 	    data_length = len(data)
+	else:
+	    raise "unrecognized binary data format"
+	if format & 0x04 == big_endian:
+	    endianess = ">"
+	else:
+	    endianess = "<"
 	try:
-	    if format == single:
-		result = list(struct.unpack(str(data_length/4) + "f", data))
-	    elif format == double:
-		result = list(struct.unpack(str(data_length/8) + "d", data))
+	    if format & 0x03 == single:
+		result = list(struct.unpack(endianess +
+					    str(data_length/4) + "f", data))
+	    elif format & 0x03 == double:
+		result = list(struct.unpack(endianess +
+					    str(data_length/8) + "d", data))
 	    else:
-		raise "unknown data value format requested"
+		raise "unknown data values format requested"
 	except struct.error:
 	    raise "binary data was malformed"
 	return result
