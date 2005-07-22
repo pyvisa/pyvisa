@@ -437,8 +437,8 @@ doesn't know a~priori.
 Therefore, PyVISA reads from the device in \emph{chunks}.  Each chunk is
 20~kilobytes long by default.  If there's still data to be read, PyVISA repeats
 the procedure and eventually concatenates the results and returns it to you.
-By the way, those 20~kilobytes are large enough so that mostly one read cycle
-is sufficient.
+Those 20~kilobytes are large enough so that mostly one read cycle is
+sufficient.
 
 The whole thing happens automatically, as you can see.  Normally you needn't
 worry about it.  However, some devices don't like to send data in chunks.  So
@@ -460,10 +460,13 @@ PyVISA currently supports three forms of transfers:
 \begin{description}
 \item[ascii] This is the default mode.  It assumes a normal string with comma-
   or whitespace-separated values.
-\item[single] The values are expected as IEEE floating point values with single
-  precision (i.\,e.\ four bytes each).  The data must have a
-  prepended~\verb|"#0"| and an appended~\verb|"\n"| (no matter which
-  termination character you have set).
+\item[single] The values are expected as a binary sequence of IEEE floating
+  point values with single precision (i.\,e.\ four bytes each).\footnote{All
+    flavours of binary data streams defined in IEEE\,488.2 are supported,
+    i.\,e.\ those beginning with
+    ``\textit{$\langle$header$\rangle$}~\texttt{\#}\textit{$\langle$digit$\rangle$}'',
+    where \textit{$\langle$header$\rangle$} is optional, and
+    \textit{$\langle$digit$\rangle$} may also be~``0''.}
 \item[double] The same as \textbf{single}, but with values of double precision
   (eight bytes each).
 \end{description}
@@ -501,8 +504,8 @@ keithley.write("format:data sreal")
 keithley.values_format = single
 \end{verbatim}
 to the initialisation commands, and all measurement data will be transmitted as
-binary.  You'd only notice the increased speed, as PyVISA converts it into the
-same list of values as before.
+binary.  You will only notice the increased speed, as PyVISA converts it into
+the same list of values as before.
 
 
 \subsection{Termination characters}
@@ -510,7 +513,10 @@ same list of values as before.
 
 Somehow the computer must detect when the device is finished with sending a
 message.  It does so by using different methods, depending on the bus system.
-However, you may influence this behaviour by setting termination characters.
+In most cases you don't need to worry about termination characters.  In our
+institute, only the RS\,232 devices tend to be somewhat fussy about them.
+However, if you have trouble, you may influence termination characters with
+PyVISA\@.
 
 Termination characters may be one character or a sequence of characters.
 Whenever this character or sequence occurs in the input stream, the read
@@ -528,7 +534,7 @@ Alternatively you can give it when creating your instrument object:
 my_instrument = Instrument("GPIB::10", term_chars = CR)
 \end{verbatim}
 The default value depends on the bus system.  Generally, the sequence is empty,
-in particular for GPIB\@.  For RS232 (once it's supported), it'll
+in particular for GPIB\@.  For RS232 (once it's got its own class), it'll
 be~\code{LF}\@.
 
 The termination characters sequence is an ordinary string.  \code{CR} and
