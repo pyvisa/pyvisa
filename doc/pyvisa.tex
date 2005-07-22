@@ -25,7 +25,7 @@
 \documentclass{howto}
 
 \title{PyVISA}
-\release{0.9.3}
+\release{0.9.4}
 
 \author{Torsten Bronger}
 \authoraddress{
@@ -33,7 +33,7 @@
 	\email{bronger@physik.rwth-aachen.de}
 }
 
-\date{20 Juli 2005}
+\date{22 Juli 2005}
 
 \makeindex
 
@@ -57,21 +57,21 @@ as a separate file \file{LICENSE} in the PyVISA distribution.
 \noindent
 PyVISA enables you to control your measurement and test equipment -- digital
 multimeters, motors, sensors and the like.  This document covers the
-simple-to-use \module{visa} module of the PyVISA package.  It implements
-control of measurement devices in a straightforward and convenient way.  The
-design goal is to combine HTBasic's ease and implicitness with Python's modern
-syntax and powerful set of libraries.  Please also have a look at
-\ulink{PyVISA's project page}{http://sourceforge.net/projects/pyvisa} with bug
-tracker and download area.
+easy-to-use \module{visa} module of the PyVISA package.  It implements control
+of measurement devices in a straightforward and convenient way.  The design
+goal is to combine HTBasic's simplicity with Python's modern syntax and
+powerful set of libraries.
 
-However, it is not a full VISA implementation because it relies on an external
-VISA DLL or ``shared object'' file.  This can be downloaded from your interface
-vendor's web pages (National Instruments, Agilent etc).  PyVISA only makes it
-available for Python code.
+PyVISA doesn't implement VISA itself.  Instead, PyVISA provides bindings to the
+VISA library (a DLL or ``shared object'' file).  This library is usually
+shipped with your GPIB interface.  If not, you can download it from your
+interface equipment vendor (National Instruments, Agilent, etc).
 
-This package is still not thoroughly tested.  In particular, I need feedback
-from people who've given it a try.  It works for us, but probably we are not
-representative.
+PyVISA is free software under the terms of the GPL\@.  It can be downloaded at
+\ulink{PyVISA's project page}{http://sourceforge.net/projects/pyvisa}.  You can
+report bugs there, too.  This package is still not thoroughly tested.
+Therefore, I need feedback from people who've given it a try.  It works for us,
+but we own only a limited set of measurement equipment.
 \end{abstract}
 
 \begin{samepage}
@@ -142,57 +142,69 @@ It couldn't be simpler.
 \subsection{A more complex example}
 \label{sec:more-complex-example}
 
-The following code works for a Keithley 2000 multimeter in ``language 199
-mode'' (in contrast to ``SCPI mode'').  It advises the multimeter to measure
-10~voltages.  After having read them, the program calculates the average
-voltage and prints it on the screen.
+The following example shows how to use SCPI commands with a Keithley 2000
+multimeter in order to measure 10~voltages.  After having read them, the
+program calculates the average voltage and prints it on the screen.
+
+I'll explain the program step-by-step.  First, we have to initialise the
+instrument:
 \begin{verbatim}
 from visa import GpibInstrument
 
 keithley = GpibInstrument(12)
+keithley.write("*rst; status:preset; *cls")
+\end{verbatim}
+Here, we create the instrument variable \var{keithley}, which is used for all
+further operations on the instrument.  Immediately after it, we send the
+initialisation and reset message to the instrument.
+
+The next step is to write all the measurement parameters, in particular the
+interval time (500\,ms) and the number of readings~(10) to the instrument.  I
+won't explain it in detail.  Have a look at an SCPI and/or Keithley~2000
+manual.
+\begin{verbatim}
 interval_in_ms = 500
 number_of_readings = 10
-keithley.write("F0B2M2G0T2Q%dI%dX" % (interval_in_ms, number_of_readings))
-keithley.trigger()
-keithley.wait_for_srq()
-voltages = keithley.read_floats()
-print "Average voltage: ", sum(voltages) / len(voltages)
-\end{verbatim}
-Let's have a look at the command string \code{"F0B2M2G0T2Q\%dI\%dX"}:
-\begin{tableii}{ll}{code}{Code}{Description}
-  \lineii{F0}{we want to measure \emph{voltages}}
-  \lineii{B2}{we want to read the entire data buffer}
-  \lineii{M2}{send SRQ when finished measuring}
-  \lineii{G0}{neat number format}
-  \lineii{T2}{start when triggered}
-  \lineii{Q\%d}{set number of readings}
-  \lineii{I\%d}{set time interval between readings}
-  \lineii{X}{execute all commands}
-\end{tableii}
 
-After this string has been sent to the device, we start the measurement with
-\begin{verbatim}
-keithley.trigger()
+keithley.write("status:measurement:enable 512; *sre 1")
+keithley.write("sample:count %d" % number_of_readings)
+keithley.write("trigger:source bus")
+keithley.write("trigger:delay %f" % (interval_in_ms / 1000.0))
+
+keithley.write("trace:points %d" % number_of_readings)
+keithley.write("trace:feed sense1; feed:control next")
 \end{verbatim}
-and wait for the end of data acquisition with
+Okay, now the instrument is prepared to do the measurement.  The next three
+lines make the instrument waiting for a trigger pulse, trigger it, and wait
+until it sends a ``service request'':
 \begin{verbatim}
+keithley.write("initiate")
+keithley.trigger()
 keithley.wait_for_srq()
 \end{verbatim}
-Now I must read the result from the device.  I could use the \code{read()}
-method as in the first example, but then I'd get one big string,
+With sending the service request, the instrument tells us that the measurement
+has been finished and that the results are ready for transmission.  We could
+read them with \samp{keithley.ask("trace:data?")}\ however, then we'd get
 \begin{verbatim}
 NDCV-000.0004E+0,NDCV-000.0005E+0,NDCV-000.0004E+0,NDCV-000.0007E+0,
 NDCV-000.0000E+0,NDCV-000.0007E+0,NDCV-000.0008E+0,NDCV-000.0004E+0,
 NDCV-000.0002E+0,NDCV-000.0005E+0
 \end{verbatim}
-which I would have to convert to a list of numbers.  Fortunately, the
-\code{read_floats()} method does this work for us, and so the variable
-\var{voltages} contains
+which we would have to convert to a Python list of numbers.  Fortunately, the
+\code{ask_for_values()} method does this work for us:
 \begin{verbatim}
-[-0.0004, -0.0005, -0.0004, -0.0007, 0, -0.0007, -0.0008, -0.0004,
- -0.0002, -0.0005]
+voltages = keithley.ask_for_values("trace:data?")
+print "Average voltage: ", sum(voltages) / len(voltages)
 \end{verbatim}
-which is much better.  The rest of the example is straightforward Python.
+Finally, we should reset the instrument's data buffer and SRQ status register,
+so that it's ready for a new run.  Again, this is explained in detail in the
+instrument's manual:
+\begin{verbatim}
+keithley.ask("status:measurement?")
+keithley.write("trace:clear; feed:control next")
+\end{verbatim}
+That's it.  18 lines of lucid code.  (Well, SCPI is awkward, but that's another
+story.)
 
 
 \section{Module classes}
@@ -215,20 +227,20 @@ which is much better.  The rest of the example is straightforward Python.
 
   Possible keyword arguments are:
   \begin{tableii}{ll}{var}{Keyword}{Description}
-    \lineii{term_char}{termination characters, see
-      section~\ref{sec:termchars}. Default: \code{""} \emph{(empty)}}
     \lineii{timeout}{timeout in seconds for all device operations, see
       section~\ref{sec:timeouts}. Default:~5}
     \lineii{chunk_size}{Length of read data chunks in bytes, see
       section~\ref{sec:chunk-length}. Default: 20\,kB}
     \lineii{values_format}{Data format for lists of read values, see
       section~\ref{sec:reading-binary-data}. Default: \code{ascii}}
-    \lineii{lock}{whether you want to have exclusive access to the device.
-      Default: \code{VI_NO_LOCK}}
+    \lineii{term_char}{termination characters, see
+      section~\ref{sec:termchars}. Default: \code{""} \emph{(empty)}}
     \lineii{send_end}{whether to assert END after each write operation, see
       section~\ref{sec:termchars}. Default: \code{True}}
     \lineii{delay}{delay in seconds after each write operation, see
       section~\ref{sec:termchars}. Default:~0}
+    \lineii{lock}{whether you want to have exclusive access to the device.
+      Default: \code{VI_NO_LOCK}}
   \end{tableii}
 
   \vspace{1ex}
@@ -263,7 +275,8 @@ The class \class{Instrument} defines the following methods and attributes:
   contain only one element or may be empty.
 
   The optional \var{format} argument overrides the setting of
-  \var{values_format}.
+  \var{values_format}.  For information about that, see
+  section~\ref{sec:reading-binary-data}.
 \end{methoddesc}
 
 \begin{methoddesc}{ask}{message}
@@ -276,7 +289,8 @@ The class \class{Instrument} defines the following methods and attributes:
   list of values, just as \code{read_floats()} does.
 
   The optional \var{format} argument overrides the setting of
-  \var{values_format}.
+  \var{values_format}.  For information about that, see
+  section~\ref{sec:reading-binary-data}.
 \end{methoddesc}
 
 \begin{methoddesc}{clear}{}
@@ -317,8 +331,8 @@ The class \class{Instrument} defines the following methods and attributes:
 \end{memberdesc}
 
 \begin{memberdesc}{values_format}
-  The data format for measurement data sent from the instrument to the
-  computer.  See section~\ref{sec:reading-binary-data} for further information.
+  The format for multi-value data sent from the instrument to the computer.
+  See section~\ref{sec:reading-binary-data} for further information.
 \end{memberdesc}
 
 
@@ -379,54 +393,6 @@ The class \class{Gpib} defines the following method:
 You needn't store the board instance in a variable.  Instead, you may send an
 IFC signal just by saying \samp{Gpib().send_ifc()}.
 \end{notice}
-
-
-\subsection{Termination characters}
-\label{sec:termchars}
-
-Somehow the computer must detect when the device is finished with sending a
-message.  It does so by using different methods, depending on the bus system.
-However, you may influence this behaviour by setting termination characters.
-
-Termination characters may be one character or a sequence of characters.
-Whenever this character or sequence occurs in the input stream, the read
-operation is terminated and the read message is given to the calling
-application.  The next read operation continues with the input stream
-immediately after the last termination sequence.  In PyVISA, the termination
-characters are stripped off the message before it is given to you.
-
-You may set termination characters for each instrument, e.\,g.
-\begin{verbatim}
-my_instrument.term_chars = CR
-\end{verbatim}
-Alternatively you can give it when creating your instrument object:
-\begin{verbatim}
-my_instrument = Instrument("GPIB::10", term_chars = CR)
-\end{verbatim}
-The default value depends on the bus system.  Generally, the sequence is empty,
-in particular for GPIB\@.  For RS232 (once it's supported), it'll
-be~\code{LF}\@.
-
-The termination characters sequence is an ordinary string.  \code{CR} and
-\code{LF} are just string constants that allow readable access to \verb|"\r"|
-and~\verb|"\n"|.  Therefore, instead of \code{CR+LF}, you can also write
-\verb|"\r\n"|, whichever you like more.
-
-There are two further options related to this topic, namely \code{send_end} and
-\code{delay}.  They are inspired by HTBasic.  \code{send_end} is a boolean.  If
-it's \code{True} (the default), the EOI line is asserted after each write
-operation, signalling the end of the operation.  EOI is GPIB-specific but
-similar action is taken for other interfaces.
-
-The argument \code{delay} is the time in seconds to wait after each write
-operation.  So you could write:
-\begin{verbatim}
-my_instrument = Instrument("GPIB::10", term_chars = CR, send_end = False,
-                           delay = 1.2")
-\end{verbatim}
-This will set the delay to 1.2~seconds, and the EOI line is omitted.  By the
-way, omitting EOI is \emph{not} recommended, so if you omit it nevertheless,
-you should know what you're doing.
 
 
 \subsection{Timeouts}
@@ -522,6 +488,69 @@ format:
 \begin{verbatim}
 my_instrument = GpibInstrument(12, values_format = single | big_endian)
 \end{verbatim}
+
+
+\subsubsection{Example}
+\label{sec:binary-example}
+
+In order to demonstrate how easy reading binary data can be, remember our
+example from section~\ref{sec:more-complex-example}.  You just have to append
+the lines
+\begin{verbatim}
+keithley.write("format:data sreal")
+keithley.values_format = single
+\end{verbatim}
+to the initialisation commands, and all measurement data will be transmitted as
+binary.  You'd only notice the increased speed, as PyVISA converts it into the
+same list of values as before.
+
+
+\subsection{Termination characters}
+\label{sec:termchars}
+
+Somehow the computer must detect when the device is finished with sending a
+message.  It does so by using different methods, depending on the bus system.
+However, you may influence this behaviour by setting termination characters.
+
+Termination characters may be one character or a sequence of characters.
+Whenever this character or sequence occurs in the input stream, the read
+operation is terminated and the read message is given to the calling
+application.  The next read operation continues with the input stream
+immediately after the last termination sequence.  In PyVISA, the termination
+characters are stripped off the message before it is given to you.
+
+You may set termination characters for each instrument, e.\,g.
+\begin{verbatim}
+my_instrument.term_chars = CR
+\end{verbatim}
+Alternatively you can give it when creating your instrument object:
+\begin{verbatim}
+my_instrument = Instrument("GPIB::10", term_chars = CR)
+\end{verbatim}
+The default value depends on the bus system.  Generally, the sequence is empty,
+in particular for GPIB\@.  For RS232 (once it's supported), it'll
+be~\code{LF}\@.
+
+The termination characters sequence is an ordinary string.  \code{CR} and
+\code{LF} are just string constants that allow readable access to \verb|"\r"|
+and~\verb|"\n"|.  Therefore, instead of \code{CR+LF}, you can also write
+\verb|"\r\n"|, whichever you like more.
+
+There are two further options related to this topic, namely \code{send_end} and
+\code{delay}.  \code{send_end} is a boolean.  If it's \code{True} (the
+default), the EOI line is asserted after each write operation, signalling the
+end of the operation.  EOI is GPIB-specific but similar action is taken for
+other interfaces.
+
+The argument \code{delay} is the time in seconds to wait after each write
+operation.  So you could write:
+\begin{verbatim}
+my_instrument = Instrument("GPIB::10", term_chars = CR, send_end = False,
+                           delay = 1.2")
+\end{verbatim}
+This will set the delay to 1.2~seconds, and the EOI line is omitted.  By the
+way, omitting EOI is \emph{not} recommended, so if you omit it nevertheless,
+you should know what you're doing.
 
 
 \section{Module functions}
