@@ -631,11 +631,11 @@ applications.\footnote{Of course, it's highly advisable not to have installed
 
 \subsubsection{Windows}
 
-PyVISA expects a file called \file{visa32.dll} in the \envvar{PATH}\@.  You
-must assure that this is the case.  For example, on my system you find this
-file in \file{C:\e WINNT\e system32\e}.  Either copy it there or expand your
-\envvar{PATH}.  Alternatively, you can create an INI file.  You must do this
-anyway if the file is not called \file{visa32.dll} on your system.
+PyVISA expects a file called \file{visa32.dll} in the \envvar{PATH}\@.  For
+example, on my system you find this file in \file{C:\e WINNT\e system32\e}.
+Either copy it there or expand your \envvar{PATH}.  Alternatively, you can
+create an INI file.  You must do this anyway if the file is not called
+\file{visa32.dll} on your system.
 
 
 \subsubsection{Linux}
@@ -678,7 +678,8 @@ Please note that ``\code{[Paths]}'' is treated case-sensitively.
 
 You can define a site-wide configuration file at
 \file{/usr/share/pyvisa/.pyvisarc}.  (It may also be \file{/usr/local/\ldots}\
-depending on the location of your Python.)
+depending on the location of your Python.)  Under Windows, this file is usually
+placed at \file{c:\e Python23\e share\e pyvisa\e .pyvisarc}.
 
 
 \section{About PyVISA}
