@@ -634,16 +634,39 @@ applications.\footnote{Of course, it's highly advisable not to have installed
 PyVISA expects a file called \file{visa32.dll} in the \envvar{PATH}\@.  You
 must assure that this is the case.  For example, on my system you find this
 file in \file{C:\e WINNT\e system32\e}.  Either copy it there or expand your
-\envvar{PATH}\@.
+\envvar{PATH}.  Alternatively, you can create an INI file.  You must do this
+anyway if the file is not called \file{visa32.dll} on your system.
 
 
 \subsubsection{Linux}
 
-For Linux, the default VISA library is
-\file{/usr/local/vxipnp/linux/bin/libvisa.so.7}.  However, here you have the
-choice.  If it's called differently on your system, or is placed in another
-directory, you can tell PyVISA by creating a file \file{\~{}/.pyvisarc}.  This
-has the format of an INI~file.  For example, if the library is at
+For Linux, the VISA library is by default at
+\file{/usr/local/vxipnp/linux/bin/libvisa.so.7}.  If this is not the case on
+your installation, you have to create an INI file.
+
+
+\subsubsection{INI file for customisation}
+
+If the VISA library file is not at the default place, or doesn't have the
+default name for your operating system (see above), you can tell PyVISA by
+creating a file called \file{.pyvisarc} (mind the leading dot).
+
+Another motivation for setting up an INI file is that you have more than one
+VISA library, e.\,g.\ because two GPIB interfaces of two different vendors are
+connected with the computer.  However, in this case I'd try to use both
+interfaces with one library because sometimes you're lucky and it works.  Note
+that PyVISA is currently not able to switch between DLLs while the program is
+running.
+
+For Windows, place it in your ``Documents and Settings'' folder,\footnote{its
+  name depends on the language of your Windows version} e.\,g.\
+\begin{verbatim}
+C:\Documents and Settings\smith\.pyvisarc
+\end{verbatim}
+if ``smith'' is the name of your login account.  For Linux, put it in your home
+directory.
+
+This file has the format of an INI~file.  For example, if the library is at
 \file{/usr/lib/libvisa.so.7}, the file \file{.pyvisarc} must contain the
 following:
 \begin{verbatim}
@@ -672,4 +695,4 @@ bugs there.  \textbf{I'm also very keen to know whether PyVISA works for you or
 
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
 % LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
-% LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC
+% LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC DLLs
