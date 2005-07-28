@@ -115,21 +115,26 @@ class VisaLibrary(Singleton):
     """
     def init(self):
 	self.__lib = self.__cdecl_lib = None
-    def load_library(self, path = "/usr/local/vxipnp/linux/bin/libvisa.so.7"):
+    def load_library(self, path = None):
 	"""(Re-)loads the VISA library.
 
 	The optional parameter "path" holds the full path to the VISA library.
-	At the moment, it has significance only for Linux.  It is called
-	implicitly by __call__ if not called successfully before.
+	It is called implicitly by __call__ if not called successfully before.
 
 	It may raise an OSNotSupported exception, or an OSError if the library
 	file was not found.
 
 	"""
 	if os.name == 'nt':
-	    self.__lib	     = windll.visa32
-	    self.__cdecl_lib = cdll.visa32
+	    if path:
+		self.__lib	 = windll.LoadLibrary(path)
+		self.__cdecl_lib = cdll.LoadLibrary(path)
+	    else:
+		self.__lib	 = windll.visa32
+		self.__cdecl_lib = cdll.visa32
 	elif os.name == 'posix':
+	    if not path:
+		path = "/usr/local/vxipnp/linux/bin/libvisa.so.7"
 	    self.__lib = self.__cdecl_lib = cdll.LoadLibrary(path)
 	else:
 	    self.__lib = self.__cdecl_lib = None
