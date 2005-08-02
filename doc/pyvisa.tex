@@ -682,6 +682,18 @@ depending on the location of your Python.)  Under Windows, this file is usually
 placed at \file{c:\e Python23\e share\e pyvisa\e .pyvisarc}.
 
 
+\subsubsection{Setting the VISA library in the program}
+
+You can also set the path to your VISA library at the beginning of your
+program.  Just start the program with
+\begin{verbatim}
+from pyvisa.vpp43 import visa_library
+visa_library.load_library("/usr/lib/libvisa.so.7")
+from visa import *
+...
+\end{verbatim}
+
+
 \section{About PyVISA}
 
 PyVISA was originally programmed by Gregor Thalhammer, Innsbruck/Austria, and
