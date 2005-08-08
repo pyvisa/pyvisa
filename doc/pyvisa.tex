@@ -606,6 +606,7 @@ my_instrument_handle = vpp43.open(resource_manager.session, "GPIB::14",
                                   VI_EXCLUSIVE_LOCK)
 \end{verbatim}
 
+
 \section{Installation}
 
 \subsection{Prerequisites}
@@ -690,6 +691,14 @@ program.  Just start the program with
 \begin{verbatim}
 from pyvisa.vpp43 import visa_library
 visa_library.load_library("/usr/lib/libvisa.so.7")
+from visa import *
+...
+\end{verbatim}
+Keep in mind that the backslashes of Windows paths must be properly escaped, or
+the path must be preceeded by~\samp{r}:
+\begin{verbatim}
+from pyvisa.vpp43 import visa_library
+visa_library.load_library(r"c:\WINNT\system32\agvisa32.dll")
 from visa import *
 ...
 \end{verbatim}
