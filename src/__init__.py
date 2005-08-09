@@ -4,7 +4,7 @@
 #    __init__.py - PyVISA's package initialisation.
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-#		      Torsten Bronger <bronger@physik.rwth-aachen.de>.
+#                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
 #
 #    This file is part of PyVISA.
 #
@@ -15,7 +15,7 @@
 #
 #    PyVISA is distributed in the hope that it will be useful, but WITHOUT ANY
 #    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-#    FOR A PARTICULAR PURPOSE.	See the GNU General Public License for more
+#    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 #    details.
 #
 #    You should have received a copy of the GNU General Public License along
@@ -28,7 +28,7 @@ import vpp43
 
 _config_parser = ConfigParser.SafeConfigParser()
 _config_parser.read([os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
-		     os.path.join(os.path.expanduser("~"), ".pyvisarc")])
+                     os.path.join(os.path.expanduser("~"), ".pyvisarc")])
 try:
     _visa_library_path = _config_parser.get("Paths", "visa library")
 except ConfigParser.Error:

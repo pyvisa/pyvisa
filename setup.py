@@ -4,7 +4,7 @@
 #    setup.py - Distutils setup script for PyVISA
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-#		      Torsten Bronger <bronger@physik.rwth-aachen.de>.
+#                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
 #
 #    This file is part of PyVISA.
 #
@@ -15,7 +15,7 @@
 #
 #    PyVISA is distributed in the hope that it will be useful, but WITHOUT ANY
 #    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-#    FOR A PARTICULAR PURPOSE.	See the GNU General Public License for more
+#    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 #    details.
 #
 #    You should have received a copy of the GNU General Public License along
@@ -59,10 +59,10 @@ def restore_rpmmacros():
 # twice.  This would happen otherwise, because setup.py is called more than
 # once per building session.
 if os.name == 'posix' and os.path.isfile(real_rpmmacros_name) and \
-	not os.path.isfile(temp_rpmmacros_name):
+        not os.path.isfile(temp_rpmmacros_name):
     shutil.move(real_rpmmacros_name, temp_rpmmacros_name)
     if os.path.isfile(distutils_rpmmacros_name):
-	shutil.copy(distutils_rpmmacros_name, real_rpmmacros_name)
+        shutil.copy(distutils_rpmmacros_name, real_rpmmacros_name)
     atexit.register(restore_rpmmacros)
 
 # FixMe: Maybe this should be done in Python itself (using distutils.dep_util),
@@ -77,9 +77,9 @@ setup(name = 'pyvisa',
       description = 'Python VISA bindings for GPIB, RS232, and USB instruments',
       version = '0.9.4',
       long_description = \
-      """A Python package for support of the "Virtual Instrument Software
-Architecture" (VISA), in order to control measurement devices and test
-equipment via GPIB, RS232, or USB.""",
+      """A Python package for support of the 'Virtual Instrument Software
+Architecture' (VISA), in order to control measurement devices and test
+equipment via GPIB, RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
       author = 'Gregor Thalhammer, Torsten Bronger',
       author_email = 'Gregor.Thalhammer@uibk.ac.at',
       maintainer_email = 'pyvisa-devel@lists.sourceforge.net',
@@ -88,16 +88,16 @@ equipment via GPIB, RS232, or USB.""",
       keywords = 'VISA GPIB USB serial RS232 measurement acquisition',
       license = 'GNU General Public License',
       classifiers = [
-	'Development Status :: 4 - Beta',
-	'Intended Audience :: Developers',
-	'Intended Audience :: Science/Research',
-	'License :: OSI Approved :: GNU General Public License (GPL)',
-	'Operating System :: Microsoft :: Windows',
-	'Operating System :: POSIX :: Linux',
-	'Programming Language :: Python',
-	'Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator',
-	'Topic :: Software Development :: Libraries :: Python Modules',
-	],
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python',
+        'Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        ],
       package_dir = {'pyvisa': 'src'},
       package_data = {'pyvisa': ['doc/pyvisa.pdf', 'doc/vpp43.txt']},
       packages = ['pyvisa'],

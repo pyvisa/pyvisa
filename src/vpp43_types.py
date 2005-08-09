@@ -128,7 +128,7 @@ ViJobId, ViPJobId           = _type_dublet(ViUInt32)
 # Class of callback functions for event handling, first type is result type
 if _os.name == 'nt':
     ViHndlr = _ctypes.WINFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
-				  ViAddr)
+                                  ViAddr)
 else:
     ViHndlr = _ctypes.CFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
-				ViAddr)
+                                ViAddr)

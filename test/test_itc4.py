@@ -4,7 +4,7 @@
 #    test_itc4.py - PyVISA test code for Oxfort ITC4 temperature controller
 #
 #    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-#		      Torsten Bronger <bronger@physik.rwth-aachen.de>.
+#                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
 #
 #    This file is part of PyVISA.
 #
@@ -15,7 +15,7 @@
 #
 #    PyVISA is distributed in the hope that it will be useful, but WITHOUT ANY
 #    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-#    FOR A PARTICULAR PURPOSE.	See the GNU General Public License for more
+#    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 #    details.
 #
 #    You should have received a copy of the GNU General Public License along

@@ -33,7 +33,7 @@ from visa_messages import completion_and_error_messages \
 class Error(Exception):
     """Abstract basic exception class for this module."""
     def __init__(self, description):
-	Exception.__init__(self, description)
+        Exception.__init__(self, description)
 
 class VisaIOError(Error):
     """Exception class for VISA I/O errors.
@@ -43,9 +43,9 @@ class VisaIOError(Error):
 
     """
     def __init__(self, error_code):
-	abbreviation, description = _completion_and_error_messages[error_code]
-	Error.__init__(self, abbreviation + ": " + description)
-	self.error_code = error_code
+        abbreviation, description = _completion_and_error_messages[error_code]
+        Error.__init__(self, abbreviation + ": " + description)
+        self.error_code = error_code
 
 class VisaIOWarning(Warning):
     """Exception class for VISA I/O warnings.
@@ -54,7 +54,7 @@ class VisaIOWarning(Warning):
 
     """
     def __init__(self, description):
-	Warning.__init__(self, description)
+        Warning.__init__(self, description)
 
 class TypeError(Error):
     """Exception class for wrong types in VISA function argument lists.
@@ -68,7 +68,7 @@ class TypeError(Error):
 
     """
     def __init__(self, description):
-	Error.__init__(self, description)
+        Error.__init__(self, description)
 
 class UnknownHandler(Error):
     """Exception class for invalid handler data given to uninstall_handler().
@@ -79,9 +79,9 @@ class UnknownHandler(Error):
 
     """
     def __init__(self):
-	Error.__init__(self, "Handler with this handler function and user data"
-		       " not found")
+        Error.__init__(self, "Handler with this handler function and user data"
+                       " not found")
 
 class OSNotSupported(Error):
     def __init__(self, os):
-	Error.__init__(self, os + " is not yet supported by pyvisa")
+        Error.__init__(self, os + " is not yet supported by pyvisa")
