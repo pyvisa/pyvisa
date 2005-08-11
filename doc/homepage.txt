@@ -36,20 +36,24 @@ Controlling GPIB, RS232, and USB instruments
 PyVISA
 =======
 
-The PyVISA package is a VISA binding for Python.  In relies on an external
-library file that you can download from your interface vendor's web pages
-(National Instruments, Agilent, etc).  PyVISA implements a convenient and
-Pythonic access to this library in two layers:
+The PyVISA package enables you to control all kinds of measurement equipment
+through various buses (GPIB, RS232, USB) with Python programs.
+
+It is tailored to work on both Windows and Linux, and with arbitrary adapters
+(National Instruments, Agilent, Tektronics).  In order to achieve this, PyVISA
+relies on an external library file that you can download from your adapter
+vendor's web pages.
+
+PyVISA implements convenient and Pythonic programming in two layers:
 
 1. First, there is the lower level ``vpp43``, which directly calls the VISA
    functions from Python.  See the `PyVISA low-level implementation`_ for more
-   information.
+   information.  ``vpp43`` is only for people who need full control or the
+   official VISA functions for some reason.
 
-2. On top of it, an object-oriented Python module has been created called
-   ``visa`` simply.  In case of doubt, use ``visa`` because it is easier and
-   more convenient. ``vpp43`` is only for people who need full control or the
-   official VISA functions for some reason.  See the `PyVISA manual`_ for more
-   information.
+2. On top of it, an object-oriented Python module has been created simply
+   called ``visa``.  In case of doubt, use ``visa`` because it is easier and
+   more convenient.  See the `PyVISA manual`_ for more information.
 
 The `PyVISA project page`_ contains the bug tracker and the download area.
 
