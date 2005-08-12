@@ -40,9 +40,9 @@ The PyVISA package enables you to control all kinds of measurement equipment
 through various buses (GPIB, RS232, USB) with Python programs.
 
 It is tailored to work on both Windows and Linux, and with arbitrary adapters
-(National Instruments, Agilent, Tektronics).  In order to achieve this, PyVISA
-relies on an external library file that you can download from your adapter
-vendor's web pages.
+(e.g. National Instruments, Agilent, Tektronics).  In order to achieve this,
+PyVISA relies on an external library file that you can download from your
+adapter vendor's web pages.
 
 PyVISA implements convenient and Pythonic programming in two layers:
 
