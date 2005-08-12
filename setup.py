@@ -23,7 +23,7 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-from distutils.core import setup
+from setuptools import setup
 import distutils.dir_util
 import shutil, os.path, atexit
 
@@ -101,4 +101,5 @@ equipment via GPIB, RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
       package_dir = {'pyvisa': 'src'},
       package_data = {'pyvisa': ['doc/pyvisa.pdf', 'doc/vpp43.txt']},
       packages = ['pyvisa'],
+      platforms = "Linux, Windows",
       py_modules = ['visa'])
