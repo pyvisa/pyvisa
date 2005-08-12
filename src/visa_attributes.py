@@ -113,7 +113,7 @@ attributes_s = {
     'VI_ATTR_RSRC_IMPL_VERSION': \
     viAttrInfo(
     viRO, viGlobal, ViVersion,
-    _AttrRange(0, 0xFFFFFFFF),
+    _AttrRange(0, 0xFFFFFFFFL),
     'implementation version',
     "Resource version that uniquely identifies each of the different "\
     "revisions or implementations of a resource."
@@ -195,14 +195,14 @@ attributes_s = {
     #ASRL Specific INSTR Resource Attributes
     'VI_ATTR_ASRL_AVAIL_NUM': \
     viAttrInfo(
-    viRO, viGlobal, ViUInt32, None, #0 to 0xFFFFFFFF
+    viRO, viGlobal, ViUInt32, None, #0 to 0xFFFFFFFFL
     'number of bytes available at serial port',
     ""
     ),
 
     'VI_ATTR_ASRL_BAUD': \
     viAttrInfo(
-    viRW, viGlobal, ViUInt32, None, #0 to 0xFFFFFFFF
+    viRW, viGlobal, ViUInt32, None, #0 to 0xFFFFFFFFL
     'serial baud rate',
     ""
     ),
