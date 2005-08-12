@@ -1,0 +1,5 @@
+# Actually, it doesn't make much sense to include the ctypes dependancy here
+# since there isn't any ctypes egg yet.
+
+# ctypes >= 0.9.2
+
