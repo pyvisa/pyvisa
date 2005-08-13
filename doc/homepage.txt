@@ -21,9 +21,9 @@
 ..   Temple Place, Suite 330, Boston, MA 02111-1307 USA
 .. 
 
-===================================================
-PyVISA homepage -- GPIB etc. with Python
-===================================================
+==============================================
+Python GPIB etc. support with PyVISA
+==============================================
 
 -------------------------------------------------------
 Controlling GPIB, RS232, and USB instruments
@@ -46,14 +46,14 @@ adapter vendor's web pages.
 
 PyVISA implements convenient and Pythonic programming in two layers:
 
-1. First, there is the lower level ``vpp43``, which directly calls the VISA
-   functions from Python.  See the `PyVISA low-level implementation`_ for more
-   information.  ``vpp43`` is only for people who need full control or the
-   official VISA functions for some reason.
+1. An object-oriented Python module has been created simply called ``visa``.
+   It is the recommended way to use PyVISA.  See the `PyVISA manual`_ for more
+   information.
 
-2. On top of it, an object-oriented Python module has been created simply
-   called ``visa``.  In case of doubt, use ``visa`` because it is easier and
-   more convenient.  See the `PyVISA manual`_ for more information.
+2. Additionally, there is the lower level module ``vpp43``, which directly
+   calls the VISA functions from Python.  See the `PyVISA low-level
+   implementation`_ for more information.  ``vpp43`` is only for people who
+   need full control or the official VISA functions for some reason.
 
 The `PyVISA project page`_ contains the bug tracker and the download area.
 
