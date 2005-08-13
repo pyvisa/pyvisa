@@ -6,7 +6,9 @@ vpp43.html: vpp43.txt
 	rst2html.py vpp43.txt > vpp43.html
 
 index.html: homepage.txt
-	rst2html.py homepage.txt > index.html
+	rst2html.py homepage.txt | \
+	  sed -e "s%<meta name=\"author\" content=\"Torsten Bronger &lt;bronger&#64;physik.rwth-aachen.de&gt;\" />%\\0\n<meta name=\"keywords\" content=\"Python GPIB VISA USB RS232 data acquisition\" />%" \
+	  > index.html
 
 # I have to do the following in /tmp because latex2html doesn't want to work in
 # a path that contains a dot.  Unfortunately, the BUILD directory that
