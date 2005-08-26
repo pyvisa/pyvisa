@@ -91,7 +91,7 @@ Let's go \emph{in medias res} and have a look at a simple example:
 \begin{verbatim}
 from visa import *
 
-my_instrument = GpibInstrument(14)
+my_instrument = instrument("GPIB::14")
 my_instrument.write("*IDN?")
 print my_instrument.read()
 \end{verbatim}
@@ -102,8 +102,11 @@ Every instrument is represented in the source by an object instance.  In this ca
 I have a GPIB instrument with instrument number~14, so I create the instance
 (i.\,e.\ variable) called \var{my_instrument} accordingly:
 \begin{verbatim}
-my_instrument = GpibInstrument(14)
+my_instrument = instrument("GPIB::14")
 \end{verbatim}
+\code{"GPIB::14"} is the instrument's \emph{resource name}.  See
+section~\ref{sec:VISA-resource-names} for a short explanation of that.
+
 Then, I send the message ``*IDN?''\ to the device, which is the standard GPIB
 message for ``what are you?''\ or -- in some cases -- ``what's on your display
 at the moment?'':
@@ -124,7 +127,7 @@ code prints its self-identification on the screen:
 \begin{verbatim}
 from visa import *
 
-itc4 = Instrument("COM2", term_chars = CR)
+itc4 = instrument("COM2", term_chars = CR)
 itc4.write("V")
 print itc4.read()
 \end{verbatim}
@@ -133,7 +136,7 @@ Instead of separate write and read operations, you can do both with one
 \begin{verbatim}
 from visa import *
 
-itc4 = Instrument("COM2", term_chars = CR)
+itc4 = instrument("COM2", term_chars = CR)
 print itc4.ask("V")
 \end{verbatim}
 It couldn't be simpler.
@@ -149,9 +152,9 @@ program calculates the average voltage and prints it on the screen.
 I'll explain the program step-by-step.  First, we have to initialise the
 instrument:
 \begin{verbatim}
-from visa import GpibInstrument
+from visa import instrument
 
-keithley = GpibInstrument(12)
+keithley = instrument("GPIB::12")
 keithley.write("*rst; status:preset; *cls")
 \end{verbatim}
 Here, we create the instrument variable \var{keithley}, which is used for all
@@ -207,6 +210,72 @@ That's it.  18 lines of lucid code.  (Well, SCPI is awkward, but that's another
 story.)
 
 
+\subsection{VISA resource names}
+\label{sec:VISA-resource-names}
+
+If you use the function \function{instrument()}, you must tell this function
+the \emph{VISA resource name} of the instrument you want to connect to.
+
+Generally, it starts with the bus type, followed by a double colon~\samp{::},
+followed by the number within the bus.  For example,
+\begin{verbatim}
+GPIB::10
+\end{verbatim}
+denotes the GPIB instrument with the number~10.  If you have two GPIB boards
+and the instrument is connected to board number~1, you must write
+\begin{verbatim}
+GPIB1::10
+\end{verbatim}
+
+As for the bus, things like ``\code{GPIB}'', ``\code{USB}'', ``\code{ASRL}''
+(for serial/parallel interface) are possible.  So for connecting to an
+instrument at COM2, the resource name is
+\begin{verbatim}
+ASRL2
+\end{verbatim}
+(Since only one instrument can be connected with one serial interface, there is
+no double colon parameter.)  However, most VISA systems allow aliases such as
+\samp{COM2} or \samp{LPT1}.  You may also add your own aliases.
+
+The resource name is case-insensitive.  It doesn't matter whether you say
+\samp{ASRL2} or \samp{asrl2}.
+
+I have to refer you to a comprehensive VISA description like
+\url{http://www.ni.com/pdf/manuals/370423a.pdf} for further information.
+
+
+\section{Module functions}
+
+\begin{funcdesc}{get_instruments_list}{\optional{use_aliases}}
+  returns a list with all instruments that are known to the local VISA system.
+  If you're lucky, these are all instruments connected with the computer.
+
+  The boolean \var{use_aliases} is \code{True} by default, which means that the
+  more human-friendly aliases like ``\code{COM1}'' instead of ``\code{ASRL1}''
+  are returned.  With some VISA systems\footnote{such as the ``Measurement and
+    Automation Center'' by National Instruments} you can define your own
+  aliases for each device, e.\,g.\ ``\code{keithley617}'' for
+  ``\code{GPIB0::15::INSTR}''.  If \var{use_aliases} is \code{False}, only
+  standard resource names are returned.
+\end{funcdesc}
+
+\begin{funcdesc}{instrument}{resource_name\optional{, **keyw}}
+  returns an instrument variable for the instrument given by
+  \var{resource_name}.  It saves you from calling one of the instrument classes
+  directly by choosing the right one according to the type of the instrument.
+  So you have \emph{one} function to open \emph{all} of your instruments.
+
+  The parameter \var{resource_name} may be any valid VISA instrument resource
+  name, see section~\ref{sec:VISA-resource-names}.  In particular, you can use
+  a name returned by \function{get_instruments_list()} above.
+
+  All further keyword arguments given to this function are passed to the class
+  constructor of the respective instrument class.  See
+  section~\ref{sec:general-devices} for a table with all allowed keyword
+  arguments and their meanings.
+\end{funcdesc}
+
+
 \section{Module classes}
 
 \subsection{General devices}
@@ -248,16 +317,6 @@ story.)
   see~\citetitle[http://pyvisa.sourceforge.net/vpp43.html]{The VISA library
     implementation}.
 \end{classdesc}
-
-For example, the above mentioned GPIB instrument with number~14 could also be
-created with
-\begin{verbatim}
-my_instrument = Instrument("GPIB::14")
-\end{verbatim}
-or even more explicitly with
-\begin{verbatim}
-my_instrument = Instrument("GPIB0::14::INSTR")
-\end{verbatim}
 
 The class \class{Instrument} defines the following methods and attributes:
 
@@ -419,7 +478,7 @@ indefinitely if necessary.
 The default timeout is 5~seconds, but you can change it when creating the
 device object:
 \begin{verbatim}
-my_instrument = Instrument("ASRL1", timeout = 8)
+my_instrument = instrument("ASRL1", timeout = 8)
 \end{verbatim}
 This creates the object variable \var{my_instrument} and sets its timeout to
 5~seconds.  In this context, a timeout value of \code{None} is allowed, which
@@ -474,7 +533,7 @@ PyVISA currently supports three forms of transfers:
 You can set the form of transfer with the property \code{values_format}, either
 with the generation of the object,
 \begin{verbatim}
-my_instrument = GpibInstrument(12, values_format = single)
+my_instrument = instrument("GPIB::12", values_format = single)
 \end{verbatim}
 or later by setting the property directly:
 \begin{verbatim}
@@ -489,7 +548,7 @@ call this ``swapped'' byte order.  However, there is also big-endian byte
 order.  In this case you have to append \samp{| big_endian} to your values
 format:
 \begin{verbatim}
-my_instrument = GpibInstrument(12, values_format = single | big_endian)
+my_instrument = instrument("GPIB::12", values_format = single | big_endian)
 \end{verbatim}
 
 
@@ -531,7 +590,7 @@ my_instrument.term_chars = CR
 \end{verbatim}
 Alternatively you can give it when creating your instrument object:
 \begin{verbatim}
-my_instrument = Instrument("GPIB::10", term_chars = CR)
+my_instrument = instrument("GPIB::10", term_chars = CR)
 \end{verbatim}
 The default value depends on the bus system.  Generally, the sequence is empty,
 in particular for GPIB\@.  For RS232 (once it's got its own class), it'll
@@ -551,28 +610,12 @@ other interfaces.
 The argument \code{delay} is the time in seconds to wait after each write
 operation.  So you could write:
 \begin{verbatim}
-my_instrument = Instrument("GPIB::10", term_chars = CR, send_end = False,
-                           delay = 1.2")
+my_instrument = instrument("GPIB::10", term_chars = CR, send_end = False,
+                           delay = 1.2)
 \end{verbatim}
 This will set the delay to 1.2~seconds, and the EOI line is omitted.  By the
 way, omitting EOI is \emph{not} recommended, so if you omit it nevertheless,
 you should know what you're doing.
-
-
-\section{Module functions}
-
-\begin{funcdesc}{get_instruments_list}{\optional{use_aliases}}
-  returns a list with all instruments that are known to the local VISA system.
-  If you're lucky, these are all instruments connected with the computer.
-
-  The boolean \var{use_aliases} is \code{True} by default, which means that the
-  more human-friendly aliases like ``\code{COM1}'' instead of ``\code{ASRL1}''
-  are returned.  With some VISA systems\footnote{such as the ``Measurement and
-    Automation Center'' by National Instruments} you can define your own
-  aliases for each device, e.\,g.\ ``\code{keithley617}'' for
-  ``\code{GPIB0::15::INSTR}''.  If \var{use_aliases} is \code{False}, only
-  standard resource names are returned.
-\end{funcdesc}
 
 
 \section{Mixing with direct VISA commands}
@@ -718,4 +761,4 @@ bugs there.  \textbf{I'm also very keen to know whether PyVISA works for you or
 
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
 % LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
-% LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC DLLs
+% LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC DLLs asrl
