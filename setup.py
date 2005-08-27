@@ -24,6 +24,7 @@
 #
 
 from setuptools import setup
+# from distutils.core import setup
 import distutils.dir_util
 import shutil, os.path, atexit
 
