@@ -240,8 +240,11 @@ no double colon parameter.)  However, most VISA systems allow aliases such as
 The resource name is case-insensitive.  It doesn't matter whether you say
 \samp{ASRL2} or \samp{asrl2}.
 
-I have to refer you to a comprehensive VISA description like
-\url{http://www.ni.com/pdf/manuals/370423a.pdf} for further information.
+\begin{raggedright}
+For further information, I have to refer you to a comprehensive VISA
+description like \url{http://www.ni.com/pdf/manuals/370423a.pdf}.
+
+\end{raggedright}
 
 
 \section{Module functions}
@@ -303,7 +306,7 @@ I have to refer you to a comprehensive VISA description like
     \lineii{values_format}{Data format for lists of read values, see
       section~\ref{sec:reading-binary-data}. Default: \code{ascii}}
     \lineii{term_char}{termination characters, see
-      section~\ref{sec:termchars}. Default: \code{""} \emph{(empty)}}
+      section~\ref{sec:termchars}. Default: \code{None}}
     \lineii{send_end}{whether to assert END after each write operation, see
       section~\ref{sec:termchars}. Default: \code{True}}
     \lineii{delay}{delay in seconds after each write operation, see
@@ -596,16 +599,27 @@ The default value depends on the bus system.  Generally, the sequence is empty,
 in particular for GPIB\@.  For RS232 (once it's got its own class), it'll
 be~\code{LF}\@.
 
+Well, the real default is not \code{""} (the empty string) but \code{None}.
+There is a subtle difference: \code{""} really means the termination characters
+are not used at all, neither for read nor for write operations.  In contrast,
+\code{None} means that every write operation is implicitly terminated with
+\code{CR}\@.  This works well with most instruments.
+
+All CRs and LFs are stripped from the end of a read string, no matter how
+\var{term_chars} is set.
+
 The termination characters sequence is an ordinary string.  \code{CR} and
 \code{LF} are just string constants that allow readable access to \verb|"\r"|
 and~\verb|"\n"|.  Therefore, instead of \code{CR+LF}, you can also write
 \verb|"\r\n"|, whichever you like more.
 
-There are two further options related to this topic, namely \code{send_end} and
-\code{delay}.  \code{send_end} is a boolean.  If it's \code{True} (the
-default), the EOI line is asserted after each write operation, signalling the
-end of the operation.  EOI is GPIB-specific but similar action is taken for
-other interfaces.
+\subsubsection{``delay'' and ``send\_end''}
+
+There are two further options related to message termination, namely
+\code{send_end} and \code{delay}.  \code{send_end} is a boolean.  If it's
+\code{True} (the default), the EOI line is asserted after each write operation,
+signalling the end of the operation.  EOI is GPIB-specific but similar action
+is taken for other interfaces.
 
 The argument \code{delay} is the time in seconds to wait after each write
 operation.  So you could write:
@@ -761,4 +775,4 @@ bugs there.  \textbf{I'm also very keen to know whether PyVISA works for you or
 
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
 % LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
-% LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC DLLs asrl
+% LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC DLLs asrl CRs LFs
