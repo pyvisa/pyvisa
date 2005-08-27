@@ -187,6 +187,29 @@ def get_instruments_list(use_aliases=True):
             result.append(resource_name[:-7])
     return result
 
+def instrument(resource_name, **keyw):
+    """Factory function for instrument instances.
+
+    Parameters:
+    resource_name -- the VISA resource name of the device.  It may be an
+        alias.
+    keyw -- keyword argument for the class constructor of the device instance
+        to be generated.
+
+    Return value:
+    The generated instrument instance.
+
+    """
+    interface_type, interface_board_number, resource_class, \
+        unaliased_expanded_resource_name, alias_if_exists  = \
+        vpp43.parse_resource_extended(resource_manager.session, resource_name)
+    if resource_class.upper() != "INSTR":
+        raise "given resource was not an INSTR but %s" % resource_class
+    if interface_type == VI_INTF_GPIB:
+        return GpibInstrument(resource_name, **keyw)
+    else:
+        return Instrument(resource_name, **keyw)
+
 
 # The bits in the bitfield mean the following:
 #
@@ -255,7 +278,7 @@ class Instrument(ResourceTemplate):
         if self.resource_class != "INSTR":
             raise "resource is not an instrument"
     def __repr__(self):
-        return "Instrument(%s)" % self.resource_name
+        return "Instrument(\"%s\")" % self.resource_name
     def write(self, message):
         """Write a string message to the device.
 
@@ -431,7 +454,7 @@ class GpibInstrument(Instrument):
             instrument's GPIB number.
         board_number -- (default: 0) the number of the GPIB bus.
 
-        Other keyword arguments are passed to the constructor of class
+        Further keyword arguments are passed to the constructor of class
         Instrument.
 
         """
@@ -504,7 +527,7 @@ class Interface(ResourceTemplate):
         if self.resource_class != "INTFC":
             raise "resource is not an interface"
     def __repr__(self):
-        return "Interface(%s)" % self.resource_name
+        return "Interface(\"%s\")" % self.resource_name
 
 class Gpib(Interface):
     """Class for GPIB interfaces (rather than instruments)."""
@@ -519,7 +542,7 @@ class Gpib(Interface):
         Interface.__init__(self, "GPIB" + str(board_number))
         self.board_number = board_number
     def __repr__(self):
-        return "Gpib(%s)" % self.board_number
+        return "Gpib(%d)" % self.board_number
     def send_ifc(self):
         """Send "interface clear" signal to the GPIB."""
         vpp43.gpib_send_ifc(self.vi)
