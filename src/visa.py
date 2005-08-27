@@ -237,7 +237,7 @@ class Instrument(ResourceTemplate):
 
     """
     chunk_size = 20*1024   # How many bytes are read per low-level call
-    __term_chars = ""      # See below
+    __term_chars = None    # See below
     delay = 0.0            # Seconds to wait after each high-level write
     values_format = ascii  # floating point data value format
     def __init__(self, resource_name, **keyw):
@@ -269,7 +269,7 @@ class Instrument(ResourceTemplate):
         ResourceTemplate.__init__(self, resource_name,
                                   **_filter_keyword_arguments(keyw, ("timeout",
                                                                      "lock")))
-        self.term_chars    = keyw.get("term_chars", "")
+        self.term_chars    = keyw.get("term_chars")
         self.chunk_size    = keyw.get("chunk_size", self.chunk_size)
         self.delay         = keyw.get("delay", 0.0)
         self.send_end      = keyw.get("send_end", True)
@@ -287,14 +287,15 @@ class Instrument(ResourceTemplate):
             to it, unless they are already.
 
         """
-        if self.__term_chars and \
-           not message.endswith(self.__term_chars):
+        if self.__term_chars and not message.endswith(self.__term_chars):
             message += self.__term_chars
+        elif self.__term_chars is None and not message.endswith(CR):
+            message += CR
         vpp43.write(self.vi, message)
         if self.delay > 0.0:
             time.sleep(self.delay)
     def _strip_term_chars(self, buffer):
-        if self.__term_chars != "":
+        if self.__term_chars:
             if buffer.endswith(self.__term_chars):
                 buffer = buffer[:-len(self.__term_chars)]
             else:
@@ -399,7 +400,8 @@ class Instrument(ResourceTemplate):
         # First, reset termination characters, in case something bad happens.
         self.__term_chars = ""
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
-        if term_chars == "":
+        if term_chars == "" or term_chars == None:
+            self.__term_chars = term_chars
             return
         # Only the last character in term_chars is the real low-level
         # termination character, the rest is just used for verification after
@@ -416,7 +418,7 @@ class Instrument(ResourceTemplate):
         """Return the current termination characters for the device."""
         return self.__term_chars
     def __del_term_chars(self):
-        self.term_chars = ""
+        self.term_chars = None
     term_chars = property(__get_term_chars, __set_term_chars, __del_term_chars)
     r"""Set or read a new termination character sequence (property).
 
@@ -426,7 +428,9 @@ class Instrument(ResourceTemplate):
     CR.  If you assign "" to this property, the termination sequence is
     deleted.
 
-    The default is "".
+    The default is None, which means that CR is appended to each write
+    operation but not expected after each read operation (but stripped if
+    present).
 
     """
     def __set_send_end(self, send):
