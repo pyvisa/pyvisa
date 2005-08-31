@@ -23,6 +23,30 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
+"""Top-level module of PyVISA with object-oriented layer on top of the original
+VISA functions (in vpp43.py).  See http://pyvisa.sourceforge.net/pyvisa/ for
+details.
+
+Exported functions:
+
+get_instruments_list() -- return a list with all found instruments
+instrument() -- factory function for creating instrument instances
+
+Exported classes:
+
+ResourceTemplate -- abstract base class of the VISA implementation
+ResourceManager -- singleton class for the default resource manager
+Instrument -- generic class for all kinds of Instruments
+GpibInstrument -- class for GPIB instruments
+Interface -- base class for GPIB interfaces (rather than instruments)
+Gpib -- class for GPIB interfaces (rather than instruments)
+
+Exported variables:
+
+resource_manager -- the single instance of ResourceManager.
+
+"""
+
 __version__ = "$Revision$"
 # $Source$
 
@@ -68,15 +92,28 @@ def _filter_keyword_arguments(keyw, selected_keys):
     return result
 
 class ResourceTemplate(object):
-    import vpp43 as _vpp43
     """The abstract base class of the VISA implementation.  It covers
     life-cycle services: opening and closing of vi's.
 
     Don't instantiate it!
 
     """
+    import vpp43 as _vpp43  # Needed for finishing the object safely.
     vi = None
+    """VISA handle of the resource"""
     def __init__(self, resource_name=None, **keyw):
+        """ResourceTemplate class constructor.  It opens a session to the
+        resource.
+
+        Parameters:
+        resource_name -- (optional) the VISA name for the resource,
+            e.g. "GPIB::10".  If "None", it's assumed that the resource manager
+            is to be constructed.
+        keyw -- keyword argument for the class constructor of the device instance
+            to be generated.  Allowed arguments: lock, timeout.  See Instrument
+            class for a detailed description.
+
+        """
         _warn_for_invalid_keyword_arguments(keyw, ("lock", "timeout"))
         if self.__class__ is ResourceTemplate:
             raise TypeError, "trying to instantiate an abstract class"
@@ -126,14 +163,29 @@ class ResourceTemplate(object):
     def __del_timeout(self):
         timeout = self.__get_timeout()  # just to test whether it's defined
         vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
-    timeout = property(__get_timeout, __set_timeout, __del_timeout, None)
+    timeout = property(__get_timeout, __set_timeout, __del_timeout,
+        """The timeout in seconds for all resource I/O operations.
+
+        Note that the VISA library may round up this value heavily.  I
+        experienced that my NI VISA implementation had only the values 0, 1, 3
+        and 10 seconds.
+
+        """)
     def __get_resource_class(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
-    resource_class = property(__get_resource_class, None, None, None)
+    resource_class = property(__get_resource_class, None, None,
+        """The resource class of the resource as a string.""")
     def __get_resource_name(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
-    resource_name = property(__get_resource_name, None, None, None)
+    resource_name = property(__get_resource_name, None, None,
+        """The VISA resource name of the resource as a string.""")
     def close(self):
+        """Closes the VISA session and marks the handle as invalid.
+
+        This method can be called to ensure that all resources are freed.
+        Finishing the object by __del__ seems to work safely enough though.
+
+        """
         if self.vi is not None:
             self._vpp43.close(self.vi)
             self.vi = None
@@ -142,7 +194,11 @@ class ResourceTemplate(object):
 class ResourceManager(vpp43.Singleton, ResourceTemplate):
     """Singleton class for the default resource manager."""
     def init(self):
-        """Singleton class constructor."""
+        """Singleton class constructor.
+
+        See vpp43.Singleton for details.
+
+        """
         ResourceTemplate.__init__(self)
         # I have "session" as an alias because the specification calls the "vi"
         # handle "session" for the resource manager.
@@ -151,9 +207,10 @@ class ResourceManager(vpp43.Singleton, ResourceTemplate):
         return "ResourceManager()"
 
 resource_manager = ResourceManager()
+"""The global resource manager instance.  Exactly one is needed."""
 
 def _destroy_resource_manager():
-    # delete self-reference
+    # delete self-reference for clean finishing
     del ResourceManager.__it__
 atexit.register(_destroy_resource_manager)
 
@@ -195,7 +252,7 @@ def instrument(resource_name, **keyw):
     resource_name -- the VISA resource name of the device.  It may be an
         alias.
     keyw -- keyword argument for the class constructor of the device instance
-        to be generated.
+        to be generated.  See the class Instrument for further information.
 
     Return value:
     The generated instrument instance.
@@ -237,17 +294,21 @@ class Instrument(ResourceTemplate):
     of its child classes.
 
     """
-    chunk_size = 20*1024   # How many bytes are read per low-level call
-    __term_chars = None    # See below
-    delay = 0.0            # Seconds to wait after each high-level write
-    values_format = ascii  # floating point data value format
+    chunk_size = 20*1024
+    """How many bytes are read per low-level call"""
+    __term_chars = None
+    """Termination character sequence.  See below."""
+    delay = 0.0
+    """Seconds to wait after each high-level write"""
+    values_format = ascii
+    """floating point data value format"""
     def __init__(self, resource_name, **keyw):
         """Constructor method.
 
         Parameters:
         resource_name -- the instrument's resource name or an alias, may be
             taken from the list from get_instruments_list().
-        
+
         Keyword arguments:
         timeout -- the VISA timeout for each low-level operation in
             milliseconds.
@@ -277,8 +338,8 @@ class Instrument(ResourceTemplate):
         self.values_format = keyw.get("values_format", self.values_format)
         # I validate the resource class by requesting it from the instrument
         if self.resource_class != "INSTR":
-            raise ValueError "given resource was not an INSTR but %s" \
-                             % self.resource_class
+            raise ValueError, "given resource was not an INSTR but %s" \
+                              % self.resource_class
     def __repr__(self):
         return "Instrument(\"%s\")" % self.resource_name
     def write(self, message):
@@ -305,6 +366,12 @@ class Instrument(ResourceTemplate):
                               "termination characters", stacklevel = 2)
         return buffer.rstrip(CR+LF)
     def read_raw(self):
+        """Read the unmodified string sent from the instrument to the computer.
+
+        In contrast to read(), no termination characters are checked or
+        stripped.  You get the pristine message.
+
+        """
         warnings.filterwarnings("ignore", "VI_SUCCESS_MAX_CNT")
         try:
             buffer = ""
@@ -326,6 +393,8 @@ class Instrument(ResourceTemplate):
         is compared to the ending of the read string message.  If they don't
         match, a warning is issued.
 
+        All line-ending characters are stripped from the end of the string.
+
         Parameters: None
 
         Return value:
@@ -334,6 +403,18 @@ class Instrument(ResourceTemplate):
         """
         return self._strip_term_chars(self.read_raw())
     def read_values(self, format=None):
+        """Read a list of floating point values from the device.
+
+        Parameters:
+        format -- (optional) the format of the values.  If given, it overrides
+            the class attribute "values_format".  Possible values are bitwise
+            disjunctions of the above constants ascii, single, double, and
+            big_endian.  Default is ascii.
+
+        Return value:
+        The list with the read values.
+
+        """
         if not format:
             format = self.values_format
         if format & 0x01 == ascii:
@@ -381,13 +462,16 @@ class Instrument(ResourceTemplate):
             raise InvalidBinaryFormat, "binary data itself was malformed"
         return result
     def read_floats(self):
+        """This method is deprecated.  Use read_values() instead."""
         warnings.warn("read_floats() is deprecated.  Use read_values()",
                       stacklevel = 2)
         return self.read_values(format=ascii)
     def ask(self, message):
+        """A combination of write(message) and read()"""
         self.write(message)
         return self.read()
     def ask_for_values(self, message, format=None):
+        """A combination of write(message) and read_values()"""
         self.write(message)
         return self.read_values(format)
     def clear(self):
@@ -422,20 +506,20 @@ class Instrument(ResourceTemplate):
         return self.__term_chars
     def __del_term_chars(self):
         self.term_chars = None
-    term_chars = property(__get_term_chars, __set_term_chars, __del_term_chars)
-    r"""Set or read a new termination character sequence (property).
+    term_chars = property(__get_term_chars, __set_term_chars, __del_term_chars,
+        r"""Set or read a new termination character sequence (property).
 
-    Normally, you just give the new termination sequence, which is appended to
-    each write operation (unless it's already there), and expected as the
-    ending mark during each read operation.  A typical example is CR+LF or just
-    CR.  If you assign "" to this property, the termination sequence is
-    deleted.
+        Normally, you just give the new termination sequence, which is appended
+        to each write operation (unless it's already there), and expected as
+        the ending mark during each read operation.  A typical example is CR+LF
+        or just CR.  If you assign "" to this property, the termination
+        sequence is deleted.
 
-    The default is None, which means that CR is appended to each write
-    operation but not expected after each read operation (but stripped if
-    present).
+        The default is None, which means that CR is appended to each write
+        operation but not expected after each read operation (but stripped if
+        present).
 
-    """
+        """)
     def __set_send_end(self, send):
         if send:
             vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
@@ -443,7 +527,11 @@ class Instrument(ResourceTemplate):
             vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_FALSE)
     def __get_send_end(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_TRUE
-    send_end = property(__get_send_end, __set_send_end)
+    send_end = property(__get_send_end, __set_send_end, None,
+        """Whether or not to assert EOI (or something equivalent after each write
+        operation.
+
+        """)
 
 class GpibInstrument(Instrument):
     """Class for GPIB instruments.
@@ -493,6 +581,16 @@ class GpibInstrument(Instrument):
         self._vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
         self._vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
     def wait_for_srq(self, timeout=25):
+        """Wait for a serial request (SRQ) coming from the instrument.
+
+        Note that this method is not ended when *another* instrument signals an
+        SRQ, only *this* instrument.
+
+        Parameters:
+        timeout -- (optional) the maximal waiting time in seconds.  The default
+            value is 25 (seconds).  "None" means waiting forever if necessary.
+
+        """
         vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
         if timeout and not(0 <= timeout <= 4294967):
             raise ValueError, "timeout value is invalid"
@@ -534,8 +632,8 @@ class Interface(ResourceTemplate):
         ResourceTemplate.__init__(self, interface_name)
         # I validate the resource class by requesting it from the interface
         if self.resource_class != "INTFC":
-            raise ValueError "resource is not an INTFC but %s"\
-                             % self.resource_class
+            raise ValueError, "resource is not an INTFC but %s"\
+                              % self.resource_class
     def __repr__(self):
         return "Interface(\"%s\")" % self.resource_name
 
@@ -547,7 +645,7 @@ class Gpib(Interface):
         Parameters:
         board_number -- integer denoting the number of the GPIB board, defaults
             to 0.
-        
+
         """
         Interface.__init__(self, "GPIB" + str(board_number))
         self.board_number = board_number
@@ -557,7 +655,7 @@ class Gpib(Interface):
         """Send "interface clear" signal to the GPIB."""
         vpp43.gpib_send_ifc(self.vi)
 
-def testpyvisa():
+def _test_pyvisa():
     print "Test start"
     keithley = GpibInstrument(12)
     milliseconds = 500
@@ -570,4 +668,4 @@ def testpyvisa():
     print "Test end"
 
 if __name__ == '__main__':
-    testpyvisa()
+    _test_pyvisa()
