@@ -56,7 +56,7 @@ class VisaIOWarning(Warning):
     def __init__(self, description):
         Warning.__init__(self, description)
 
-class TypeError(Error):
+class VisaTypeError(Error):
     """Exception class for wrong types in VISA function argument lists.
 
     Raised if unsupported types are given to scanf, sscanf, printf, sprintf,
@@ -84,4 +84,10 @@ class UnknownHandler(Error):
 
 class OSNotSupported(Error):
     def __init__(self, os):
-        Error.__init__(self, os + " is not yet supported by pyvisa")
+        Error.__init__(self, os + " is not yet supported by PyVISA")
+
+class InvalidBinaryFormat(Error):
+    def __init__(self, description = ""):
+        if description:
+            description = ": " + description
+        Error.__init__(self, "unrecognized binary data format" + description)
