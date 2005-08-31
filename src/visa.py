@@ -23,6 +23,9 @@
 #    Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
+__version__ = "$Revision$"
+# $Source$
+
 import vpp43
 from vpp43_constants import *
 from visa_exceptions import *
@@ -95,8 +98,7 @@ class ResourceTemplate(object):
                     except VisaIOError, error:
                         if error.error_code == VI_ERROR_NLISTENERS:
                             continue
-                        else:
-                            raise
+                        else: raise
                     break
                 else:
                     # Very last chance, this time without exception handling
@@ -114,12 +116,12 @@ class ResourceTemplate(object):
         self.close()
     def __set_timeout(self, timeout=5):
         if not(0 <= timeout <= 4294967):
-            raise ValueError("timeout value is invalid")
+            raise ValueError, "timeout value is invalid"
         vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
     def __get_timeout(self):
         timeout = vpp43.get_attribute(self.vi, VI_ATTR_TMO_VALUE)
         if timeout == VI_TMO_INFINITE:
-            raise NameError("no timeout is specified")
+            raise NameError, "no timeout is specified"
         return timeout / 1000.0
     def __del_timeout(self):
         timeout = self.__get_timeout()  # just to test whether it's defined
@@ -178,8 +180,7 @@ def get_instruments_list(use_aliases=True):
     # Otherwise, truncate the "::INSTR".
     result = []
     for resource_name in resource_names:
-        interface_type, interface_board_number, resource_class, \
-         unaliased_expanded_resource_name, alias_if_exists  = \
+        _, _, _, _, alias_if_exists  = \
          vpp43.parse_resource_extended(resource_manager.session, resource_name)
         if alias_if_exists and use_aliases:
             result.append(alias_if_exists)
@@ -200,11 +201,11 @@ def instrument(resource_name, **keyw):
     The generated instrument instance.
 
     """
-    interface_type, interface_board_number, resource_class, \
-        unaliased_expanded_resource_name, alias_if_exists  = \
+    interface_type, _, resource_class, _, _  = \
         vpp43.parse_resource_extended(resource_manager.session, resource_name)
     if resource_class.upper() != "INSTR":
-        raise "given resource was not an INSTR but %s" % resource_class
+        raise ValueError, "given resource was not an INSTR but %s" \
+                          % resource_class
     if interface_type == VI_INTF_GPIB:
         return GpibInstrument(resource_name, **keyw)
     else:
@@ -276,7 +277,8 @@ class Instrument(ResourceTemplate):
         self.values_format = keyw.get("values_format", self.values_format)
         # I validate the resource class by requesting it from the instrument
         if self.resource_class != "INSTR":
-            raise "resource is not an instrument"
+            raise ValueError "given resource was not an INSTR but %s" \
+                             % self.resource_class
     def __repr__(self):
         return "Instrument(\"%s\")" % self.resource_name
     def write(self, message):
@@ -348,7 +350,7 @@ class Instrument(ResourceTemplate):
             self.term_chars = original_term_chars
         hash_sign_position = data.find("#")
         if hash_sign_position == -1 or len(data) - hash_sign_position < 2:
-            raise "unrecognized binary data format"
+            raise InvalidBinaryFormat
         data = data[hash_sign_position:]
         if data[1].isdigit() and int(data[1]) > 0:
             number_of_digits = int(data[1])
@@ -361,7 +363,7 @@ class Instrument(ResourceTemplate):
             data = data[2:-1]
             data_length = len(data)
         else:
-            raise "unrecognized binary data format"
+            raise InvalidBinaryFormat
         if format & 0x04 == big_endian:
             endianess = ">"
         else:
@@ -374,9 +376,9 @@ class Instrument(ResourceTemplate):
                 result = list(struct.unpack(endianess +
                                             str(data_length/8) + "d", data))
             else:
-                raise "unknown data values format requested"
+                raise ValueError, "unknown data values format requested"
         except struct.error:
-            raise "binary data was malformed"
+            raise InvalidBinaryFormat, "binary data itself was malformed"
         return result
     def read_floats(self):
         warnings.warn("read_floats() is deprecated.  Use read_values()",
@@ -389,6 +391,7 @@ class Instrument(ResourceTemplate):
         self.write(message)
         return self.read_values(format)
     def clear(self):
+        """Resets the device.  This operation is highly bus-dependent."""
         vpp43.clear(self.vi)
     def trigger(self):
         """Sends a software trigger to the device."""
@@ -410,7 +413,7 @@ class Instrument(ResourceTemplate):
         # Consequently, it's illogical to have the real termination character
         # twice in the sequence (otherwise reading would stop prematurely).
         if term_chars[:-1].find(last_char) != -1:
-            raise "ambiguous ending in termination characters"
+            raise ValueError, "ambiguous ending in termination characters"
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR, ord(last_char))
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_TRUE)
         self.__term_chars = term_chars
@@ -478,19 +481,21 @@ class GpibInstrument(Instrument):
         if not re.match(r"(visa://[a-z0-9/]+/)?GPIB[0-9]?"
                         "::[0-9]+(::[0-9]+)?::INSTR$",
                         resource_name, re.IGNORECASE):
-            raise "invalid GPIB instrument"
+            raise ValueError, "device is not a GPIB instrument"
         vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
     def __del__(self):
         if self.vi is not None:
             self.__switch_events_off()
             Instrument.__del__(self)
+    def __repr__(self):
+        return "GpibInstrument(\"%s\")" % self.resource_name
     def __switch_events_off(self):
         self._vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
         self._vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
     def wait_for_srq(self, timeout=25):
         vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
         if timeout and not(0 <= timeout <= 4294967):
-            raise ValueError("timeout value is invalid")
+            raise ValueError, "timeout value is invalid"
         starting_time = time.clock()
         while True:
             if timeout is None:
@@ -529,7 +534,8 @@ class Interface(ResourceTemplate):
         ResourceTemplate.__init__(self, interface_name)
         # I validate the resource class by requesting it from the interface
         if self.resource_class != "INTFC":
-            raise "resource is not an interface"
+            raise ValueError "resource is not an INTFC but %s"\
+                             % self.resource_class
     def __repr__(self):
         return "Interface(\"%s\")" % self.resource_name
 
@@ -559,7 +565,7 @@ def testpyvisa():
     keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
     keithley.trigger()
     keithley.wait_for_srq()
-    print keithley.read_values()
+    voltages = keithley.read_values()
     print "Average: ", sum(voltages) / len(voltages)
     print "Test end"
 
