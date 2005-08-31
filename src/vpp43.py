@@ -382,7 +382,7 @@ def convert_argument_list(original_arguments):
         elif isinstance(argument, str):    
             converted_arguments.append(argument)
         else:
-            raise visa_exceptions.TypeError, \
+            raise visa_exceptions.VisaTypeError, \
                 "Invalid type in scanf/printf: %s" % type(argument)
     return tuple(converted_arguments)
 
@@ -412,7 +412,7 @@ def convert_to_byref(byvalue_arguments, buffer_length):
         elif isinstance(byvalue_arguments[i], (c_long, c_double)):
             converted_arguments.append(byref(byvalue_arguments[i]))
         else:
-            raise visa_exceptions.TypeError, \
+            raise visa_exceptions.VisaTypeError, \
                 "Invalid type in scanf: %s" % type(argument)
     return tuple(converted_arguments)
         
@@ -609,7 +609,7 @@ def install_handler(vi, event_type, handler, user_handle = None):
                 converted_user_handle = \
                     (c_long * len(user_handle))(*tuple(user_handle))
         else:
-            raise visa_exceptions.TypeError, \
+            raise visa_exceptions.VisaTypeError, \
                 "Type not allowed as user handle: %s" % type(user_handle)
     visa_library.set_user_handle_type(converted_user_handle)
     converted_handler = ViHndlr(handler)
