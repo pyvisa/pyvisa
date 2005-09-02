@@ -35,6 +35,16 @@
 
 \date{30 August 2005}
 
+% \ifpdf{%
+%   \usepackage{hyperref}
+%   \hypersetup{%
+%     pdfauthor={Torsten Bronger},%
+%     pdftitle={PyVISA},%
+%     pdfsubject={The PyVISA manual},%
+%     pdfkeywords={Python,VISA,PyVISA,GPIB,USB,data acquisition,measurements}
+%   }
+% }%
+
 \makeindex
 
 \begin{document}
@@ -78,12 +88,6 @@ positive reports from National instruments adapters and the Agilent~82357\,A\@.
   \tableofcontents
 \end{samepage}
 
-\declaremodule{extension}{pyvisa}
-  \platform{Linux,Windows}
-\modulesynopsis{Controlling measurement and test equipment using VISA.}
-\moduleauthor{Gregor Thalhammer}{gth@users.sourceforge.net}
-\moduleauthor{Torsten Bronger}{bronger@physik.rwth-aachen.de}
-\sectionauthor{Torsten Bronger}{bronger@physik.rwth-aachen.de}
 
 \section{An example}
 
@@ -148,6 +152,7 @@ It couldn't be simpler.
 The following example shows how to use SCPI commands with a Keithley 2000
 multimeter in order to measure 10~voltages.  After having read them, the
 program calculates the average voltage and prints it on the screen.
+\index{SCPI}
 
 I'll explain the program step-by-step.  First, we have to initialise the
 instrument:
@@ -247,7 +252,20 @@ description like \url{http://www.ni.com/pdf/manuals/370423a.pdf}.
 \end{raggedright}
 
 
-\section{Module functions}
+\section{\module{visa} --- module contents}
+
+\declaremodule{module}{visa}
+  \platform{Linux,Windows}
+\modulesynopsis{Controlling measurement and test equipment using VISA.}
+\moduleauthor{Gregor Thalhammer}{gth@users.sourceforge.net}
+\moduleauthor{Torsten Bronger}{bronger@physik.rwth-aachen.de}
+\sectionauthor{Torsten Bronger}{bronger@physik.rwth-aachen.de}
+
+This section is a reference to the functions and classes of the \module{visa}
+module, which is the main module of the PyVISA package.
+
+
+\subsection{Module functions}
 
 \begin{funcdesc}{get_instruments_list}{\optional{use_aliases}}
   returns a list with all instruments that are known to the local VISA system.
@@ -279,9 +297,10 @@ description like \url{http://www.ni.com/pdf/manuals/370423a.pdf}.
 \end{funcdesc}
 
 
-\section{Module classes}
+\subsection{Module classes}
 
-\subsection{General devices}
+
+\subsubsection{General devices}
 \label{sec:general-devices}
 
 \begin{classdesc}{Instrument}{resource_name\optional{, **keyw}}
@@ -398,7 +417,7 @@ The class \class{Instrument} defines the following methods and attributes:
 \end{memberdesc}
 
 
-\subsection{GPIB devices}
+\subsubsection{GPIB devices}
 \label{sec:gpib-devices}
 
 \begin{classdesc}{GpibInstrument}{gpib_identifier\optional{,
@@ -457,6 +476,9 @@ IFC signal just by saying \samp{Gpib().send_ifc()}.
 \end{notice}
 
 
+\section{Properties of instrument variables}
+
+
 \subsection{Timeouts}
 \label{sec:timeouts}
 
@@ -486,6 +508,10 @@ my_instrument = instrument("ASRL1", timeout = 8)
 This creates the object variable \var{my_instrument} and sets its timeout to
 5~seconds.  In this context, a timeout value of \code{None} is allowed, which
 removes the timeout for this device.
+
+Note that your local VISA library may round up this value heavily.  I
+experienced this effect with my National Instruments VISA implementation, which
+rounds off to 0, 1, 3 and 10~seconds.
 
 
 \subsection{Chunk length}
@@ -769,7 +795,9 @@ Thalhammer.
 
 Its homepage is \url{http://sourceforge.net/projects/pyvisa/}.  Please report
 bugs there.  \textbf{I'm also very keen to know whether PyVISA works for you or
-  not.  Thank you!}  
+  not.  Thank you!}
+
+\input{\jobname.ind}
 
 \end{document}
 
