@@ -108,6 +108,7 @@ I have a GPIB instrument with instrument number~14, so I create the instance
 \begin{verbatim}
 my_instrument = instrument("GPIB::14")
 \end{verbatim}
+\ttindex{instrument()}
 \code{"GPIB::14"} is the instrument's \emph{resource name}.  See
 section~\ref{sec:VISA-resource-names} for a short explanation of that.
 
@@ -124,6 +125,9 @@ print my_instrument.read()
 
 
 \subsection{Example for serial (RS232) device}
+\index{RS232@RS\,232}
+\index{COM2@``COM\,2''}
+\index{serial device}
 
 The only RS\,232 device in my lab is an old Oxford ITC\,4 temperature
 controller, which is connected through COM\,2 with my computer.  The following
@@ -135,6 +139,7 @@ itc4 = instrument("COM2", term_chars = CR)
 itc4.write("V")
 print itc4.read()
 \end{verbatim}
+\ttindex{instrument()}
 Instead of separate write and read operations, you can do both with one
 \code{ask()} call.  Thus, the above source code is equivalent to
 \begin{verbatim}
@@ -153,6 +158,7 @@ The following example shows how to use SCPI commands with a Keithley 2000
 multimeter in order to measure 10~voltages.  After having read them, the
 program calculates the average voltage and prints it on the screen.
 \index{SCPI}
+\index{Keithley 2000}
 
 I'll explain the program step-by-step.  First, we have to initialise the
 instrument:
@@ -162,6 +168,7 @@ from visa import instrument
 keithley = instrument("GPIB::12")
 keithley.write("*rst; status:preset; *cls")
 \end{verbatim}
+\ttindex{instrument()}
 Here, we create the instrument variable \var{keithley}, which is used for all
 further operations on the instrument.  Immediately after it, we send the
 initialisation and reset message to the instrument.
@@ -185,6 +192,8 @@ keithley.write("trace:feed sense1; feed:control next")
 Okay, now the instrument is prepared to do the measurement.  The next three
 lines make the instrument waiting for a trigger pulse, trigger it, and wait
 until it sends a ``service request'':
+\index{trigger}
+\index{service request}
 \begin{verbatim}
 keithley.write("initiate")
 keithley.trigger()
@@ -217,6 +226,8 @@ story.)
 
 \subsection{VISA resource names}
 \label{sec:VISA-resource-names}
+\index{resource name}
+\index{VISA resource name}
 
 If you use the function \function{instrument()}, you must tell this function
 the \emph{VISA resource name} of the instrument you want to connect to.
@@ -254,7 +265,7 @@ description like \url{http://www.ni.com/pdf/manuals/370423a.pdf}.
 
 \section{\module{visa} --- module contents}
 
-\declaremodule{module}{visa}
+\declaremodule{}{visa}
   \platform{Linux,Windows}
 \modulesynopsis{Controlling measurement and test equipment using VISA.}
 \moduleauthor{Gregor Thalhammer}{gth@users.sourceforge.net}
@@ -278,6 +289,8 @@ module, which is the main module of the PyVISA package.
   aliases for each device, e.\,g.\ ``\code{keithley617}'' for
   ``\code{GPIB0::15::INSTR}''.  If \var{use_aliases} is \code{False}, only
   standard resource names are returned.
+  \index{alias}
+  \index{Measurement and Automation Center}
 \end{funcdesc}
 
 \begin{funcdesc}{instrument}{resource_name\optional{, **keyw}}
@@ -285,6 +298,7 @@ module, which is the main module of the PyVISA package.
   \var{resource_name}.  It saves you from calling one of the instrument classes
   directly by choosing the right one according to the type of the instrument.
   So you have \emph{one} function to open \emph{all} of your instruments.
+  \index{factory function}
 
   The parameter \var{resource_name} may be any valid VISA instrument resource
   name, see section~\ref{sec:VISA-resource-names}.  In particular, you can use
@@ -333,6 +347,14 @@ module, which is the main module of the PyVISA package.
     \lineii{lock}{whether you want to have exclusive access to the device.
       Default: \code{VI_NO_LOCK}}
   \end{tableii}
+  \index{keyword arguments, common}
+  \ttindex{timeout}
+  \ttindex{chunk_size}
+  \ttindex{values_format}
+  \ttindex{term_char}
+  \ttindex{send_end}
+  \ttindex{delay}
+  \ttindex{lock}
 
   \vspace{1ex}
   For further information about the locking mechanism,
@@ -481,6 +503,7 @@ IFC signal just by saying \samp{Gpib().send_ifc()}.
 
 \subsection{Timeouts}
 \label{sec:timeouts}
+\ttindex{timeout}
 
 Very most VISA I/O operations may be performed with a timeout.  If a timeout is
 set, every operation that takes longer than the timeout is aborted and an
@@ -516,6 +539,7 @@ rounds off to 0, 1, 3 and 10~seconds.
 
 \subsection{Chunk length}
 \label{sec:chunk-length}
+\ttindex{chunk_length}
 
 If you read data from a device, you must store it somewhere.  Unfortunately,
 PyVISA must make space for the data \emph{before} it starts reading, which
@@ -540,6 +564,8 @@ This example sets it to 100~kilobytes.
 
 \subsection{Reading binary data}
 \label{sec:reading-binary-data}
+\ttindex{values_format}
+\index{binary data}
 
 Some instruments allow for sending the measured data in binary form.  This has
 the advantage that the data transfer is much shorter and takes less time.
@@ -598,6 +624,9 @@ the same list of values as before.
 
 \subsection{Termination characters}
 \label{sec:termchars}
+\index{termination characters}
+\index{ending sequence}
+\ttindex{term_chars}
 
 Somehow the computer must detect when the device is finished with sending a
 message.  It does so by using different methods, depending on the bus system.
@@ -640,6 +669,8 @@ and~\verb|"\n"|.  Therefore, instead of \code{CR+LF}, you can also write
 \verb|"\r\n"|, whichever you like more.
 
 \subsubsection{``delay'' and ``send\_end''}
+\ttindex{delay}
+\ttindex{send\_end}
 
 There are two further options related to message termination, namely
 \code{send_end} and \code{delay}.  \code{send_end} is a boolean.  If it's
@@ -656,9 +687,11 @@ my_instrument = instrument("GPIB::10", term_chars = CR, send_end = False,
 This will set the delay to 1.2~seconds, and the EOI line is omitted.  By the
 way, omitting EOI is \emph{not} recommended, so if you omit it nevertheless,
 you should know what you're doing.
+\index{EOI line}
 
 
 \section{Mixing with direct VISA commands}
+\index{VISA commands, mixing with}
 
 You can mix the high-level object-oriented approach described in this document
 with middle-level VISA function calls in module \module{vpp43} as described in
@@ -669,6 +702,7 @@ with
 \begin{verbatim}
 from pyvisa import vpp43
 \end{verbatim}
+\refmodindex{vpp43}
 Then you can use them with \samp{vpp43.\emph{function_name}(...)}.
 
 The VISA functions need to know what session you are referring to.  PyVISA
@@ -691,8 +725,10 @@ my_instrument_handle = vpp43.open(resource_manager.session, "GPIB::14",
 
 
 \section{Installation}
+\index{installation}
 
 \subsection{Prerequisites}
+\index{prerequisites}
 
 PyVISA needs Python version~2.3 or newer.
 
@@ -710,9 +746,12 @@ applications.\footnote{Of course, it's highly advisable not to have installed
   another version of Python on your system before you install Enthought
   Python.}  Unfortunately, Enthought Python contains a too old version of
 ctypes at the moment, so you still have to install ctypes.
+\refmodindex{ctypes}
 
 
 \subsection{Setting up the module}
+\index{configuration}
+\index{setting up PyVISA}
 
 \subsubsection{Windows}
 
@@ -721,6 +760,8 @@ example, on my system you find this file in \file{C:\e WINNT\e system32\e}.
 Either copy it there or expand your \envvar{PATH}.  Alternatively, you can
 create an INI file.  You must do this anyway if the file is not called
 \file{visa32.dll} on your system.
+\index{visa32.dll}
+\index{PATH}
 
 
 \subsubsection{Linux}
@@ -731,10 +772,12 @@ your installation, you have to create an INI file.
 
 
 \subsubsection{INI file for customisation}
+\index{INI file}
 
 If the VISA library file is not at the default place, or doesn't have the
 default name for your operating system (see above), you can tell PyVISA by
 creating a file called \file{.pyvisarc} (mind the leading dot).
+\index{pyvisarc@.pyvisarc}
 
 Another motivation for setting up an INI file is that you have more than one
 VISA library, e.\,g.\ because two GPIB interfaces of two different vendors are
@@ -788,6 +831,7 @@ from visa import *
 
 
 \section{About PyVISA}
+\index{authors}
 
 PyVISA was originally programmed by Gregor Thalhammer, Innsbruck/Austria, and
 Torsten Bronger, Aachen/\hskip0pt Germany.  It bases on earlier experiences by
