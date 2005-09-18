@@ -120,8 +120,7 @@ class ResourceTemplate(object):
         if resource_name is not None:  # is none for the resource manager
             warnings.filterwarnings("ignore", "VI_SUCCESS_DEV_NPRESENT")
             self.vi = vpp43.open(resource_manager.session, resource_name,
-                                 keyw.get("lock", VI_NO_LOCK),
-                                 VI_TMO_IMMEDIATE)
+                                 keyw.get("lock", VI_NO_LOCK))
             if vpp43.get_status() == VI_SUCCESS_DEV_NPRESENT:
                 # okay, the device was not ready when we opened the session.
                 # Now it gets five seconds more to become ready.  Every 0.1
@@ -151,7 +150,7 @@ class ResourceTemplate(object):
                 self.timeout = timeout
     def __del__(self):
         self.close()
-    def __set_timeout(self, timeout=5):
+    def __set_timeout(self, timeout):
         if not(0 <= timeout <= 4294967):
             raise ValueError, "timeout value is invalid"
         vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
@@ -432,7 +431,8 @@ class Instrument(ResourceTemplate):
         hash_sign_position = data.find("#")
         if hash_sign_position == -1 or len(data) - hash_sign_position < 2:
             raise InvalidBinaryFormat
-        data = data[hash_sign_position:]
+        if hash_sign_position > 0:
+            data = data[hash_sign_position:]
         if data[1].isdigit() and int(data[1]) > 0:
             number_of_digits = int(data[1])
             # I store data and data_length in two separate variables in case
