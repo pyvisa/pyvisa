@@ -57,6 +57,12 @@ PyVISA implements convenient and Pythonic programming in two layers:
 
 The `PyVISA project page`_ contains the bug tracker and the download area.
 
+Projects using PyVISA so far:
+
+* `pyvLab`_ -- program to control VISA-talking instruments
+
+.. _`pyvLab`: http://pyvlab.sourceforge.net/
+
 
 General overview
 ================
@@ -149,4 +155,4 @@ Links
        http://digital.ni.com/manuals.nsf/websearch/266526277DFF74F786256ADC0065C50C
 
 
-..  LocalWords:  rst british reST ies vpp pyvisa docs
+..  LocalWords:  rst british reST ies vpp pyvisa docs pyvLab
