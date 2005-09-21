@@ -841,7 +841,7 @@ open
 
 Open a session to the specified device.
 
-:Call: vi = open(session, resource_name, access_mode, timeout)
+:Call: vi = open(session, resource_name, access_mode, open_timeout)
 :VISA name: viOpen
 :Parameters:
     `session` : integer
@@ -859,7 +859,7 @@ Open a session to the specified device.
         session uses the default values provided by this
         specification.  Multiple access modes can be used simultaneously by
         specifying a "bitwise OR" of the above values.
-    `timeout` : integer : optional
+    `open_timeout` : integer : optional
         If the `access_mode` parameter requests a lock, then this parameter
         specifies the absolute time period in milliseconds that the resource
         waits to get unlocked before this operation returns an error;
