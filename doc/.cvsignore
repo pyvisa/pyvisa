@@ -6,6 +6,8 @@
 *.pla
 *.syn
 *.toc
+*.ilg
+*.ind
 vpp43.html
 vpp43.pdf
 vpp43.tex
