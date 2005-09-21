@@ -135,7 +135,7 @@ code prints its self-identification on the screen:
 \begin{verbatim}
 from visa import *
 
-itc4 = instrument("COM2", term_chars = CR)
+itc4 = instrument("COM2")
 itc4.write("V")
 print itc4.read()
 \end{verbatim}
@@ -145,7 +145,7 @@ Instead of separate write and read operations, you can do both with one
 \begin{verbatim}
 from visa import *
 
-itc4 = instrument("COM2", term_chars = CR)
+itc4 = instrument("COM2")
 print itc4.ask("V")
 \end{verbatim}
 It couldn't be simpler.
@@ -445,8 +445,8 @@ The class \class{Instrument} defines the following methods and attributes:
 \begin{classdesc}{GpibInstrument}{gpib_identifier\optional{,
       board_number\optional{, **keyw}}}
   represents a GPIB instrument.  If \var{gpib_identifier} is a string, it is
-  interpreted as a VISA resource name.  If it is a number, it denotes the
-  device number at the GPIB bus.
+  interpreted as a VISA resource name (section~\ref{sec:VISA-resource-names}).
+  If it is a number, it denotes the device number at the GPIB bus.
 
   The optional \var{board_number} defaults to zero.  If you have more that one
   GPIB bus system attached to the computer, you can select the bus with this
@@ -495,6 +495,31 @@ The class \class{Gpib} defines the following method:
 \begin{notice}
 You needn't store the board instance in a variable.  Instead, you may send an
 IFC signal just by saying \samp{Gpib().send_ifc()}.
+\end{notice}
+
+
+\subsubsection{Serial devices}
+\label{sec:serial-devices}
+
+Please note that ``serial instrument'' means only RS232 and parallel port
+instruments, i.\,e.\ everything attached to COM and LPT\@.  In particular, it
+does not include USB instruments.  For USB you have to use \class{Instrument}
+instead.
+
+\begin{classdesc}{SerialInstrument}{resource_name\optional{, **keyw}}
+  represents a serial instrument.  \var{resource_name} is the VISA resource
+  name, see section~\ref{sec:VISA-resource-names}.
+
+  The keyword arguments are interpreted the same as with the class
+  \class{Instrument}.
+\end{classdesc}
+
+\begin{notice}
+  Since this class is derived from the class \class{Instrument}, please refer
+  to section~\ref{sec:general-devices} for all operations.
+  \class{SerialInstrument} can do everything that \class{Instrument} can do;
+  actually, the only difference is a different default value for
+  \var{term_chars}.
 \end{notice}
 
 
@@ -630,10 +655,9 @@ the same list of values as before.
 
 Somehow the computer must detect when the device is finished with sending a
 message.  It does so by using different methods, depending on the bus system.
-In most cases you don't need to worry about termination characters.  In our
-institute, only the RS\,232 devices tend to be somewhat fussy about them.
-However, if you have trouble, you may influence termination characters with
-PyVISA\@.
+In most cases you don't need to worry about termination characters because the
+defaults are very good.  However, if you have trouble, you may influence
+termination characters with PyVISA\@.
 
 Termination characters may be one character or a sequence of characters.
 Whenever this character or sequence occurs in the input stream, the read
@@ -651,14 +675,13 @@ Alternatively you can give it when creating your instrument object:
 my_instrument = instrument("GPIB::10", term_chars = CR)
 \end{verbatim}
 The default value depends on the bus system.  Generally, the sequence is empty,
-in particular for GPIB\@.  For RS232 (once it's got its own class), it'll
-be~\code{LF}\@.
+in particular for GPIB\@.  For RS232 it's~\code{CR}\@.
 
 Well, the real default is not \code{""} (the empty string) but \code{None}.
 There is a subtle difference: \code{""} really means the termination characters
 are not used at all, neither for read nor for write operations.  In contrast,
 \code{None} means that every write operation is implicitly terminated with
-\code{CR}\@.  This works well with most instruments.
+\code{CR+LF}\@.  This works well with most instruments.
 
 All CRs and LFs are stripped from the end of a read string, no matter how
 \var{term_chars} is set.
@@ -681,8 +704,7 @@ is taken for other interfaces.
 The argument \code{delay} is the time in seconds to wait after each write
 operation.  So you could write:
 \begin{verbatim}
-my_instrument = instrument("GPIB::10", term_chars = CR, send_end = False,
-                           delay = 1.2)
+my_instrument = instrument("GPIB::10", send_end = False, delay = 1.2)
 \end{verbatim}
 This will set the delay to 1.2~seconds, and the EOI line is omitted.  By the
 way, omitting EOI is \emph{not} recommended, so if you omit it nevertheless,
@@ -848,3 +870,4 @@ bugs there.  \textbf{I'm also very keen to know whether PyVISA works for you or
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
 % LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
 % LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC DLLs asrl CRs LFs
+% LocalWords:  SerialInstrument
