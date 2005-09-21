@@ -38,6 +38,7 @@ ResourceTemplate -- abstract base class of the VISA implementation
 ResourceManager -- singleton class for the default resource manager
 Instrument -- generic class for all kinds of Instruments
 GpibInstrument -- class for GPIB instruments
+SerialInstrument -- class for serial (COM, LPT) instruments
 Interface -- base class for GPIB interfaces (rather than instruments)
 Gpib -- class for GPIB interfaces (rather than instruments)
 
@@ -178,6 +179,13 @@ class ResourceTemplate(object):
         return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
     resource_name = property(__get_resource_name, None, None,
         """The VISA resource name of the resource as a string.""")
+    def __get_interface_type(self):
+        interface_type, _, _, _, _  = \
+            vpp43.parse_resource_extended(resource_manager.session,
+                                          self.resource_name)
+        return interface_type
+    interface_type = property(__get_interface_type, None, None,
+        """The interface type of the resource as a number.""")
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
 
@@ -264,6 +272,8 @@ def instrument(resource_name, **keyw):
                           % resource_class
     if interface_type == VI_INTF_GPIB:
         return GpibInstrument(resource_name, **keyw)
+    elif interface_type == VI_INTF_ASRL:
+        return SerialInstrument(resource_name, **keyw)
     else:
         return Instrument(resource_name, **keyw)
 
@@ -351,8 +361,8 @@ class Instrument(ResourceTemplate):
         """
         if self.__term_chars and not message.endswith(self.__term_chars):
             message += self.__term_chars
-        elif self.__term_chars is None and not message.endswith(CR):
-            message += CR
+        elif self.__term_chars is None and not message.endswith(CR+LF):
+            message += CR+LF
         vpp43.write(self.vi, message)
         if self.delay > 0.0:
             time.sleep(self.delay)
@@ -563,12 +573,7 @@ class GpibInstrument(Instrument):
             resource_name = gpib_identifier
         Instrument.__init__(self, resource_name, **keyw)
         # Now check whether the instrument is really valid
-        resource_name = vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
-        # FixMe: Apparently it's not guaranteed that VISA returns the
-        # *complete* resource name?
-        if not re.match(r"(visa://[a-z0-9/]+/)?GPIB[0-9]?"
-                        "::[0-9]+(::[0-9]+)?::INSTR$",
-                        resource_name, re.IGNORECASE):
+        if self.interface_type != VI_INTF_GPIB:
             raise ValueError, "device is not a GPIB instrument"
         vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
     def __del__(self):
@@ -610,6 +615,37 @@ class GpibInstrument(Instrument):
             if vpp43.read_stb(self.vi) & 0x40:
                 break
         vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+
+class SerialInstrument(Instrument):
+    """Class for serial (RS232 or parallel port) instruments.  Not USB!
+
+    This class extents the Instrument class with special operations and
+    properties of serial instruments.
+
+    """
+    def __init__(self, resource_name, **keyw):
+        """Class constructor.
+
+        parameters:
+        resource_name -- the instrument's resource name or an alias, may be
+            taken from the list from get_instruments_list().
+
+        Further keyword arguments are passed to the constructor of class
+        Instrument.
+
+        """
+        _warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
+                                                   "chunk_size", "lock",
+                                                   "delay", "send_end",
+                                                   "values_format"))
+        keyw.setdefault("term_chars", CR)
+        Instrument.__init__(self, resource_name, **keyw)
+        # Now check whether the instrument is really valid
+        # FixMe: Apparently it's not guaranteed that VISA returns the
+        # *complete* resource name?
+        if self.interface_type != VI_INTF_ASRL:
+            raise ValueError, "device is not a serial instrument"
+
 
 class Interface(ResourceTemplate):
     """Base class for GPIB interfaces.
