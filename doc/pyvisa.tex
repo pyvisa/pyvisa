@@ -372,7 +372,7 @@ The class \class{Instrument} defines the following methods and attributes:
   returns a string sent from the instrument to the computer.
 \end{methoddesc}
 
-\begin{methoddesc}{read_floats}{\optional{format}}
+\begin{methoddesc}{read_values}{\optional{format}}
   returns a list of decimal values (floats) sent from the instrument to the
   computer.  See section~\ref{sec:more-complex-example} above.  The list may
   contain only one element or may be empty.
@@ -387,9 +387,9 @@ The class \class{Instrument} defines the following methods and attributes:
   string from the instrument.
 \end{methoddesc}
 
-\begin{methoddesc}{ask_for_floats}{message\optional{, format}}
+\begin{methoddesc}{ask_for_values}{message\optional{, format}}
   sends the string \var{message} to the instrument and reads the answer as a
-  list of values, just as \code{read_floats()} does.
+  list of values, just as \code{read_values()} does.
 
   The optional \var{format} argument overrides the setting of
   \var{values_format}.  For information about that, see
