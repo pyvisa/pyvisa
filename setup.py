@@ -76,11 +76,11 @@ if os.name == 'posix':
 
 setup(name = 'PyVISA',
       description = 'Python VISA bindings for GPIB, RS232, and USB instruments',
-      version = '0.9.6',
+      version = '0.9.7',
       long_description = \
-      """A Python package for support of the 'Virtual Instrument Software
-Architecture' (VISA), in order to control measurement devices and test
-equipment via GPIB, RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
+      """A Python package for support of the Virtual Instrument Software Architecture
+(VISA), in order to control measurement devices and test equipment via GPIB,
+RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
       author = 'Gregor Thalhammer, Torsten Bronger',
       author_email = 'Gregor.Thalhammer@uibk.ac.at',
       maintainer_email = 'pyvisa-devel@lists.sourceforge.net',
