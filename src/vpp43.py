@@ -692,10 +692,10 @@ def move_out_32(vi, space, offset, length, buffer_16):
     converted_buffer = (ViUInt32 * length)(*tuple(buffer_32))
     visa_library().viMoveOut32(vi, space, offset, length, converted_buffer)
 
-def open(session, resource_name, access_mode = VI_NO_LOCK, timeout =
+def open(session, resource_name, access_mode = VI_NO_LOCK, open_timeout =
          VI_TMO_IMMEDIATE):
     vi = ViSession()
-    visa_library().viOpen(session, resource_name, access_mode, timeout,
+    visa_library().viOpen(session, resource_name, access_mode, open_timeout,
                           byref(vi))
     return vi.value
 
