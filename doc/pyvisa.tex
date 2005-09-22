@@ -74,8 +74,9 @@ powerful set of libraries.
 
 PyVISA doesn't implement VISA itself.  Instead, PyVISA provides bindings to the
 VISA library (a DLL or ``shared object'' file).  This library is usually
-shipped with your GPIB interface.  If not, you can download it from your
-interface equipment vendor (National Instruments, Agilent, etc).
+shipped with your GPIB interface or software like LabVIEW\@.  Alternatively you
+can buy it from your favourite equipment vendor (National Instruments, Agilent,
+etc).
 
 PyVISA is free software under the terms of the GPL\@.  It can be downloaded at
 \ulink{PyVISA's project page}{http://sourceforge.net/projects/pyvisa}.  You can
@@ -522,6 +523,56 @@ instead.
   \var{term_chars}.
 \end{notice}
 
+The class \class{SerialInstrument} defines the following additional properties.
+Note that all properties can also be given as keyword arguments when calling
+the class constructor or \function{instrument()}.
+
+\begin{memberdesc}{baud_rate}
+  The communication speed in baud.  The default value is 9600.
+\end{memberdesc}
+
+\begin{memberdesc}{data_bits}
+  Number of data bits contained in each frame.  Its value must be from 5 to~8.
+  The default is~8.
+\end{memberdesc}
+
+\begin{memberdesc}{stop_bits}
+  Number of stop bits contained in each frame.  Possible values are 1, 1.5,
+  and~2.  The default is~1.
+\end{memberdesc}
+
+\begin{memberdesc}{parity}
+  The parity used with every frame transmitted and received.  Possible values
+  are:
+
+  \begin{tableii}{ll}{var}{Value}{Description}
+    \lineii{no_parity}{no parity bit is used}
+    \lineii{odd_parity}{the parity bit causes odd parity}
+    \lineii{even_parity}{the parity bit causes even parity}
+    \lineii{mark_parity}{the parity bit exists but it's always~1}
+    \lineii{space_parity}{the parity bit exists but it's always~0}
+  \end{tableii}
+
+  The default value is \var{no_parity}.
+\end{memberdesc}
+
+\begin{memberdesc}{end_input}
+  This determines the method used to terminate read operations.  Possible
+  values are:
+
+  \begin{tableii}{ll}{var}{Value}{Description}
+    \lineii{no_end_input}{read will not terminate until all or the requested
+      data is received.  This}
+    \lineii{}{\quad way is not supported by PyVISA at the moment.}
+    \lineii{last_bit_end_input}{read will terminate as soon as a character
+      arrives with its last data bit set.}
+    \lineii{term_chars_end_input}{read will terminate as soon as the 
+      last character of \var{term_chars} is received}
+  \end{tableii}
+
+  The default value is \var{term_chars_end_input}.
+\end{memberdesc}
+
 
 \section{Properties of instrument variables}
 
@@ -755,9 +806,12 @@ my_instrument_handle = vpp43.open(resource_manager.session, "GPIB::14",
 PyVISA needs Python version~2.3 or newer.
 
 The PyVISA package doesn't include a low-level VISA implementation itself.  You
-have to download it from one of the VISA vendors, e.\,g.\ from the
-\ulink{National Instruments VISA pages}{http://ni.com/visa/}.  Please install
-it properly before you proceed.
+have to get it from one of the VISA vendors, e.\,g.\ from the \ulink{National
+  Instruments VISA pages}{http://ni.com/visa/}.  NI sells its VISA kit for
+approx.~\$\,400.  However, it's bundled with most of NI's hardware and
+software.  I can't really tell about other vendors but well-equipped labs
+probably have VISA already (even if they don't know).  Please install VISA
+properly before you proceed.
 
 Additionally, your Python installation needs a fresh version of
 \ulink{ctypes}{http://starship.python.net/crew/theller/ctypes/}.  By the way,
@@ -869,5 +923,5 @@ bugs there.  \textbf{I'm also very keen to know whether PyVISA works for you or
 
 % LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
 % LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
-% LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC DLLs asrl CRs LFs
+% LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC DLLs asrl CRs LFs NI's
 % LocalWords:  SerialInstrument
