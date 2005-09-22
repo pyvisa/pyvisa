@@ -616,6 +616,19 @@ class GpibInstrument(Instrument):
                 break
         vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
 
+
+# The following aliases are used for the "end_input" property
+no_end_input = VI_ASRL_END_NONE
+last_bit_end_input = VI_ASRL_END_LAST_BIT
+term_chars_end_input = VI_ASRL_END_TERMCHAR
+
+# The following aliases are used for the "parity" property
+no_parity = VI_ASRL_PAR_NONE
+odd_parity = VI_ASRL_PAR_ODD
+even_parity = VI_ASRL_PAR_EVEN
+mark_parity = VI_ASRL_PAR_MARK
+space_parity = VI_ASRL_PAR_SPACE
+
 class SerialInstrument(Instrument):
     """Class for serial (RS232 or parallel port) instruments.  Not USB!
 
@@ -634,17 +647,63 @@ class SerialInstrument(Instrument):
         Instrument.
 
         """
-        _warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
-                                                   "chunk_size", "lock",
-                                                   "delay", "send_end",
-                                                   "values_format"))
+        _warn_for_invalid_keyword_arguments(keyw,
+           ("timeout", "term_chars", "chunk_size", "lock",
+            "delay", "send_end", "values_format",
+            "baud_rate", "data_bits", "end_input", "parity", "stop_bits"))
         keyw.setdefault("term_chars", CR)
-        Instrument.__init__(self, resource_name, **keyw)
+        Instrument.__init__(self, resource_name,
+                            **_filter_keyword_arguments(keyw,
+                              ("timeout", "term_chars", "chunk_size", "lock",
+                               "delay", "send_end", "values_format")))
         # Now check whether the instrument is really valid
-        # FixMe: Apparently it's not guaranteed that VISA returns the
-        # *complete* resource name?
         if self.interface_type != VI_INTF_ASRL:
             raise ValueError, "device is not a serial instrument"
+        self.baud_rate = keyw.get("baud_rate", 9600)
+        self.data_bits = keyw.get("data_bits", 8)
+        self.stop_bits = keyw.get("stop_bits", 1)
+        self.parity    = keyw.get("parity", no_parity)
+        self.end_input = keyw.get("end_input", term_chars_end_input)
+    def __get_baud_rate(self):
+        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_BAUD_RATE)
+    def __set_baud_rate(self, rate):
+        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_BAUD_RATE, rate)
+    baud_rate = property(__get_baud_rate, __set_baud_rate, None,
+                         """Baud rate of the serial instrument""")
+    def __get_data_bits(self):
+        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS)
+    def __set_data_bits(self, bits):
+        if not 5 <= bits <= 8:
+            raise ValueError, "number of data bits must be from 5 to 8"
+        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS, bits)
+    data_bits = property(__get_data_bits, __set_data_bits, None,
+                         """Number of data bits contained in each frame """
+                         """(from 5 to 8)""")
+    def __get_stop_bits(self):
+        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS) / 10.0
+    def __set_stop_bits(self, bits):
+        deci_bits = 10 * bits
+        if 9 < deci_bits < 11: deci_bits = 10
+        elif 14 < deci_bits < 16: deci_bits = 15
+        elif 19 < deci_bits < 21: deci_bits = 20
+        else: raise ValueError, "invalid number of stop bits"
+        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS, deci_bits)
+    stop_bits = property(__get_stop_bits, __set_stop_bits, None,
+                         """Number of stop bits contained in each frame """
+                         """(1, 1.5, or 2)""")
+    def __get_parity(self):
+        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_PARITY)
+    def __set_parity(self, bits):
+        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_PARITY, bits)
+    parity = property(__get_parity, __set_parity, None,
+                      """The parity used with every frame transmitted """
+                      """and received""")
+    def __get_end_input(self):
+        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_END_IN)
+    def __set_end_input(self, termination):
+        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_END_IN, termination)
+    end_input = property(__get_end_input, __set_end_input, None,
+        """indicates the method used to terminate read operations""")
 
 
 class Interface(ResourceTemplate):
