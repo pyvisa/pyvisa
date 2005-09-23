@@ -665,9 +665,9 @@ class SerialInstrument(Instrument):
         self.parity    = keyw.get("parity", no_parity)
         self.end_input = keyw.get("end_input", term_chars_end_input)
     def __get_baud_rate(self):
-        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_BAUD_RATE)
+        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_BAUD)
     def __set_baud_rate(self, rate):
-        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_BAUD_RATE, rate)
+        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_BAUD, rate)
     baud_rate = property(__get_baud_rate, __set_baud_rate, None,
                          """Baud rate of the serial instrument""")
     def __get_data_bits(self):
@@ -680,7 +680,10 @@ class SerialInstrument(Instrument):
                          """Number of data bits contained in each frame """
                          """(from 5 to 8)""")
     def __get_stop_bits(self):
-        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS) / 10.0
+        deci_bits = vpp43.get_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS)
+        if deci_bits == 10: return 1
+        elif deci_bits == 15: return 1.5
+        elif deci_bits == 20: return 2
     def __set_stop_bits(self, bits):
         deci_bits = 10 * bits
         if 9 < deci_bits < 11: deci_bits = 10
