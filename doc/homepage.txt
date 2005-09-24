@@ -41,8 +41,8 @@ through various buses (GPIB, RS232, USB) with Python programs.
 
 It is tailored to work on both Windows and Linux, and with arbitrary adapters
 (e.g. National Instruments, Agilent, Tektronics).  In order to achieve this,
-PyVISA relies on an external library file that you can download from your
-adapter vendor's web pages.
+PyVISA relies on an external library file that you have to purchase separately.
+However, it is bundled with most hardware and software of those vendors.
 
 PyVISA implements convenient and Pythonic programming in two layers:
 
@@ -75,7 +75,7 @@ libraries that support both your device and its bus system.
 In order to ease this unfortunate situation, the VISA [#]_ specification was
 defined in the middle of the 90ies.  Today VISA is implemented on all
 significant operating systems.  A couple of vendors offer VISA libraries,
-albeit mostly in binary form.  These libraries work together with arbitrary
+albeit mostly chargeable.  These libraries work together with arbitrary
 peripherical devices, although they may be limited to certain interface
 devices, such as the vendor's GPIB card.
 
