@@ -150,7 +150,8 @@ from visa import *
 itc4 = instrument("COM2")
 print itc4.ask("V")
 \end{verbatim}
-It couldn't be simpler.
+It couldn't be simpler.  See section~\ref{sec:serial-devices} for further
+information about serial devices.
 
 
 \subsection{A more complex example}
@@ -512,16 +513,16 @@ instead.
   represents a serial instrument.  \var{resource_name} is the VISA resource
   name, see section~\ref{sec:VISA-resource-names}.
 
-  The keyword arguments are interpreted the same as with the class
-  \class{Instrument}.
+  The general keyword arguments are interpreted the same as with the class
+  \class{Instrument}.  The only difference is the default value for
+  \var{term_chars}: For serial instruments, \code{CR} (carriage return) is used
+  to terminate readings and writings.
 \end{classdesc}
 
 \begin{notice}
   Since this class is derived from the class \class{Instrument}, please refer
   to section~\ref{sec:general-devices} for all operations.
-  \class{SerialInstrument} can do everything that \class{Instrument} can do;
-  actually, the only difference is a different default value for
-  \var{term_chars}.
+  \class{SerialInstrument} can do everything that \class{Instrument} can do.
 \end{notice}
 
 The class \class{SerialInstrument} defines the following additional properties.
@@ -562,11 +563,11 @@ the class constructor or \function{instrument()}.
   values are:
 
   \begin{tableii}{ll}{var}{Value}{Description}
-    \lineii{no_end_input}{read will not terminate until all or the requested
-      data is received.  This}
-    \lineii{}{\quad way is not supported by PyVISA at the moment.}
+%     \lineii{no_end_input}{read will not terminate until all or the requested
+%       data is received.  This}
+%     \lineii{}{\quad way is not supported by PyVISA at the moment.}
     \lineii{last_bit_end_input}{read will terminate as soon as a character
-      arrives with its last data bit set.}
+      arrives with its last data bit set}
     \lineii{term_chars_end_input}{read will terminate as soon as the 
       last character of \var{term_chars} is received}
   \end{tableii}
@@ -575,7 +576,7 @@ the class constructor or \function{instrument()}.
 \end{memberdesc}
 
 
-\section{Properties of instrument variables}
+\section{Common properties of instrument variables}
 
 
 \subsection{Timeouts}
