@@ -2,7 +2,7 @@
 .. 
 ..   homepage.txt - The reST source code of PyVISA's homepage
 .. 
-..   Copyright © 2005 Torsten Bronger <bronger@physik.rwth-aachen.de>.
+..   Copyright © 2005, 2006 Torsten Bronger <bronger@physik.rwth-aachen.de>.
 .. 
 ..   This file is part of PyVISA.
 .. 

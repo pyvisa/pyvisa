@@ -2,8 +2,8 @@
 .. 
 ..   vpp43.txt - VISA VPP-4.3.2 functions documentation
 .. 
-..   Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-..                    Torsten Bronger <bronger@physik.rwth-aachen.de>.
+..   Copyright © 2005, 2006 Gregor Thalhammer <gth@users.sourceforge.net>,
+..                          Torsten Bronger <bronger@physik.rwth-aachen.de>.
 .. 
 ..   This file is part of PyVISA.
 .. 
