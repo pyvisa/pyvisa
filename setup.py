@@ -3,8 +3,8 @@
 #
 #    setup.py - Distutils setup script for PyVISA
 #
-#    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-#                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
+#    Copyright © 2005, 2006 Torsten Bronger <bronger@physik.rwth-aachen.de>,
+#                           Gregor Thalhammer <gth@users.sourceforge.net>.
 #
 #    This file is part of PyVISA.
 #
@@ -76,20 +76,20 @@ if os.name == 'posix':
 
 setup(name = 'PyVISA',
       description = 'Python VISA bindings for GPIB, RS232, and USB instruments',
-      version = '0.9.7',
+      version = '1.0',
       long_description = \
       """A Python package for support of the Virtual Instrument Software Architecture
 (VISA), in order to control measurement devices and test equipment via GPIB,
 RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
-      author = 'Gregor Thalhammer, Torsten Bronger',
-      author_email = 'Gregor.Thalhammer@uibk.ac.at',
+      author = 'Torsten Bronger, Gregor Thalhammer',
+      author_email = 'bronger@physik.rwth-aachen.de',
       maintainer_email = 'pyvisa-devel@lists.sourceforge.net',
       url = 'http://pyvisa.sourceforge.net',
       download_url = 'http://sourceforge.net/projects/pyvisa/',
       keywords = 'VISA GPIB USB serial RS232 measurement acquisition',
       license = 'GNU General Public License',
       classifiers = [
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU General Public License (GPL)',
