@@ -3,8 +3,8 @@
 #
 #    test_keithley2000.py - PyVISA test code for Keithley 2000 multimeter
 #
-#    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-#                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
+#    Copyright © 2005, 2006 Torsten Bronger <bronger@physik.rwth-aachen.de>,
+#                           Gregor Thalhammer <gth@users.sourceforge.net>.
 #
 #    This file is part of PyVISA.
 #

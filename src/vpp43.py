@@ -3,8 +3,8 @@
 #
 #    vpp43.py - VISA VPP-4.3.2 functions implementation
 #
-#    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-#                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
+#    Copyright © 2005, 2006 Torsten Bronger <bronger@physik.rwth-aachen.de>,
+#                           Gregor Thalhammer <gth@users.sourceforge.net>.
 #
 #    This file is part of PyVISA.
 #

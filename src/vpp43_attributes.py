@@ -3,8 +3,8 @@
 #
 #    vpp43_attributes.py - VISA VPP-4.3.2 attributes data
 #
-#    Copyright © 2005 Gregor Thalhammer <gth@users.sourceforge.net>,
-#                     Torsten Bronger <bronger@physik.rwth-aachen.de>.
+#    Copyright © 2005, 2006 Torsten Bronger <bronger@physik.rwth-aachen.de>,
+#                           Gregor Thalhammer <gth@users.sourceforge.net>.
 #
 #    This file is part of PyVISA.
 #
