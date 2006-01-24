@@ -76,15 +76,19 @@ powerful set of libraries.
 PyVISA doesn't implement VISA itself.  Instead, PyVISA provides bindings to the
 VISA library (a DLL or ``shared object'' file).  This library is usually
 shipped with your GPIB interface or software like LabVIEW\@.  Alternatively,
-you can buy it from your favourite equipment vendor (National Instruments,
+you can download it from your favourite equipment vendor (National Instruments,
 Agilent, etc).
 
 PyVISA is free software under the terms of the GPL\@.  It can be downloaded at
 \ulink{PyVISA's project page}{http://sourceforge.net/projects/pyvisa}.  You can
-report bugs there, too.  This package is still a rather young piece of
-software.  Therefore, I need feedback from people who've given it a try.  So
-far, we have positive reports from National instruments adapters and the
+report bugs there, too.  Additionally, I'm happy about feedback from people
+who've given it a try.  So far, we have positive reports of various National
+Instruments GPIB adapters (connected through PCI, USB, and RS\,232) and the
 Agilent~82357\,A\@.
+
+As far as USB instruments are concerned, you must make sure that they act as
+ordinary USB devices and not as so-called HDI devices (like keyboard and
+mouse).
 \end{abstract}
 
 \begin{samepage}
@@ -812,9 +816,12 @@ The PyVISA package doesn't include a low-level VISA implementation itself.  You
 have to get it from one of the VISA vendors, e.\,g.\ from the \ulink{National
   Instruments VISA pages}{http://ni.com/visa/}.  NI sells its VISA kit for
 approx.~\$\,400.  However, it's bundled with most of NI's hardware and
-software.  I can't really tell about other vendors but well-equipped labs
-probably have VISA already (even if they don't know).  Please install VISA
-properly before you proceed.
+software.  Besides, the download itself is free, and one user reported that he
+had successfully installed VISA support without buying anything.
+
+I can't really tell about other vendors but well-equipped labs probably have
+VISA already (even if they don't know).  Please install VISA properly before
+you proceed.
 
 Additionally, your Python installation needs a fresh version of
 \ulink{ctypes}{http://starship.python.net/crew/theller/ctypes/}.  By the way,
