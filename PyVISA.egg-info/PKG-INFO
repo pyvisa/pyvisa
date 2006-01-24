@@ -1,9 +1,9 @@
 Metadata-Version: 1.0
 Name: PyVISA
-Version: 0.9.7
+Version: 1.0
 Summary: Python VISA bindings for GPIB, RS232, and USB instruments
 Home-page: http://pyvisa.sourceforge.net
-Author: Gregor Thalhammer, Torsten Bronger
+Author: Torsten Bronger, Gregor Thalhammer
 Author-email: pyvisa-devel@lists.sourceforge.net
 License: GNU General Public License
 Download-URL: http://sourceforge.net/projects/pyvisa/
@@ -13,7 +13,7 @@ Description: A Python package for support of the Virtual Instrument Software Arc
 Keywords: VISA GPIB USB serial RS232 measurement acquisition
 Platform: Linux
 Platform: Windows
-Classifier: Development Status :: 4 - Beta
+Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: GNU General Public License (GPL)
