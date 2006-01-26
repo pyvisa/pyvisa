@@ -42,7 +42,7 @@ reading self-identification from a Keithley Multimeter with GPIB number 12
 is as easy as three lines of Python code::
 
     import visa
-    keithley = visa.Instrument("GPIB::12")
+    keithley = visa.instrument("GPIB::12")
     print keithley.ask("*IDN?")
 
 (That's the whole program; really!) It is tailored to work on both Windows and
