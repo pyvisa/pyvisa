@@ -37,9 +37,9 @@ PyVISA
 =======
 
 The PyVISA package enables you to control all kinds of measurement equipment
-through various buses (GPIB, RS232, USB) with Python programs.  As an example,
-reading self-identification from a Keithley Multimeter with GPIB number 12
-is as easy as three lines of Python code::
+through various busses (GPIB, RS232, USB) with Python programs.  As an example,
+reading self-identification from a Keithley Multimeter with GPIB number 12 is
+as easy as three lines of Python code::
 
     import visa
     keithley = visa.instrument("GPIB::12")
@@ -59,8 +59,8 @@ PyVISA implements convenient and Pythonic programming in two layers:
 
 2. Additionally, there is the lower level module ``vpp43``, which directly
    calls the VISA functions from Python.  See the `PyVISA low-level
-   implementation`_ for more information.  ``vpp43`` is only for people who
-   need full control or the official VISA functions for some reason.
+   implementation`_ for more information.  This is only for people who need
+   full control or the official VISA functions for some reason.
 
 PyVISA is free open-source software.  The `PyVISA project page`_ contains the
 bug tracker and the download area.
