@@ -573,7 +573,7 @@ def in_8(vi, space, offset):
 def in_16(vi, space, offset):
     value_16 = ViUInt16()
     visa_library().viIn16(vi, space, offset, byref(value_16))
-    return value_8.value
+    return value_16.value
 
 def in_32(vi, space, offset):
     value_32 = ViUInt32()
