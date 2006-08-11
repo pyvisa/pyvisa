@@ -937,6 +937,9 @@ parse_resource_extended
 
 Parse a resource string to get extended interface information.
 
+**Attention:** Calling this function may raise an ``AttributeError`` because
+some older VISA implementation don't have the function ``viParseRsrcEx``.
+
 :Call: interface_type, interface_board_number, resource_class,
        unaliased_expanded_resource_name, alias_if_exists =
        parse_resource_extended(session, resource_name)
