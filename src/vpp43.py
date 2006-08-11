@@ -188,7 +188,11 @@ class VisaLibrary(Singleton):
             "viUsbControlOut", "viVPrintf", "viVQueryf", "viVSPrintf",
             "viVSScanf", "viVScanf", "viVxiCommandQuery", "viWaitOnEvent",
             "viWrite", "viWriteAsync", "viWriteFromFile"]:
-            self.__lib.__getattr__(visa_function).restype = check_status
+            try:
+                self.__lib.__getattr__(visa_function).restype = check_status
+            except AttributeError:
+                # Apparently, viParseRsrcEx was not found
+                pass
         for visa_function in ["viPrintf", "viScanf", "viSPrintf", "viSScanf",
                               "viQueryf"]:
             self.__cdecl_lib.__getattr__(visa_function).restype = check_status
@@ -266,9 +270,14 @@ class VisaLibrary(Singleton):
                                        ViUInt32]
         self.__lib.viParseRsrc.argtypes = [ViSession, ViRsrc, ViPUInt16,
                                            ViPUInt16]
-        self.__lib.viParseRsrcEx.argtypes = [ViSession, ViRsrc, ViPUInt16,
-                                             ViPUInt16, ViAChar, ViAChar,
-                                             ViAChar]
+        try:
+            self.__lib.viParseRsrcEx.argtypes = [ViSession, ViRsrc, ViPUInt16,
+                                                 ViPUInt16, ViAChar, ViAChar,
+                                                 ViAChar]
+        except AttributeError:
+            # Here too, we silently ignore it.  If the user accesses it anyway,
+            # an AttributeError is raised which is clear enough
+            pass
         self.__lib.viPeek8.argtypes = [ViSession, ViAddr, ViPUInt8]
         self.__lib.viPeek16.argtypes = [ViSession, ViAddr, ViPUInt16]
         self.__lib.viPeek32.argtypes = [ViSession, ViAddr, ViPUInt32]

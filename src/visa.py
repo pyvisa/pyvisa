@@ -244,8 +244,12 @@ def get_instruments_list(use_aliases=True):
     # Otherwise, truncate the "::INSTR".
     result = []
     for resource_name in resource_names:
-        _, _, _, _, alias_if_exists  = \
-         vpp43.parse_resource_extended(resource_manager.session, resource_name)
+        try:
+            _, _, _, _, alias_if_exists = \
+             vpp43.parse_resource_extended(resource_manager.session,
+                                           resource_name)
+        except AttributeError:
+            alias_if_exists = None
         if alias_if_exists and use_aliases:
             result.append(alias_if_exists)
         else:
