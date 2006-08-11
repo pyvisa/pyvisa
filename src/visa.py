@@ -180,9 +180,9 @@ class ResourceTemplate(object):
     resource_name = property(__get_resource_name, None, None,
         """The VISA resource name of the resource as a string.""")
     def __get_interface_type(self):
-        interface_type, _, _, _, _  = \
-            vpp43.parse_resource_extended(resource_manager.session,
-                                          self.resource_name)
+        interface_type, _ = \
+            vpp43.parse_resource(resource_manager.session,
+                                 self.resource_name)
         return interface_type
     interface_type = property(__get_interface_type, None, None,
         """The interface type of the resource as a number.""")
@@ -265,11 +265,8 @@ def instrument(resource_name, **keyw):
     The generated instrument instance.
 
     """
-    interface_type, _, resource_class, _, _  = \
-        vpp43.parse_resource_extended(resource_manager.session, resource_name)
-    if resource_class.upper() != "INSTR":
-        raise ValueError, "given resource was not an INSTR but %s" \
-                          % resource_class
+    interface_type, _ = \
+        vpp43.parse_resource(resource_manager.session, resource_name)
     if interface_type == VI_INTF_GPIB:
         return GpibInstrument(resource_name, **keyw)
     elif interface_type == VI_INTF_ASRL:
