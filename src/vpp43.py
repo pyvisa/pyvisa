@@ -358,7 +358,7 @@ class VisaLibrary(Singleton):
                                                    ViPJobId])
         self.__set_argument_types("viWriteFromFile", [ViSession, ViString,
                                                       ViUInt32, ViPUInt32])
-    def __set_argument_types(visa_function, types, force_cdecl=False,
+    def __set_argument_types(self, visa_function, types, force_cdecl=False,
                              may_be_missing=True):
         if not force_cdecl:
             library = self.__lib
