@@ -139,7 +139,7 @@ class VisaLibrary(Singleton):
         else:
             self.__lib = self.__cdecl_lib = None
             raise visa_exceptions.OSNotSupported, os.name
-        self.__set_argument_types()
+        self.__initialize_library_functions()
     def set_user_handle_type(self, user_handle):
         # Actually, it's not necessary to change ViHndlr *globally*.  However,
         # I don't want to break symmetry too much with all the other VPP43
@@ -168,7 +168,7 @@ class VisaLibrary(Singleton):
         if force_cdecl:
             return self.__cdecl_lib
         return self.__lib
-    def __set_argument_types(self):
+    def __initialize_library_functions(self):
         # Consistency remark: here all VPP-4.3.2 routines must be listed (unless, of
         # course, they don't return a status value, like "peek" and "poke").
         for visa_function in ["viAssertIntrSignal", "viAssertTrigger",
@@ -191,147 +191,184 @@ class VisaLibrary(Singleton):
             try:
                 self.__lib.__getattr__(visa_function).restype = check_status
             except AttributeError:
-                # Apparently, viParseRsrcEx was not found
+                # Mostly, viParseRsrcEx was not found
                 pass
         for visa_function in ["viPrintf", "viScanf", "viSPrintf", "viSScanf",
                               "viQueryf"]:
-            self.__cdecl_lib.__getattr__(visa_function).restype = check_status
+            try:
+                self.__cdecl_lib.__getattr__(visa_function).restype = check_status
+            except AttributeError:
+                pass
         for visa_function in ["viPeek8", "viPeek16", "viPeek32", "viPoke8",
                               "viPoke16", "viPoke32"]:
-            self.__lib.__getattr__(visa_function).restype = None
-        self.__lib.viAssertIntrSignal.argtypes = [ViSession, ViInt16, ViUInt32]
-        self.__lib.viAssertTrigger.argtypes = [ViSession, ViUInt16]
-        self.__lib.viAssertUtilSignal.argtypes = [ViSession, ViUInt16]
-        self.__lib.viBufRead.argtypes = \
-            [ViSession, ViPBuf, ViUInt32, ViPUInt32]
-        self.__lib.viBufWrite.argtypes = \
-            [ViSession, ViBuf, ViUInt32, ViPUInt32]
-        self.__lib.viClear.argtypes = [ViSession]
-        self.__lib.viClose.argtypes = [ViObject]
-        self.__lib.viDisableEvent.argtypes = [ViSession, ViEventType, ViUInt16]
-        self.__lib.viDiscardEvents.argtypes = [ViSession, ViEventType,
-                                               ViUInt16]
-        self.__lib.viEnableEvent.argtypes = [ViSession, ViEventType, ViUInt16,
-                                             ViEventFilter]
-        self.__lib.viFindNext.argtypes = [ViSession, ViAChar]
-        self.__lib.viFindRsrc.argtypes = [ViSession, ViString, ViPFindList,
-                                          ViPUInt32, ViAChar]
-        self.__lib.viFlush.argtypes = [ViSession, ViUInt16]
-        self.__lib.viGetAttribute.argtypes = [ViObject, ViAttr, c_void_p]
-        self.__lib.viGpibCommand.argtypes = [ViSession, ViBuf, ViUInt32,
-                                             ViPUInt32]
-        self.__lib.viGpibControlATN.argtypes = [ViSession, ViUInt16]
-        self.__lib.viGpibControlREN.argtypes = [ViSession, ViUInt16]
-        self.__lib.viGpibPassControl.argtypes = [ViSession, ViUInt16, ViUInt16]
-        self.__lib.viGpibSendIFC.argtypes = [ViSession]
-        self.__lib.viIn8.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                     ViPUInt8]
-        self.__lib.viIn16.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                      ViPUInt16]
-        self.__lib.viIn32.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                      ViPUInt32]
-        self.__lib.viInstallHandler.argtypes = [ViSession, ViEventType,
-                                                ViHndlr, ViAddr]
-        self.__lib.viLock.argtypes = [ViSession, ViAccessMode, ViUInt32,
-                                      ViKeyId, ViAChar]
-        self.__lib.viMapAddress.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                            ViBusSize, ViBoolean, ViAddr,
-                                            ViPAddr]
-        self.__lib.viMapTrigger.argtypes = [ViSession, ViInt16, ViInt16,
-                                            ViUInt16]
-        self.__lib.viMemAlloc.argtypes = [ViSession, ViBusSize, ViPBusAddress]
-        self.__lib.viMemFree.argtypes = [ViSession, ViBusAddress]
-        self.__lib.viMove.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                      ViUInt16, ViUInt16, ViBusAddress,
-                                      ViUInt16, ViBusSize]
-        self.__lib.viMoveAsync.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                           ViUInt16, ViUInt16, ViBusAddress,
-                                           ViUInt16, ViBusSize, ViPJobId]
-        self.__lib.viMoveIn8.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                         ViBusSize, ViAUInt8]
-        self.__lib.viMoveIn16.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                          ViBusSize, ViAUInt16]
-        self.__lib.viMoveIn32.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                          ViBusSize, ViAUInt32]
-        self.__lib.viMoveOut8.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                          ViBusSize, ViAUInt8]
-        self.__lib.viMoveOut16.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                           ViBusSize, ViAUInt16]
-        self.__lib.viMoveOut32.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                           ViBusSize, ViAUInt32]
-        self.__lib.viOpen.argtypes = [ViSession, ViRsrc, ViAccessMode,
-                                      ViUInt32, ViPSession]
-        self.__lib.viOpenDefaultRM.argtypes = [ViPSession]
-        self.__lib.viOut8.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                      ViUInt8]
-        self.__lib.viOut16.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                       ViUInt16]
-        self.__lib.viOut32.argtypes = [ViSession, ViUInt16, ViBusAddress,
-                                       ViUInt32]
-        self.__lib.viParseRsrc.argtypes = [ViSession, ViRsrc, ViPUInt16,
-                                           ViPUInt16]
+            try:
+                self.__lib.__getattr__(visa_function).restype = None
+            except AttributeError:
+                pass
+        # Here too, we silently ignore missing functions.  If the user accesses
+        # it nevertheless, an AttributeError is raised which is clear enough
+        self.__set_argument_types("viAssertIntrSignal", [ViSession,
+                                                         ViInt16, ViUInt32])
+        self.__set_argument_types("viAssertTrigger", [ViSession, ViUInt16])
+        self.__set_argument_types("viAssertUtilSignal", [ViSession, ViUInt16])
+        self.__set_argument_types("viBufRead", [ViSession, ViPBuf, ViUInt32,
+                                                ViPUInt32])
+        self.__set_argument_types("viBufWrite", [ViSession, ViBuf, ViUInt32,
+                                                 ViPUInt32])
+        self.__set_argument_types("viClear", [ViSession])
+        self.__set_argument_types("viClose", [ViObject])
+        self.__set_argument_types("viDisableEvent", [ViSession, ViEventType,
+                                                     ViUInt16])
+        self.__set_argument_types("viDiscardEvents", [ViSession, ViEventType,
+                                               ViUInt16])
+        self.__set_argument_types("viEnableEvent", [ViSession, ViEventType,
+                                                    ViUInt16, ViEventFilter])
+        self.__set_argument_types("viFindNext", [ViSession, ViAChar])
+        self.__set_argument_types("viFindRsrc", [ViSession, ViString,
+                                                 ViPFindList, ViPUInt32,
+                                                 ViAChar])
+        self.__set_argument_types("viFlush", [ViSession, ViUInt16])
+        self.__set_argument_types("viGetAttribute", [ViObject, ViAttr,
+                                                     c_void_p])
+        self.__set_argument_types("viGpibCommand", [ViSession, ViBuf, ViUInt32,
+                                                    ViPUInt32])
+        self.__set_argument_types("viGpibControlATN", [ViSession, ViUInt16])
+        self.__set_argument_types("viGpibControlREN", [ViSession, ViUInt16])
+        self.__set_argument_types("viGpibPassControl", [ViSession, ViUInt16,
+                                                        ViUInt16])
+        self.__set_argument_types("viGpibSendIFC", [ViSession])
+        self.__set_argument_types("viIn8", [ViSession, ViUInt16, ViBusAddress,
+                                            ViPUInt8])
+        self.__set_argument_types("viIn16", [ViSession, ViUInt16, ViBusAddress,
+                                             ViPUInt16])
+        self.__set_argument_types("viIn32", [ViSession, ViUInt16, ViBusAddress,
+                                             ViPUInt32])
+        self.__set_argument_types("viInstallHandler", [ViSession, ViEventType,
+                                                       ViHndlr, ViAddr])
+        self.__set_argument_types("viLock", [ViSession, ViAccessMode, ViUInt32,
+                                             ViKeyId, ViAChar])
+        self.__set_argument_types("viMapAddress", [ViSession, ViUInt16,
+                                                   ViBusAddress, ViBusSize,
+                                                   ViBoolean, ViAddr, ViPAddr])
+        self.__set_argument_types("viMapTrigger", [ViSession, ViInt16, ViInt16,
+                                                   ViUInt16])
+        self.__set_argument_types("viMemAlloc", [ViSession, ViBusSize,
+                                                 ViPBusAddress])
+        self.__set_argument_types("viMemFree", [ViSession, ViBusAddress])
+        self.__set_argument_types("viMove", [ViSession, ViUInt16, ViBusAddress,
+                                             ViUInt16, ViUInt16, ViBusAddress,
+                                             ViUInt16, ViBusSize])
+        self.__set_argument_types("viMoveAsync", [ViSession, ViUInt16,
+                                                  ViBusAddress, ViUInt16,
+                                                  ViUInt16, ViBusAddress,
+                                                  ViUInt16, ViBusSize,
+                                                  ViPJobId])
+        self.__set_argument_types("viMoveIn8", [ViSession, ViUInt16,
+                                                ViBusAddress, ViBusSize,
+                                                ViAUInt8])
+        self.__set_argument_types("viMoveIn16", [ViSession, ViUInt16,
+                                                 ViBusAddress, ViBusSize,
+                                                 ViAUInt16])
+        self.__set_argument_types("viMoveIn32", [ViSession, ViUInt16,
+                                                 ViBusAddress, ViBusSize,
+                                                 ViAUInt32])
+        self.__set_argument_types("viMoveOut8", [ViSession, ViUInt16,
+                                                 ViBusAddress, ViBusSize,
+                                                 ViAUInt8])
+        self.__set_argument_types("viMoveOut16", [ViSession, ViUInt16,
+                                                  ViBusAddress, ViBusSize,
+                                                  ViAUInt16])
+        self.__set_argument_types("viMoveOut32", [ViSession, ViUInt16,
+                                                  ViBusAddress, ViBusSize,
+                                                  ViAUInt32])
+        # The following function *must* be available in order to assure that we
+        # have a VISA library at all (rather than something completely
+        # different).  I hope that viOpen is old enough in the VISA
+        # specification.
+        self.__set_argument_types("viOpen", [ViSession, ViRsrc, ViAccessMode,
+                                             ViUInt32, ViPSession],
+                                            may_be_missing=False)
+        self.__set_argument_types("viOpenDefaultRM", [ViPSession])
+        self.__set_argument_types("viOut8", [ViSession, ViUInt16, ViBusAddress,
+                                             ViUInt8])
+        self.__set_argument_types("viOut16", [ViSession, ViUInt16,
+                                              ViBusAddress, ViUInt16])
+        self.__set_argument_types("viOut32", [ViSession, ViUInt16,
+                                              ViBusAddress, ViUInt32])
+        self.__set_argument_types("viParseRsrc", [ViSession, ViRsrc, ViPUInt16,
+                                                  ViPUInt16])
+        self.__set_argument_types("viParseRsrcEx", [ViSession, ViRsrc,
+                                                    ViPUInt16, ViPUInt16,
+                                                    ViAChar, ViAChar, ViAChar])
+        self.__set_argument_types("viPeek8", [ViSession, ViAddr, ViPUInt8])
+        self.__set_argument_types("viPeek16", [ViSession, ViAddr, ViPUInt16])
+        self.__set_argument_types("viPeek32", [ViSession, ViAddr, ViPUInt32])
+        self.__set_argument_types("viPoke8", [ViSession, ViAddr, ViUInt8])
+        self.__set_argument_types("viPoke16", [ViSession, ViAddr, ViUInt16])
+        self.__set_argument_types("viPoke32", [ViSession, ViAddr, ViUInt32])
+        self.__set_argument_types("viPrintf", [ViSession, ViString],
+                                              force_cdecl=True)
+        self.__set_argument_types("viQueryf", [ViSession, ViString, ViString],
+                                              force_cdecl=True)
+        self.__set_argument_types("viRead", [ViSession, ViPBuf, ViUInt32,
+                                             ViPUInt32])
+        self.__set_argument_types("viReadAsync", [ViSession, ViPBuf, ViUInt32,
+                                                  ViPJobId])
+        self.__set_argument_types("viReadSTB", [ViSession, ViPUInt16])
+        self.__set_argument_types("viReadToFile", [ViSession, ViString,
+                                                   ViUInt32, ViPUInt32])
+        self.__set_argument_types("viScanf", [ViSession, ViString],
+                                             force_cdecl=True)
+        self.__set_argument_types("viSetAttribute", [ViObject, ViAttr,
+                                                     ViAttrState])
+        self.__set_argument_types("viSetBuf", [ViSession, ViUInt16, ViUInt32])
+        self.__set_argument_types("viSPrintf", [ViSession, ViPBuf, ViString],
+                                               force_cdecl=True)
+        self.__set_argument_types("viSScanf", [ViSession, ViBuf, ViString],
+                                              force_cdecl=True)
+        self.__set_argument_types("viStatusDesc", [ViObject, ViStatus,
+                                                   ViAChar])
+        self.__set_argument_types("viTerminate", [ViSession, ViUInt16,
+                                                  ViJobId])
+        self.__set_argument_types("viUninstallHandler", [ViSession,
+                                                         ViEventType, ViHndlr,
+                                                         ViAddr])
+        self.__set_argument_types("viUnlock", [ViSession])
+        self.__set_argument_types("viUnmapAddress", [ViSession])
+        self.__set_argument_types("viUnmapTrigger", [ViSession, ViInt16,
+                                                     ViInt16])
+        self.__set_argument_types("viUsbControlIn", [ViSession, ViInt16,
+                                                     ViInt16, ViUInt16,
+                                                     ViUInt16, ViUInt16,
+                                                     ViPBuf, ViPUInt16])
+        self.__set_argument_types("viUsbControlOut", [ViSession, ViInt16,
+                                                      ViInt16, ViUInt16,
+                                                      ViUInt16, ViUInt16,
+                                                      ViPBuf])
+        # The following "V" routines are *not* implemented in PyVISA, and will
+        # never be: viVPrintf, viVQueryf, viVScanf, viVSPrintf, viVSScanf
+        self.__set_argument_types("viVxiCommandQuery", [ViSession, ViUInt16,
+                                                        ViUInt32, ViPUInt32])
+        self.__set_argument_types("viWaitOnEvent", [ViSession, ViEventType,
+                                                    ViUInt32, ViPEventType,
+                                                    ViPEvent])
+        self.__set_argument_types("viWrite", [ViSession, ViBuf, ViUInt32,
+                                              ViPUInt32])
+        self.__set_argument_types("viWriteAsync", [ViSession, ViBuf, ViUInt32,
+                                                   ViPJobId])
+        self.__set_argument_types("viWriteFromFile", [ViSession, ViString,
+                                                      ViUInt32, ViPUInt32])
+    def __set_argument_types(visa_function, types, force_cdecl=False,
+                             may_be_missing=True):
+        if not force_cdecl:
+            library = self.__lib
+        else:
+            library = self.__cdecl_lib
         try:
-            self.__lib.viParseRsrcEx.argtypes = [ViSession, ViRsrc, ViPUInt16,
-                                                 ViPUInt16, ViAChar, ViAChar,
-                                                 ViAChar]
+            library.__getattr__(visa_function).argtypes = types
         except AttributeError:
-            # Here too, we silently ignore it.  If the user accesses it anyway,
-            # an AttributeError is raised which is clear enough
-            pass
-        self.__lib.viPeek8.argtypes = [ViSession, ViAddr, ViPUInt8]
-        self.__lib.viPeek16.argtypes = [ViSession, ViAddr, ViPUInt16]
-        self.__lib.viPeek32.argtypes = [ViSession, ViAddr, ViPUInt32]
-        self.__lib.viPoke8.argtypes = [ViSession, ViAddr, ViUInt8]
-        self.__lib.viPoke16.argtypes = [ViSession, ViAddr, ViUInt16]
-        self.__lib.viPoke32.argtypes = [ViSession, ViAddr, ViUInt32]
-        self.__cdecl_lib.viPrintf.argtypes = [ViSession, ViString]
-        self.__cdecl_lib.viQueryf.argtypes = [ViSession, ViString, ViString]
-        self.__lib.viRead.argtypes = [ViSession, ViPBuf, ViUInt32, ViPUInt32]
-        self.__lib.viReadAsync.argtypes = [ViSession, ViPBuf, ViUInt32,
-                                           ViPJobId]
-        self.__lib.viReadSTB.argtypes = [ViSession, ViPUInt16]
-        self.__lib.viReadToFile.argtypes = [ViSession, ViString, ViUInt32,
-                                            ViPUInt32]
-        self.__cdecl_lib.viScanf.argtypes = [ViSession, ViString]
-        self.__lib.viSetAttribute.argtypes = [ViObject, ViAttr, ViAttrState]
-        self.__lib.viSetBuf.argtypes = [ViSession, ViUInt16, ViUInt32]
-        self.__cdecl_lib.viSPrintf.argtypes = [ViSession, ViPBuf, ViString]
-        self.__cdecl_lib.viSScanf.argtypes = [ViSession, ViBuf, ViString]
-        self.__lib.viStatusDesc.argtypes = [ViObject, ViStatus, ViAChar]
-        self.__lib.viTerminate.argtypes = [ViSession, ViUInt16, ViJobId]
-        self.__lib.viUninstallHandler.argtypes = [ViSession, ViEventType,
-                                                  ViHndlr, ViAddr]
-        self.__lib.viUnlock.argtypes = [ViSession]
-        self.__lib.viUnmapAddress.argtypes = [ViSession]
-        self.__lib.viUnmapTrigger.argtypes = [ViSession, ViInt16, ViInt16]
-        self.__lib.viUsbControlIn.argtypes = [ViSession, ViInt16, ViInt16,
-                                              ViUInt16, ViUInt16, ViUInt16,
-                                              ViPBuf, ViPUInt16]
-        self.__lib.viUsbControlOut.argtypes = [ViSession, ViInt16, ViInt16,
-                                               ViUInt16, ViUInt16, ViUInt16,
-                                               ViPBuf]
-        # The following "V" routines are *not* implemented in pyvisa, and will
-        # never be.  They are listed here to implement a poor man's alert
-        # mechanism.
-        self.__lib.viVPrintf.argtypes = \
-            self.__cdecl_lib.viVPrintf.argtypes = []
-        self.__lib.viVQueryf.argtypes = \
-            self.__cdecl_lib.viVQueryf.argtypes = []
-        self.__lib.viVScanf.argtypes = \
-            self.__cdecl_lib.viVScanf.argtypes = []
-        self.__lib.viVSPrintf.argtypes = \
-            self.__cdecl_lib.viVSPrintf.argtypes = []
-        self.__lib.viVSScanf.argtypes = \
-            self.__cdecl_lib.viVSScanf.argtypes = []
-        self.__lib.viVxiCommandQuery.argtypes = [ViSession, ViUInt16, ViUInt32,
-                                                 ViPUInt32]
-        self.__lib.viWaitOnEvent.argtypes = [ViSession, ViEventType, ViUInt32,
-                                             ViPEventType, ViPEvent]
-        self.__lib.viWrite.argtypes = [ViSession, ViBuf, ViUInt32, ViPUInt32]
-        self.__lib.viWriteAsync.argtypes = [ViSession, ViBuf, ViUInt32,
-                                            ViPJobId]
-        self.__lib.viWriteFromFile.argtypes = [ViSession, ViString, ViUInt32,
-                                               ViPUInt32]
+            if not may_be_missing:
+                raise
 
 
 visa_library = VisaLibrary()
@@ -775,16 +812,18 @@ def poke_32(vi, address, value_32):
     visa_library().viPoke32(vi, address, value_32)
 
 def printf(vi, write_format, *args):
-    visa_library(True).viPrintf(vi, write_format, *convert_argument_list(args))
+    visa_library(force_cdecl=True).viPrintf(vi, write_format,
+                                            *convert_argument_list(args))
 
 def queryf(vi, write_format, read_format, write_args, *read_args, **keyw):
     maximal_string_length = keyw.get("maxmial_string_length", 1024)
     argument_list = list(convert_argument_list(read_args))
     if write_args is None: write_args = ()
-    visa_library(True).viQueryf(vi, write_format, read_format,
-                                *(convert_argument_list(write_args) +
-                                  convert_to_byref(argument_list,
-                                                   maximal_string_length)))
+    visa_library(force_cdecl=True) \
+        .viQueryf(vi, write_format, read_format,
+                  *(convert_argument_list(write_args) +
+                    convert_to_byref(argument_list,
+                                     maximal_string_length)))
     return construct_return_tuple(argument_list)
 
 def read(vi, count):
@@ -815,9 +854,10 @@ def read_to_file(vi, filename, count):
 def scanf(vi, read_format, *args, **keyw):
     maximal_string_length = keyw.get("maxmial_string_length", 1024)
     argument_list = list(convert_argument_list(args))
-    visa_library(True).viScanf(vi, read_format,
-                               *convert_to_byref(argument_list,
-                                                 maximal_string_length))
+    visa_library(force_cdecl=True) \
+        .viScanf(vi, read_format,
+                 *convert_to_byref(argument_list,
+                                   maximal_string_length))
     return construct_return_tuple(argument_list)
 
 def set_attribute(vi, attribute, attribute_state):
@@ -828,16 +868,17 @@ def set_buffer(vi, mask, size):
 
 def sprintf(vi, write_format, *args, **keyw):
     buffer = create_string_buffer(keyw.get("buffer_length", 1024))
-    visa_library(True).viSPrintf(vi, buffer, write_format,
-                                 *convert_argument_list(args))
+    visa_library(force_cdecl=True).viSPrintf(vi, buffer, write_format,
+                                             *convert_argument_list(args))
     return buffer.raw
 
 def sscanf(vi, buffer, read_format, *args, **keyw):
     maximal_string_length = keyw.get("maxmial_string_length", 1024)
     argument_list = list(convert_argument_list(args))
-    visa_library(True).viSScanf(vi, buffer, read_format,
-                                *convert_to_byref(argument_list,
-                                                  maximal_string_length))
+    visa_library(force_cdecl=True) \
+        .viSScanf(vi, buffer, read_format,
+                  *convert_to_byref(argument_list,
+                                    maximal_string_length))
     return construct_return_tuple(argument_list)
 
 def status_description(vi, status):
