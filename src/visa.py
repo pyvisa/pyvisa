@@ -4,7 +4,7 @@
 #    visa.py - High-level object-oriented VISA implementation
 #
 #    Copyright © 2005, 2006 Torsten Bronger <bronger@physik.rwth-aachen.de>,
-#                           .Gregor Thalhammer <gth@users.sourceforge.net>.
+#                           Gregor Thalhammer <gth@users.sourceforge.net>.
 #
 #    This file is part of PyVISA.
 #
