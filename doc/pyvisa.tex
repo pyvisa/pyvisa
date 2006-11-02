@@ -651,7 +651,7 @@ This example sets it to 100~kilobytes.
 \index{binary data}
 
 Some instruments allow for sending the measured data in binary form.  This has
-the advantage that the data transfer is much shorter and takes less time.
+the advantage that the data transfer is much smaller and takes less time.
 PyVISA currently supports three forms of transfers:
 
 \begin{description}
@@ -678,7 +678,8 @@ or later by setting the property directly:
 my_instrument.values_format = single
 \end{verbatim}
 Setting this option affects the methods \code{read_values()} and
-\code{ask_for_values()}.
+\code{ask_for_values()}.  In particular, you must assure separately that the
+device actually sends in this format.
 
 In some cases it may be necessary to set the \emph{byte order}, also known as
 \emph{endianness}.  PyVISA assumes little-endian as default.  Some instruments
