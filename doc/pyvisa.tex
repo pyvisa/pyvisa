@@ -26,7 +26,7 @@
 \documentclass{howto}
 
 \title{PyVISA}
-\release{1.0}
+\release{1.1}
 
 \author{Torsten Bronger}
 \authoraddress{
@@ -612,7 +612,7 @@ device object:
 my_instrument = instrument("ASRL1", timeout = 8)
 \end{verbatim}
 This creates the object variable \var{my_instrument} and sets its timeout to
-5~seconds.  In this context, a timeout value of \code{None} is allowed, which
+8~seconds.  In this context, a timeout value of \code{None} is allowed, which
 removes the timeout for this device.
 
 Note that your local VISA library may round up this value heavily.  I
