@@ -9,6 +9,7 @@ setup.py
 visa.py
 PyVISA.egg-info/PKG-INFO
 PyVISA.egg-info/SOURCES.txt
+PyVISA.egg-info/dependency_links.txt
 PyVISA.egg-info/depends.txt
 PyVISA.egg-info/top_level.txt
 doc/.cvsignore

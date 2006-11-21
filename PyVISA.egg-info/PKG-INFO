@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: PyVISA
-Version: 1.0
+Version: 1.1
 Summary: Python VISA bindings for GPIB, RS232, and USB instruments
 Home-page: http://pyvisa.sourceforge.net
 Author: Torsten Bronger, Gregor Thalhammer
