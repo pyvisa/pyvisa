@@ -19,7 +19,8 @@ pyvisa.pdf: pyvisa.tex
 	cp pyvisa.tex /tmp/
 	cd /tmp ; mkhowto --pdf --html \
 	  --up-link http://pyvisa.sourceforge.net \
-	  --up-title "PyVISA homepage" pyvisa.tex
+	  --up-title "PyVISA homepage" --numeric --image-type=png \
+	  --iconserver=. pyvisa.tex
 	mv /tmp/pyvisa.pdf /tmp/pyvisa .
 
 upload: all
