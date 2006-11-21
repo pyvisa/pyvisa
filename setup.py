@@ -40,7 +40,7 @@ except:
 # too.
 #
 # The goal is to override an existing local RPM configuration.  Distutils only
-# works togather with a widely untouched configuration, so I have to disable
+# works together with a widely untouched configuration, so I have to disable
 # any extisting one represented by the file ~/.rpmmacros.  I look for this file
 # and move it to ~/.rpmmacros.original.  After setup.py is terminated, this
 # renaming is reverted.
@@ -78,7 +78,7 @@ if os.name == 'posix':
 
 setup(name = 'PyVISA',
       description = 'Python VISA bindings for GPIB, RS232, and USB instruments',
-      version = '1.0',
+      version = '1.1',
       long_description = \
       """A Python package for support of the Virtual Instrument Software Architecture
 (VISA), in order to control measurement devices and test equipment via GPIB,
