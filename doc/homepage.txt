@@ -83,7 +83,7 @@ libraries that support both your device and its bus system.
 In order to ease this unfortunate situation, the VISA [#]_ specification was
 defined in the middle of the 90ies.  Today VISA is implemented on all
 significant operating systems.  A couple of vendors offer VISA libraries,
-albeit mostly chargeable.  These libraries work together with arbitrary
+partly with free download.  These libraries work together with arbitrary
 peripherical devices, although they may be limited to certain interface
 devices, such as the vendor's GPIB card.
 
