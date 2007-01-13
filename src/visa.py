@@ -348,8 +348,8 @@ class Instrument(ResourceTemplate):
         self.values_format = keyw.get("values_format", self.values_format)
         # I validate the resource class by requesting it from the instrument
         if self.resource_class != "INSTR":
-            raise ValueError, "given resource was not an INSTR but %s" \
-                              % self.resource_class
+            warnings.warn("given resource was not an INSTR but %s"
+                          % self.resource_class, stacklevel = 2)
     def __repr__(self):
         return "Instrument(\"%s\")" % self.resource_name
     def write(self, message):
@@ -731,8 +731,8 @@ class Interface(ResourceTemplate):
         ResourceTemplate.__init__(self, interface_name)
         # I validate the resource class by requesting it from the interface
         if self.resource_class != "INTFC":
-            raise ValueError, "resource is not an INTFC but %s"\
-                              % self.resource_class
+            warnings.warn("resource is not an INTFC but %s"
+                          % self.resource_class, stacklevel = 2)
     def __repr__(self):
         return "Interface(\"%s\")" % self.resource_name
 
