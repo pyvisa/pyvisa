@@ -189,20 +189,20 @@ class VisaLibrary(Singleton):
             "viVSScanf", "viVScanf", "viVxiCommandQuery", "viWaitOnEvent",
             "viWrite", "viWriteAsync", "viWriteFromFile"]:
             try:
-                self.__lib.__getattr__(visa_function).restype = check_status
+                getattr(self.__lib, visa_function).restype = check_status
             except AttributeError:
                 # Mostly, viParseRsrcEx was not found
                 pass
         for visa_function in ["viPrintf", "viScanf", "viSPrintf", "viSScanf",
                               "viQueryf"]:
             try:
-                self.__cdecl_lib.__getattr__(visa_function).restype = check_status
+                getattr(self.__cdecl_lib, visa_function).restype = check_status
             except AttributeError:
                 pass
         for visa_function in ["viPeek8", "viPeek16", "viPeek32", "viPoke8",
                               "viPoke16", "viPoke32"]:
             try:
-                self.__lib.__getattr__(visa_function).restype = None
+                getattr(self.__lib, visa_function).restype = None
             except AttributeError:
                 pass
         # Here too, we silently ignore missing functions.  If the user accesses
@@ -365,7 +365,7 @@ class VisaLibrary(Singleton):
         else:
             library = self.__cdecl_lib
         try:
-            library.__getattr__(visa_function).argtypes = types
+            getattr(library, visa_function).argtypes = types
         except AttributeError:
             if not may_be_missing:
                 raise
