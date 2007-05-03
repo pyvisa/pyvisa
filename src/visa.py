@@ -347,7 +347,10 @@ class Instrument(ResourceTemplate):
         self.send_end      = keyw.get("send_end", True)
         self.values_format = keyw.get("values_format", self.values_format)
         # I validate the resource class by requesting it from the instrument
-        if self.resource_class != "INSTR":
+        if self.resource_class == "":
+            raise ValueError, "empty resource class: device not found"
+        # FixMe: RAW and SOCKET should be moved in own classes eventually
+        elif self.resource_class not in ("INSTR", "RAW", "SOCKET"):
             warnings.warn("given resource was not an INSTR but %s"
                           % self.resource_class, stacklevel = 2)
     def __repr__(self):
@@ -613,10 +616,12 @@ class GpibInstrument(Instrument):
                 vpp43.wait_on_event(self.vi, VI_EVENT_SERVICE_REQ,
                                     adjusted_timeout)
             vpp43.close(context)
-            if vpp43.read_stb(self.vi) & 0x40:
+            if self.stb & 0x40:
                 break
         vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
-
+    def __get_stb(self):
+        return vpp43.read_stb(self.vi)
+    stb = property(__get_stb, None, None, """Service request status register.""")
 
 # The following aliases are used for the "end_input" property
 no_end_input = VI_ASRL_END_NONE
