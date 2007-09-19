@@ -47,9 +47,9 @@ as easy as three lines of Python code::
 
 (That's the whole program; really!) It is tailored to work on both Windows and
 Linux, and with arbitrary adapters (e.g. National Instruments, Agilent,
-Tektronics).  In order to achieve this, PyVISA relies on an external library
-file which is bundled with hardware and software of those vendors.  (So only in
-rare cases you have to purchase it separately.)
+Tektronics, Stanford Research Systems).  In order to achieve this, PyVISA
+relies on an external library file which is bundled with hardware and software
+of those vendors.  (So only in rare cases you have to purchase it separately.)
 
 PyVISA implements convenient and Pythonic programming in two layers:
 
