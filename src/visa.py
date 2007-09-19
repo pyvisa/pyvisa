@@ -702,8 +702,8 @@ class SerialInstrument(Instrument):
                          """(1, 1.5, or 2)""")
     def __get_parity(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_PARITY)
-    def __set_parity(self, bits):
-        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_PARITY, bits)
+    def __set_parity(self, parity):
+        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_PARITY, parity)
     parity = property(__get_parity, __set_parity, None,
                       """The parity used with every frame transmitted """
                       """and received""")
