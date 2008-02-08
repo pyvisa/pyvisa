@@ -76,7 +76,7 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
         if not equal:
             new_filters.append(filter)
     if len(warnings.filters) == len(new_filters):
-        warnings.warn("Warning filter not found", stacklevel = 2)
+        warnings.warn("Warning filter not found", stacklevel=2)
     warnings.filters = new_filters
 
 def _warn_for_invalid_keyword_arguments(keyw, allowed_keys):
@@ -172,7 +172,14 @@ class ResourceTemplate(object):
 
         """)
     def __get_resource_class(self):
-        return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
+        try:
+            resource_class = \
+                vpp43.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
+        except VisaIOError, error:
+            if error.error_code == VI_ERROR_NSUP_ATTR:
+                return None
+            else: raise
+        return resource_class
     resource_class = property(__get_resource_class, None, None,
         """The resource class of the resource as a string.""")
     def __get_resource_name(self):
@@ -347,12 +354,13 @@ class Instrument(ResourceTemplate):
         self.send_end      = keyw.get("send_end", True)
         self.values_format = keyw.get("values_format", self.values_format)
         # I validate the resource class by requesting it from the instrument
-        if self.resource_class == "":
-            raise ValueError, "empty resource class: device not found"
+        if not self.resource_class:
+            warnings.warn("resource class of instrument could not be determined",
+                          stacklevel=2)
         # FixMe: RAW and SOCKET should be moved in own classes eventually
         elif self.resource_class not in ("INSTR", "RAW", "SOCKET"):
             warnings.warn("given resource was not an INSTR but %s"
-                          % self.resource_class, stacklevel = 2)
+                          % self.resource_class, stacklevel=2)
     def __repr__(self):
         return "Instrument(\"%s\")" % self.resource_name
     def write(self, message):
@@ -376,7 +384,7 @@ class Instrument(ResourceTemplate):
                 buffer = buffer[:-len(self.__term_chars)]
             else:
                 warnings.warn("read string doesn't end with "
-                              "termination characters", stacklevel = 2)
+                              "termination characters", stacklevel=2)
         return buffer.rstrip(CR+LF)
     def read_raw(self):
         """Read the unmodified string sent from the instrument to the computer.
@@ -478,7 +486,7 @@ class Instrument(ResourceTemplate):
     def read_floats(self):
         """This method is deprecated.  Use read_values() instead."""
         warnings.warn("read_floats() is deprecated.  Use read_values()",
-                      stacklevel = 2)
+                      stacklevel=2)
         return self.read_values(format=ascii)
     def ask(self, message):
         """A combination of write(message) and read()"""
@@ -737,7 +745,7 @@ class Interface(ResourceTemplate):
         # I validate the resource class by requesting it from the interface
         if self.resource_class != "INTFC":
             warnings.warn("resource is not an INTFC but %s"
-                          % self.resource_class, stacklevel = 2)
+                          % self.resource_class, stacklevel=2)
     def __repr__(self):
         return "Interface(\"%s\")" % self.resource_name
 
