@@ -1,3 +1,510 @@
+2008-03-26  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex, doc/vpp43.txt, src/__init__.py, src/visa.py, src/visa_attributes.py, src/visa_exceptions.py, src/visa_messages.py, src/visa_study.py, src/vpp43.py, src/vpp43_attributes.py, src/vpp43_constants.py, src/vpp43_types.py, test/test_itc4.py, test/test_keithley2000.py, COPYING, PyVISA.egg-info/PKG-INFO, doc/LICENSE, doc/homepage.txt, setup.py:
+	Updated to v1.3.  Changed licence to MIT.
+
+2008-02-08  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa.py: Made determination of ressource class even more careful.
+
+2007-09-19  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa.py: Tiny improvement.
+
+	* doc/pyvisa.tex, setup.py: Promoted to version 1.2
+
+	* doc/homepage.txt: Minor correction.
+
+2007-05-03  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/vpp43.py:
+	Changed some __getattr__ to getattr in order to have working exceptions again
+	(e.g. timeouts).
+
+	* src/visa.py:
+	Softened the test for "INSTR" even further.  Introduced the "stb" property for
+	GPIB instruments.
+
+2007-01-13  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa.py: Changed "is not an INSTR" error to a warning.
+
+2006-12-09  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.cfg: Added correct prefix for RPM.
+
+2006-11-24  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/homepage.txt: Deleted "purchase" thing.
+
+2006-11-21  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Small corrections.
+
+	* PyVISA.egg-info/PKG-INFO, PyVISA.egg-info/SOURCES.txt:
+	Ordinary update.
+
+	* setup.py: Changed version number to 1.1.
+
+	* doc/homepage.txt: Updated date.
+
+	* doc/Makefile: An neue mkhowto-Version angepaßt.
+
+2006-11-02  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Improved description of values_format.
+
+	* doc/pyvisa.tex: Typo fixed.  Promoted version to 1.1.
+
+2006-08-13  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa.py: Typo fixed.
+
+2006-08-11  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/vpp43.py: Added missing self.
+
+	* src/vpp43.py:
+	Now almost all VISA function may be missing (in case of very old libraries).
+
+	* doc/vpp43.txt: Mentioned possible AttributeError with viParseRsrcEx.
+
+	* src/vpp43.py, src/visa.py: Made secure against missing viParseRsrcEx.
+
+	* src/visa.py: Removed superfluous calls to parse_resource_extended.
+
+2006-07-28  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/vpp43.py: Typo fixed (thanks to Steve MULLER).
+
+2006-02-18  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/homepage.txt: Typo fixed.
+
+2006-01-26  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/homepage.txt: Typo corrected.
+
+	* doc/homepage.txt: Made introduction more positive.
+
+2006-01-24  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* PyVISA.egg-info/SOURCES.txt: New file.
+
+	* PyVISA.egg-info/PKG-INFO: Ordinary update.
+
+	* doc/pyvisa.tex: Minor improvements.
+
+	* setup.py:
+	Script can now handle installation with or without setuptools.
+
+	* setup.py: Switched to new distutils version.
+
+2006-01-23  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py: General update.
+
+	* misc/ctypes/vpp43_types.py, test/test_itc4.py, test/test_keithley2000.py, src/visa_exceptions.py, src/visa_messages.py, src/vpp43.py, src/vpp43_attributes.py, src/vpp43_constants.py, src/vpp43_types.py, src/__init__.py, src/visa.py, doc/vpp43.txt:
+	Copyright updated.
+
+	* doc/pyvisa.tex: Copyright updated.  Version number changed.
+
+	* doc/vpp43.txt, doc/homepage.txt: Copyright year updated.
+
+2005-09-24  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Minor improvements.
+
+	* PyVISA.egg-info/PKG-INFO: Ordinary update.
+
+	* doc/homepage.txt:
+	Mentioned that you may have to purchase the VISA library.
+
+2005-09-23  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa.py: Fixed two bugs.
+
+2005-09-22  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: New properties of SerialInstrument explained.
+
+	* src/visa.py: Added many further properties to SerialInstrument.
+
+2005-09-21  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/.cvsignore, PyVISA.egg-info/PKG-INFO: Ordinary update.
+
+	* doc/pyvisa.tex, setup.py: Changed version number to 0.9.7.
+
+	* doc/vpp43.txt: Renamed timeout parameter in open() to open_timeout.
+
+	* doc/homepage.txt: Link zu pyvLab hinzugefügt.
+
+	* src/vpp43.py: Renamed Timeout parameter in open() to open_timeout.
+
+	* doc/pyvisa.tex:
+	Added section about SerialInstrument.  Minor improvements.
+
+	* src/visa.py:
+	Added class SerialInstrument.  Made termination characters even more robust.
+	Minor improvements.
+
+	* doc/pyvisa.tex: {read,ask_for}_floats --> {read,ask_for}_values.
+
+2005-09-18  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa.py: Minor improvements.
+
+2005-09-07  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Added index entries.
+
+2005-09-02  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex:
+	Changed document structure a lot (to allow for an index).
+
+2005-08-31  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py, doc/pyvisa.tex: Changed version number to 0.9.6.
+
+	* src/vpp43.py: Renamed TypeError to VisaTypeError.
+
+	* src/visa_exceptions.py:
+	Added InvalidBinaryFormat.  Renamed TypeError to VisaTypeError.
+
+	* src/visa.py:
+	Added a lot of docstrings.  Fixed bug with ValueError exception raising.
+
+	* src/visa.py:
+	Eliminated string exceptions.  A little bit of code clean-up.
+
+2005-08-27  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py:
+	Added old distutils inclusion for RPM that cause trouble with my setuptools
+	installation.
+
+	* src/visa.py:
+	Set default for term_chars to None and implemented it in write() method.
+
+	* doc/pyvisa.tex: Described new default for term_chars.
+
+	* src/visa.py: Added instrument().  Fixed bugs in __repr()__.
+
+2005-08-26  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex:
+	Changed section order a little bit.  Added section about VISA resource names.
+	Added description of instrument().
+
+2005-08-13  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/homepage.txt: Changed title and inverted first enumeration.
+
+	* doc/Makefile: Added a "keywords" meta tag to index.html.
+
+2005-08-12  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa_attributes.py: 0xFFFFFFFF -> 0xFFFFFFFFL
+
+	* doc/homepage.txt: Minor improvement.
+
+	* .cvsignore: Removed Python Eggs directory.
+
+	* doc/pyvisa.tex: Changed version number to 0.9.5.
+
+	* setup.py: Switched from distutils to setuptools.
+
+	* PyVISA.egg-info/depends.txt, PyVISA.egg-info/top_level.txt, PyVISA.egg-info/PKG-INFO:
+	New file.
+
+2005-08-11  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py:
+	Changed package name to "PyVISA".  Changed version number to 0.9.5.
+
+	* .cvsignore: Added PyVISA.egg-info.
+
+	* doc/homepage.txt: Made it more friendly.
+
+	* doc/pyvisa.tex: Included positive user reports.
+
+2005-08-09  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* test/test_itc4.py, test/test_keithley2000.py, src/__init__.py, src/visa.py, src/visa_exceptions.py, src/visa_messages.py, src/vpp43.py, src/vpp43_types.py, setup.py:
+	Removed tabs from indentation.
+
+2005-08-08  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Added note about escaping in Windows-style paths.
+
+2005-08-02  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Mentioned too old ctypes in Enthought Python.
+
+	* doc/pyvisa.tex:
+	Added explanation about how to set the VISA libaray within the Python program.
+
+	* setup.py: Changed version number to 0.9.4.
+
+2005-07-28  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Minor corrections.
+
+	* doc/pyvisa.tex:
+	Explained INI file for Windows.  Explained selecting the DLL's filename under
+	Windows.
+
+	* src/vpp43.py: Added filename selection for VISA DLL with Windows.
+
+2005-07-22  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Various improvements.
+
+	* doc/pyvisa.tex:
+	Changed version number to 0.9.4.  Changed order of properties/keyword
+	arguments.  Modified more complex example to SCPI code.
+
+2005-07-21  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa.py: Added code to skip over header before binary data.
+
+	* doc/pyvisa.tex: Added explanation of endianness.
+
+	* src/visa.py: Cleaned up whitespace.
+
+	* src/visa.py: Added support for endianess in case of binary transfers.
+
+	* src/visa.py:
+	Improved binary reading; now it also accepts things like "#267...".
+
+2005-07-20  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt: Deleted document version number.
+
+	* setup.py: Changed version number to 0.9.3.
+
+	* doc/pyvisa.tex:
+	Changed version number to 0.9.3.  Added description of read_raw().  Updated
+	description of termination characters.
+
+	* src/visa.py: Added read_raw().
+
+	* src/visa.py:
+	Changed default termination characters to "" for GPIB instruments.  LF and CR
+	are completely stripped from the end of read string, no matter how the
+	termination characters are set.
+
+	* doc/homepage.txt: Moved PyVISA section to the beginning.
+
+2005-07-19  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Added optional "format" arguments.  Fixed typo.
+
+	* doc/pyvisa.tex:
+	Explained missing properties of Instrument.  Added explanation of
+	values_format.  Added descriptions for ask() and ask_for_values().
+
+	* src/visa.py:
+	Added remaining keyword arguments for Instrument constructor.  Added CR and LF.
+	Added working support for reading binary data.
+
+2005-07-18  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa.py: Added ask() and ask_for_values().
+
+	* src/visa.py: Implemented binary reading.  Not working yet.
+
+	* doc/pyvisa.tex: Explained new keyword arguments.
+
+	* src/visa.py:
+	Split the old term_chars in term_chars, delay, and send_end.
+
+2005-07-17  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* src/visa.py:
+	Implemented warning system for invalid keyword arguments.  Added test for valid
+	float values in read_floats().  Added full term_char string in
+	__get_term_char().
+
+2005-07-13  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex:
+	Standard timeout increased from 2 to 5 seconds.  read_floats() returns *always*
+	a list.  Moved trigger() method to Instrument class.
+
+	* src/visa.py:
+	Standard timeout increased from 2 to 5 seconds.  read_floats() returns *always*
+	a list.  Moved trigger() method to Instrument class.  Fixed bug in regular
+	expression for termination characters.  Fixed bug with ignored term_char
+	attribute for GPIB instruments.
+
+2005-07-09  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py, doc/pyvisa.tex: Changed to new release number.
+
+	* src/__init__.py: minor improvement.
+
+	* src/visa.py:
+	Increased chunk_size's default value and added it to the keyword arguments of
+	the constructor.
+
+	* doc/pyvisa.tex: Added explanation of chunk_size.
+
+2005-07-03  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Spell-checked.
+
+	* doc/pyvisa.tex: Added RS232 example.
+
+	* doc/pyvisa.tex, setup.py: Changed version number to 0.9.1.
+
+	* README: Corrected package name.
+
+	* misc/ctypes/vpp43_types.py, setup.py, src/__init__.py, src/visa_exceptions.py, src/visa_messages.py, src/visa_study.py, src/vpp43.py, src/vpp43_attributes.py, src/vpp43_constants.py, src/vpp43_types.py, test/test_keithley2000.py:
+	Corrected package name in copyright notice.
+
+	* doc/homepage.txt: Added "GPIB" to the homepage's title.
+
+	* test/test_itc4.py: New file.
+
+	* doc/pyvisa.tex:
+	Adjusted to the fact that PyVISA is now also tested with RS232.  Changed date.
+
+	* src/visa.py: Fixed minor bug with obsolete variable name.
+
+	* src/visa.py:
+	Added properties resource_name and resource_class to ResourceTemplate.  Used
+	both to simplify code.
+
+2005-07-01  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py: Made description even shorter.
+
+	* doc/homepage.txt:
+	Made the string "GPIB" more obvious on the homepage.
+
+2005-06-30  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* README: Undated to current situation.
+
+	* setup.py: Changed description.
+
+2005-06-29  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py, doc/pyvisa.tex: Changed to version 0.9.
+
+	* doc/vpp43.txt: Minor fix.
+
+	* test/test_keithley2000.py: Fixed bug with variable "voltages".
+
+2005-06-28  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/vpp43.txt: Added explanation of ".pyvisarc".
+
+	* doc/homepage.txt, doc/pyvisa.tex, doc/vpp43.txt: Minor improvements
+
+	* doc/pyvisa.tex, doc/vpp43.txt: Fixed little errors.
+
+2005-06-27  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/pyvisa.tex: Mentioned needed Python version.
+
+	* src/__init__.py: Fixed bug with missing $HOME on Windows.
+
+	* setup.py:
+	Added single module visa.py.  Ignored exceptions from remove_tree() call.
+
+	* doc/pyvisa.tex:
+	Added explanation of .pyvisarc.  Adjusted to new import strategy.
+
+	* doc/.cvsignore: Added LaTeX intermediate outputs and logfiles.
+
+	* src/.cvsignore: New file.
+
+	* src/__init__.py: Added site-wide configuration file.
+
+	* src/__init__.py: First usable version.
+
+	* visa.py: New file.
+
+	* setup.py: Substituted a native distutils routine for prune_path.
+
+	* doc/Makefile: Moved creation of pyvisa.tex-related doc to /tmp/.
+
+	* MANIFEST.in: Added ChnageLog and doc/Makefile.
+
+	* setup.cfg: Added doc_files.
+
+	* setup.py:
+	Added symbolic link from src/doc/ to doc/.  Added doc inclusion into the binary
+	dumb distri.  Untested, because supported since Python 2.4.
+
+	* setup.py:
+	Renamed package to "pyvisa".  Added "make" call for making documentation.
+
+2005-06-26  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* doc/upload_homepage.sh: File deleted.
+
+	* doc/Makefile: New file.
+
+	* src/visa.py, src/visa_study.py: Adjusted header info.
+
+	* src/pyvisa.py, src/visa.py: Renamed pyvisa.py to this file.
+
+	* src/visa_study.py: Renamed visa.py to this file.
+
+	* setup.py:
+	Added code for disabling an existing local RPM configuation.  Added "license"
+	keyword parameter.
+
+	* setup.cfg: New file.
+
+	* doc/vpp43.txt: Added warning concerning load_library().
+
+	* doc/vpp43.txt: Added section about re-loading the VISA library.
+
+2005-06-25  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py: Improved description strings.
+
+	* doc/pyvisa.tex, src/pyvisa.py:
+	Changed default timeout for wait_for_srq() to 25 seconds.
+
+	* test/test_keithley2000.py: New file.
+
+	* src/vpp43.py: Removed TODO list.
+
+	* .cvsignore: Added MANIFEST.
+
+	* MANIFEST.in: Adjusted to current configuration.
+
+	* README, readme.txt: File renamed.
+
+	* misc/ctypes/Makefile, misc/ctypes/ctypes-test.c, misc/ctypes/ctypes-test.py, misc/ctypes/minimal.py, misc/ctypes/vpp43_types.py:
+	New file.
+
+	* setup.py: Added missing import.
+
+	* setup.py: Adjusted to new directory structure.
+
+	* src/__init__.py: New file.
+
+	* src/pyvisa.py: Added copyright notice.
+
+	* pyvisa.py, src/pyvisa.py, src/visa.py, src/visa_attributes.py, src/visa_exceptions.py, src/visa_messages.py, src/vpp43.py, src/vpp43_attributes.py, src/vpp43_constants.py, src/vpp43_types.py, visa.py, visa_attributes.py, visa_exceptions.py, visa_messages.py, vpp43.py, vpp43_attributes.py, vpp43_constants.py, vpp43_types.py:
+	Moved file to src/
+
+	* ChangeLog: New file.
+
+2005-06-23  Torsten Bronger  <bronger@physik.rwth-aachen.de>
+
+	* setup.py: Fixed too bugs.
+
+	* setup.py: Brought up-to-date.
+
 2005-06-23  Torsten Bronger  <bronger@physik.rwth-aachen.de>
 
 	* setup.py: Fixed two bugs.
