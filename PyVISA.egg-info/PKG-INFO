@@ -1,6 +1,6 @@
-Metadata-Version: 1.0
+Metadata-Version: 1.1
 Name: PyVISA
-Version: 1.1
+Version: 1.3
 Summary: Python VISA bindings for GPIB, RS232, and USB instruments
 Home-page: http://pyvisa.sourceforge.net
 Author: Torsten Bronger, Gregor Thalhammer
@@ -16,7 +16,7 @@ Platform: Windows
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Science/Research
-Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: Microsoft :: Windows
 Classifier: Operating System :: POSIX :: Linux
 Classifier: Programming Language :: Python

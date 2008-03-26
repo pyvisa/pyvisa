@@ -3,24 +3,32 @@
 #
 #    setup.py - Distutils setup script for PyVISA
 #
-#    Copyright © 2005, 2006 Torsten Bronger <bronger@physik.rwth-aachen.de>,
-#                           Gregor Thalhammer <gth@users.sourceforge.net>.
-#
+#    Copyright © 2005, 2006, 2007, 2008
+#                Torsten Bronger <bronger@physik.rwth-aachen.de>,
+#                Gregor Thalhammer <gth@users.sourceforge.net>.
+#  
 #    This file is part of PyVISA.
-#
+#  
 #    PyVISA is free software; you can redistribute it and/or modify it under
-#    the terms of the GNU General Public License as published by the Free
-#    Software Foundation; either version 2 of the License, or (at your option)
-#    any later version.
+#    the terms of the MIT licence:
 #
-#    PyVISA is distributed in the hope that it will be useful, but WITHOUT ANY
-#    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-#    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-#    details.
+#    Permission is hereby granted, free of charge, to any person obtaining a
+#    copy of this software and associated documentation files (the "Software"),
+#    to deal in the Software without restriction, including without limitation
+#    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#    and/or sell copies of the Software, and to permit persons to whom the
+#    Software is furnished to do so, subject to the following conditions:
 #
-#    You should have received a copy of the GNU General Public License along
-#    with PyVISA; if not, write to the Free Software Foundation, Inc., 59
-#    Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#    The above copyright notice and this permission notice shall be included in
+#    all copies or substantial portions of the Software.
+#
+#    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#    DEALINGS IN THE SOFTWARE.
 #
 
 try:
@@ -78,7 +86,7 @@ if os.name == 'posix':
 
 setup(name = 'PyVISA',
       description = 'Python VISA bindings for GPIB, RS232, and USB instruments',
-      version = '1.2',
+      version = '1.3',
       long_description = \
       """A Python package for support of the Virtual Instrument Software Architecture
 (VISA), in order to control measurement devices and test equipment via GPIB,
@@ -94,7 +102,7 @@ RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
