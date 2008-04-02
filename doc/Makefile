@@ -17,7 +17,7 @@ index.html: homepage.txt
 pyvisa.pdf: pyvisa.tex
 	rm -Rf pyvisa /tmp/pyvisa
 	cp pyvisa.tex /tmp/
-	cd /tmp ; mkhowto --pdf --html \
+	cd /tmp ; /usr/lib/python2.5/doc/tools/mkhowto --pdf --html \
 	  --up-link http://pyvisa.sourceforge.net \
 	  --up-title "PyVISA homepage" --numeric --image-type=png \
 	  --iconserver=. pyvisa.tex
