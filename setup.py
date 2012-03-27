@@ -116,4 +116,5 @@ RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
       package_data = {'pyvisa': ['doc/pyvisa.pdf', 'doc/vpp43.txt']},
       packages = ['pyvisa'],
       platforms = "Linux, Windows",
-      py_modules = ['visa'])
+      py_modules = ['visa'],
+      setup_requires = ["sphinx>=1.0"])

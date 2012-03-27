@@ -1,0 +1,979 @@
+﻿.. -*- mode: rst; coding: utf-8; ispell-local-dictionary: "british"; -*-
+ 
+   pyvisa.txt - Manual for high-level OO instrument access on top of VISA
+   Converted from the original pyvisa.tex to restructured text.
+
+   Copyright © 2012 Florian Bauer <fbauer.devel@googlemail.com>
+   Copyright © 2011 Kevin Saff
+   Copyright © 2005, 2006, 2007, 2008-2012
+               Torsten Bronger <bronger@physik.rwth-aachen.de>,
+               Gregor Thalhammer <gth@users.sourceforge.net>.
+ 
+   This file is part of PyVISA.
+ 
+   PyVISA is free software; you can redistribute it and/or modify it under the
+   terms of the MIT licence:
+ 
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+
+
+========
+ PyVISA
+========
+:release: 1.4
+
+:author: Torsten Bronger <bronger@physik.rwth-aachen.de>
+:author: Florian Bauer
+:date: 26 March 2008
+
+.. _front:
+
+Front Matter
+============
+
+Copyright 2005 Torsten Bronger.
+
+Permission is granted to copy, distribute and/or modify this document under the
+terms of the GNU Free Documentation License, Version 1.2 or any later version
+published by the Free Software Foundation; with no Invariant Sections, no
+Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included
+as a separate file (LICENSE) in the PyVISA distribution.
+
+Abstract
+--------
+
+PyVISA enables you to control your measurement and test equipment -- digital
+multimeters, motors, sensors and the like.  This document covers the
+easy-to-use :py:module:`visa` module of the PyVISA package.  It implements control
+of measurement devices in a straightforward and convenient way.  The design
+goal is to combine HT\,Basic's simplicity with Python's modern syntax and
+powerful set of libraries.
+
+PyVISA doesn't implement VISA itself.  Instead, PyVISA provides bindings to the
+VISA library (a DLL or "shared object" file).  This library is usually
+shipped with your GPIB interface or software like LabVIEW.  Alternatively,
+you can download it from your favourite equipment vendor (National Instruments,
+Agilent, etc).
+
+PyVISA is free software under the terms of the GPL.  It can be downloaded at
+`PyVISA's project page <http://sourceforge.net/projects/pyvisa>`_.  You can
+report bugs there, too.  Additionally, I'm happy about feedback from people
+who've given it a try.  So far, we have positive reports of various National
+Instruments GPIB adapters (connected through PCI, USB, and RS\,232), the
+Agilent~82357\,A, and SRS lock-in amplifiers, for both Windows and Linux.
+However, I'd be really surprised about negative reports anyway, due to the high
+abstraction level of PyVISA.
+
+As far as USB instruments are concerned, you must make sure that they act as
+ordinary USB devices and not as so-called HDI devices (like keyboard and
+mouse).
+
+
+Contents:
+=========
+
+.. toctree::
+   :maxdepth: 4
+
+
+An example
+==========
+
+Let's go *in medias res* and have a look at a simple example::
+
+  from visa import *
+
+  my_instrument = instrument("GPIB::14")
+  my_instrument.write("*IDN?")
+  print my_instrument.read()
+
+This example already shows the two main design goals of PyVISA: preferring
+simplicity over generality, and doing it the object-oriented way.
+
+Every instrument is represented in the source by an object instance.  In this case,
+I have a GPIB instrument with instrument number 14, so I create the instance
+(i.\,e.\ variable) called \var{my_instrument} accordingly::
+
+  my_instrument = instrument("GPIB::14")
+
+\ttindex{instrument()}
+\code{"GPIB::14"} is the instrument's \emph{resource name}.  See
+section~\ref{sec-VISA-resource-names} for a short explanation of that.
+
+Then, I send the message ``*IDN?''\ to the device, which is the standard GPIB
+message for ``what are you?''\ or -- in some cases -- ``what's on your display
+at the moment?'':
+\begin{verbatim}
+my_instrument.write("*IDN?")
+\end{verbatim}
+Finally, I print the instrument's answer on the screen:
+\begin{verbatim}
+print my_instrument.read()
+\end{verbatim}
+
+
+Example for serial (RS232) device
+---------------------------------
+
+\index{RS232@RS\,232}
+\index{COM2@``COM\,2''}
+\index{serial device}
+
+The only RS\,232 device in my lab is an old Oxford ITC\,4 temperature
+controller, which is connected through COM\,2 with my computer.  The following
+code prints its self-identification on the screen:
+\begin{verbatim}
+from visa import *
+
+itc4 = instrument("COM2")
+itc4.write("V")
+print itc4.read()
+\end{verbatim}
+\ttindex{instrument()}
+Instead of separate write and read operations, you can do both with one
+\code{ask()} call.  Thus, the above source code is equivalent to
+\begin{verbatim}
+from visa import *
+
+itc4 = instrument("COM2")
+print itc4.ask("V")
+\end{verbatim}
+It couldn't be simpler.  See section~\ref{sec-serial-devices} for further
+information about serial devices.
+
+.. _sec-more-complex-example:
+
+A more complex example
+----------------------
+
+
+The following example shows how to use SCPI commands with a Keithley 2000
+multimeter in order to measure 10~voltages.  After having read them, the
+program calculates the average voltage and prints it on the screen.
+\index{SCPI}
+\index{Keithley 2000}
+
+I'll explain the program step-by-step.  First, we have to initialise the
+instrument:
+\begin{verbatim}
+from visa import instrument
+
+keithley = instrument("GPIB::12")
+keithley.write("*rst; status:preset; *cls")
+\end{verbatim}
+\ttindex{instrument()}
+Here, we create the instrument variable \var{keithley}, which is used for all
+further operations on the instrument.  Immediately after it, we send the
+initialisation and reset message to the instrument.
+
+The next step is to write all the measurement parameters, in particular the
+interval time (500\,ms) and the number of readings~(10) to the instrument.  I
+won't explain it in detail.  Have a look at an SCPI and/or Keithley~2000
+manual.
+\begin{verbatim}
+interval_in_ms = 500
+number_of_readings = 10
+
+keithley.write("status:measurement:enable 512; *sre 1")
+keithley.write("sample:count %d" % number_of_readings)
+keithley.write("trigger:source bus")
+keithley.write("trigger:delay %f" % (interval_in_ms / 1000.0))
+
+keithley.write("trace:points %d" % number_of_readings)
+keithley.write("trace:feed sense1; feed:control next")
+\end{verbatim}
+Okay, now the instrument is prepared to do the measurement.  The next three
+lines make the instrument waiting for a trigger pulse, trigger it, and wait
+until it sends a ``service request'':
+\index{trigger}
+\index{service request}
+\begin{verbatim}
+keithley.write("initiate")
+keithley.trigger()
+keithley.wait_for_srq()
+\end{verbatim}
+With sending the service request, the instrument tells us that the measurement
+has been finished and that the results are ready for transmission.  We could
+read them with \samp{keithley.ask("trace:data?")}\ however, then we'd get
+\begin{verbatim}
+NDCV-000.0004E+0,NDCV-000.0005E+0,NDCV-000.0004E+0,NDCV-000.0007E+0,
+NDCV-000.0000E+0,NDCV-000.0007E+0,NDCV-000.0008E+0,NDCV-000.0004E+0,
+NDCV-000.0002E+0,NDCV-000.0005E+0
+\end{verbatim}
+which we would have to convert to a Python list of numbers.  Fortunately, the
+\code{ask_for_values()} method does this work for us:
+\begin{verbatim}
+voltages = keithley.ask_for_values("trace:data?")
+print "Average voltage: ", sum(voltages) / len(voltages)
+\end{verbatim}
+Finally, we should reset the instrument's data buffer and SRQ status register,
+so that it's ready for a new run.  Again, this is explained in detail in the
+instrument's manual:
+\begin{verbatim}
+keithley.ask("status:measurement?")
+keithley.write("trace:clear; feed:control next")
+\end{verbatim}
+That's it.  18 lines of lucid code.  (Well, SCPI is awkward, but that's another
+story.)
+
+
+
+.. _sec-VISA-resource-names:
+
+VISA resource names
+-------------------
+
+\index{resource name}
+\index{VISA resource name}
+
+If you use the function \function{instrument()}, you must tell this function
+the \emph{VISA resource name} of the instrument you want to connect to.
+
+Generally, it starts with the bus type, followed by a double colon~\samp{::},
+followed by the number within the bus.  For example,
+\begin{verbatim}
+GPIB::10
+\end{verbatim}
+denotes the GPIB instrument with the number~10.  If you have two GPIB boards
+and the instrument is connected to board number~1, you must write
+\begin{verbatim}
+GPIB1::10
+\end{verbatim}
+
+As for the bus, things like ``\code{GPIB}'', ``\code{USB}'', ``\code{ASRL}''
+(for serial/parallel interface) are possible.  So for connecting to an
+instrument at COM2, the resource name is
+\begin{verbatim}
+ASRL2
+\end{verbatim}
+(Since only one instrument can be connected with one serial interface, there is
+no double colon parameter.)  However, most VISA systems allow aliases such as
+\samp{COM2} or \samp{LPT1}.  You may also add your own aliases.
+
+The resource name is case-insensitive.  It doesn't matter whether you say
+\samp{ASRL2} or \samp{asrl2}.
+
+\begin{raggedright}
+For further information, I have to refer you to a comprehensive VISA
+description like \url{http://www.ni.com/pdf/manuals/370423a.pdf}.
+
+\end{raggedright}
+
+
+:py:module:`visa`c --- module contents
+======================================
+
+\declaremodule{}{visa}
+  \platform{Linux,Windows}
+\modulesynopsis{Controlling measurement and test equipment using VISA.}
+\moduleauthor{Torsten Bronger}{bronger@physik.rwth-aachen.de}
+\moduleauthor{Gregor Thalhammer}{gth@users.sourceforge.net}
+\sectionauthor{Torsten Bronger}{bronger@physik.rwth-aachen.de}
+
+This section is a reference to the functions and classes of the \module{visa}
+module, which is the main module of the PyVISA package.
+
+
+Module functions
+----------------
+
+\begin{funcdesc}{get_instruments_list}{\optional{use_aliases}}
+  returns a list with all instruments that are known to the local VISA system.
+  If you're lucky, these are all instruments connected with the computer.
+
+  The boolean \var{use_aliases} is \code{True} by default, which means that the
+  more human-friendly aliases like ``\code{COM1}'' instead of ``\code{ASRL1}''
+  are returned.  With some VISA systems\footnote{such as the ``Measurement and
+    Automation Center'' by National Instruments} you can define your own
+  aliases for each device, e.\,g.\ ``\code{keithley617}'' for
+  ``\code{GPIB0::15::INSTR}''.  If \var{use_aliases} is \code{False}, only
+  standard resource names are returned.
+  \index{alias}
+  \index{Measurement and Automation Center}
+\end{funcdesc}
+
+\begin{funcdesc}{instrument}{resource_name\optional{, **keyw}}
+  returns an instrument variable for the instrument given by
+  \var{resource_name}.  It saves you from calling one of the instrument classes
+  directly by choosing the right one according to the type of the instrument.
+  So you have \emph{one} function to open \emph{all} of your instruments.
+  \index{factory function}
+
+  The parameter \var{resource_name} may be any valid VISA instrument resource
+  name, see section~\ref{sec-VISA-resource-names}.  In particular, you can use
+  a name returned by \function{get_instruments_list()} above.
+
+  All further keyword arguments given to this function are passed to the class
+  constructor of the respective instrument class.  See
+  section~\ref{sec-general-devices} for a table with all allowed keyword
+  arguments and their meanings.
+\end{funcdesc}
+
+
+Module classes
+--------------
+
+
+.. _sec-general-devices:
+
+General devices
++++++++++++++++
+
+\begin{classdesc}{Instrument}{resource_name\optional{, **keyw}}
+  represents an instrument, e.\,g.\ a measurement device.  It is independent of
+  a particular bus system, i.\,e.\ it may be a GPIB, serial, USB, or whatever
+  instrument.  However, it is not possible to perform bus-specific operations
+  on instruments created by this class.  For this, have a look at the
+  specialised classes like \class{GpibInstrument}
+  (section~\ref{sec-gpib-devices}).
+
+  The parameter \var{resource_name} takes the same syntax as resource
+  specifiers in VISA.  Thus, it begins with the bus system followed by
+  ``\verb|::|'', continues with the location of the device within the bus
+  system, and ends with an optional ``\verb|::INSTR|''.
+
+  Possible keyword arguments are:
+  \begin{tableii}{ll}{var}{Keyword}{Description}
+    \lineii{timeout}{timeout in seconds for all device operations, see
+      section~\ref{sec-timeouts}. Default:~5}
+    \lineii{chunk_size}{Length of read data chunks in bytes, see
+      section~\ref{sec-chunk-length}. Default: 20\,kB}
+    \lineii{values_format}{Data format for lists of read values, see
+      section~\ref{sec-reading-binary-data}. Default: \code{ascii}}
+    \lineii{term_char}{termination characters, see
+      section~\ref{sec-termchars}. Default: \code{None}}
+    \lineii{send_end}{whether to assert END after each write operation, see
+      section~\ref{sec-termchars}. Default: \code{True}}
+    \lineii{delay}{delay in seconds after each write operation, see
+      section~\ref{sec-termchars}. Default:~0}
+    \lineii{lock}{whether you want to have exclusive access to the device.
+      Default: \code{VI_NO_LOCK}}
+  \end{tableii}
+  \index{keyword arguments, common}
+  \ttindex{timeout}
+  \ttindex{chunk_size}
+  \ttindex{values_format}
+  \ttindex{term_char}
+  \ttindex{send_end}
+  \ttindex{delay}
+  \ttindex{lock}
+
+  \vspace{1ex}
+  For further information about the locking mechanism,
+  see~\citetitle[http://pyvisa.sourceforge.net/vpp43.html]{The VISA library
+    implementation}.
+\end{classdesc}
+
+The class \class{Instrument} defines the following methods and attributes:
+
+\begin{methoddesc}{write}{message}
+  writes the string \var{message} to the instrument.
+\end{methoddesc}
+
+\begin{methoddesc}{read}{}
+  returns a string sent from the instrument to the computer.
+\end{methoddesc}
+
+\begin{methoddesc}{read_values}{\optional{format}}
+  returns a list of decimal values (floats) sent from the instrument to the
+  computer.  See section~\ref{sec-more-complex-example} above.  The list may
+  contain only one element or may be empty.
+
+  The optional \var{format} argument overrides the setting of
+  \var{values_format}.  For information about that, see
+  section~\ref{sec-reading-binary-data}.
+\end{methoddesc}
+
+\begin{methoddesc}{ask}{message}
+  sends the string \var{message} to the instrument and returns the answer
+  string from the instrument.
+\end{methoddesc}
+
+\begin{methoddesc}{ask_for_values}{message\optional{, format}}
+  sends the string \var{message} to the instrument and reads the answer as a
+  list of values, just as \code{read_values()} does.
+
+  The optional \var{format} argument overrides the setting of
+  \var{values_format}.  For information about that, see
+  section~\ref{sec-reading-binary-data}.
+\end{methoddesc}
+
+\begin{methoddesc}{clear}{}
+  resets the device.  This operation is highly bus-dependent.  I refer you to
+  the original VISA documentation, which explains how this is achieved for VXI,
+  GPIB, serial, etc.
+\end{methoddesc}
+
+\begin{methoddesc}{trigger}{}
+  sends a trigger signal to the instrument.
+\end{methoddesc}
+
+\begin{methoddesc}{read_raw}{}
+  returns a string sent from the instrument to the computer.  In contrast to
+  \code{read()}, no termination characters are checked or stripped.  You get
+  the pristine message.
+\end{methoddesc}
+
+\begin{memberdesc}{timeout}
+  The timeout in seconds for each I/O operation.  See
+  section~\ref{sec-timeouts} for further information.
+\end{memberdesc}
+
+\begin{memberdesc}{term_chars}
+  The termination characters for each read and write operation.  See
+  section~\ref{sec-termchars} for further information.
+\end{memberdesc}
+
+\begin{memberdesc}{send_end}
+  Whether or not to assert EOI (or something equivalent, depending on the
+  interface type) after each write operation.  See section~\ref{sec-termchars}
+  for further information.
+\end{memberdesc}
+
+\begin{memberdesc}{delay}
+  Time in seconds to wait after each write operation.  See
+  section~\ref{sec-termchars} for further information.
+\end{memberdesc}
+
+\begin{memberdesc}{values_format}
+  The format for multi-value data sent from the instrument to the computer.
+  See section~\ref{sec-reading-binary-data} for further information.
+\end{memberdesc}
+
+.. _sec-gpib-devices:
+
+GPIB devices
+++++++++++++
+
+
+\begin{classdesc}{GpibInstrument}{gpib_identifier\optional{,
+      board_number\optional{, **keyw}}}
+  represents a GPIB instrument.  If \var{gpib_identifier} is a string, it is
+  interpreted as a VISA resource name (section~\ref{sec-VISA-resource-names}).
+  If it is a number, it denotes the device number at the GPIB bus.
+
+  The optional \var{board_number} defaults to zero.  If you have more that one
+  GPIB bus system attached to the computer, you can select the bus with this
+  parameter.
+
+  The keyword arguments are interpreted the same as with the class
+  \class{Instrument}.
+\end{classdesc}
+
+\begin{notice}
+  Since this class is derived from the class \class{Instrument}, please refer
+  to section~\ref{sec-general-devices} for the basic operations.
+  \class{GpibInstrument} can do everything that \class{Instrument} can do, so
+  it simply extends the original class with GPIB-specific operations.
+\end{notice}
+
+The class \class{GpibInstrument} defines the following methods:
+
+\begin{methoddesc}{wait_for_srq}{\optional{timeout}}
+  waits for a serial request (SRQ) coming from the instrument.  Note that this
+  method is not ended when \emph{another} instrument signals an SRQ, only
+  \emph{this} instrument.
+  
+  The \var{timeout} argument, given in seconds, denotes the maximal waiting
+  time.  The default value is 25~(seconds).  If you pass \code{None} for the
+  timeout, this method waits forever if no SRQ arrives.
+\end{methoddesc}
+
+\bigskip
+\begin{classdesc}{Gpib}{\optional{board_number}}
+  represents a GPIB board.  Although most setups have at most one GPIB
+  interface card or USB-GPIB device (with board number~0), theoretically you
+  may have more.  Be that as it may, for board-level operations, i.\,e.\
+  operations that affect the whole bus with all connected devices, you must
+  create an instance of this class.
+
+  The optional GPIB board number \var{board_number} defaults to~0.
+\end{classdesc}
+
+The class \class{Gpib} defines the following method:
+
+\begin{methoddesc}{send_ifc}{}
+  pulses the interface clear line (IFC) for at least 0.1~seconds.
+\end{methoddesc}
+
+\begin{notice}
+You needn't store the board instance in a variable.  Instead, you may send an
+IFC signal just by saying \samp{Gpib().send_ifc()}.
+\end{notice}
+
+.. _sec-serial-devices:
+
+Serial devices
+++++++++++++++
+
+
+Please note that ``serial instrument'' means only RS232 and parallel port
+instruments, i.\,e.\ everything attached to COM and LPT.  In particular, it
+does not include USB instruments.  For USB you have to use \class{Instrument}
+instead.
+
+\begin{classdesc}{SerialInstrument}{resource_name\optional{, **keyw}}
+  represents a serial instrument.  \var{resource_name} is the VISA resource
+  name, see section~\ref{sec-VISA-resource-names}.
+
+  The general keyword arguments are interpreted the same as with the class
+  \class{Instrument}.  The only difference is the default value for
+  \var{term_chars}: For serial instruments, \code{CR} (carriage return) is used
+  to terminate readings and writings.
+\end{classdesc}
+
+\begin{notice}
+  Since this class is derived from the class \class{Instrument}, please refer
+  to section~\ref{sec-general-devices} for all operations.
+  \class{SerialInstrument} can do everything that \class{Instrument} can do.
+\end{notice}
+
+The class \class{SerialInstrument} defines the following additional properties.
+Note that all properties can also be given as keyword arguments when calling
+the class constructor or \function{instrument()}.
+
+\begin{memberdesc}{baud_rate}
+  The communication speed in baud.  The default value is 9600.
+\end{memberdesc}
+
+\begin{memberdesc}{data_bits}
+  Number of data bits contained in each frame.  Its value must be from 5 to~8.
+  The default is~8.
+\end{memberdesc}
+
+\begin{memberdesc}{stop_bits}
+  Number of stop bits contained in each frame.  Possible values are 1, 1.5,
+  and~2.  The default is~1.
+\end{memberdesc}
+
+\begin{memberdesc}{parity}
+  The parity used with every frame transmitted and received.  Possible values
+  are:
+
+  \begin{tableii}{ll}{var}{Value}{Description}
+    \lineii{no_parity}{no parity bit is used}
+    \lineii{odd_parity}{the parity bit causes odd parity}
+    \lineii{even_parity}{the parity bit causes even parity}
+    \lineii{mark_parity}{the parity bit exists but it's always~1}
+    \lineii{space_parity}{the parity bit exists but it's always~0}
+  \end{tableii}
+
+  The default value is \var{no_parity}.
+\end{memberdesc}
+
+\begin{memberdesc}{end_input}
+  This determines the method used to terminate read operations.  Possible
+  values are:
+
+  \begin{tableii}{ll}{var}{Value}{Description}
+%     \lineii{no_end_input}{read will not terminate until all or the requested
+%       data is received.  This}
+%     \lineii{}{\quad way is not supported by PyVISA at the moment.}
+    \lineii{last_bit_end_input}{read will terminate as soon as a character
+      arrives with its last data bit set}
+    \lineii{term_chars_end_input}{read will terminate as soon as the 
+      last character of \var{term_chars} is received}
+  \end{tableii}
+
+  The default value is \var{term_chars_end_input}.
+\end{memberdesc}
+
+
+Common properties of instrument variables
+-----------------------------------------
+
+
+.. _sec-timeouts:
+
+Timeouts
+~~~~~~~~
+
+\ttindex{timeout}
+
+Very most VISA I/O operations may be performed with a timeout.  If a timeout is
+set, every operation that takes longer than the timeout is aborted and an
+exception is raised.  Timeouts are given per instrument.
+
+For all PyVISA objects, a timeout is set with
+\begin{verbatim}
+my_device.timeout = 25
+\end{verbatim}
+Here, \var{my_device} may be a device, an interface or whatever, and its
+timeout is set to 25~seconds.  Floating-point values are allowed.  If you set
+it to zero, all operations must succeed instantaneously.  You must not set it
+to \code{None}.  Instead, if you want to remove the timeout, just say
+\begin{verbatim}
+del my_device.timeout
+\end{verbatim}
+Now every operation of the resource takes as long as it takes, even
+indefinitely if necessary.
+
+The default timeout is 5~seconds, but you can change it when creating the
+device object:
+\begin{verbatim}
+my_instrument = instrument("ASRL1", timeout = 8)
+\end{verbatim}
+This creates the object variable \var{my_instrument} and sets its timeout to
+8~seconds.  In this context, a timeout value of \code{None} is allowed, which
+removes the timeout for this device.
+
+Note that your local VISA library may round up this value heavily.  I
+experienced this effect with my National Instruments VISA implementation, which
+rounds off to 0, 1, 3 and 10~seconds.
+
+
+.. _sec-chunk-length:
+
+Chunk length
+~~~~~~~~~~~~
+
+\ttindex{chunk_length}
+
+If you read data from a device, you must store it somewhere.  Unfortunately,
+PyVISA must make space for the data \emph{before} it starts reading, which
+means that it must know how much data the device will send.  However, it
+doesn't know a~priori.
+
+Therefore, PyVISA reads from the device in \emph{chunks}.  Each chunk is
+20~kilobytes long by default.  If there's still data to be read, PyVISA repeats
+the procedure and eventually concatenates the results and returns it to you.
+Those 20~kilobytes are large enough so that mostly one read cycle is
+sufficient.
+
+The whole thing happens automatically, as you can see.  Normally you needn't
+worry about it.  However, some devices don't like to send data in chunks.  So
+if you have trouble with a certain device and expect data lengths larger than
+the default chunk length, you should increase its value by saying e.\,g.
+\begin{verbatim}
+my_instrument.chunk_size = 102400
+\end{verbatim}
+This example sets it to 100~kilobytes.
+
+
+.. _sec-reading-binary-data:
+
+Reading binary data
+~~~~~~~~~~~~~~~~~~~
+
+\ttindex{values_format}
+\index{binary data}
+
+Some instruments allow for sending the measured data in binary form.  This has
+the advantage that the data transfer is much smaller and takes less time.
+PyVISA currently supports three forms of transfers:
+
+\begin{description}
+\item[ascii] This is the default mode.  It assumes a normal string with comma-
+  or whitespace-separated values.
+\item[single] The values are expected as a binary sequence of IEEE floating
+  point values with single precision (i.\,e.\ four bytes each).\footnote{All
+    flavours of binary data streams defined in IEEE\,488.2 are supported,
+    i.\,e.\ those beginning with
+    ``\textit{$\langle$header$\rangle$}~\texttt{\#}\textit{$\langle$digit$\rangle$}'',
+    where \textit{$\langle$header$\rangle$} is optional, and
+    \textit{$\langle$digit$\rangle$} may also be~``0''.}
+\item[double] The same as \textbf{single}, but with values of double precision
+  (eight bytes each).
+\end{description}
+
+You can set the form of transfer with the property \code{values_format}, either
+with the generation of the object,
+\begin{verbatim}
+my_instrument = instrument("GPIB::12", values_format = single)
+\end{verbatim}
+or later by setting the property directly:
+\begin{verbatim}
+my_instrument.values_format = single
+\end{verbatim}
+Setting this option affects the methods \code{read_values()} and
+\code{ask_for_values()}.  In particular, you must assure separately that the
+device actually sends in this format.
+
+In some cases it may be necessary to set the \emph{byte order}, also known as
+\emph{endianness}.  PyVISA assumes little-endian as default.  Some instruments
+call this ``swapped'' byte order.  However, there is also big-endian byte
+order.  In this case you have to append \samp{| big_endian} to your values
+format:
+\begin{verbatim}
+my_instrument = instrument("GPIB::12", values_format = single | big_endian)
+\end{verbatim}
+
+
+.. _sec-binary-example:
+
+Example
++++++++
+
+
+In order to demonstrate how easy reading binary data can be, remember our
+example from section~\ref{sec-more-complex-example}.  You just have to append
+the lines
+\begin{verbatim}
+keithley.write("format:data sreal")
+keithley.values_format = single
+\end{verbatim}
+to the initialisation commands, and all measurement data will be transmitted as
+binary.  You will only notice the increased speed, as PyVISA converts it into
+the same list of values as before.
+
+.. _sec-termchars:
+
+Termination characters
+~~~~~~~~~~~~~~~~~~~~~~
+
+\index{termination characters}
+\index{ending sequence}
+\ttindex{term_chars}
+
+Somehow the computer must detect when the device is finished with sending a
+message.  It does so by using different methods, depending on the bus system.
+In most cases you don't need to worry about termination characters because the
+defaults are very good.  However, if you have trouble, you may influence
+termination characters with PyVISA.
+
+Termination characters may be one character or a sequence of characters.
+Whenever this character or sequence occurs in the input stream, the read
+operation is terminated and the read message is given to the calling
+application.  The next read operation continues with the input stream
+immediately after the last termination sequence.  In PyVISA, the termination
+characters are stripped off the message before it is given to you.
+
+You may set termination characters for each instrument, e.\,g.
+\begin{verbatim}
+my_instrument.term_chars = CR
+\end{verbatim}
+Alternatively you can give it when creating your instrument object:
+\begin{verbatim}
+my_instrument = instrument("GPIB::10", term_chars = CR)
+\end{verbatim}
+The default value depends on the bus system.  Generally, the sequence is empty,
+in particular for GPIB.  For RS232 it's~\code{CR}.
+
+Well, the real default is not \code{""} (the empty string) but \code{None}.
+There is a subtle difference: \code{""} really means the termination characters
+are not used at all, neither for read nor for write operations.  In contrast,
+\code{None} means that every write operation is implicitly terminated with
+\code{CR+LF}.  This works well with most instruments.
+
+All CRs and LFs are stripped from the end of a read string, no matter how
+\var{term_chars} is set.
+
+The termination characters sequence is an ordinary string.  \code{CR} and
+\code{LF} are just string constants that allow readable access to \verb|"\r"|
+and~\verb|"\n"|.  Therefore, instead of \code{CR+LF}, you can also write
+\verb|"\r\n"|, whichever you like more.
+
+``delay'' and ``send\_end''
++++++++++++++++++++++++++++
+
+\ttindex{delay}
+\ttindex{send\_end}
+
+There are two further options related to message termination, namely
+\code{send_end} and \code{delay}.  \code{send_end} is a boolean.  If it's
+\code{True} (the default), the EOI line is asserted after each write operation,
+signalling the end of the operation.  EOI is GPIB-specific but similar action
+is taken for other interfaces.
+
+The argument \code{delay} is the time in seconds to wait after each write
+operation.  So you could write:
+\begin{verbatim}
+my_instrument = instrument("GPIB::10", send_end = False, delay = 1.2)
+\end{verbatim}
+This will set the delay to 1.2~seconds, and the EOI line is omitted.  By the
+way, omitting EOI is \emph{not} recommended, so if you omit it nevertheless,
+you should know what you're doing.
+\index{EOI line}
+
+
+\section{Mixing with direct VISA commands}
+==========================================
+\index{VISA commands, mixing with}
+
+You can mix the high-level object-oriented approach described in this document
+with middle-level VISA function calls in module \module{vpp43} as described in
+`The VISA library implementation <http://pyvisa.sourceforge.net/vpp43.html>`_
+  which is also part of the PyVISA package.  By doing so, you
+have full control of your devices.  I recommend to import the VISA functions
+with
+\begin{verbatim}
+from pyvisa import vpp43
+\end{verbatim}
+\refmodindex{vpp43}
+Then you can use them with \samp{vpp43.\emph{function_name}(...)}.
+
+The VISA functions need to know what session you are referring to.  PyVISA
+opens exactly one session for each instrument or interface and stores its
+session handle in the instance attribute~\member{vi}.  For example, these two
+lines are equivalent:
+\begin{verbatim}
+my_instrument.clear()
+vpp43.clear(my_instrument.vi)
+\end{verbatim}
+
+In case you need the session handle for the default resource manager, it's
+stored in \member{resource_manager.session}:
+\begin{verbatim}
+from visa import *
+from pyvisa import vpp43
+my_instrument_handle = vpp43.open(resource_manager.session, "GPIB::14",
+                                  VI_EXCLUSIVE_LOCK)
+\end{verbatim}
+
+
+Installation
+------------
+\index{installation}
+
+Prerequisites
+~~~~~~~~~~~~~
+
+\index{prerequisites}
+
+PyVISA needs Python version~2.3 or newer.
+
+The PyVISA package doesn't include a low-level VISA implementation itself.  You
+have to get it from one of the VISA vendors, e.\,g.\ from the
+`National Instruments VISA pages <http://ni.com/visa/>`_.  NI sells its VISA kit for
+approx.~\$\,400.  However, it's bundled with most of NI's hardware and
+software.  Besides, the download itself is free, and one user reported that he
+had successfully installed VISA support without buying anything.
+
+I can't really tell about other vendors but well-equipped labs probably have
+VISA already (even if they don't know).  Please install VISA properly before
+you proceed.
+
+Additionally, your Python installation needs a fresh version of
+`ctypes <http://starship.python.net/crew/theller/ctypes/>`_.  By the way,
+if you use Windows, I recommend to install `Enthought Python <http://www.enthought.com/python/>`_.  It is a special Python version
+with all-included philosophy for scientific and engineering
+applications.\footnote{Of course, it's highly advisable not to have installed
+  another version of Python on your system before you install Enthought
+  Python.}
+\refmodindex{ctypes}
+
+
+Setting up the module
+~~~~~~~~~~~~~~~~~~~~~
+
+\index{configuration}
+\index{setting up PyVISA}
+
+Windows
++++++++
+
+PyVISA expects a file called \file{visa32.dll} in the \envvar{PATH}.  For
+example, on my system you find this file in \file{C:\e WINNT\e system32\e}.
+Either copy it there or expand your \envvar{PATH}.  Alternatively, you can
+create an INI file.  You must do this anyway if the file is not called
+\file{visa32.dll} on your system.
+\index{visa32.dll}
+\index{PATH}
+
+
+Linux
++++++
+
+For Linux, the VISA library is by default at
+\file{/usr/local/vxipnp/linux/bin/libvisa.so.7}.  If this is not the case on
+your installation, you have to create an INI file.
+
+
+INI file for customisation
+++++++++++++++++++++++++++
+
+\index{INI file}
+
+If the VISA library file is not at the default place, or doesn't have the
+default name for your operating system (see above), you can tell PyVISA by
+creating a file called \file{.pyvisarc} (mind the leading dot).
+\index{pyvisarc@.pyvisarc}
+
+Another motivation for setting up an INI file is that you have more than one
+VISA library, e.\,g.\ because two GPIB interfaces of two different vendors are
+connected with the computer.  However, in this case I'd try to use both
+interfaces with one library because sometimes you're lucky and it works.  Note
+that PyVISA is currently not able to switch between DLLs while the program is
+running.
+
+For Windows, place it in your ``Documents and Settings'' folder,\footnote{its
+  name depends on the language of your Windows version} e.\,g.\
+\begin{verbatim}
+C:\Documents and Settings\smith\.pyvisarc
+\end{verbatim}
+if ``smith'' is the name of your login account.  For Linux, put it in your home
+directory.
+
+This file has the format of an INI~file.  For example, if the library is at
+\file{/usr/lib/libvisa.so.7}, the file \file{.pyvisarc} must contain the
+following:
+\begin{verbatim}
+[Paths]
+
+VISA library: /usr/lib/libvisa.so.7
+\end{verbatim}
+Please note that ``\code{[Paths]}'' is treated case-sensitively.
+
+You can define a site-wide configuration file at
+\file{/usr/share/pyvisa/.pyvisarc}.  (It may also be \file{/usr/local/\ldots}\
+depending on the location of your Python.)  Under Windows, this file is usually
+placed at \file{c:\e Python24\e share\e pyvisa\e .pyvisarc}.
+
+
+Setting the VISA library in the program
++++++++++++++++++++++++++++++++++++++++
+
+You can also set the path to your VISA library at the beginning of your
+program.  Just start the program with::
+
+    from pyvisa.vpp43 import visa_library
+    visa_library.load_library("/usr/lib/libvisa.so.7")
+    from visa import *
+    ...
+
+Keep in mind that the backslashes of Windows paths must be properly escaped, or
+the path must be preceeded by `r`::
+
+    from pyvisa.vpp43 import visa_library
+    visa_library.load_library(r"c:\WINNT\system32\agvisa32.dll")
+    from visa import *
+    ...
+
+
+
+About PyVISA
+============
+
+\index{authors}
+
+PyVISA was originally programmed by Torsten Bronger, Aachen Germany
+and Gregor Thalhammer, Innsbruck Austria.  It bases on earlier
+experiences by Thalhammer.
+
+Its homepage is http://sourceforge.net/projects/pyvisa/.  Please report
+bugs there. 
+
+**I'm also very keen to know whether PyVISA works for you or not.  Thank you!**
+
+
+.. LocalWords:  ascii british PyVISA pyvisa keyw GpibInstrument var NOEND EOI
+   LocalWords:  rNOEND noend ASRL keithley gpib Center vpp ctypes dll WINNT IDN
+   LocalWords:  ifc SCPI srq utf tex pyvisarc INI ITC DLLs asrl CRs LFs NI's
+   LocalWords:  SerialInstrument
