@@ -85,11 +85,8 @@ the PyVISA distribution.
    mouse).
 
 
-Contents:
-=========
+.. contents::
 
-.. toctree::
-   :maxdepth: 4
 
 
 An example
@@ -376,21 +373,21 @@ General devices
    +-----------------+-------------------------------------------+
    | *values_format* | Data format for lists of read values, see |
    |                 | section :ref:`sec:reading-binary-data`.   |
-   |                 | Default: `ascii`                        |
+   |                 | Default: `ascii`                          |
    +-----------------+-------------------------------------------+
    | *term_char*     | termination characters, see  section      |
-   |                 | :ref:`sec:termchars`. Default: `None`   |
+   |                 | :ref:`sec:termchars`. Default: `None`     |
    +-----------------+-------------------------------------------+
    | *send_end*      | whether to assert END after each write    |
    |                 | operation, see  section                   |
-   |                 | :ref:`sec:termchars`. Default: `True`   |
+   |                 | :ref:`sec:termchars`. Default: `True`     |
    +-----------------+-------------------------------------------+
    | *delay*         | delay in seconds after each write         |
    |                 | operation, see  section                   |
    |                 | :ref:`sec:termchars`. Default: 0          |
    +-----------------+-------------------------------------------+
    | *lock*          | whether you want to have exclusive access |
-   |                 | to the device.  Default: `VI_NO_LOCK`   |
+   |                 | to the device.  Default: `VI_NO_LOCK`     |
    +-----------------+-------------------------------------------+
 
    .. index::
@@ -1041,7 +1038,7 @@ Please report  bugs there.
 .. [#] such as the "Measurement and  Automation Center" by National Instruments
 
 .. [#] All  flavours of binary data streams defined in IEEE488.2 are supported,  i.e.
-   those beginning with *<header>* "#"*<digit>*,
+   those beginning with *<header>#<digit>*,
    where *<header>* is optional, and  *<digit>* may also be
    "0".
 
