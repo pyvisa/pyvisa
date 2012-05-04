@@ -100,7 +100,7 @@ RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
       url = 'http://pyvisa.sourceforge.net',
       download_url = 'http://sourceforge.net/projects/pyvisa/',
       keywords = 'VISA GPIB USB serial RS232 measurement acquisition',
-      license = 'GNU General Public License',
+      license = 'MIT License',
       classifiers = [
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
