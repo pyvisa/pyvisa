@@ -308,8 +308,8 @@ single     = 1
 double     = 3
 big_endian = 4
 
-CR = "\r"
-LF = "\n"
+CR = b"\r"
+LF = b"\n"
 
 class Instrument(ResourceTemplate):
     """Class for all kinds of Instruments.
@@ -403,7 +403,7 @@ class Instrument(ResourceTemplate):
         """
         warnings.filterwarnings("ignore", "VI_SUCCESS_MAX_CNT")
         try:
-            buffer = ""
+            buffer = b""
             chunk = vpp43.read(self.vi, self.chunk_size)
             buffer += chunk
             while vpp43.get_status() == VI_SUCCESS_MAX_CNT:
@@ -453,7 +453,7 @@ class Instrument(ResourceTemplate):
                     float_regex.findall(self.read())]
         # Okay, we need to read binary data
         original_term_chars = self.term_chars
-        self.term_chars = ""
+        self.term_chars = b""
         try:
             data = self.read_raw()
         finally:
@@ -515,9 +515,9 @@ class Instrument(ResourceTemplate):
         """Set a new termination character sequence.  See below the property
         "term_char"."""
         # First, reset termination characters, in case something bad happens.
-        self.__term_chars = ""
+        self.__term_chars = b""
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
-        if term_chars == "" or term_chars == None:
+        if term_chars == b"" or term_chars == None:
             self.__term_chars = term_chars
             return
         # Only the last character in term_chars is the real low-level

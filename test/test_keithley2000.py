@@ -30,16 +30,17 @@
 #    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #    DEALINGS IN THE SOFTWARE.
 #
-
+from __future__ import print_function
 from visa import *
 
-print "Test start"
-keithley = GpibInstrument(12)
-milliseconds = 500
-number_of_values = 10
-keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
-keithley.trigger()
-keithley.wait_for_srq()
-voltages = keithley.read_floats()
-print "Average: ", sum(voltages) / len(voltages)
-print "Test end"
+def test_keithley2000():
+    print("Test start")
+    keithley = GpibInstrument(12)
+    milliseconds = 500
+    number_of_values = 10
+    keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
+    keithley.trigger()
+    keithley.wait_for_srq()
+    voltages = keithley.read_floats()
+    print("Average: ", sum(voltages) / len(voltages))
+    print("Test end")

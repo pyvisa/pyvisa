@@ -31,12 +31,12 @@
 #    DEALINGS IN THE SOFTWARE.
 #
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+
+from setuptools import setup
+
 import distutils.dir_util
 import shutil, os.path, atexit
+import sys
 
 try:
     distutils.dir_util.remove_tree("build")
@@ -85,6 +85,9 @@ if os.name == 'posix':
     os.system("make --directory=doc/")
     os.system("ln -s ../doc src/")
 
+extra = {}
+if sys.version_info >= (3,):
+    extra['use_2to3'] = True
 # The release name must be changed here and in doc/pyvisa.tex
 
 setup(name = 'PyVISA',
@@ -117,4 +120,5 @@ RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
       packages = ['pyvisa'],
       platforms = "Linux, Windows",
       py_modules = ['visa'],
-      setup_requires = ["sphinx>=1.0"])
+      setup_requires = ["sphinx>=1.0", "Mock"],
+      **extra)

@@ -30,11 +30,12 @@
 #    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #    DEALINGS IN THE SOFTWARE.
 #
-
+from __future__ import print_function
 from visa import *
 
-print "Test start"
-itc4 = Instrument("COM2", term_chars = "\r", timeout = 5)
-itc4.write("V")
-print itc4.read()
-print "Test end"
+def test_itc4():
+    print("Test start")
+    itc4 = Instrument("COM2", term_chars = b"\r", timeout = 5)
+    itc4.write("V")
+    print(itc4.read())
+    print("Test end")
