@@ -74,7 +74,7 @@ class _AttrSet:
             self.valuedict[name] = value
 
     def __repr__(self):
-        return repr(self.dict)
+        return repr(self.valuedict)
     
     def __contains__(self, item):
         return item in self.NameSet
