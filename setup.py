@@ -32,7 +32,7 @@
 #
 
 from distribute_setup import use_setuptools
-use_setuptools()
+use_setuptools("0.6.24")
 from setuptools import setup
 
 import distutils.dir_util
