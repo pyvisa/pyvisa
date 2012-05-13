@@ -39,9 +39,9 @@
 ========
 .. |release| replace:: 1.4
 
-:author: Torsten Bronger <bronger@physik.rwth-aachen.de>
-:author: Florian Bauer
-:date: 26 March 2008
+:Date: |today|
+:Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
+:Maintainer: Florian Bauer <pyvisa-devel@sourceforge.net>
 
 .. _front:
 

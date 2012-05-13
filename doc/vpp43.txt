@@ -38,8 +38,11 @@ The VISA library implementation
 Part of the PyVISA package
 ---------------------------------
 
-:Date: $Date$
+:Date: |today|
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
+:Maintainer: Florian Bauer <pyvisa-devel@sourceforge.net>
+
+
 :Abstract: This document covers the ``vpp43.py`` module, which is part of the
   PyVISA_ package.  This module implements thin wrappers around all functions
   defined in the `VISA specification`_.  Thus it enables the programmer to

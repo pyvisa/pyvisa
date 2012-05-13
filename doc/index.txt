@@ -1,6 +1,6 @@
 .. -*- mode: rst; coding: iso-8859-1; ispell-local-dictionary: "british"; -*-
 ..
-..   homepage.txt - The reST source code of PyVISA's homepage
+..   index.txt - The reST source code of PyVISA's homepage
 ..
 ..   Copyright © 2005, 2006, 2007, 2008
 ..               Torsten Bronger <bronger@physik.rwth-aachen.de>,
@@ -38,8 +38,9 @@ Python GPIB etc. support with PyVISA
 Controlling GPIB, RS232, and USB instruments
 -------------------------------------------------------
 
-:Date: $Date$
+:Date: |today|
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
+:Maintainer: Florian Bauer <pyvisa-devel@sourceforge.net>
 
 
 PyVISA
@@ -133,7 +134,7 @@ Links
 
   - the `PyVISA project page`_ with download area and bug tracker
 
-  - the `PyVISA manual`_ (also `as PDF`_)
+  - the `PyVISA manual`_ 
 
   - the `PyVISA low-level implementation`_ called ``vpp43``
 
@@ -153,7 +154,7 @@ Links
 
   - `NI-VISA help file`_ in HTML
 
-.. _`PyVISA manual`: http://pyvisa.sourceforge.net/pyvisa/
+.. _`PyVISA manual`: http://pyvisa.sourceforge.net/pyvisa.html
 .. _`as PDF`: http://pyvisa.sourceforge.net/pyvisa.pdf
 .. _`PyVISA project page`: http://sourceforge.net/projects/pyvisa/
 .. _`PyVISA low-level implementation`: http://pyvisa.sourceforge.net/vpp43.html
