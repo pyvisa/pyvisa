@@ -93,7 +93,7 @@ if sys.version_info >= (3,):
 
 setup(name = 'PyVISA',
       description = 'Python VISA bindings for GPIB, RS232, and USB instruments',
-      version = '1.4',
+      version = '1.5',
       long_description = \
       """A Python package for support of the Virtual Instrument Software Architecture
 (VISA), in order to control measurement devices and test equipment via GPIB,
