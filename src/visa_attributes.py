@@ -94,7 +94,7 @@ class _AttrBitSet(_AttrSet):
     def __contains__(self, bitfield): #Fixme: more strict test for validity, test for zero
         """True if at least on of allowed bits is set"""
         for bit in self.namedict:
-            if bit & item:
+            if bit & bitfield:
                 return True
         else:
             return False
