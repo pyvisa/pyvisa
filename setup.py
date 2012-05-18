@@ -34,6 +34,7 @@
 from distribute_setup import use_setuptools
 use_setuptools("0.6.24")
 from setuptools import setup
+from setuptools import find_packages
 
 import distutils.dir_util
 import shutil, os.path, atexit
@@ -43,48 +44,6 @@ try:
     distutils.dir_util.remove_tree("build")
 except:
     pass
-
-
-
-# POSIX-specific code related to RPM package configuration; other users are free to
-# bypass this section altogether.
-if os.name == 'posix':
-	# The following code may be very specific to my own home configuration,
-	# although I hope that it's useful to other who try to create PyVISA packages,
-	# too.
-	#
-	# The goal is to override an existing local RPM configuration.  Distutils only
-	# works together with a widely untouched configuration, so I have to disable
-	# any extisting one represented by the file ~/.rpmmacros.  I look for this file
-	# and move it to ~/.rpmmacros.original.  After setup.py is terminated, this
-	# renaming is reverted.
-	#
-	# Additionally, if a file ~/.rpmmacros.distutis exists, it is used for
-	# ~/.rpmmacros while setup.py is running.  So you can still make use of things
-	# like "%vendor" or "%packager".
-    home_dir = os.environ['HOME']
-    real_rpmmacros_name = os.path.join(home_dir, '.rpmmacros')
-    distutils_rpmmacros_name = os.path.join(home_dir, '.rpmmacros.distutils')
-    temp_rpmmacros_name = os.path.join(home_dir, '.rpmmacros.original')
-
-    def restore_rpmmacros():
-        shutil.move(temp_rpmmacros_name, real_rpmmacros_name)
-    
-    # I check whether temp_rpmmacros_name exists for two reasons: First, I don't
-    # want to overwrite it, and secondly, I don't want this renaming to take place
-    # twice.  This would happen otherwise, because setup.py is called more than
-    # once per building session.
-    if os.path.isfile(real_rpmmacros_name) and \
-            not os.path.isfile(temp_rpmmacros_name):
-        shutil.move(real_rpmmacros_name, temp_rpmmacros_name)
-        if os.path.isfile(distutils_rpmmacros_name):
-            shutil.copy(distutils_rpmmacros_name, real_rpmmacros_name)
-        atexit.register(restore_rpmmacros)
-    
-    # FixMe: Maybe this should be done in Python itself (using distutils.dep_util),
-    # eventually.
-    os.system("make --directory=doc/")
-    os.system("ln -s ../doc src/")
 
 extra = {}
 if sys.version_info >= (3,):
@@ -116,9 +75,7 @@ RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
         'Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator',
         'Topic :: Software Development :: Libraries :: Python Modules',
         ],
-      package_dir = {'pyvisa': 'src'},
-      package_data = {'pyvisa': ['doc/pyvisa.pdf', 'doc/vpp43.txt']},
-      packages = ['pyvisa'],
+      packages = find_packages(),
       platforms = "Linux, Windows",
       py_modules = ['visa'],
       setup_requires = ["sphinx>=1.0", "Mock"],
