@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    test_keithley2000.py - PyVISA test code for Keithley 2000 multimeter
+#    test_visa.py - PyVISA test code for visa.py
 #
-#    Copyright © 2005, 2006, 2007, 2008
-#                Torsten Bronger <bronger@physik.rwth-aachen.de>,
-#                Gregor Thalhammer <gth@users.sourceforge.net>.
+#    Copyright © 2012
+#                Florian Bauer <fbauer.devel@gmail.com>
 #                     
 #    This file is part of PyVISA.
 #  
@@ -31,19 +30,27 @@
 #    DEALINGS IN THE SOFTWARE.
 #
 from __future__ import print_function
-from visa import *
+from pyvisa import visa
+import pytest
 
-def test_keithley2000(monkeypatch):
-    monkeypatch.setattr(GpibInstrument, 'interface_type', VI_INTF_GPIB)
-    monkeypatch.setattr(GpibInstrument, 'stb', 0x40)
-    print("Test start")
-    keithley = GpibInstrument(12)
-    milliseconds = 500
-    number_of_values = 10
-    keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
-    keithley.trigger()
-    keithley.wait_for_srq()
-    voltages = keithley.read_floats()
-    if voltages:
-        print("Average: ", sum(voltages) / len(voltages))
-    print("Test end")
+
+
+class TestGpibInstrument:
+    
+    def pytest_funcarg__instrument(self, request):
+        monkeypatch = request.getfuncargvalue('monkeypatch')
+        monkeypatch.setattr(visa.GpibInstrument,
+                            'interface_type',
+                            visa.VI_INTF_GPIB)
+        monkeypatch.setattr(visa.GpibInstrument, 'stb', 0x40)
+
+        return visa.GpibInstrument(1)
+    
+    @pytest.mark.parametrize('timeout', [None, 0, 25, 4294967])
+    def test_wait_for_srq(self, instrument, timeout):
+        instrument.wait_for_srq(timeout)
+
+    @pytest.mark.parametrize('timeout', [-1, 4294968])
+    def test_wait_for_srq_raises(self, instrument, timeout):
+        with pytest.raises(ValueError):
+            instrument.wait_for_srq(timeout)
