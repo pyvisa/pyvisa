@@ -729,6 +729,9 @@ class SerialInstrument(Instrument):
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_END_IN, termination)
     end_input = property(__get_end_input, __set_end_input, None,
         """indicates the method used to terminate read operations""")
+    
+    def __repr__(self):
+        return "SerialInstrument(\"%s\")" % self.resource_name
 
 
 class Interface(ResourceTemplate):
