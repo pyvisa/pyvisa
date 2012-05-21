@@ -33,6 +33,8 @@ from __future__ import print_function
 from pyvisa import visa
 import pytest
 from mock import Mock
+import collections
+
 class TestInstrument(object):
     
     def pytest_funcarg__instrument(self, request):
@@ -48,10 +50,10 @@ class TestInstrument(object):
         assert repr(instrument) == 'Instrument("")'
     
     @pytest.mark.parametrize(('message', 'expected'),
-                             [("hi there", "hi there\r\n"),
-                              ("hi there\r", "hi there\r\r\n"),
-                              ("hi there\n", "hi there\n\r\n"),
-                              ("hi there\r\n", "hi there\r\n")])
+                             [(b"hi there", b"hi there\r\n"),
+                              (b"hi there\r", b"hi there\r\r\n"),
+                              (b"hi there\n", b"hi there\n\r\n"),
+                              (b"hi there\r\n", b"hi there\r\n")])
     def test_write(self, monkeypatch, instrument, message, expected):
         my_write = Mock()
         monkeypatch.setattr(visa.vpp43, 'write', my_write)
@@ -60,23 +62,23 @@ class TestInstrument(object):
         my_write.assert_called_with(0, expected)
 
     @pytest.mark.parametrize(('message', 'expected'),
-                             [("hi there", "hi there\n"),
-                              ("hi there\r", "hi there\r\n"),
-                              ("hi there\n", "hi there\n"),
-                              ("hi there\r\n", "hi there\r\n")])
+                             [(b"hi there", b"hi there\n"),
+                              (b"hi there\r", b"hi there\r\n"),
+                              (b"hi there\n", b"hi there\n"),
+                              (b"hi there\r\n", b"hi there\r\n")])
     def test_write_termchars_set(self, monkeypatch, instrument,
                                  message, expected):
         my_write = Mock()
         monkeypatch.setattr(visa.vpp43, 'write', my_write)
-        instrument.term_chars = '\n'
+        instrument.term_chars = b'\n'
         instrument.write(message)
         my_write.assert_called_with(0, expected)
         
     @pytest.mark.parametrize(('message', 'expected'),
-                             [("hi there", "hi there\r\n"),
-                              ("hi there\r", "hi there\r\r\n"),
-                              ("hi there\n", "hi there\n\r\n"),
-                              ("hi there\r\n", "hi there\r\n")])
+                             [(b"hi there", b"hi there\r\n"),
+                              (b"hi there\r", b"hi there\r\r\n"),
+                              (b"hi there\n", b"hi there\n\r\n"),
+                              (b"hi there\r\n", b"hi there\r\n")])
     def test_write_delay_set(self, monkeypatch, instrument, message, expected):
         my_write = Mock()
         my_sleep = Mock()
@@ -89,26 +91,26 @@ class TestInstrument(object):
         my_sleep.assert_called_with(1)
         
     @pytest.mark.parametrize(('message', 'expected'),
-                             [("hi there", "hi there"),
-                              ("hi there\r\n", "hi there"),
-                              ("hi there\r\n\r\n", "hi there"),
+                             [(b"hi there", b"hi there"),
+                              (b"hi there\r\n", b"hi there"),
+                              (b"hi there\r\n\r\n", b"hi there"),
                               ])
     def test_strip_term_chars(self, instrument, message, expected):
         assert instrument._strip_term_chars(message) == expected
 
     @pytest.mark.parametrize(('message', 'expected'),
-                             [("hi there", "hi there"),
+                             [(b"hi there", b"hi there"),
                               # XXX: \r is stripped here as well. Ok?
-                              ("hi there\r\n", "hi there"),
-                              ("hi there\n", "hi there"),
-                              ("hi there\n\n", "hi there"),
+                              (b"hi there\r\n", b"hi there"),
+                              (b"hi there\n", b"hi there"),
+                              (b"hi there\n\n", b"hi there"),
                               ])
     def test_strip_term_chars__term_chars_set(self, instrument,
                                               message, expected):
-        instrument.term_chars = '\n'
+        instrument.term_chars = b'\n'
         assert instrument._strip_term_chars(message) == expected
 
-    def test_term_chars(self, instrument):
+    def test_term_chars_default(self, instrument):
         """default term chars are CR+LF, property is set to None"""
         assert instrument.term_chars is None
         
@@ -145,11 +147,14 @@ class TestSerialInstrument(TestInstrument):
         monkeypatch.setattr(visa.SerialInstrument,
                             'interface_type',
                             visa.VI_INTF_ASRL)
+        my_attr = MyAttribute()
+        monkeypatch.setattr(visa.vpp43, "get_attribute", my_attr.get_attribute)
+        monkeypatch.setattr(visa.vpp43, "set_attribute", my_attr.set_attribute)
         return visa.SerialInstrument(1)
     
-    def test_term_chars(self, instrument):
+    def test_term_chars_default(self, instrument):
         """default term char is CR"""
-        assert instrument.term_chars == '\r'
+        assert instrument.term_chars == b'\r'
         
     def test_repr(self, instrument):
         # XXX: refactor so that a resource_name is
@@ -159,23 +164,72 @@ class TestSerialInstrument(TestInstrument):
 
     
     @pytest.mark.parametrize(('message', 'expected'),
-                             [("hi there", "hi there\r"),
-                              ("hi there\r", "hi there\r"),
-                              ("hi there\n", "hi there\n\r"),
-                              ("hi there\r\n", "hi there\r\n\r")])
+                             [(b"hi there", b"hi there\r"),
+                              (b"hi there\r", b"hi there\r"),
+                              (b"hi there\n", b"hi there\n\r"),
+                              (b"hi there\r\n", b"hi there\r\n\r")])
     def test_write(self, monkeypatch, instrument, message, expected):
         TestInstrument.test_write(self, monkeypatch, instrument,
                                   message, expected)
 
     @pytest.mark.parametrize(("message", "expected"),
-                             [("hi there", "hi there\r"),
-                              ("hi there\r", "hi there\r"),
-                              ("hi there\n", "hi there\n\r"),
-                              ("hi there\r\n", "hi there\r\n\r")])
+                             [(b"hi there", b"hi there\r"),
+                              (b"hi there\r", b"hi there\r"),
+                              (b"hi there\n", b"hi there\n\r"),
+                              (b"hi there\r\n", b"hi there\r\n\r")])
     def test_write_delay_set(self, monkeypatch, instrument, message, expected):
         TestInstrument.test_write_delay_set(self, monkeypatch, instrument,
                                             message, expected)
 
+    def test_baud_rate(self, monkeypatch, instrument):
+        instrument.baud_rate = 115200
+        assert instrument.baud_rate == 115200
+        
+    def test_data_bits(self, monkeypatch, instrument):
+        instrument.data_bits = 5
+        assert instrument.data_bits == 5
+        
+    @pytest.mark.parametrize("values", [4, 9])
+    def test_data_bits_bad_values(self, monkeypatch, instrument, values):
+        with pytest.raises(ValueError):
+            instrument.data_bits = values
 
+    @pytest.mark.parametrize("value", [1., 1.5, 2.])
+    def test_stop_bits(self, monkeypatch, instrument, value):
+        instrument.stop_bits = value
+        assert instrument.stop_bits == value
+        
+    @pytest.mark.parametrize("value", [0.8, 3])
+    def test_stop_bits_bad_values(self, monkeypatch, instrument, value):
+        with pytest.raises(ValueError):
+            instrument.stop_bits = value
 
+    @pytest.mark.parametrize("value", [
+        visa.no_parity,
+        visa.odd_parity,
+        visa.even_parity,
+        visa.mark_parity,
+        visa.space_parity,])
+    def test_parity(self, monkeypatch, instrument, value):
+        instrument.parity = value
+        assert instrument.parity == value
 
+    @pytest.mark.parametrize("value", [
+        visa.no_end_input,
+        visa.last_bit_end_input,
+        visa.term_chars_end_input,
+        ])
+    def test_end_input(self, monkeypatch, instrument, value):
+        instrument.end_input = value
+        assert instrument.end_input == value
+        
+class MyAttribute(object):
+    
+    def __init__(self):
+        self.data = collections.defaultdict(lambda: b"")
+        
+    def set_attribute(self, vi, attribute, value):
+        self.data[(vi, attribute)] = value
+        
+    def get_attribute(self, vi, attribute):
+        return self.data[(vi, attribute)]

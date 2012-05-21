@@ -523,7 +523,7 @@ class Instrument(ResourceTemplate):
         # Only the last character in term_chars is the real low-level
         # termination character, the rest is just used for verification after
         # each read operation.
-        last_char = term_chars[-1]
+        last_char = term_chars[-1:]
         # Consequently, it's illogical to have the real termination character
         # twice in the sequence (otherwise reading would stop prematurely).
         if term_chars[:-1].find(last_char) != -1:
