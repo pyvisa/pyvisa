@@ -34,6 +34,10 @@ from pyvisa import visa
 import pytest
 from mock import Mock
 import collections
+import struct
+
+def packfloats2(fmt, floats):
+    return b'#0' + ''.join(struct.pack(fmt, num) for num in floats) + '\n'
 
 class TestInstrument(object):
     
@@ -42,6 +46,9 @@ class TestInstrument(object):
         monkeypatch.setattr(visa.Instrument,
                             'interface_type',
                             visa.VI_INTF_GPIB)
+        my_attr = MyAttribute()
+        monkeypatch.setattr(visa.vpp43, "get_attribute", my_attr.get_attribute)
+        monkeypatch.setattr(visa.vpp43, "set_attribute", my_attr.set_attribute)
         return visa.Instrument(1)
 
     def test_repr(self, instrument):
@@ -113,7 +120,84 @@ class TestInstrument(object):
     def test_term_chars_default(self, instrument):
         """default term chars are CR+LF, property is set to None"""
         assert instrument.term_chars is None
+
+    @pytest.mark.parametrize("value", [True, False])
+    def test_send_end(self, instrument, value):
+        instrument.send_end = value
+        assert instrument.send_end == value
+
+    def test_read_raw(self, monkeypatch, instrument):
+        my_read = Mock(return_value=b'some bytes\r\n')
+        my_get_status = Mock(side_effect=[visa.VI_SUCCESS_MAX_CNT, 0])
+        monkeypatch.setattr(visa.vpp43, 'read', my_read)
+        monkeypatch.setattr(visa.vpp43, 'get_status', my_get_status)
+        result = instrument.read_raw()
+        assert result == b'some bytes\r\nsome bytes\r\n'
+
+    def test_read(self, monkeypatch, instrument):
+        my_read = Mock(return_value=b'some bytes\r\n')
+        my_get_status = Mock(side_effect=[visa.VI_SUCCESS_MAX_CNT, 0])
+        monkeypatch.setattr(visa.vpp43, 'read', my_read)
+        monkeypatch.setattr(visa.vpp43, 'get_status', my_get_status)
+        result = instrument.read()
+        assert result == b'some bytes\r\nsome bytes'
         
+    @pytest.mark.parametrize(('format', 'input', 'expected'),
+                             [(None, b'some bytes\r\n', []),
+                              (visa.ascii, b'some bytes\r\n', []),
+                              (visa.ascii, b'1.25', [1.25]),
+                              (visa.ascii, b'1.25 2.5', [1.25, 2.5]),
+                              (visa.ascii, b'1.25, 2.5', [1.25, 2.5]),
+
+                              #(visa.single, b'some bytes\r\n', []),
+                              (visa.single, packfloats2('<f', [1.25]), [1.25]),
+                              (visa.single, b'junk' + packfloats2('<f', [1.25]), [1.25]),
+                              (visa.single, packfloats2('<f', [1.25, 2.5]), [1.25, 2.5]),
+                              (visa.single | visa.big_endian,
+                               packfloats2('>f', [1.25]), [1.25]),
+                              (visa.single | visa.big_endian,
+                               b'junk' + packfloats2('>f', [1.25]), [1.25]),
+                              (visa.single | visa.big_endian,
+                               packfloats2('>f', [1.25, 2.5]), [1.25, 2.5]),
+
+                              (visa.double, packfloats2('<d', [1.25]), [1.25]),
+                              (visa.double, b'junk' + packfloats2('<d', [1.25]), [1.25]),
+                              (visa.double, packfloats2('<d', [1.25, 2.5]), [1.25, 2.5]),
+                              (visa.double | visa.big_endian,
+                               packfloats2('>d', [1.25]), [1.25]),
+                              (visa.double | visa.big_endian,
+                               b'junk' + packfloats2('>d', [1.25]), [1.25]),
+                              (visa.double | visa.big_endian,
+                               packfloats2('>d', [1.25, 2.5]), [1.25, 2.5]), 
+                              ])
+    def test_read_values(self, monkeypatch, instrument,
+                         format, input, expected):
+        my_read = Mock(return_value=input)
+        my_get_status = Mock(return_value=0)
+        monkeypatch.setattr(visa.vpp43, 'read', my_read)
+        monkeypatch.setattr(visa.vpp43, 'get_status', my_get_status)
+        result = instrument.read_values(format)
+        assert result == expected
+        
+    @pytest.mark.parametrize(('format', 'input', 'expected_exception'),
+                             [(visa.single, b'some bytes\r\n', visa.InvalidBinaryFormat),
+                              (visa.single, b'#8', visa.InvalidBinaryFormat),
+                              (visa.single, b'#0deadbeef', visa.InvalidBinaryFormat),
+                              (visa.single, b'#deadbeef', visa.InvalidBinaryFormat),
+                              
+                              ])
+    def test_read_values_errors(self, monkeypatch, instrument,
+                                format, input, expected_exception):
+        my_read = Mock(return_value=input)
+        my_get_status = Mock(return_value=0)
+        monkeypatch.setattr(visa.vpp43, 'read', my_read)
+        monkeypatch.setattr(visa.vpp43, 'get_status', my_get_status)
+        with pytest.raises(expected_exception):
+            instrument.read_values(format)
+
+
+    
+    
 class TestGpibInstrument(TestInstrument):
     
     def pytest_funcarg__instrument(self, request):
@@ -122,6 +206,9 @@ class TestGpibInstrument(TestInstrument):
                             'interface_type',
                             visa.VI_INTF_GPIB)
         monkeypatch.setattr(visa.GpibInstrument, 'stb', 0x40)
+        my_attr = MyAttribute()
+        monkeypatch.setattr(visa.vpp43, "get_attribute", my_attr.get_attribute)
+        monkeypatch.setattr(visa.vpp43, "set_attribute", my_attr.set_attribute)
         return visa.GpibInstrument(1)
     
     @pytest.mark.parametrize('timeout', [None, 0, 25, 4294967])
@@ -181,26 +268,26 @@ class TestSerialInstrument(TestInstrument):
         TestInstrument.test_write_delay_set(self, monkeypatch, instrument,
                                             message, expected)
 
-    def test_baud_rate(self, monkeypatch, instrument):
+    def test_baud_rate(self, instrument):
         instrument.baud_rate = 115200
         assert instrument.baud_rate == 115200
         
-    def test_data_bits(self, monkeypatch, instrument):
+    def test_data_bits(self, instrument):
         instrument.data_bits = 5
         assert instrument.data_bits == 5
         
     @pytest.mark.parametrize("values", [4, 9])
-    def test_data_bits_bad_values(self, monkeypatch, instrument, values):
+    def test_data_bits_bad_values(self, instrument, values):
         with pytest.raises(ValueError):
             instrument.data_bits = values
 
     @pytest.mark.parametrize("value", [1., 1.5, 2.])
-    def test_stop_bits(self, monkeypatch, instrument, value):
+    def test_stop_bits(self, instrument, value):
         instrument.stop_bits = value
         assert instrument.stop_bits == value
         
     @pytest.mark.parametrize("value", [0.8, 3])
-    def test_stop_bits_bad_values(self, monkeypatch, instrument, value):
+    def test_stop_bits_bad_values(self, instrument, value):
         with pytest.raises(ValueError):
             instrument.stop_bits = value
 
@@ -210,7 +297,7 @@ class TestSerialInstrument(TestInstrument):
         visa.even_parity,
         visa.mark_parity,
         visa.space_parity,])
-    def test_parity(self, monkeypatch, instrument, value):
+    def test_parity(self, instrument, value):
         instrument.parity = value
         assert instrument.parity == value
 
@@ -219,7 +306,7 @@ class TestSerialInstrument(TestInstrument):
         visa.last_bit_end_input,
         visa.term_chars_end_input,
         ])
-    def test_end_input(self, monkeypatch, instrument, value):
+    def test_end_input(self, instrument, value):
         instrument.end_input = value
         assert instrument.end_input == value
         

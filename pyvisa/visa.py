@@ -459,7 +459,7 @@ class Instrument(ResourceTemplate):
         finally:
             self.term_chars = original_term_chars
         hash_sign_position = data.find("#")
-        if hash_sign_position == -1 or len(data) - hash_sign_position < 2:
+        if hash_sign_position == -1 or len(data) - hash_sign_position < 3:
             raise InvalidBinaryFormat
         if hash_sign_position > 0:
             data = data[hash_sign_position:]
