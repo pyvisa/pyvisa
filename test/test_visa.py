@@ -31,10 +31,16 @@
 #
 from __future__ import print_function
 from pyvisa import visa
+from pyvisa.visa import InvalidBinaryFormat
 import pytest
 from mock import Mock
 import collections
 import struct
+
+def packfloats1(fmt, floats):
+    data = ''.join(struct.pack(fmt, num) for num in floats)
+    datalen = str(len(data))
+    return b"#" + b"%d" % len(datalen) + datalen + data
 
 def packfloats2(fmt, floats):
     return b'#0' + ''.join(struct.pack(fmt, num) for num in floats) + '\n'
@@ -149,7 +155,26 @@ class TestInstrument(object):
                               (visa.ascii, b'1.25 2.5', [1.25, 2.5]),
                               (visa.ascii, b'1.25, 2.5', [1.25, 2.5]),
 
-                              #(visa.single, b'some bytes\r\n', []),
+                              (visa.single, packfloats1('<f', [1.25]), [1.25]),
+                              (visa.single, b'junk' + packfloats1('<f', [1.25]), [1.25]),
+                              (visa.single, packfloats1('<f', [1.25, 2.5]), [1.25, 2.5]),
+                              (visa.single | visa.big_endian,
+                               packfloats1('>f', [1.25]), [1.25]),
+                              (visa.single | visa.big_endian,
+                               b'junk' + packfloats1('>f', [1.25]), [1.25]),
+                              (visa.single | visa.big_endian,
+                               packfloats1('>f', [1.25, 2.5]), [1.25, 2.5]),
+
+                              (visa.double, packfloats1('<d', [1.25]), [1.25]),
+                              (visa.double, b'junk' + packfloats1('<d', [1.25]), [1.25]),
+                              (visa.double, packfloats1('<d', [1.25, 2.5]), [1.25, 2.5]),
+                              (visa.double | visa.big_endian,
+                               packfloats1('>d', [1.25]), [1.25]),
+                              (visa.double | visa.big_endian,
+                               b'junk' + packfloats1('>d', [1.25]), [1.25]),
+                              (visa.double | visa.big_endian,
+                               packfloats1('>d', [1.25, 2.5]), [1.25, 2.5]),
+                              
                               (visa.single, packfloats2('<f', [1.25]), [1.25]),
                               (visa.single, b'junk' + packfloats2('<f', [1.25]), [1.25]),
                               (visa.single, packfloats2('<f', [1.25, 2.5]), [1.25, 2.5]),
@@ -180,11 +205,11 @@ class TestInstrument(object):
         assert result == expected
         
     @pytest.mark.parametrize(('format', 'input', 'expected_exception'),
-                             [(visa.single, b'some bytes\r\n', visa.InvalidBinaryFormat),
-                              (visa.single, b'#8', visa.InvalidBinaryFormat),
-                              (visa.single, b'#0deadbeef', visa.InvalidBinaryFormat),
-                              (visa.single, b'#deadbeef', visa.InvalidBinaryFormat),
-                              
+                             [(visa.single, b'bytes\r\n', InvalidBinaryFormat),
+                              (visa.single, b'#8', InvalidBinaryFormat),
+                              (visa.single, b'#0deadbeef', InvalidBinaryFormat),
+                              (visa.single, b'#deadbeef', InvalidBinaryFormat),
+                              (visa.double, packfloats1('<f', [1.25]), InvalidBinaryFormat),
                               ])
     def test_read_values_errors(self, monkeypatch, instrument,
                                 format, input, expected_exception):
