@@ -29,10 +29,7 @@ class _AttrRange:
         self.maximum = maximum
 
     def __contains__(self, item):
-        if item >= self.minimum and item <= self.maximum:
-            return True
-        else:
-            return False
+        return self.minimum <= item <= self.maximum
 
     def tostring(self, val):
         if val in self:
@@ -47,7 +44,8 @@ class _AttrRange:
 
 class _AttrSet:
     """encapsulates named attributes values,
-    for conversion between name and value"""
+    for conversion between name and value.
+    """
 
     def __init__(self, *args):
         self.NameSet = args
@@ -135,7 +133,7 @@ attributes_s = {
     viRO, viGlobal, ViVersion,
     _AttrRange(0, 0xFFFFFFFF),
     'implementation version',
-    "Resource version that uniquely identifies each of the different "\
+    "Resource version that uniquely identifies each of the different "
     "revisions or implementations of a resource."
     ),
 
@@ -144,8 +142,8 @@ attributes_s = {
     viRO, viGlobal, ViAccessMode,
     _AttrSet('VI_NO_LOCK', 'VI_EXCLUSIVE_LOCK', 'VI_SHARED_LOCK'),
     'lock state',
-    "The current locking state of the resource. The resource can be "\
-    "unlocked, locked with an exclusive lock, or locked with a shared "\
+    "The current locking state of the resource. The resource can be "
+    "unlocked, locked with an exclusive lock, or locked with a shared "
     "lock."
     ),
 
@@ -153,7 +151,7 @@ attributes_s = {
     viAttrInfo(
     viRO, viGlobal, ViUInt16, _AttrRange(0, 0x3FFF),
     'resource manufacturer ID',
-    "A value that corresponds to the VXI manufacturer ID of the "\
+    "A value that corresponds to the VXI manufacturer ID of the "
     "manufacturer that created the implementation."
     ),
 
@@ -161,7 +159,7 @@ attributes_s = {
     viAttrInfo(
     viRO, viGlobal, ViString, None,
     'resource manufacturer name',
-    "A string that corresponds to the VXI manufacturer name of the "\
+    "A string that corresponds to the VXI manufacturer name of the "
     "manufacturer that created the implementation."
     ),
 
@@ -169,7 +167,7 @@ attributes_s = {
     viAttrInfo(
     viRO, viGlobal, ViRsrc, None,
     'resource name',
-    "The unique identifier for a resource compliant with the address "\
+    "The unique identifier for a resource compliant with the address "
     "structure presented in Section 4.4.1, Address String."
     ),
 
@@ -177,7 +175,7 @@ attributes_s = {
     viAttrInfo(
     viRO, viGlobal, ViVersion, None,
     'resource specification version',
-    "Resource version that uniquely identifies the version of the VISA "\
+    "Resource version that uniquely identifies the version of the VISA "
     "specification to which the implementation is compliant."
     ),
 

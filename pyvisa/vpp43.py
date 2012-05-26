@@ -586,7 +586,7 @@ def find_resources(session, regular_expression):
     visa_library().viFindRsrc(session, regular_expression,
                               byref(find_list), byref(return_counter),
                               instrument_description)
-    return (find_list, return_counter.value, instrument_description.value)
+    return find_list, return_counter.value, instrument_description.value
 
 
 def flush(vi, mask):
@@ -743,19 +743,19 @@ def move_asynchronously(vi, source_space, source_offset, source_width,
 
 
 def move_in_8(vi, space, offset, length):
-    buffer_8 = (ViUInt8 * length)();
+    buffer_8 = (ViUInt8 * length)()
     visa_library().viMoveIn8(vi, space, offset, length, buffer_8)
     return list(buffer_8)
 
 
 def move_in_16(vi, space, offset, length):
-    buffer_16 = (ViUInt16 * length)();
+    buffer_16 = (ViUInt16 * length)()
     visa_library().viMoveIn16(vi, space, offset, length, buffer_16)
     return list(buffer_16)
 
 
 def move_in_32(vi, space, offset, length):
-    buffer_32 = (ViUInt32 * length)();
+    buffer_32 = (ViUInt32 * length)()
     visa_library().viMoveIn32(vi, space, offset, length, buffer_32)
     return list(buffer_32)
 
@@ -809,7 +809,7 @@ def parse_resource(session, resource_name):
     interface_board_number = ViUInt16()
     visa_library().viParseRsrc(session, resource_name, byref(interface_type),
                                byref(interface_board_number))
-    return (interface_type.value, interface_board_number.value)
+    return interface_type.value, interface_board_number.value
 
 
 def parse_resource_extended(session, resource_name):
@@ -889,7 +889,7 @@ def read_asynchronously(vi, count):
     buffer = create_string_buffer(count)
     job_id = ViJobId()
     visa_library().viReadAsync(vi, buffer, count, byref(job_id))
-    return (buffer, job_id)
+    return buffer, job_id
 
 
 def read_stb(vi):
@@ -1011,7 +1011,7 @@ def wait_on_event(vi, in_event_type, timeout):
     out_context = ViEvent()
     visa_library().viWaitOnEvent(vi, in_event_type, timeout,
                                  byref(out_event_type), byref(out_context))
-    return (out_event_type.value, out_context)
+    return out_event_type.value, out_context
 
 
 def write(vi, buffer):

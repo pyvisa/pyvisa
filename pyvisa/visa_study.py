@@ -17,15 +17,16 @@
 __version__ = "$Revision$"
 # $Source$
 
+import os
+import types
+import logging
 from ctypes import *
+
 from visa_messages import *
 from vpp43_types import *
 from vpp43_constants import *
 from visa_attributes import attributes_s, attributes
-import os
-import types
-import sys
-import logging
+
 
 log = logging.getLogger('visa')
 
@@ -43,6 +44,7 @@ class VisaError(IOError):
     """Base class for VISA errors"""
 
     def __init__(self, value):
+        IOError.__init__(self)
         self.value = value
 
     def __str__(self):
@@ -50,7 +52,7 @@ class VisaError(IOError):
             (shortdesc, longdesc) = completion_and_error_messages[self.value]
             hexvalue = self.value  # convert errorcodes (negative) to long
             if hexvalue < 0:
-                hexvalue = hexvalue + 0x100000000
+                hexvalue += 0x100000000
             return shortdesc + " (%X): " % hexvalue + longdesc
 
 
@@ -80,7 +82,7 @@ def OpenDefaultRM():
     """Return a session to the Default Resource Manager resource."""
     sesn = ViSession()
     result = visa.viOpenDefaultRM(byref(sesn))
-    return (result, sesn.value)
+    return result, sesn.value
 
 
 def Open(sesn, rsrcName, accessMode, openTimeout):
@@ -91,7 +93,7 @@ def Open(sesn, rsrcName, accessMode, openTimeout):
     openTimout = ViUInt32(openTimeout)
     vi = ViSession()
     result = visa.viOpen(sesn, rsrcName, accessMode, openTimeout, byref(vi))
-    return (result, vi.value)
+    return result, vi.value
 
 
 def FindRsrc(session, expr):
@@ -130,7 +132,7 @@ def ParseRsrc(sesn, rsrcName):
         ViRsrc(rsrcName),
         byref(intfType),
         byref(intfNum))
-    return (result, intfType.value, intfNum.value)
+    return result, intfType.value, intfNum.value
 
 
 def ParseRsrcEx(sesn, rsrcName):
@@ -190,7 +192,7 @@ def GetAttribute(vi, attribute):
         else:
             value_ext = str(val)
 
-    return (attr_name, val, value_ext)
+    return attr_name, val, value_ext
 
 
 def SetAttribute(vi, attribute, value):
@@ -239,7 +241,7 @@ def Read(vi, count):
     retCount = ViUInt32()
     result = visa.viRead(vi, buf, count, byref(retCount))
     log.debug("Read: buffer length %d at %s", sizeof(buf), hex(addressof(buf)))
-    return (result, buf.raw[0:retCount.value])
+    return result, buf.raw[0:retCount.value]
 
 
 visa.viWriteAsync.restype = CheckStatus

@@ -78,8 +78,7 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
 def _warn_for_invalid_keyword_arguments(keyw, allowed_keys):
     for key in keyw.iterkeys():
         if key not in allowed_keys:
-            warnings.warn("Keyword argument \"%s\" unknown" % key,
-                          stacklevel=3)
+            warnings.warn('Keyword argument "%s" unknown' % key, stacklevel=3)
 
 
 def _filter_keyword_arguments(keyw, selected_keys):
@@ -114,91 +113,95 @@ class ResourceTemplate(object):
 
         """
         _warn_for_invalid_keyword_arguments(keyw, ("lock", "timeout"))
+
         if self.__class__ is ResourceTemplate:
             raise TypeError("trying to instantiate an abstract class")
-        if resource_name is not None:  # is none for the resource manager
-            warnings.filterwarnings("ignore", "VI_SUCCESS_DEV_NPRESENT")
-            self.vi = vpp43.open(resource_manager.session, resource_name,
-                                 keyw.get("lock", VI_NO_LOCK))
-            if vpp43.get_status() == VI_SUCCESS_DEV_NPRESENT:
-                # okay, the device was not ready when we opened the session.
-                # Now it gets five seconds more to become ready.  Every 0.1
-                # seconds we probe it with viClear.
-                passed_time = 0  # in seconds
-                while passed_time < 5.0:
-                    time.sleep(0.1)
-                    passed_time += 0.1
-                    try:
-                        vpp43.clear(self.vi)
-                    except VisaIOError as error:
-                        if error.error_code != VI_ERROR_NLISTENERS:
-                            raise
-                    break
-                else:
-                    # Very last chance, this time without exception handling
-                    time.sleep(0.1)
-                    passed_time += 0.1
+
+        if resource_name is None:  # is none for the resource manager
+            return
+
+        warnings.filterwarnings("ignore", "VI_SUCCESS_DEV_NPRESENT")
+        self.vi = vpp43.open(resource_manager.session, resource_name,
+                             keyw.get("lock", VI_NO_LOCK))
+
+        if vpp43.get_status() == VI_SUCCESS_DEV_NPRESENT:
+            # okay, the device was not ready when we opened the session.
+            # Now it gets five seconds more to become ready.  Every 0.1
+            # seconds we probe it with viClear.
+            passed_time = 0  # in seconds
+            while passed_time < 5.0:
+                time.sleep(0.1)
+                passed_time += 0.1
+                try:
                     vpp43.clear(self.vi)
-            _removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
-            timeout = keyw.get("timeout", 5)
-            if timeout is None:
-                vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE,
-                                    VI_TMO_INFINITE)
+                except VisaIOError as error:
+                    if error.error_code != VI_ERROR_NLISTENERS:
+                        raise
+                break
             else:
-                self.timeout = timeout
+                # Very last chance, this time without exception handling
+                time.sleep(0.1)
+                passed_time += 0.1
+                vpp43.clear(self.vi)
+
+        _removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
+        timeout = keyw.get("timeout", 5)
+        if timeout is None:
+            vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
+        else:
+            self.timeout = timeout
 
     def __del__(self):
         self.close()
 
-    def __set_timeout(self, timeout):
-        if not(0 <= timeout <= 4294967):
-            raise ValueError("timeout value is invalid")
-        vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
-
-    def __get_timeout(self):
-        timeout = vpp43.get_attribute(self.vi, VI_ATTR_TMO_VALUE)
-        if timeout == VI_TMO_INFINITE:
-            raise NameError("no timeout is specified")
-        return timeout / 1000.0
-
-    def __del_timeout(self):
-        timeout = self.__get_timeout()  # just to test whether it's defined
-        vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
-    timeout = property(__get_timeout, __set_timeout, __del_timeout,
+    @property
+    def timeout(self):
         """The timeout in seconds for all resource I/O operations.
 
         Note that the VISA library may round up this value heavily.  I
         experienced that my NI VISA implementation had only the values 0, 1, 3
         and 10 seconds.
 
-        """)
+        """
+        timeout = vpp43.get_attribute(self.vi, VI_ATTR_TMO_VALUE)
+        if timeout == VI_TMO_INFINITE:
+            raise NameError("no timeout is specified")
+        return timeout / 1000.0
 
-    def __get_resource_class(self):
+    @timeout.setter
+    def timeout(self, timeout):
+        if not(0 <= timeout <= 4294967):
+            raise ValueError("timeout value is invalid")
+        vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
+
+    @timeout.deleter
+    def timeout(self):
+        timeout = self.timeout  # just to test whether it's defined
+        vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
+
+    @property
+    def resource_class(self):
+        """The resource class of the resource as a string."""
+
         try:
             resource_class = \
                 vpp43.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
         except VisaIOError as error:
             if error.error_code != VI_ERROR_NSUP_ATTR:
                 raise
-        return resource_class
+        return resource_class  # FIXME: local variable referenced before assignment
 
-    resource_class = property(__get_resource_class, None, None,
-        """The resource class of the resource as a string.""")
-
-    def __get_resource_name(self):
+    @property
+    def resource_name(self):
+        """The VISA resource name of the resource as a string."""
         return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
 
-    resource_name = property(__get_resource_name, None, None,
-        """The VISA resource name of the resource as a string.""")
-
-    def __get_interface_type(self):
-        interface_type, _ = \
-            vpp43.parse_resource(resource_manager.session,
-                                 self.resource_name)
+    @property
+    def interface_type(self):
+        """The interface type of the resource as a number."""
+        interface_type, _ = vpp43.parse_resource(resource_manager.session,
+                                                 self.resource_name)
         return interface_type
-
-    interface_type = property(__get_interface_type, None, None,
-        """The interface type of the resource as a number.""")
 
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
@@ -290,8 +293,8 @@ def instrument(resource_name, **keyw):
     The generated instrument instance.
 
     """
-    interface_type, _ = \
-        vpp43.parse_resource(resource_manager.session, resource_name)
+    interface_type, _ = vpp43.parse_resource(resource_manager.session,
+                                             resource_name)
     if interface_type == VI_INTF_GPIB:
         return GpibInstrument(resource_name, **keyw)
     elif interface_type == VI_INTF_ASRL:
@@ -532,34 +535,8 @@ class Instrument(ResourceTemplate):
         vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
         vpp43.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
 
-    def __set_term_chars(self, term_chars):
-        """Set a new termination character sequence.  See below the property
-        "term_char"."""
-        # First, reset termination characters, in case something bad happens.
-        self.__term_chars = b""
-        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
-        if term_chars == b"" or term_chars == None:
-            self.__term_chars = term_chars
-            return
-        # Only the last character in term_chars is the real low-level
-        # termination character, the rest is just used for verification after
-        # each read operation.
-        last_char = term_chars[-1:]
-        # Consequently, it's illogical to have the real termination character
-        # twice in the sequence (otherwise reading would stop prematurely).
-        if term_chars[:-1].find(last_char) != -1:
-            raise ValueError("ambiguous ending in termination characters")
-        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR, ord(last_char))
-        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_TRUE)
-        self.__term_chars = term_chars
-
-    def __get_term_chars(self):
-        """Return the current termination characters for the device."""
-        return self.__term_chars
-
-    def __del_term_chars(self):
-        self.term_chars = None
-    term_chars = property(__get_term_chars, __set_term_chars, __del_term_chars,
+    @property
+    def term_chars(self):
         r"""Set or read a new termination character sequence (property).
 
         Normally, you just give the new termination sequence, which is appended
@@ -572,21 +549,52 @@ class Instrument(ResourceTemplate):
         operation but not expected after each read operation (but stripped if
         present).
 
-        """)
+        """
 
-    def __set_send_end(self, send):
+        """Return the current termination characters for the device."""
+        return self.__term_chars
+
+    @term_chars.setter
+    def term_chars(self, term_chars):
+        """Set a new termination character sequence.  See below the property
+        "term_char"."""
+        # First, reset termination characters, in case something bad happens.
+        self.__term_chars = b""
+        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
+        if term_chars == b"" or term_chars == None:
+            self.__term_chars = term_chars
+            return
+            # Only the last character in term_chars is the real low-level
+        # termination character, the rest is just used for verification after
+        # each read operation.
+        last_char = term_chars[-1:]
+        # Consequently, it's illogical to have the real termination character
+        # twice in the sequence (otherwise reading would stop prematurely).
+        if term_chars[:-1].find(last_char) != -1:
+            raise ValueError("ambiguous ending in termination characters")
+
+        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR, ord(last_char))
+        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_TRUE)
+        self.__term_chars = term_chars
+
+    @term_chars.deleter
+    def term_chars(self):
+        self.term_chars = None
+
+    @property
+    def send_end(self):
+        """Whether or not to assert EOI (or something equivalent after each
+        write operation.
+        """
+        return vpp43.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_TRUE
+
+    @send_end.setter
+    def send_end(self, send):
         if send:
             vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
         else:
             vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_FALSE)
 
-    def __get_send_end(self):
-        return vpp43.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_TRUE
-    send_end = property(__get_send_end, __set_send_end, None,
-        """Whether or not to assert EOI (or something equivalent after each write
-        operation.
-
-        """)
 
 
 class GpibInstrument(Instrument):
@@ -667,10 +675,10 @@ class GpibInstrument(Instrument):
                 break
         vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
 
-    def __get_stb(self):
+    @property
+    def stb(self):
+        """Service request status register."""
         return vpp43.read_stb(self.vi)
-
-    stb = property(__get_stb, None, None, """Service request status register.""")
 
 # The following aliases are used for the "end_input" property
 no_end_input = VI_ASRL_END_NONE
@@ -715,68 +723,77 @@ class SerialInstrument(Instrument):
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_ASRL:
             raise ValueError("device is not a serial instrument")
+
         self.baud_rate = keyw.get("baud_rate", 9600)
         self.data_bits = keyw.get("data_bits", 8)
         self.stop_bits = keyw.get("stop_bits", 1)
         self.parity    = keyw.get("parity", no_parity)
         self.end_input = keyw.get("end_input", term_chars_end_input)
 
-    def __get_baud_rate(self):
+    @property
+    def baud_rate(self):
+        """The baud rate of the serial instrument."""
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_BAUD)
 
-    def __set_baud_rate(self, rate):
+    @baud_rate.setter
+    def baud_rate(self, rate):
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_BAUD, rate)
 
-    baud_rate = property(__get_baud_rate, __set_baud_rate, None,
-                         """Baud rate of the serial instrument""")
+    @property
+    def data_bits(self):
+        """Number of data bits contained in each frame (from 5 to 8)."""
 
-    def __get_data_bits(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS)
 
-    def __set_data_bits(self, bits):
+    @data_bits.setter
+    def data_bits(self, bits):
         if not 5 <= bits <= 8:
             raise ValueError("number of data bits must be from 5 to 8")
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS, bits)
-    data_bits = property(__get_data_bits, __set_data_bits, None,
-                         """Number of data bits contained in each frame """
-                         """(from 5 to 8)""")
 
-    def __get_stop_bits(self):
+    @property
+    def stop_bits(self):
+        """Number of stop bits contained in each frame (1, 1.5, or 2)."""
+
         deci_bits = vpp43.get_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS)
-        if deci_bits == 10: return 1
-        elif deci_bits == 15: return 1.5
-        elif deci_bits == 20: return 2
+        if deci_bits == 10:
+            return 1
+        elif deci_bits == 15:
+            return 1.5
+        elif deci_bits == 20:
+            return 2
 
-    def __set_stop_bits(self, bits):
+    @stop_bits.setter
+    def stop_bits(self, bits):
         deci_bits = 10 * bits
-        if 9 < deci_bits < 11: deci_bits = 10
-        elif 14 < deci_bits < 16: deci_bits = 15
-        elif 19 < deci_bits < 21: deci_bits = 20
-        else: raise ValueError("invalid number of stop bits")
+        if 9 < deci_bits < 11:
+            deci_bits = 10
+        elif 14 < deci_bits < 16:
+            deci_bits = 15
+        elif 19 < deci_bits < 21:
+            deci_bits = 20
+        else:
+            raise ValueError("invalid number of stop bits")
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS, deci_bits)
 
-    stop_bits = property(__get_stop_bits, __set_stop_bits, None,
-                         """Number of stop bits contained in each frame """
-                         """(1, 1.5, or 2)""")
+    @property
+    def parity(self):
+        """The parity used with every frame transmitted and received."""
 
-    def __get_parity(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_PARITY)
 
-    def __set_parity(self, parity):
+    @parity.setter
+    def parity(self, parity):
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_PARITY, parity)
 
-    parity = property(__get_parity, __set_parity, None,
-                      """The parity used with every frame transmitted """
-                      """and received""")
-
-    def __get_end_input(self):
+    @property
+    def end_input(self):
+        """indicates the method used to terminate read operations"""
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_END_IN)
 
-    def __set_end_input(self, termination):
+    @end_input.setter
+    def end_input(self, termination):
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_END_IN, termination)
-
-    end_input = property(__get_end_input, __set_end_input, None,
-        """indicates the method used to terminate read operations""")
 
     def __repr__(self):
         return "SerialInstrument(\"%s\")" % self.resource_name

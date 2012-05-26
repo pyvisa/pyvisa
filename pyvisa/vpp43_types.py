@@ -36,7 +36,7 @@ import os as _os
 # However, as long as I'm not fully sure about this, they won't hurt.
 
 def _type_dublet(ctypes_type):
-    return (ctypes_type, _ctypes.POINTER(ctypes_type))
+    return ctypes_type, _ctypes.POINTER(ctypes_type)
 
 def _type_triplet(ctypes_type):
     return _type_dublet(ctypes_type) + (_ctypes.POINTER(ctypes_type),)
