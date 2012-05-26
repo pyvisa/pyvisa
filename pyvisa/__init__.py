@@ -12,7 +12,9 @@
     :license: MIT, see COPYING for more details.
 """
 
-import ConfigParser, os, sys
+import os
+import sys
+import ConfigParser
 import vpp43
 
 _config_parser = ConfigParser.SafeConfigParser()

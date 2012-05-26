@@ -11,8 +11,6 @@
     :license: MIT, see COPYING for more details.
 """
 
-
-
 __version__ = "$Revision$"
 # \$Source${}$\$
 

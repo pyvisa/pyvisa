@@ -18,19 +18,23 @@ __version__ = "$Revision$"
 
 VI_SPEC_VERSION = 0x00300000
 
-from visa_exceptions import *
-from vpp43_constants import *
-from vpp43_types import *
-from vpp43_attributes import attributes
 import os
-from ctypes import byref, cdll, c_void_p, c_double, c_long, \
-    create_string_buffer, POINTER
+import warnings
+
+from ctypes import (byref, cdll, c_void_p, c_double, c_long,
+                    create_string_buffer, POINTER)
+
 if os.name == 'nt':
     from ctypes import windll, WINFUNCTYPE as FUNCTYPE
 else:
     from ctypes import CFUNCTYPE as FUNCTYPE
-import warnings
+
+from visa_exceptions import *
 from visa_messages import completion_and_error_messages
+
+from vpp43_constants import *
+from vpp43_types import *
+from vpp43_attributes import attributes
 
 visa_functions = [
     "assert_interrupt_signal", "assert_trigger", "assert_utility_signal",
@@ -57,7 +61,8 @@ __all__ = ["visa_library", "get_status"] + visa_functions
 
 # Add all symbols from #visa_exceptions# and #vpp43_constants# to the list of
 # exported symbols
-import visa_exceptions, vpp43_constants
+import visa_exceptions
+import vpp43_constants
 __all__.extend([name for name in vpp43_constants.__dict__.keys() +
                 visa_exceptions.__dict__.keys() if name[0] != '_'])
 
@@ -71,6 +76,7 @@ class Singleton(object):
     definition of __init__.
 
     """
+
     def __new__(cls, *args, **kwds):
         it = cls.__dict__.get("__it__")
         if it is not None:
@@ -78,10 +84,13 @@ class Singleton(object):
         cls.__it__ = it = object.__new__(cls)
         it.init(*args, **kwds)
         return it
+
     def init(self, *args, **kwds):
         pass
+
     def __init__(self, *args, **kwds):
         pass
+
 
 class VisaLibrary(Singleton):
     """Singleton class for VISA ctypes library handle.
@@ -95,9 +104,11 @@ class VisaLibrary(Singleton):
     __call__     -- returns the ctypes object holding the VISA library
 
     """
+
     def init(self):
         self.__lib = self.__cdecl_lib = None
-    def load_library(self, path = None):
+
+    def load_library(self, path=None):
         """(Re-)loads the VISA library.
 
         The optional parameter "path" holds the full path to the VISA library.
@@ -122,6 +133,7 @@ class VisaLibrary(Singleton):
             self.__lib = self.__cdecl_lib = None
             raise visa_exceptions.OSNotSupported(os.name)
         self.__initialize_library_functions()
+
     def set_user_handle_type(self, user_handle):
         # Actually, it's not necessary to change ViHndlr *globally*.  However,
         # I don't want to break symmetry too much with all the other VPP43
@@ -137,19 +149,21 @@ class VisaLibrary(Singleton):
                                                 ViHndlr, user_handle_p]
         self.__lib.viUninstallHandler.argtypes = [ViSession, ViEventType,
                                                   ViHndlr, user_handle_p]
-    def __call__(self, force_cdecl = False):
+
+    def __call__(self, force_cdecl=False):
         """Returns the ctypes object to the VISA library.
 
         If "force_cdecl" is True, use the cdecl calling convention even under
         Windows, where the stdcall convension is the default.  For Linux, this
         has no effect.
-        
+
         """
         if self.__lib is None or self.__cdecl_lib is None:
             self.load_library()
         if force_cdecl:
             return self.__cdecl_lib
         return self.__lib
+
     def __initialize_library_functions(self):
         # Consistency remark: here all VPP-4.3.2 routines must be listed (unless, of
         # course, they don't return a status value, like "peek" and "poke").
@@ -340,6 +354,7 @@ class VisaLibrary(Singleton):
                                                    ViPJobId])
         self.__set_argument_types("viWriteFromFile", [ViSession, ViString,
                                                       ViUInt32, ViPUInt32])
+
     def __set_argument_types(self, visa_function, types, force_cdecl=False,
                              may_be_missing=True):
         if not force_cdecl:
@@ -364,6 +379,7 @@ dodgy_completion_codes = \
     VI_WARN_EXT_FUNC_NIMPL]
 """For these completion codes, warnings are issued."""
 
+
 def check_status(status):
     """Check return values for errors and warnings."""
     global visa_status
@@ -373,8 +389,9 @@ def check_status(status):
     if status in dodgy_completion_codes:
         abbreviation, description = completion_and_error_messages[status]
         warnings.warn("%s: %s" % (abbreviation, description),
-                      visa_exceptions.VisaIOWarning, stacklevel = 2)
+                      visa_exceptions.VisaIOWarning, stacklevel=2)
     return status
+
 
 def get_status():
     return visa_status
@@ -407,11 +424,12 @@ def convert_argument_list(original_arguments):
             converted_arguments.append(c_double(argument))
         elif isinstance(argument, int):
             converted_arguments.append(c_long(argument))
-        elif isinstance(argument, str):    
+        elif isinstance(argument, str):
             converted_arguments.append(argument)
         else:
             raise visa_exceptions.VisaTypeError("Invalid type in scanf/printf: %s" % type(argument))
     return tuple(converted_arguments)
+
 
 def convert_to_byref(byvalue_arguments, buffer_length):
     """Converts a list of ctypes objects to a tuple with ctypes references
@@ -428,6 +446,7 @@ def convert_to_byref(byvalue_arguments, buffer_length):
     Return value: a tuple with the by-references arguments.
 
     """
+
     converted_arguments = []
     for i in range(len(byvalue_arguments)):
         if isinstance(byvalue_arguments[i], str):
@@ -441,7 +460,8 @@ def convert_to_byref(byvalue_arguments, buffer_length):
         else:
             raise visa_exceptions.VisaTypeError("Invalid type in scanf: %s" % type(argument))
     return tuple(converted_arguments)
-        
+
+
 def construct_return_tuple(original_ctypes_sequence):
     """Generate a return value for queryf(), scanf(), and sscanf() out of the
     list of ctypes objects.
@@ -455,6 +475,7 @@ def construct_return_tuple(original_ctypes_sequence):
         tuple of all values.
 
     """
+
     length = len(original_ctypes_sequence)
     if length == 0:
         return None
@@ -505,14 +526,18 @@ def construct_return_tuple(original_ctypes_sequence):
 #   totally intact, and the inner order of parameters, too.  There is a 1:1
 #   mapping.
 
+
 def assert_interrupt_signal(vi, mode, status_id):
     visa_library().viAssertIntrSignal(vi, mode, status_id)
+
 
 def assert_trigger(vi, protocol):
     visa_library().viAssertTrigger(vi, protocol)
 
+
 def assert_utility_signal(vi, line):
     visa_library().viAssertUtilSignal(vi, line)
+
 
 def buffer_read(vi, count):
     buffer = create_string_buffer(count)
@@ -520,31 +545,39 @@ def buffer_read(vi, count):
     visa_library().viBufRead(vi, buffer, count, byref(return_count))
     return buffer.raw[:return_count.value]
 
+
 def buffer_write(vi, buffer):
     return_count = ViUInt32()
     visa_library().viBufWrite(vi, buffer, len(buffer), byref(return_count))
     return return_count.value
 
+
 def clear(vi):
     visa_library().viClear(vi)
+
 
 def close(vi):
     visa_library().viClose(vi)
 
+
 def disable_event(vi, event_type, mechanism):
     visa_library().viDisableEvent(vi, event_type, mechanism)
+
 
 def discard_events(vi, event_type, mechanism):
     visa_library().viDiscardEvents(vi, event_type, mechanism)
 
-def enable_event(vi, event_type, mechanism, context = VI_NULL):
+
+def enable_event(vi, event_type, mechanism, context=VI_NULL):
     context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
     visa_library().viEnableEvent(vi, event_type, mechanism, context)
+
 
 def find_next(find_list):
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
     visa_library().viFindNext(find_list, instrument_description)
     return instrument_description.value
+
 
 def find_resources(session, regular_expression):
     find_list = ViFindList()
@@ -555,8 +588,10 @@ def find_resources(session, regular_expression):
                               instrument_description)
     return (find_list, return_counter.value, instrument_description.value)
 
+
 def flush(vi, mask):
     visa_library().viFlush(vi, mask)
+
 
 def get_attribute(vi, attribute):
     # FixMe: How to deal with ViBuf?
@@ -574,32 +609,40 @@ def get_attribute(vi, attribute):
         visa_library().viGetAttribute(vi, attribute, byref(attribute_state))
     return attribute_state.value
 
+
 def gpib_command(vi, buffer):
     return_count = ViUInt32()
     visa_library().viGpibCommand(vi, buffer, len(buffer), byref(return_count))
     return return_count.value
 
+
 def gpib_control_atn(vi, mode):
     visa_library().viGpibControlATN(vi, mode)
+
 
 def gpib_control_ren(vi, mode):
     visa_library().viGpibControlREN(vi, mode)
 
+
 def gpib_pass_control(vi, primary_address, secondary_address):
     visa_library().viGpibPassControl(vi, primary_address, secondary_address)
 
+
 def gpib_send_ifc(vi):
     visa_library().viGpibSendIFC(vi)
+
 
 def in_8(vi, space, offset):
     value_8 = ViUInt8()
     visa_library().viIn8(vi, space, offset, byref(value_8))
     return value_8.value
 
+
 def in_16(vi, space, offset):
     value_16 = ViUInt16()
     visa_library().viIn16(vi, space, offset, byref(value_16))
     return value_16.value
+
 
 def in_32(vi, space, offset):
     value_32 = ViUInt32()
@@ -615,7 +658,8 @@ time as a ctypes object created with CFUNCTYPE.
 
 """
 
-def install_handler(vi, event_type, handler, user_handle = None):
+
+def install_handler(vi, event_type, handler, user_handle=None):
     if user_handle is None:
         converted_user_handle = None
     else:
@@ -647,7 +691,8 @@ def install_handler(vi, event_type, handler, user_handle = None):
     handlers.append((handler, converted_user_handle, converted_handler))
     return converted_user_handle
 
-def lock(vi, lock_type, timeout, requested_key = None):
+
+def lock(vi, lock_type, timeout, requested_key=None):
     if lock_type == VI_EXCLUSIVE_LOCK:
         requested_key = None
         access_key = None
@@ -656,30 +701,36 @@ def lock(vi, lock_type, timeout, requested_key = None):
     visa_library().viLock(vi, lock_type, timeout, requested_key, access_key)
     return access_key
 
-def map_address(vi, map_space, map_base, map_size, access = VI_FALSE, suggested
-                = VI_NULL):
+
+def map_address(vi, map_space, map_base, map_size,
+                access=VI_FALSE, suggested=VI_NULL):
     access = VI_FALSE
     address = ViAddr()
     visa_library().viMapAddress(vi, map_space, map_base, map_size, access,
                                 suggested, byref(address))
     return address
 
+
 def map_trigger(vi, trigger_source, trigger_destination, mode):
     visa_library().viMapTrigger(vi, trigger_source, trigger_destination, mode)
+
 
 def memory_allocation(vi, size):
     offset = ViBusAddress()
     visa_library().viMemAlloc(vi, size, byref(offset))
     return offset
 
+
 def memory_free(vi, offset):
     visa_library().viMemFree(vi, offset)
+
 
 def move(vi, source_space, source_offset, source_width, destination_space,
          destination_offset, destination_width, length):
     visa_library().viMove(vi, source_space, source_offset, source_width,
                           destination_space, destination_offset,
                           destination_width, length)
+
 
 def move_asynchronously(vi, source_space, source_offset, source_width,
                         destination_space, destination_offset,
@@ -690,39 +741,47 @@ def move_asynchronously(vi, source_space, source_offset, source_width,
                                destination_width, length, byref(job_id))
     return job_id
 
+
 def move_in_8(vi, space, offset, length):
     buffer_8 = (ViUInt8 * length)();
     visa_library().viMoveIn8(vi, space, offset, length, buffer_8)
     return list(buffer_8)
+
 
 def move_in_16(vi, space, offset, length):
     buffer_16 = (ViUInt16 * length)();
     visa_library().viMoveIn16(vi, space, offset, length, buffer_16)
     return list(buffer_16)
 
+
 def move_in_32(vi, space, offset, length):
     buffer_32 = (ViUInt32 * length)();
     visa_library().viMoveIn32(vi, space, offset, length, buffer_32)
     return list(buffer_32)
 
+
 def move_out_8(vi, space, offset, length, buffer_8):
     converted_buffer = (ViUInt8 * length)(*tuple(buffer_8))
     visa_library().viMoveOut8(vi, space, offset, length, converted_buffer)
+
 
 def move_out_16(vi, space, offset, length, buffer_16):
     converted_buffer = (ViUInt16 * length)(*tuple(buffer_16))
     visa_library().viMoveOut16(vi, space, offset, length, converted_buffer)
 
+
 def move_out_32(vi, space, offset, length, buffer_16):
     converted_buffer = (ViUInt32 * length)(*tuple(buffer_32))
     visa_library().viMoveOut32(vi, space, offset, length, converted_buffer)
 
-def open(session, resource_name, access_mode = VI_NO_LOCK, open_timeout =
-         VI_TMO_IMMEDIATE):
+
+def open(session, resource_name,
+         access_mode=VI_NO_LOCK, open_timeout=VI_TMO_IMMEDIATE):
     vi = ViSession()
     visa_library().viOpen(session, resource_name, access_mode, open_timeout,
                           byref(vi))
     return vi.value
+
 
 def open_default_resource_manager():
     session = ViSession()
@@ -732,14 +791,18 @@ def open_default_resource_manager():
 get_default_resource_manager = open_default_resource_manager
 """A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
 
+
 def out_8(vi, space, offset, value_8):
     visa_library().viOut8(vi, space, offset, value_8)
+
 
 def out_16(vi, space, offset, value_16):
     visa_library().viOut16(vi, space, offset, value_16)
 
+
 def out_32(vi, space, offset, value_32):
     visa_library().viOut32(vi, space, offset, value_32)
+
 
 def parse_resource(session, resource_name):
     interface_type = ViUInt16()
@@ -747,6 +810,7 @@ def parse_resource(session, resource_name):
     visa_library().viParseRsrc(session, resource_name, byref(interface_type),
                                byref(interface_board_number))
     return (interface_type.value, interface_board_number.value)
+
 
 def parse_resource_extended(session, resource_name):
     interface_type = ViUInt16()
@@ -766,33 +830,41 @@ def parse_resource_extended(session, resource_name):
             resource_class.value, unaliased_expanded_resource_name.value,
             alias_if_exists)
 
+
 def peek_8(vi, address):
     value_8 = ViUInt8()
     visa_library().viPeek8(vi, address, byref(value_8))
     return value_8.value
+
 
 def peek_16(vi, address):
     value_16 = ViUInt16()
     visa_library().viPeek16(vi, address, byref(value_16))
     return value_16.value
 
+
 def peek_32(vi, address):
     value_32 = ViUInt32()
     visa_library().viPeek32(vi, address, byref(value_32))
     return value_32.value
 
+
 def poke_8(vi, address, value_8):
     visa_library().viPoke8(vi, address, value_8)
+
 
 def poke_16(vi, address, value_16):
     visa_library().viPoke16(vi, address, value_16)
 
+
 def poke_32(vi, address, value_32):
     visa_library().viPoke32(vi, address, value_32)
+
 
 def printf(vi, write_format, *args):
     visa_library(force_cdecl=True).viPrintf(vi, write_format,
                                             *convert_argument_list(args))
+
 
 def queryf(vi, write_format, read_format, write_args, *read_args, **keyw):
     maximal_string_length = keyw.get("maxmial_string_length", 1024)
@@ -805,11 +877,13 @@ def queryf(vi, write_format, read_format, write_args, *read_args, **keyw):
                                      maximal_string_length)))
     return construct_return_tuple(argument_list)
 
+
 def read(vi, count):
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
     visa_library().viRead(vi, buffer, count, byref(return_count))
     return buffer.raw[:return_count.value]
+
 
 def read_asynchronously(vi, count):
     buffer = create_string_buffer(count)
@@ -817,10 +891,12 @@ def read_asynchronously(vi, count):
     visa_library().viReadAsync(vi, buffer, count, byref(job_id))
     return (buffer, job_id)
 
+
 def read_stb(vi):
     status = ViUInt16()
     visa_library().viReadSTB(vi, byref(status))
     return status.value
+
 
 def read_to_file(vi, filename, count):
     return_count = ViUInt32()
@@ -839,17 +915,21 @@ def scanf(vi, read_format, *args, **keyw):
                                    maximal_string_length))
     return construct_return_tuple(argument_list)
 
+
 def set_attribute(vi, attribute, attribute_state):
     visa_library().viSetAttribute(vi, attribute, attribute_state)
 
+
 def set_buffer(vi, mask, size):
     visa_library().viSetBuf(vi, mask, size)
+
 
 def sprintf(vi, write_format, *args, **keyw):
     buffer = create_string_buffer(keyw.get("buffer_length", 1024))
     visa_library(force_cdecl=True).viSPrintf(vi, buffer, write_format,
                                              *convert_argument_list(args))
     return buffer.raw
+
 
 def sscanf(vi, buffer, read_format, *args, **keyw):
     maximal_string_length = keyw.get("maxmial_string_length", 1024)
@@ -860,15 +940,18 @@ def sscanf(vi, buffer, read_format, *args, **keyw):
                                     maximal_string_length))
     return construct_return_tuple(argument_list)
 
+
 def status_description(vi, status):
     description = create_string_buffer(256)
     visa_library().viStatusDesc(vi, status, description)
     return description.value
 
+
 def terminate(vi, degree, job_id):
     visa_library().viTerminate(vi, degree, job_id)
 
-def uninstall_handler(vi, event_type, handler, user_handle = None):
+
+def uninstall_handler(vi, event_type, handler, user_handle=None):
     for i in xrange(len(handlers)):
         element = handlers[i]
         if element[0] is handler and element[1] is user_handle:
@@ -882,14 +965,17 @@ def uninstall_handler(vi, event_type, handler, user_handle = None):
 def unlock(vi):
     visa_library().viUnlock(vi)
 
+
 def unmap_address(vi):
     visa_library().viUnmapAddress(vi)
+
 
 def unmap_trigger(vi, trigger_source, trigger_destination):
     visa_library().viUnmapTrigger(vi, trigger_source, trigger_destination)
 
+
 def usb_control_in(vi, request_type_bitmap_field, request_id, request_value,
-                   index, length = 0):
+                   index, length=0):
     buffer = create_string_buffer(length)
     return_count = ViUInt16()
     visa_library().viUsbControlIn(vi, request_type_bitmap_field, request_id,
@@ -897,8 +983,9 @@ def usb_control_in(vi, request_type_bitmap_field, request_id, request_value,
                                   byref(return_count))
     return buffer.raw[:return_count.value]
 
+
 def usb_control_out(vi, request_type_bitmap_field, request_id, request_value,
-                    index, buffer = ""):
+                    index, buffer=""):
     length = len(buffer)
     visa_library().viUsbControlOut(vi, request_type_bitmap_field, request_id,
                                    request_value, index, length, buffer)
@@ -912,10 +999,12 @@ vscanf   = scanf
 vsprintf = sprintf
 vsscanf  = sscanf
 
+
 def vxi_command_query(vi, mode, command):
     response = ViUInt32()
     visa_library().viVxiCommandQuery(vi, mode, command, byref(response))
     return response.value
+
 
 def wait_on_event(vi, in_event_type, timeout):
     out_event_type = ViEventType()
@@ -924,15 +1013,18 @@ def wait_on_event(vi, in_event_type, timeout):
                                  byref(out_event_type), byref(out_context))
     return (out_event_type.value, out_context)
 
+
 def write(vi, buffer):
     return_count = ViUInt32()
     visa_library().viWrite(vi, buffer, len(buffer), byref(return_count))
     return return_count.value
 
+
 def write_asynchronously(vi, buffer):
     job_id = ViJobId()
     visa_library().viWriteAsync(vi, buffer, len(buffer), byref(job_id))
     return job_id
+
 
 def write_from_file(vi, filename, count):
     return_count = ViUInt32()

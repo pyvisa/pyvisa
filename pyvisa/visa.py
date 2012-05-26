@@ -40,10 +40,16 @@ resource_manager -- the single instance of ResourceManager.
 __version__ = "$Revision$"
 # $Source$
 
+import re
+import time
+import struct
+import atexit
+import warnings
+
 import vpp43
 from vpp43_constants import *
 from visa_exceptions import *
-import re, time, warnings, atexit, struct
+
 
 def _removefilter(action, message="", category=Warning, module="", lineno=0,
                  append=0):
@@ -68,11 +74,13 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
         warnings.warn("Warning filter not found", stacklevel=2)
     warnings.filters = new_filters
 
+
 def _warn_for_invalid_keyword_arguments(keyw, allowed_keys):
     for key in keyw.iterkeys():
         if key not in allowed_keys:
             warnings.warn("Keyword argument \"%s\" unknown" % key,
-                          stacklevel = 3)
+                          stacklevel=3)
+
 
 def _filter_keyword_arguments(keyw, selected_keys):
     result = {}
@@ -80,6 +88,7 @@ def _filter_keyword_arguments(keyw, selected_keys):
         if key in selected_keys:
             result[key] = value
     return result
+
 
 class ResourceTemplate(object):
     """The abstract base class of the VISA implementation.  It covers
@@ -137,17 +146,21 @@ class ResourceTemplate(object):
                                     VI_TMO_INFINITE)
             else:
                 self.timeout = timeout
+
     def __del__(self):
         self.close()
+
     def __set_timeout(self, timeout):
         if not(0 <= timeout <= 4294967):
             raise ValueError("timeout value is invalid")
         vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
+
     def __get_timeout(self):
         timeout = vpp43.get_attribute(self.vi, VI_ATTR_TMO_VALUE)
         if timeout == VI_TMO_INFINITE:
             raise NameError("no timeout is specified")
         return timeout / 1000.0
+
     def __del_timeout(self):
         timeout = self.__get_timeout()  # just to test whether it's defined
         vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
@@ -159,6 +172,7 @@ class ResourceTemplate(object):
         and 10 seconds.
 
         """)
+
     def __get_resource_class(self):
         try:
             resource_class = \
@@ -167,19 +181,25 @@ class ResourceTemplate(object):
             if error.error_code != VI_ERROR_NSUP_ATTR:
                 raise
         return resource_class
+
     resource_class = property(__get_resource_class, None, None,
         """The resource class of the resource as a string.""")
+
     def __get_resource_name(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
+
     resource_name = property(__get_resource_name, None, None,
         """The VISA resource name of the resource as a string.""")
+
     def __get_interface_type(self):
         interface_type, _ = \
             vpp43.parse_resource(resource_manager.session,
                                  self.resource_name)
         return interface_type
+
     interface_type = property(__get_interface_type, None, None,
         """The interface type of the resource as a number.""")
+
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
 
@@ -194,6 +214,7 @@ class ResourceTemplate(object):
 
 class ResourceManager(vpp43.Singleton, ResourceTemplate):
     """Singleton class for the default resource manager."""
+
     def init(self):
         """Singleton class constructor.
 
@@ -204,16 +225,21 @@ class ResourceManager(vpp43.Singleton, ResourceTemplate):
         # I have "session" as an alias because the specification calls the "vi"
         # handle "session" for the resource manager.
         self.session = self.vi = vpp43.open_default_resource_manager()
+
     def __repr__(self):
         return "ResourceManager()"
 
 resource_manager = ResourceManager()
 """The global resource manager instance.  Exactly one is needed."""
 
+
 def _destroy_resource_manager():
     # delete self-reference for clean finishing
     del ResourceManager.__it__
+
+
 atexit.register(_destroy_resource_manager)
+
 
 def get_instruments_list(use_aliases=True):
     """Get a list of all connected devices.
@@ -249,6 +275,7 @@ def get_instruments_list(use_aliases=True):
         else:
             result.append(resource_name[:-7])
     return result
+
 
 def instrument(resource_name, **keyw):
     """Factory function for instrument instances.
@@ -290,6 +317,7 @@ big_endian = 4
 CR = b"\r"
 LF = b"\n"
 
+
 class Instrument(ResourceTemplate):
     """Class for all kinds of Instruments.
 
@@ -298,7 +326,8 @@ class Instrument(ResourceTemplate):
     of its child classes.
 
     """
-    chunk_size = 20*1024
+
+    chunk_size = 20 * 1024
     """How many bytes are read per low-level call"""
     __term_chars = None
     """Termination character sequence.  See below."""
@@ -306,6 +335,7 @@ class Instrument(ResourceTemplate):
     """Seconds to wait after each high-level write"""
     values_format = ascii
     """floating point data value format"""
+
     def __init__(self, resource_name, **keyw):
         """Constructor method.
 
@@ -348,8 +378,10 @@ class Instrument(ResourceTemplate):
         elif self.resource_class not in ("INSTR", "RAW", "SOCKET"):
             warnings.warn("given resource was not an INSTR but %s"
                           % self.resource_class, stacklevel=2)
+
     def __repr__(self):
         return "Instrument(\"%s\")" % self.resource_name
+
     def write(self, message):
         """Write a string message to the device.
 
@@ -360,11 +392,12 @@ class Instrument(ResourceTemplate):
         """
         if self.__term_chars and not message.endswith(self.__term_chars):
             message += self.__term_chars
-        elif self.__term_chars is None and not message.endswith(CR+LF):
-            message += CR+LF
+        elif self.__term_chars is None and not message.endswith(CR + LF):
+            message += CR + LF
         vpp43.write(self.vi, message)
         if self.delay > 0.0:
             time.sleep(self.delay)
+
     def _strip_term_chars(self, buffer):
         if self.__term_chars:
             if buffer.endswith(self.__term_chars):
@@ -372,7 +405,8 @@ class Instrument(ResourceTemplate):
             else:
                 warnings.warn("read string doesn't end with "
                               "termination characters", stacklevel=2)
-        return buffer.rstrip(CR+LF)
+        return buffer.rstrip(CR + LF)
+
     def read_raw(self):
         """Read the unmodified string sent from the instrument to the computer.
 
@@ -391,6 +425,7 @@ class Instrument(ResourceTemplate):
         finally:
             _removefilter("ignore", "VI_SUCCESS_MAX_CNT")
         return buffer
+
     def read(self):
         """Read a string from the device.
 
@@ -410,6 +445,7 @@ class Instrument(ResourceTemplate):
 
         """
         return self._strip_term_chars(self.read_raw())
+
     def read_values(self, format=None):
         """Read a list of floating point values from the device.
 
@@ -447,8 +483,8 @@ class Instrument(ResourceTemplate):
             # I store data and data_length in two separate variables in case
             # that data is too short.  FixMe: Maybe I should raise an error if
             # it's too long and the trailing part is not just CR/LF.
-            data_length = int(data[2:2+number_of_digits])
-            data = data[2+number_of_digits:2+number_of_digits + data_length]
+            data_length = int(data[2:2 + number_of_digits])
+            data = data[2 + number_of_digits:2 + number_of_digits + data_length]
         elif data[1] == "0" and data[-1] == "\n":
             data = data[2:-1]
             data_length = len(data)
@@ -461,35 +497,41 @@ class Instrument(ResourceTemplate):
         try:
             if format & 0x03 == single:
                 result = list(struct.unpack(endianess +
-                                            str(data_length/4) + "f", data))
+                                            str(data_length / 4) + "f", data))
             elif format & 0x03 == double:
                 result = list(struct.unpack(endianess +
-                                            str(data_length/8) + "d", data))
+                                            str(data_length / 8) + "d", data))
             else:
                 raise ValueError("unknown data values format requested")
         except struct.error:
             raise InvalidBinaryFormat("binary data itself was malformed")
         return result
+
     def read_floats(self):
         """This method is deprecated.  Use read_values() instead."""
         warnings.warn("read_floats() is deprecated.  Use read_values()",
                       stacklevel=2)
         return self.read_values(format=ascii)
+
     def ask(self, message):
         """A combination of write(message) and read()"""
         self.write(message)
         return self.read()
+
     def ask_for_values(self, message, format=None):
         """A combination of write(message) and read_values()"""
         self.write(message)
         return self.read_values(format)
+
     def clear(self):
         """Resets the device.  This operation is highly bus-dependent."""
         vpp43.clear(self.vi)
+
     def trigger(self):
         """Sends a software trigger to the device."""
         vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
         vpp43.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
+
     def __set_term_chars(self, term_chars):
         """Set a new termination character sequence.  See below the property
         "term_char"."""
@@ -510,9 +552,11 @@ class Instrument(ResourceTemplate):
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR, ord(last_char))
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_TRUE)
         self.__term_chars = term_chars
+
     def __get_term_chars(self):
         """Return the current termination characters for the device."""
         return self.__term_chars
+
     def __del_term_chars(self):
         self.term_chars = None
     term_chars = property(__get_term_chars, __set_term_chars, __del_term_chars,
@@ -529,11 +573,13 @@ class Instrument(ResourceTemplate):
         present).
 
         """)
+
     def __set_send_end(self, send):
         if send:
             vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
         else:
             vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_FALSE)
+
     def __get_send_end(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_TRUE
     send_end = property(__get_send_end, __set_send_end, None,
@@ -542,6 +588,7 @@ class Instrument(ResourceTemplate):
 
         """)
 
+
 class GpibInstrument(Instrument):
     """Class for GPIB instruments.
 
@@ -549,6 +596,7 @@ class GpibInstrument(Instrument):
     properties of GPIB instruments.
 
     """
+
     def __init__(self, gpib_identifier, board_number=0, **keyw):
         """Class constructor.
 
@@ -575,15 +623,19 @@ class GpibInstrument(Instrument):
         if self.interface_type != VI_INTF_GPIB:
             raise ValueError("device is not a GPIB instrument")
         vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+
     def __del__(self):
         if self.vi is not None:
             self.__switch_events_off()
             Instrument.__del__(self)
+
     def __repr__(self):
         return "GpibInstrument(\"%s\")" % self.resource_name
+
     def __switch_events_off(self):
         self._vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
         self._vpp43.discard_events(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+
     def wait_for_srq(self, timeout=25):
         """Wait for a serial request (SRQ) coming from the instrument.
 
@@ -614,8 +666,10 @@ class GpibInstrument(Instrument):
             if self.stb & 0x40:
                 break
         vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+
     def __get_stb(self):
         return vpp43.read_stb(self.vi)
+
     stb = property(__get_stb, None, None, """Service request status register.""")
 
 # The following aliases are used for the "end_input" property
@@ -629,6 +683,7 @@ odd_parity = VI_ASRL_PAR_ODD
 even_parity = VI_ASRL_PAR_EVEN
 mark_parity = VI_ASRL_PAR_MARK
 space_parity = VI_ASRL_PAR_SPACE
+
 
 class SerialInstrument(Instrument):
     """Class for serial (RS232 or parallel port) instruments.  Not USB!
@@ -665,14 +720,19 @@ class SerialInstrument(Instrument):
         self.stop_bits = keyw.get("stop_bits", 1)
         self.parity    = keyw.get("parity", no_parity)
         self.end_input = keyw.get("end_input", term_chars_end_input)
+
     def __get_baud_rate(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_BAUD)
+
     def __set_baud_rate(self, rate):
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_BAUD, rate)
+
     baud_rate = property(__get_baud_rate, __set_baud_rate, None,
                          """Baud rate of the serial instrument""")
+
     def __get_data_bits(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS)
+
     def __set_data_bits(self, bits):
         if not 5 <= bits <= 8:
             raise ValueError("number of data bits must be from 5 to 8")
@@ -680,11 +740,13 @@ class SerialInstrument(Instrument):
     data_bits = property(__get_data_bits, __set_data_bits, None,
                          """Number of data bits contained in each frame """
                          """(from 5 to 8)""")
+
     def __get_stop_bits(self):
         deci_bits = vpp43.get_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS)
         if deci_bits == 10: return 1
         elif deci_bits == 15: return 1.5
         elif deci_bits == 20: return 2
+
     def __set_stop_bits(self, bits):
         deci_bits = 10 * bits
         if 9 < deci_bits < 11: deci_bits = 10
@@ -692,23 +754,30 @@ class SerialInstrument(Instrument):
         elif 19 < deci_bits < 21: deci_bits = 20
         else: raise ValueError("invalid number of stop bits")
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS, deci_bits)
+
     stop_bits = property(__get_stop_bits, __set_stop_bits, None,
                          """Number of stop bits contained in each frame """
                          """(1, 1.5, or 2)""")
+
     def __get_parity(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_PARITY)
+
     def __set_parity(self, parity):
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_PARITY, parity)
+
     parity = property(__get_parity, __set_parity, None,
                       """The parity used with every frame transmitted """
                       """and received""")
+
     def __get_end_input(self):
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_END_IN)
+
     def __set_end_input(self, termination):
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_END_IN, termination)
+
     end_input = property(__get_end_input, __set_end_input, None,
         """indicates the method used to terminate read operations""")
-    
+
     def __repr__(self):
         return "SerialInstrument(\"%s\")" % self.resource_name
 
@@ -723,6 +792,7 @@ class Interface(ResourceTemplate):
 
     FixMe: However, maybe it's better to merge both classes.  In any case you
     should not instantiate this class."""
+
     def __init__(self, interface_name):
         """Class constructor.
 
@@ -736,11 +806,14 @@ class Interface(ResourceTemplate):
         if self.resource_class != "INTFC":
             warnings.warn("resource is not an INTFC but %s"
                           % self.resource_class, stacklevel=2)
+
     def __repr__(self):
         return "Interface(\"%s\")" % self.resource_name
 
+
 class Gpib(Interface):
     """Class for GPIB interfaces (rather than instruments)."""
+
     def __init__(self, board_number=0):
         """Class constructor.
 
@@ -751,11 +824,14 @@ class Gpib(Interface):
         """
         Interface.__init__(self, "GPIB" + str(board_number))
         self.board_number = board_number
+
     def __repr__(self):
         return "Gpib(%d)" % self.board_number
+
     def send_ifc(self):
         """Send "interface clear" signal to the GPIB."""
         vpp43.gpib_send_ifc(self.vi)
+
 
 def _test_pyvisa():
     print("Test start")
@@ -768,6 +844,7 @@ def _test_pyvisa():
     voltages = keithley.read_values()
     print("Average: ", sum(voltages) / len(voltages))
     print("Test end")
+
 
 if __name__ == '__main__':
     _test_pyvisa()

@@ -21,12 +21,15 @@ viRW = 'readwrite'
 viGlobal = 'Global'
 viLocal = 'Local'
 
+
 class _AttrRange:
+
     def __init__(self, minimum, maximum):
         self.minimum = minimum
         self.maximum = maximum
+
     def __contains__(self, item):
-        if item >= self.minimum and item<=self.maximum:
+        if item >= self.minimum and item <= self.maximum:
             return True
         else:
             return False
@@ -38,12 +41,14 @@ class _AttrRange:
             raise IndexError
 
     def fromstring(self, strval):
-        val = int(strval) #FIXME: always int? (long, double)
+        val = int(strval)  # FIXME: always int? (long, double)
         return val
+
 
 class _AttrSet:
     """encapsulates named attributes values,
     for conversion between name and value"""
+
     def __init__(self, *args):
         self.NameSet = args
         self.namedict = {}
@@ -55,7 +60,7 @@ class _AttrSet:
 
     def __repr__(self):
         return repr(self.valuedict)
-    
+
     def __contains__(self, item):
         return item in self.NameSet
 
@@ -68,10 +73,11 @@ class _AttrSet:
     def fromstring(self, name):
         return self.valuedict.get(name, None)
 
+
 class _AttrBitSet(_AttrSet):
     """class for set of attribute values that can be ORed together"""
 
-    def __contains__(self, bitfield): #Fixme: more strict test for validity, test for zero
+    def __contains__(self, bitfield):  # Fixme: more strict test for validity, test for zero
         """True if at least on of allowed bits is set"""
         for bit in self.namedict:
             if bit & bitfield:
@@ -87,24 +93,25 @@ class _AttrBitSet(_AttrSet):
                     s = self.namedict[bit]
                 else:
                     s = s + ' | ' + self.namedict[bit]
-            if self.namedict.has_key(0) and bitfield == 0: #no bit set: special name
+            if 0 in self.namedict and bitfield == 0:  # no bit set: special name
                 s = self.namedict[0]
         return s
 
     def fromstring(self, expr):
         bitfield = 0
-        for s in map(string.strip, string.split(expr, '|')): #split at | and remove whitespace
+        for s in map(string.strip, string.split(expr, '|')):  # split at | and remove whitespace
             bitfield = bitfield | self.valuedict[s]
         return bitfield
+
 
 class viAttrInfo:
     """container for information about attribute (attribute name,
     value, access restriction, scope (local for session or global for
     device), ctypes data type, range of possible values, short and
     long description"""
-    
+
     def __init__(self, access, scope, datatype, values, shortdesc,
-                 description, attribute = None, name = None):
+                 description, attribute=None, name=None):
         self.access = access
         self.scope = scope
         self.datatype = datatype
@@ -114,8 +121,8 @@ class viAttrInfo:
         self.attribute_value = attribute
 
     def __repr__(self):
-        #s = repr(self.typecode) + repr(self.values)
-        #return s
+        # s = repr(self.typecode) + repr(self.values)
+        # return s
         return repr(self.__dict__)
 
 
@@ -141,7 +148,7 @@ attributes_s = {
     "unlocked, locked with an exclusive lock, or locked with a shared "\
     "lock."
     ),
-    
+
     'VI_ATTR_RSRC_MANF_ID': \
     viAttrInfo(
     viRO, viGlobal, ViUInt16, _AttrRange(0, 0x3FFF),
@@ -149,7 +156,7 @@ attributes_s = {
     "A value that corresponds to the VXI manufacturer ID of the "\
     "manufacturer that created the implementation."
     ),
-    
+
     'VI_ATTR_RSRC_MANF_NAME': \
     viAttrInfo(
     viRO, viGlobal, ViString, None,
@@ -173,7 +180,7 @@ attributes_s = {
     "Resource version that uniquely identifies the version of the VISA "\
     "specification to which the implementation is compliant."
     ),
-    
+
     'VI_ATTR_RSRC_CLASS': \
     viAttrInfo(
     viRO, viGlobal, ViString, None,
@@ -197,7 +204,7 @@ attributes_s = {
     'interface type',
     "Interface type of the given session."
     ),
-    
+
     'VI_ATTR_INTF_INST_NAME': \
     viAttrInfo(
     viRO, viGlobal, ViString, None,
@@ -205,17 +212,17 @@ attributes_s = {
     "Human-readable text describing the given interface."
     ),
 
-    #ASRL Specific INSTR Resource Attributes
+    # ASRL Specific INSTR Resource Attributes
     'VI_ATTR_ASRL_AVAIL_NUM': \
     viAttrInfo(
-    viRO, viGlobal, ViUInt32, None, #0 to 0xFFFFFFFFL
+    viRO, viGlobal, ViUInt32, None,  # 0 to 0xFFFFFFFFL
     'number of bytes available at serial port',
     ""
     ),
 
     'VI_ATTR_ASRL_BAUD': \
     viAttrInfo(
-    viRW, viGlobal, ViUInt32, None, #0 to 0xFFFFFFFFL
+    viRW, viGlobal, ViUInt32, None,  # 0 to 0xFFFFFFFFL
     'serial baud rate',
     ""
     ),
@@ -226,7 +233,7 @@ attributes_s = {
     '',
     ""
     ),
-    
+
     'VI_ATTR_ASRL_PARITY': \
     viAttrInfo(
     viRW, viGlobal, ViUInt16,
@@ -235,7 +242,7 @@ attributes_s = {
     '',
     ""
     ),
-    
+
     'VI_ATTR_ASRL_STOP_BITS': \
     viAttrInfo(
     viRW, viGlobal, ViUInt16,
@@ -243,7 +250,7 @@ attributes_s = {
     '',
     ""
     ),
-    
+
     'VI_ATTR_ASRL_FLOW_CNTRL': \
     viAttrInfo(
     viRW, viGlobal, ViUInt16,
@@ -321,21 +328,21 @@ attributes_s = {
 
     'VI_ATTR_ASRL_REPLACE_CHAR': \
     viAttrInfo(
-    viRW, viLocal, ViUInt8, None, #0 to FFh,
+    viRW, viLocal, ViUInt8, None,  # 0 to FFh,
     '',
     ""
     ),
 
     'VI_ATTR_ASRL_XON_CHAR': \
     viAttrInfo(
-    viRW, viLocal, ViUInt8, None, #0 to FFh
+    viRW, viLocal, ViUInt8, None,  # 0 to FFh
     '',
     ""
     ),
 
     'VI_ATTR_ASRL_XOFF_CHAR': \
     viAttrInfo(
-    viRW, viLocal, ViUInt8, None, #0 to FFh
+    viRW, viLocal, ViUInt8, None,  # 0 to FFh
     '',
     ""
     ),
@@ -344,7 +351,7 @@ attributes_s = {
     'VI_ATTR_EVENT_TYPE': \
     viAttrInfo(
     viRO, None, ViEventType,
-    _AttrSet('VI_EVENT_IO_COMPLETION'), #FIXME: add other Events
+    _AttrSet('VI_EVENT_IO_COMPLETION'),  # FIXME: add other Events
     'event type',
     "Unique logical identifier of the event type."
     ),
@@ -352,8 +359,8 @@ attributes_s = {
     'VI_ATTR_STATUS': \
     viAttrInfo(
     viRO, None, ViStatus,
-    _AttrSet(*map(lambda x:x[0], completion_and_error_messages.values())),
-             #list of status codes, FIXME
+    _AttrSet(*map(lambda x: x[0], completion_and_error_messages.values())),
+             # list of status codes, FIXME
     'return code of asynchronous operation that has completed',
     ""
     ),
@@ -374,7 +381,7 @@ attributes_s = {
 
     'VI_ATTR_RET_COUNT': \
     viAttrInfo(
-    viRO, None, ViUInt32, None, #0 to ffffffffh
+    viRO, None, ViUInt32, None,  # 0 to ffffffffh
     'return count',
     "actual number of elements that were asynchronously transferred"
     ),
@@ -385,17 +392,13 @@ attributes_s = {
     'operation name',
     "The name of the operation generating the event."
     )
-    
+
     }
 """List of VISA Attributes, as dictionary with string keys"""
 
-attributes = {} #dict with attribute value (not name) as key
+attributes = {}  # dict with attribute value (not name) as key
 for name, info in attributes_s.iteritems():
-    value = _constants.__dict__[name] #convert attribute name to value
-    info.attribute_name = name 
+    value = _constants.__dict__[name]  # convert attribute name to value
+    info.attribute_name = name
     info.attribute_value = value
     attributes[value] = info
-
-#print attr
-    
-

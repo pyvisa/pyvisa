@@ -36,30 +36,32 @@ if os.name == 'nt':
 elif os.name == 'posix':
     visa = cdll.LoadLibrary('libvisa.so')
 else:
-    raise "No implementation for your platform available."
-    
+    raise Exception("No implementation for your platform available.")
+
 
 class VisaError(IOError):
     """Base class for VISA errors"""
+
     def __init__(self, value):
         self.value = value
-        
+
     def __str__(self):
         if self.value:
             (shortdesc, longdesc) = completion_and_error_messages[self.value]
-            hexvalue = self.value #convert errorcodes (negative) to long
+            hexvalue = self.value  # convert errorcodes (negative) to long
             if hexvalue < 0:
                 hexvalue = hexvalue + 0x100000000
-            return shortdesc + " (%X): "%hexvalue + longdesc
-            
-#Checks return values for errors
+            return shortdesc + " (%X): " % hexvalue + longdesc
+
+
+# Checks return values for errors
 def CheckStatus(status):
     #status = ViStatus(status).value
     if status < 0:
         raise VisaError(status)
     else:
         return status
-    
+
 #implement low level VISA functions
 
 #VISA Resource Management
@@ -73,11 +75,13 @@ visa.viClose.restype    = CheckStatus
 visa.viGetAttribute.restype = CheckStatus
 visa.viSetAttribute.restype = CheckStatus
 
+
 def OpenDefaultRM():
     """Return a session to the Default Resource Manager resource."""
     sesn = ViSession()
     result = visa.viOpenDefaultRM(byref(sesn))
     return (result, sesn.value)
+
 
 def Open(sesn, rsrcName, accessMode, openTimeout):
     """Open a session to the specified device."""
@@ -88,6 +92,7 @@ def Open(sesn, rsrcName, accessMode, openTimeout):
     vi = ViSession()
     result = visa.viOpen(sesn, rsrcName, accessMode, openTimeout, byref(vi))
     return (result, vi.value)
+
 
 def FindRsrc(session, expr):
     """Query a VISA system to locate the resources associated with a
@@ -107,13 +112,14 @@ def FindRsrc(session, expr):
 
     resource_list = []
     result = visa.viFindRsrc(sesn, expr, byref(findList), byref(retcnt), instrDesc)
-    if result>=0:
+    if result >= 0:
         resource_list.append(instrDesc.value)
         for i in range(1, retcnt.value):
             visa.viFindNext(findList, instrDesc)
             resource_list.append(instrDesc.value)
         visa.viClose(findList)
     return resource_list
+
 
 def ParseRsrc(sesn, rsrcName):
     """Parse a resource string to get the interface information."""
@@ -125,6 +131,7 @@ def ParseRsrc(sesn, rsrcName):
         byref(intfType),
         byref(intfNum))
     return (result, intfType.value, intfNum.value)
+
 
 def ParseRsrcEx(sesn, rsrcName):
     """Parse a resource string to get extended interface information."""
@@ -139,9 +146,7 @@ def ParseRsrcEx(sesn, rsrcName):
             unaliasedExpandedRsrcName.value, aliasIfExists.value)
 
 
-    
-#VISA Resource Template
-
+# VISA Resource Template
 def Close(object):
     """Close the specified session, event, or find list.
 
@@ -150,6 +155,7 @@ def Close(object):
     specified vi are freed."""
     result = visa.viClose(ViObject(object))
     return result
+
 
 def GetAttribute(vi, attribute):
     """Retrieve the state of an attribute. Argument can be numeric or
@@ -180,11 +186,12 @@ def GetAttribute(vi, attribute):
         value_ext = attr_info.values.tostring(val)
     else:
         if isinstance(val, (types.IntType, types.LongType)):
-            value_ext = str(val) + " (%s)"%hex(val)
+            value_ext = str(val) + " (%s)" % hex(val)
         else:
             value_ext = str(val)
-    
+
     return (attr_name, val, value_ext)
+
 
 def SetAttribute(vi, attribute, value):
     """Set attribute"""
@@ -198,9 +205,9 @@ def SetAttribute(vi, attribute, value):
 
     #convert value to numeric ('val'), when appropriate
     if isinstance(value, types.StringTypes):
-        if attr_info.values: 
+        if attr_info.values:
             val = attr_info.values.fromstring(value)
-        else: #fallback, FIXME
+        else:  # fallback, FIXME
             val = str(value)
             print('conversion from string argument not possible')
     else:
@@ -223,6 +230,7 @@ def Write(vi, buf):
     result = visa.viWrite(vi, buf, count, byref(retCount))
     return retCount.value
 
+
 visa.viRead.restype = CheckStatus
 def Read(vi, count):
     vi = ViSession(vi)
@@ -233,6 +241,7 @@ def Read(vi, count):
     log.debug("Read: buffer length %d at %s", sizeof(buf), hex(addressof(buf)))
     return (result, buf.raw[0:retCount.value])
 
+
 visa.viWriteAsync.restype = CheckStatus
 def WriteAsync(vi, buf):
     vi = ViSession(vi)
@@ -242,9 +251,10 @@ def WriteAsync(vi, buf):
     result = visa.viWriteAsync(vi, buf, count, byref(jobId))
     return jobId.value
 
+
 visa.viReadAsync.restype = CheckStatus
 def ReadAsync(vi, count):
-    buf = create_string_buffer(count) #FIXME: buffer needs to survive garbage collection!
+    buf = create_string_buffer(count)  # FIXME: buffer needs to survive garbage collection!
     jobId = ViJobId()
     log.debug("ReadAsync: buffer length %d at %s", sizeof(buf), hex(addressof(buf)))
     visa.viReadAsync(ViSession(vi),
@@ -252,9 +262,7 @@ def ReadAsync(vi, count):
                      ViUInt32(count),
                      byref(jobId))
     return jobId.value
-    
 
-#
 
 visa.viGpibControlREN.restype = CheckStatus
 def GpibControlREN(vi, mode):
@@ -269,9 +277,10 @@ visa.viEnableEvent.restype = CheckStatus
 def EnableEvent(vi, eventType, mechanism):
     visa.viEnableEvent(vi, eventType, mechanism, 0)
 
+
 visa.viInstallHandler.restype = CheckStatus
 visa.viInstallHandler.argtypes = [ViSession, ViEventType, ViHndlr, ViAddr]
-#FIXME: dangerous ViAddr
+# FIXME: dangerous ViAddr
 def InstallHandler(vi, eventType, handler, userHandle):
     userHandle = ViAddr(userHandle)
     visa.viInstallHandler(vi, eventType, handler, userHandle)
@@ -280,6 +289,7 @@ def InstallHandler(vi, eventType, handler, userHandle):
 #higher level classes and metho)ds
 
 class ResourceManager:
+
     def __init__(self):
         result, self.session = OpenDefaultRM()
 
@@ -299,7 +309,7 @@ class ResourceManager:
                rsrcClass, unaliasedExpandedRsrcName, \
                aliasIfExists
 
-    def open(self, resourceName, exclusiveLock = None, loadConfig = None, openTimeout = 1000):
+    def open(self, resourceName, exclusiveLock=None, loadConfig=None, openTimeout=1000):
         accessMode = 0
         if exclusiveLock:
             accessMode = accessMode | VI_EXCLUSIVE_LOCK
@@ -310,6 +320,7 @@ class ResourceManager:
 
 
 class Resource:
+
     def __init__(self, vi):
         self.session = vi
 
@@ -319,7 +330,7 @@ class Resource:
     def write(self, buf):
         return Write(self.session, buf)
 
-    def read(self, maxcount = None):
+    def read(self, maxcount=None):
         if maxcount:
             result, buf = Read(self.session, maxcount)
             return buf
@@ -338,9 +349,8 @@ class Resource:
     def setattr(self, attribute, value):
         SetAttribute(self.session, attribute, value)
 
-                
     def setlocal(self):
-        #VI_GPIB_REN_DEASSERT        = 0 
+        #VI_GPIB_REN_DEASSERT        = 0
         #VI_GPIB_REN_ASSERT          = 1
         #VI_GPIB_REN_DEASSERT_GTL    = 2
         #VI_GPIB_REN_ASSERT_ADDRESS  = 3
@@ -351,7 +361,7 @@ class Resource:
         mode = 6
         #Test Marconi 2019: 0 local, 1 remote, 2 local, 4 local lockout, 5 local, 6 local
         GpibControlREN(self.session, mode)
-        
+
     def close(self):
         Close(self.session)
 
@@ -363,4 +373,3 @@ class Resource:
 
     def enable_event(self, eventType, mechanism):
         return EnableEvent(self.session, eventType, mechanism)
-    
