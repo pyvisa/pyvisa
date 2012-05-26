@@ -106,7 +106,7 @@ class ResourceTemplate(object):
         """
         _warn_for_invalid_keyword_arguments(keyw, ("lock", "timeout"))
         if self.__class__ is ResourceTemplate:
-            raise TypeError, "trying to instantiate an abstract class"
+            raise TypeError("trying to instantiate an abstract class")
         if resource_name is not None:  # is none for the resource manager
             warnings.filterwarnings("ignore", "VI_SUCCESS_DEV_NPRESENT")
             self.vi = vpp43.open(resource_manager.session, resource_name,
@@ -121,10 +121,9 @@ class ResourceTemplate(object):
                     passed_time += 0.1
                     try:
                         vpp43.clear(self.vi)
-                    except VisaIOError, error:
-                        if error.error_code == VI_ERROR_NLISTENERS:
-                            continue
-                        else: raise
+                    except VisaIOError as error:
+                        if error.error_code != VI_ERROR_NLISTENERS:
+                            raise
                     break
                 else:
                     # Very last chance, this time without exception handling
@@ -142,12 +141,12 @@ class ResourceTemplate(object):
         self.close()
     def __set_timeout(self, timeout):
         if not(0 <= timeout <= 4294967):
-            raise ValueError, "timeout value is invalid"
+            raise ValueError("timeout value is invalid")
         vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
     def __get_timeout(self):
         timeout = vpp43.get_attribute(self.vi, VI_ATTR_TMO_VALUE)
         if timeout == VI_TMO_INFINITE:
-            raise NameError, "no timeout is specified"
+            raise NameError("no timeout is specified")
         return timeout / 1000.0
     def __del_timeout(self):
         timeout = self.__get_timeout()  # just to test whether it's defined
@@ -164,10 +163,9 @@ class ResourceTemplate(object):
         try:
             resource_class = \
                 vpp43.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
-        except VisaIOError, error:
-            if error.error_code == VI_ERROR_NSUP_ATTR:
-                return None
-            else: raise
+        except VisaIOError as error:
+            if error.error_code != VI_ERROR_NSUP_ATTR:
+                raise
         return resource_class
     resource_class = property(__get_resource_class, None, None,
         """The resource class of the resource as a string.""")
@@ -468,9 +466,9 @@ class Instrument(ResourceTemplate):
                 result = list(struct.unpack(endianess +
                                             str(data_length/8) + "d", data))
             else:
-                raise ValueError, "unknown data values format requested"
+                raise ValueError("unknown data values format requested")
         except struct.error:
-            raise InvalidBinaryFormat, "binary data itself was malformed"
+            raise InvalidBinaryFormat("binary data itself was malformed")
         return result
     def read_floats(self):
         """This method is deprecated.  Use read_values() instead."""
@@ -508,7 +506,7 @@ class Instrument(ResourceTemplate):
         # Consequently, it's illogical to have the real termination character
         # twice in the sequence (otherwise reading would stop prematurely).
         if term_chars[:-1].find(last_char) != -1:
-            raise ValueError, "ambiguous ending in termination characters"
+            raise ValueError("ambiguous ending in termination characters")
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR, ord(last_char))
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_TRUE)
         self.__term_chars = term_chars
@@ -575,7 +573,7 @@ class GpibInstrument(Instrument):
         Instrument.__init__(self, resource_name, **keyw)
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_GPIB:
-            raise ValueError, "device is not a GPIB instrument"
+            raise ValueError("device is not a GPIB instrument")
         vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
     def __del__(self):
         if self.vi is not None:
@@ -599,7 +597,7 @@ class GpibInstrument(Instrument):
         """
         vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
         if timeout and not(0 <= timeout <= 4294967):
-            raise ValueError, "timeout value is invalid"
+            raise ValueError("timeout value is invalid")
         starting_time = time.clock()
         while True:
             if timeout is None:
@@ -661,7 +659,7 @@ class SerialInstrument(Instrument):
                                "delay", "send_end", "values_format")))
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_ASRL:
-            raise ValueError, "device is not a serial instrument"
+            raise ValueError("device is not a serial instrument")
         self.baud_rate = keyw.get("baud_rate", 9600)
         self.data_bits = keyw.get("data_bits", 8)
         self.stop_bits = keyw.get("stop_bits", 1)
@@ -677,7 +675,7 @@ class SerialInstrument(Instrument):
         return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS)
     def __set_data_bits(self, bits):
         if not 5 <= bits <= 8:
-            raise ValueError, "number of data bits must be from 5 to 8"
+            raise ValueError("number of data bits must be from 5 to 8")
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS, bits)
     data_bits = property(__get_data_bits, __set_data_bits, None,
                          """Number of data bits contained in each frame """
@@ -692,7 +690,7 @@ class SerialInstrument(Instrument):
         if 9 < deci_bits < 11: deci_bits = 10
         elif 14 < deci_bits < 16: deci_bits = 15
         elif 19 < deci_bits < 21: deci_bits = 20
-        else: raise ValueError, "invalid number of stop bits"
+        else: raise ValueError("invalid number of stop bits")
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS, deci_bits)
     stop_bits = property(__get_stop_bits, __set_stop_bits, None,
                          """Number of stop bits contained in each frame """
@@ -760,7 +758,7 @@ class Gpib(Interface):
         vpp43.gpib_send_ifc(self.vi)
 
 def _test_pyvisa():
-    print "Test start"
+    print("Test start")
     keithley = GpibInstrument(12)
     milliseconds = 500
     number_of_values = 10
@@ -768,8 +766,8 @@ def _test_pyvisa():
     keithley.trigger()
     keithley.wait_for_srq()
     voltages = keithley.read_values()
-    print "Average: ", sum(voltages) / len(voltages)
-    print "Test end"
+    print("Average: ", sum(voltages) / len(voltages))
+    print("Test end")
 
 if __name__ == '__main__':
     _test_pyvisa()

@@ -120,7 +120,7 @@ class VisaLibrary(Singleton):
             self.__lib = self.__cdecl_lib = cdll.LoadLibrary(path)
         else:
             self.__lib = self.__cdecl_lib = None
-            raise visa_exceptions.OSNotSupported, os.name
+            raise visa_exceptions.OSNotSupported(os.name)
         self.__initialize_library_functions()
     def set_user_handle_type(self, user_handle):
         # Actually, it's not necessary to change ViHndlr *globally*.  However,
@@ -369,7 +369,7 @@ def check_status(status):
     global visa_status
     visa_status = status
     if status < 0:
-        raise visa_exceptions.VisaIOError, status
+        raise visa_exceptions.VisaIOError(status)
     if status in dodgy_completion_codes:
         abbreviation, description = completion_and_error_messages[status]
         warnings.warn("%s: %s" % (abbreviation, description),
@@ -410,8 +410,7 @@ def convert_argument_list(original_arguments):
         elif isinstance(argument, str):    
             converted_arguments.append(argument)
         else:
-            raise visa_exceptions.VisaTypeError, \
-                "Invalid type in scanf/printf: %s" % type(argument)
+            raise visa_exceptions.VisaTypeError("Invalid type in scanf/printf: %s" % type(argument))
     return tuple(converted_arguments)
 
 def convert_to_byref(byvalue_arguments, buffer_length):
@@ -440,8 +439,7 @@ def convert_to_byref(byvalue_arguments, buffer_length):
         elif isinstance(byvalue_arguments[i], (c_long, c_double)):
             converted_arguments.append(byref(byvalue_arguments[i]))
         else:
-            raise visa_exceptions.VisaTypeError, \
-                "Invalid type in scanf: %s" % type(argument)
+            raise visa_exceptions.VisaTypeError("Invalid type in scanf: %s" % type(argument))
     return tuple(converted_arguments)
         
 def construct_return_tuple(original_ctypes_sequence):
@@ -637,8 +635,7 @@ def install_handler(vi, event_type, handler, user_handle = None):
                 converted_user_handle = \
                     (c_long * len(user_handle))(*tuple(user_handle))
         else:
-            raise visa_exceptions.VisaTypeError, \
-                "Type not allowed as user handle: %s" % type(user_handle)
+            raise visa_exceptions.VisaTypeError("Type not allowed as user handle: %s" % type(user_handle))
     visa_library.set_user_handle_type(converted_user_handle)
     converted_handler = ViHndlr(handler)
     if user_handle is None:
