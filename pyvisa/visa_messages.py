@@ -30,7 +30,9 @@ from vpp43_constants import *
 # Don't export the VPP-4.3 constants, but only the messages.
 __all__ = ("completion_and_error_messages",)
 
-
+#: A dictionary that holds the name and a short description of all completion
+#: and error codes in the VISA specification.  The name and the description are
+#: strings in a tuple.
 completion_and_error_messages = {
 
     VI_SUCCESS                 : ("VI_SUCCESS",
@@ -352,8 +354,5 @@ completion_and_error_messages = {
                                   "sufficient privileges for the current "
                                   "user or machine")
     }
-"""A dictionary that holds the name and a short description of all completion
-and error codes in the VISA specification.  The name and the description are
-strings in a tupel.
-"""
+
 

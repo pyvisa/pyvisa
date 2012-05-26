@@ -90,28 +90,28 @@ def _filter_keyword_arguments(keyw, selected_keys):
 
 
 class ResourceTemplate(object):
-    """The abstract base class of the VISA implementation.  It covers
+    """ResourceTemplate class constructor.  It opens a session to the
+    resource. The abstract base class of the VISA implementation.  It covers
     life-cycle services: opening and closing of vi's.
 
     Don't instantiate it!
 
+    :param resource_name: the VISA name for the resource (eg. "GPIB::10")
+                          If "None", it's assumed that the resource manager
+                           is to be constructed.
+    :param lock:
+    :param timeout:
+
+    See :class:Instrument for a detailed description.
     """
+
     import vpp43 as _vpp43  # Needed for finishing the object safely.
+
+    #: VISA handle of the resource"
     vi = None
-    """VISA handle of the resource"""
+
     def __init__(self, resource_name=None, **keyw):
-        """ResourceTemplate class constructor.  It opens a session to the
-        resource.
 
-        Parameters:
-        resource_name -- (optional) the VISA name for the resource,
-            e.g. "GPIB::10".  If "None", it's assumed that the resource manager
-            is to be constructed.
-        keyw -- keyword argument for the class constructor of the device instance
-            to be generated.  Allowed arguments: lock, timeout.  See Instrument
-            class for a detailed description.
-
-        """
         _warn_for_invalid_keyword_arguments(keyw, ("lock", "timeout"))
 
         if self.__class__ is ResourceTemplate:
@@ -232,8 +232,9 @@ class ResourceManager(vpp43.Singleton, ResourceTemplate):
     def __repr__(self):
         return "ResourceManager()"
 
+
+#: The global resource manager instance.  Exactly one is needed.
 resource_manager = ResourceManager()
-"""The global resource manager instance.  Exactly one is needed."""
 
 
 def _destroy_resource_manager():
@@ -247,13 +248,12 @@ atexit.register(_destroy_resource_manager)
 def get_instruments_list(use_aliases=True):
     """Get a list of all connected devices.
 
-    Parameters:
-    use_aliases -- if True, return an alias name for the device if it has one.
-        Otherwise, always return the standard resource name like "GPIB::10".
+    :param use_aliases: if True (default), return the device alias if it has one.
+                        Otherwise, always return the standard resource name
+                        like "GPIB::10".
 
-    Return value:
-    A list of strings with the names of all connected devices, ready for being
-    used to open each of them.
+    :return: A list of strings with the names of all connected devices,
+             ready for being used to open each of them.
 
     """
     # Phase I: Get all standard resource names (no aliases here)
@@ -279,18 +279,16 @@ def get_instruments_list(use_aliases=True):
             result.append(resource_name[:-7])
     return result
 
-
+# FIXME: Why this is needed? Wouldn't be better to override Instrument.__new__
 def instrument(resource_name, **keyw):
     """Factory function for instrument instances.
 
-    Parameters:
-    resource_name -- the VISA resource name of the device.  It may be an
-        alias.
-    keyw -- keyword argument for the class constructor of the device instance
-        to be generated.  See the class Instrument for further information.
+    :param resource_name: the VISA resource name of the device.
+                          It may be an alias.
+    :param **keyw: keyword argument for the class constructor of the device instance
+                   to be generated.  See the class Instrument for further information.
 
-    Return value:
-    The generated instrument instance.
+    :return: The generated instrument instance.
 
     """
     interface_type, _ = vpp43.parse_resource(resource_manager.session,
@@ -328,39 +326,37 @@ class Instrument(ResourceTemplate):
     certain interface system (GPIB, USB, RS232, etc), you must instantiate one
     of its child classes.
 
+    :param resource_name: the instrument's resource name or an alias,
+                          may be taken from the list from
+                          get_instruments_list().
+    :param timeout: the VISA timeout for each low-level operation in
+                    milliseconds.
+    :param term_chars: the termination characters for this device.
+    :param chunk_size: size of data packets in bytes that are read from the
+                       device.
+    :param lock: whether you want to have exclusive access to the device.
+                 Default: VI_NO_LOCK
+    :param delay: waiting time in seconds after each write command.
+                  Default: 0
+    :param send_end: whether to assert end line after each write command.
+                     Default: True
+    :param values_format: floating point data value format. Default: ascii (0)
     """
 
+    #: How many bytes are read per low-level call.
     chunk_size = 20 * 1024
-    """How many bytes are read per low-level call"""
+
+    #: Termination character sequence.
     __term_chars = None
-    """Termination character sequence.  See below."""
+
+    #: Seconds to wait after each high-level write
     delay = 0.0
-    """Seconds to wait after each high-level write"""
+
+    #: floating point data value format
     values_format = ascii
-    """floating point data value format"""
 
     def __init__(self, resource_name, **keyw):
-        """Constructor method.
 
-        Parameters:
-        resource_name -- the instrument's resource name or an alias, may be
-            taken from the list from get_instruments_list().
-
-        Keyword arguments:
-        timeout -- the VISA timeout for each low-level operation in
-            milliseconds.
-        term_chars -- the termination characters for this device, see
-            description of class property "term_chars".
-        chunk_size -- size of data packets in bytes that are read from the
-            device.
-        lock -- whether you want to have exclusive access to the device.
-            Default: VI_NO_LOCK
-        delay -- waiting time in seconds after each write command. Default: 0
-        send_end -- whether to assert end line after each write command.
-            Default: True
-        values_format -- floating point data value format.  Default: ascii (0)
-
-        """
         _warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
                                                    "chunk_size", "lock",
                                                    "delay", "send_end",
@@ -387,17 +383,18 @@ class Instrument(ResourceTemplate):
 
     def write(self, message):
         """Write a string message to the device.
+        The term_chars are appended to it, unless they are already.
 
-        Parameters:
-        message -- the string message to be sent.  The term_chars are appended
-            to it, unless they are already.
-
+        :param message: the string message to be sent.
         """
+
         if self.__term_chars and not message.endswith(self.__term_chars):
             message += self.__term_chars
         elif self.__term_chars is None and not message.endswith(CR + LF):
             message += CR + LF
+
         vpp43.write(self.vi, message)
+
         if self.delay > 0.0:
             time.sleep(self.delay)
 
@@ -440,26 +437,19 @@ class Instrument(ResourceTemplate):
         match, a warning is issued.
 
         All line-ending characters are stripped from the end of the string.
-
-        Parameters: None
-
-        Return value:
-        The string read from the device.
-
         """
+
         return self._strip_term_chars(self.read_raw())
 
     def read_values(self, format=None):
         """Read a list of floating point values from the device.
 
-        Parameters:
-        format -- (optional) the format of the values.  If given, it overrides
+        :param format: the format of the values.  If given, it overrides
             the class attribute "values_format".  Possible values are bitwise
             disjunctions of the above constants ascii, single, double, and
             big_endian.  Default is ascii.
 
-        Return value:
-        The list with the read values.
+        :return: the list of read values
 
         """
         if not format:
@@ -512,26 +502,31 @@ class Instrument(ResourceTemplate):
 
     def read_floats(self):
         """This method is deprecated.  Use read_values() instead."""
+
         warnings.warn("read_floats() is deprecated.  Use read_values()",
                       stacklevel=2)
         return self.read_values(format=ascii)
 
     def ask(self, message):
         """A combination of write(message) and read()"""
+
         self.write(message)
         return self.read()
 
     def ask_for_values(self, message, format=None):
         """A combination of write(message) and read_values()"""
+
         self.write(message)
         return self.read_values(format)
 
     def clear(self):
         """Resets the device.  This operation is highly bus-dependent."""
+
         vpp43.clear(self.vi)
 
     def trigger(self):
         """Sends a software trigger to the device."""
+
         vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
         vpp43.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
 
@@ -586,6 +581,7 @@ class Instrument(ResourceTemplate):
         """Whether or not to assert EOI (or something equivalent after each
         write operation.
         """
+
         return vpp43.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_TRUE
 
     @send_end.setter
@@ -603,21 +599,16 @@ class GpibInstrument(Instrument):
     This class extents the Instrument class with special operations and
     properties of GPIB instruments.
 
+    :param gpib_identifier: strings are interpreted as instrument's VISA resource name.
+                            Numbers are interpreted as GPIB number.
+    :param board_number: the number of the GPIB bus.
+
+    Further keyword arguments are passed to the constructor of class
+    Instrument.
+
     """
 
     def __init__(self, gpib_identifier, board_number=0, **keyw):
-        """Class constructor.
-
-        parameters:
-        gpib_identifier -- if it's a string, it is interpreted as the
-            instrument's VISA resource name.  If it's a number, it's the
-            instrument's GPIB number.
-        board_number -- (default: 0) the number of the GPIB bus.
-
-        Further keyword arguments are passed to the constructor of class
-        Instrument.
-
-        """
         _warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
                                                    "chunk_size", "lock",
                                                    "delay", "send_end",
@@ -650,11 +641,11 @@ class GpibInstrument(Instrument):
         Note that this method is not ended when *another* instrument signals an
         SRQ, only *this* instrument.
 
-        Parameters:
-        timeout -- (optional) the maximal waiting time in seconds.  The default
-            value is 25 (seconds).  "None" means waiting forever if necessary.
-
+        :param timeout: the maximum waiting time in seconds.
+                        Defaul: 25 (seconds).
+                        None means waiting forever if necessary.
         """
+
         vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
         if timeout and not(0 <= timeout <= 4294967):
             raise ValueError("timeout value is invalid")
@@ -678,6 +669,7 @@ class GpibInstrument(Instrument):
     @property
     def stb(self):
         """Service request status register."""
+
         return vpp43.read_stb(self.vi)
 
 # The following aliases are used for the "end_input" property
@@ -699,18 +691,15 @@ class SerialInstrument(Instrument):
     This class extents the Instrument class with special operations and
     properties of serial instruments.
 
+    :param resource_name: the instrument's resource name or an alias, may be
+        taken from the list from get_instruments_list().
+
+    Further keyword arguments are passed to the constructor of class
+    Instrument.
     """
+
     def __init__(self, resource_name, **keyw):
-        """Class constructor.
 
-        parameters:
-        resource_name -- the instrument's resource name or an alias, may be
-            taken from the list from get_instruments_list().
-
-        Further keyword arguments are passed to the constructor of class
-        Instrument.
-
-        """
         _warn_for_invalid_keyword_arguments(keyw,
            ("timeout", "term_chars", "chunk_size", "lock",
             "delay", "send_end", "values_format",
@@ -807,17 +796,16 @@ class Interface(ResourceTemplate):
     attributes that only "interfaces that support GPIB" have and other that
     "all" have.
 
+    :param interface_name: VISA resource name of the interface.  May be "GPIB0"
+                           or "GPIB1::INTFC".
+
     FixMe: However, maybe it's better to merge both classes.  In any case you
-    should not instantiate this class."""
+    should not instantiate this class.
+
+    """
 
     def __init__(self, interface_name):
-        """Class constructor.
 
-        Parameters:
-        interface_name -- VISA resource name of the interface.  May be "GPIB0"
-            or "GPIB1::INTFC".
-
-        """
         ResourceTemplate.__init__(self, interface_name)
         # I validate the resource class by requesting it from the interface
         if self.resource_class != "INTFC":
@@ -829,16 +817,13 @@ class Interface(ResourceTemplate):
 
 
 class Gpib(Interface):
-    """Class for GPIB interfaces (rather than instruments)."""
+    """Class for GPIB interfaces (rather than instruments).
+
+    :param board_number: integer denoting the number of the GPIB board.
+                         Default = 0.
+    """
 
     def __init__(self, board_number=0):
-        """Class constructor.
-
-        Parameters:
-        board_number -- integer denoting the number of the GPIB board, defaults
-            to 0.
-
-        """
         Interface.__init__(self, "GPIB" + str(board_number))
         self.board_number = board_number
 

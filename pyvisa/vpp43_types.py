@@ -35,11 +35,11 @@ import os as _os
 # significance in Python because there is no native call-by-reference.
 # However, as long as I'm not fully sure about this, they won't hurt.
 
-def _type_dublet(ctypes_type):
+def _type_pair(ctypes_type):
     return ctypes_type, _ctypes.POINTER(ctypes_type)
 
 def _type_triplet(ctypes_type):
-    return _type_dublet(ctypes_type) + (_ctypes.POINTER(ctypes_type),)
+    return _type_pair(ctypes_type) + (_ctypes.POINTER(ctypes_type),)
 
 ViUInt32, ViPUInt32, ViAUInt32    = _type_triplet(_ctypes.c_ulong)
 ViInt32, ViPInt32, ViAInt32       = _type_triplet(_ctypes.c_long)
@@ -92,12 +92,12 @@ ViConstString = _ctypes.POINTER(ViChar)
 # difference to the above is of no significance in Python, so I use it here
 # only for easier synchronisation with the spec.
 
-ViAccessMode, ViPAccessMode = _type_dublet(ViUInt32)
-ViBusAddress, ViPBusAddress = _type_dublet(ViUInt32)
+ViAccessMode, ViPAccessMode = _type_pair(ViUInt32)
+ViBusAddress, ViPBusAddress = _type_pair(ViUInt32)
 
 ViBusSize     = ViUInt32
 
-ViAttrState, ViPAttrState   = _type_dublet(ViUInt32)
+ViAttrState, ViPAttrState   = _type_pair(ViUInt32)
 
 # The following is weird, taken from news:zn2ek2w2.fsf@python.net
 ViVAList      = _ctypes.POINTER(_ctypes.c_char)
@@ -109,10 +109,10 @@ ViAAttr       = ViPAttr
 
 ViEventFilter = ViUInt32
 
-ViFindList, ViPFindList     = _type_dublet(ViObject)
-ViEvent, ViPEvent           = _type_dublet(ViObject)
-ViKeyId, ViPKeyId           = _type_dublet(ViString)
-ViJobId, ViPJobId           = _type_dublet(ViUInt32)
+ViFindList, ViPFindList     = _type_pair(ViObject)
+ViEvent, ViPEvent           = _type_pair(ViObject)
+ViKeyId, ViPKeyId           = _type_pair(ViString)
+ViJobId, ViPJobId           = _type_pair(ViUInt32)
 
 # Class of callback functions for event handling, first type is result type
 if _os.name == 'nt':

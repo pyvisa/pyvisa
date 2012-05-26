@@ -127,6 +127,7 @@ class viAttrInfo:
 #VISA Template Attributes
 #Table 3.2.1
 
+#: List of VISA Attributes, as dictionary with string keys
 attributes_s = {
     'VI_ATTR_RSRC_IMPL_VERSION': \
     viAttrInfo(
@@ -392,7 +393,7 @@ attributes_s = {
     )
 
     }
-"""List of VISA Attributes, as dictionary with string keys"""
+
 
 attributes = {}  # dict with attribute value (not name) as key
 for name, info in attributes_s.iteritems():
