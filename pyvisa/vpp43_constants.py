@@ -1,35 +1,16 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
-#    vpp43_constants.py - VISA VPP-4.3 constants (VPP-4.3.2 spec, section 3)
-#
-#    Copyright © 2005, 2006, 2007, 2008
-#                Torsten Bronger <bronger@physik.rwth-aachen.de>,
-#                Gregor Thalhammer <gth@users.sourceforge.net>.
-#  
-#    This file is part of PyVISA.
-#  
-#    PyVISA is free software; you can redistribute it and/or modify it under
-#    the terms of the MIT licence:
-#
-#    Permission is hereby granted, free of charge, to any person obtaining a
-#    copy of this software and associated documentation files (the "Software"),
-#    to deal in the Software without restriction, including without limitation
-#    the rights to use, copy, modify, merge, publish, distribute, sublicense,
-#    and/or sell copies of the Software, and to permit persons to whom the
-#    Software is furnished to do so, subject to the following conditions:
-#
-#    The above copyright notice and this permission notice shall be included in
-#    all copies or substantial portions of the Software.
-#
-#    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-#    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-#    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-#    DEALINGS IN THE SOFTWARE.
-#
+"""
+    vpp43_constants
+    ~~~~~~~~~~~~~~~
+
+    VISA VPP-4.3 constants (VPP-4.3.2 spec, section 3).
+
+    This file is part of PyVISA.
+
+    :copyright: (c) 2012 by the PyVISA authors.
+    :license: MIT, see COPYING for more details.
+"""
+
 
 """Makes all "completion and error codes", "attribute values", "event type
 values", and "values and ranges" defined in the VISA specification VPP-4.3.2,
