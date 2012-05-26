@@ -126,7 +126,7 @@ attributes_s = {
     'VI_ATTR_RSRC_IMPL_VERSION': \
     viAttrInfo(
     viRO, viGlobal, ViVersion,
-    _AttrRange(0, 0xFFFFFFFFL),
+    _AttrRange(0, 0xFFFFFFFF),
     'implementation version',
     "Resource version that uniquely identifies each of the different "\
     "revisions or implementations of a resource."

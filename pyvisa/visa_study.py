@@ -49,7 +49,7 @@ class VisaError(IOError):
             (shortdesc, longdesc) = completion_and_error_messages[self.value]
             hexvalue = self.value #convert errorcodes (negative) to long
             if hexvalue < 0:
-                hexvalue = hexvalue + 0x100000000L
+                hexvalue = hexvalue + 0x100000000
             return shortdesc + " (%X): "%hexvalue + longdesc
             
 #Checks return values for errors
