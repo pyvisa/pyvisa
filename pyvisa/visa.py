@@ -833,20 +833,3 @@ class Gpib(Interface):
     def send_ifc(self):
         """Send "interface clear" signal to the GPIB."""
         vpp43.gpib_send_ifc(self.vi)
-
-
-def _test_pyvisa():
-    print("Test start")
-    keithley = GpibInstrument(12)
-    milliseconds = 500
-    number_of_values = 10
-    keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
-    keithley.trigger()
-    keithley.wait_for_srq()
-    voltages = keithley.read_values()
-    print("Average: ", sum(voltages) / len(voltages))
-    print("Test end")
-
-
-if __name__ == '__main__':
-    _test_pyvisa()

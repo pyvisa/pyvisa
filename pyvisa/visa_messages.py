@@ -354,5 +354,3 @@ completion_and_error_messages = {
                                   "sufficient privileges for the current "
                                   "user or machine")
     }
-
-
