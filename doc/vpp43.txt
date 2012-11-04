@@ -50,6 +50,7 @@ Part of the PyVISA package
   communicate with measurement and test devices via GPIB, RS232, USB etc.
 
 .. _PyVISA: http://pyvisa.sourceforge.net/
+.. _`PyVISA project page`: _PyVISA
 .. _`VISA specification`: http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
 
 .. contents::

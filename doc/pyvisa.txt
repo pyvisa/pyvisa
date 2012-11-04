@@ -75,7 +75,7 @@ the PyVISA distribution.
    download it from your favourite equipment vendor (National
    Instruments, Agilent, etc).
 
-   It can be downloaded at `PyVISA's project page
+   It can be downloaded at the `PyVISA project page
    <http://sourceforge.net/projects/pyvisa>`_.  You can report bugs
    there, too.  Additionally, I'm happy about feedback from people
    who've given it a try.  So far, we have positive reports of various
@@ -114,7 +114,7 @@ accordingly::
 
 `"GPIB::14"` is the instrument's *resource name*.  See section
 :ref:`sec:visa-resource-names` for a short explanation of that.  Then,
-I send the message "*IDN?" to the device, which is the standard GPIB
+I send the message `"\*IDN?"` to the device, which is the standard GPIB
 message for "what are you?" or -- in some cases -- "what's on your
 display at the moment?"::
 
