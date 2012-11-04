@@ -1,2 +1,2 @@
-include ChangeLog COPYING MANIFEST MANIFEST.in
+include ChangeLog COPYING MANIFEST MANIFEST.in distribute_setup.py
 include doc/*.css doc/*.txt doc/LICENSE doc/pyvisa.tex doc/Makefile
