@@ -1,8 +1,8 @@
-.. -*- mode: rst; coding: iso-8859-1; ispell-local-dictionary: "british"; -*-
+.. -*- mode: rst; coding: utf-8; ispell-local-dictionary: "british"; -*-
 ..
 ..   index.txt - The reST source code of PyVISA's homepage
 ..
-..   Copyright © 2005, 2006, 2007, 2008
+..   Copyright Â© 2005, 2006, 2007, 2008
 ..               Torsten Bronger <bronger@physik.rwth-aachen.de>,
 ..               Gregor Thalhammer <gth@users.sourceforge.net>.
 ..
