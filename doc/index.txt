@@ -40,8 +40,8 @@ Controlling GPIB, RS232, and USB instruments
 
 :Date: |today|
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
-:Maintainer: Florian Bauer <pyvisa-devel@sourceforge.net>
-
+:Maintainer: Florian Bauer <pyvisa-devel@lists.sourceforge.net>
+:Downloads: See the `PyVISA project page`_.
 
 PyVISA
 =======
@@ -133,25 +133,19 @@ Links
 * PyVISA itself:
 
   - the `PyVISA project page`_ with download area and bug tracker
-
   - the `PyVISA manual`_ 
-
   - the `PyVISA low-level implementation`_ called ``vpp43``
 
 * The original VISA docs:
 
   - `VISA specification`_ (scroll down to the end)
-
   - `VISA library specification`_
-
   - `VISA specification for textual languages`_
 
 * The very good VISA manuals from `National Instruments's VISA pages`_:
 
   - `NI-VISA User Manual`_
-
   - `NI-VISA Programmer Reference Manual`_
-
   - `NI-VISA help file`_ in HTML
 
 .. _`PyVISA manual`: http://pyvisa.sourceforge.net/pyvisa.html

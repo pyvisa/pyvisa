@@ -41,7 +41,8 @@
 
 :Date: |today|
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
-:Maintainer: Florian Bauer <pyvisa-devel@sourceforge.net>
+:Maintainer: Florian Bauer <pyvisa-devel@lists.sourceforge.net>
+:Downloads: See the `PyVISA project page`_.
 
 .. _front:
 
@@ -61,33 +62,32 @@ the PyVISA distribution.
 
 .. topic:: Abstract
 
-   PyVISA enables you to control your measurement and test equipment -- digital
-   multimeters, motors, sensors and the like.  This document covers the  easy-to-
-   use :mod:`visa` module of the PyVISA package.  It implements control  of
-   measurement devices in a straightforward and convenient way.  The design  goal
-   is to combine HTBasic's simplicity with Python's modern syntax and  powerful set
-   of libraries.    PyVISA doesn't implement VISA itself.  Instead, PyVISA provides
-   bindings to the  VISA library (a DLL or "shared object" file).  This library is
-   usually  shipped with your GPIB interface or software like LabVIEW .
-   Alternatively,  you can download it from your favourite equipment vendor
-   (National Instruments,  Agilent, etc).
+   PyVISA enables you to control your measurement and test equipment
+   -- digital multimeters, motors, sensors and the like.  This
+   document covers the easy-to- use :mod:`visa` module of the PyVISA
+   package.  It implements control of measurement devices in a
+   straightforward and convenient way.  The design goal is to combine
+   HTBasic's simplicity with Python's modern syntax and powerful set
+   of libraries.  PyVISA doesn't implement VISA itself.  Instead,
+   PyVISA provides bindings to the VISA library (a DLL or "shared
+   object" file).  This library is usually shipped with your GPIB
+   interface or software like LabVIEW .  Alternatively, you can
+   download it from your favourite equipment vendor (National
+   Instruments, Agilent, etc).
 
-   PyVISA is free software under the
-   terms of the GPL .  It can be downloaded at  `PyVISA's project page
-   <http://sourceforge.net/projects/pyvisa>`_.  You can  report bugs there, too.
-   Additionally, I'm happy about feedback from people  who've given it a try.  So
-   far, we have positive reports of various National  Instruments GPIB adapters
-   (connected through PCI, USB, and RS232), the  Agilent 82357A, and SRS lock-in
-   amplifiers, for both Windows and Linux.  However, I'd be really surprised about
-   negative reports anyway, due to the high  abstraction level of PyVISA .    As
-   far as USB instruments are concerned, you must make sure that they act as
-   ordinary USB devices and not as so-called HDI devices (like keyboard and
-   mouse).
-
+   It can be downloaded at `PyVISA's project page
+   <http://sourceforge.net/projects/pyvisa>`_.  You can report bugs
+   there, too.  Additionally, I'm happy about feedback from people
+   who've given it a try.  So far, we have positive reports of various
+   National Instruments GPIB adapters (connected through PCI, USB, and
+   RS232), the Agilent 82357A, and SRS lock-in amplifiers, for both
+   Windows and Linux.  However, I'd be really surprised about negative
+   reports anyway, due to the high abstraction level of PyVISA .  As
+   far as USB instruments are concerned, you must make sure that they
+   act as ordinary USB devices and not as so-called HDI devices (like
+   keyboard and mouse).
 
 .. contents::
-
-
 
 An example
 ==========
@@ -103,23 +103,24 @@ Let's go *in medias res* and have a look at a simple example::
 This example already shows the two main design goals of PyVISA: preferring
 simplicity over generality, and doing it the object-oriented way.
 
-Every
-instrument is represented in the source by an object instance.  In this case,  I
-have a GPIB instrument with instrument number 14, so I create the instance
-(i.e. variable) called *my_instrument* accordingly::
+Every instrument is represented in the source by an object instance.
+In this case, I have a GPIB instrument with instrument number 14, so I
+create the instance (i.e. variable) called *my_instrument*
+accordingly::
 
    my_instrument = instrument("GPIB::14")
 
 .. index:: single: instrument()
 
-`"GPIB::14"` is the instrument's *resource name*.  See  section
-:ref:`sec:visa-resource-names` for a short explanation of that.    Then, I send
-the message "*IDN?" to the device, which is the standard GPIB  message for
-"what are you?" or -- in some cases -- "what's on your display  at the moment?"::
+`"GPIB::14"` is the instrument's *resource name*.  See section
+:ref:`sec:visa-resource-names` for a short explanation of that.  Then,
+I send the message "*IDN?" to the device, which is the standard GPIB
+message for "what are you?" or -- in some cases -- "what's on your
+display at the moment?"::
 
    my_instrument.write("*IDN?")
 
-Finally, I print the instrument's answer on the screen:   ::
+Finally, I print the instrument's answer on the screen: ::
 
    print my_instrument.read()
 
@@ -132,9 +133,9 @@ Example for serial (RS232) device
    single: COM2
    single: serial device
 
-The only RS232 device in my lab is an old Oxford ITC4 temperature  controller,
-which is connected through COM2 with my computer.  The following  code prints
-its self-identification on the screen::
+The only RS232 device in my lab is an old Oxford ITC4 temperature
+controller, which is connected through COM2 with my computer.  The
+following code prints its self-identification on the screen::
 
    from visa import *
    
@@ -144,16 +145,16 @@ its self-identification on the screen::
 
 .. index:: single: instrument()
 
-Instead of separate write and read operations, you can do both with one
-`ask()` call.  Thus, the above source code is equivalent to::
+Instead of separate write and read operations, you can do both with
+one `ask()` call.  Thus, the above source code is equivalent to::
 
    from visa import *
    
    itc4 = instrument("COM2")
    print itc4.ask("V")
 
-It couldn't be simpler.  See section :ref:`sec:serial-devices` for further
-information about serial devices.
+It couldn't be simpler.  See section :ref:`sec:serial-devices` for
+further information about serial devices.
 
 
 .. _sec:more-complex-example:
@@ -165,11 +166,13 @@ A more complex example
    single: SCPI
    single: Keithley 2000
 
-The following example shows how to use SCPI commands with a Keithley 2000
-multimeter in order to measure 10 voltages.  After having read them, the
-program calculates the average voltage and prints it on the screen.
+The following example shows how to use SCPI commands with a Keithley
+2000 multimeter in order to measure 10 voltages.  After having read
+them, the program calculates the average voltage and prints it on the
+screen.
 
-I'll explain the program step-by-step.  First, we have to initialise the  instrument::
+I'll explain the program step-by-step.  First, we have to initialise
+the instrument::
 
    from visa import instrument
    
@@ -178,14 +181,14 @@ I'll explain the program step-by-step.  First, we have to initialise the  instru
 
 .. index:: single: instrument()
 
-Here, we create the instrument variable *keithley*, which is used for all
-further operations on the instrument.  Immediately after it, we send the
-initialisation and reset message to the instrument.
+Here, we create the instrument variable *keithley*, which is used for
+all further operations on the instrument.  Immediately after it, we
+send the initialisation and reset message to the instrument.
 
-The next step is to write
-all the measurement parameters, in particular the  interval time (500ms) and the
-number of readings (10) to the instrument.  I  won't explain it in detail.  Have
-a look at an SCPI and/or Keithley 2000  manual.
+The next step is to write all the measurement parameters, in
+particular the interval time (500ms) and the number of readings (10)
+to the instrument.  I won't explain it in detail.  Have a look at an
+SCPI and/or Keithley 2000 manual.
 
 .. code-block:: python
 
@@ -204,17 +207,18 @@ a look at an SCPI and/or Keithley 2000  manual.
    single: trigger
    single: service request
 
-Okay, now the instrument is prepared to do the measurement.  The next three
-lines make the instrument waiting for a trigger pulse, trigger it, and wait
-until it sends a "service request"::
+Okay, now the instrument is prepared to do the measurement.  The next
+three lines make the instrument waiting for a trigger pulse, trigger
+it, and wait until it sends a "service request"::
 
    keithley.write("initiate")
    keithley.trigger()
    keithley.wait_for_srq()
 
-With sending the service request, the instrument tells us that the measurement
-has been finished and that the results are ready for transmission.  We could
-read them with `keithley.ask("trace:data?")` however, then we'd get
+With sending the service request, the instrument tells us that the
+measurement has been finished and that the results are ready for
+transmission.  We could read them with `keithley.ask("trace:data?")`
+however, then we'd get
 
 .. code-block:: none
 
@@ -222,21 +226,21 @@ read them with `keithley.ask("trace:data?")` however, then we'd get
    NDCV-000.0000E+0,NDCV-000.0007E+0,NDCV-000.0008E+0,NDCV-000.0004E+0,
    NDCV-000.0002E+0,NDCV-000.0005E+0
 
-which we would have to convert to a Python list of numbers.  Fortunately, the
-`ask_for_values()` method does this work for us::
+which we would have to convert to a Python list of numbers.
+Fortunately, the `ask_for_values()` method does this work for us::
 
    voltages = keithley.ask_for_values("trace:data?")
    print "Average voltage: ", sum(voltages) / len(voltages)
 
-Finally, we should reset the instrument's data buffer and SRQ status register,
-so that it's ready for a new run.  Again, this is explained in detail in the
-instrument's manual::
+Finally, we should reset the instrument's data buffer and SRQ status
+register, so that it's ready for a new run.  Again, this is explained
+in detail in the instrument's manual::
 
    keithley.ask("status:measurement?")
    keithley.write("trace:clear; feed:control next")
 
-That's it.  18 lines of lucid code.  (Well, SCPI is awkward, but that's another
-story.)
+That's it.  18 lines of lucid code.  (Well, SCPI is awkward, but
+that's another story.)
 
 
 .. _sec:visa-resource-names:
@@ -248,37 +252,41 @@ VISA resource names
    single: resource name
    single: VISA resource name
 
-If you use the function :func:`instrument`, you must tell this function the
-*VISA resource name* of the instrument you want to connect to.
-Generally, it starts with the bus type, followed by a double colon `"::"`,  followed by the
-number within the bus.  For example,
+If you use the function :func:`instrument`, you must tell this
+function the *VISA resource name* of the instrument you want to
+connect to.  Generally, it starts with the bus type, followed by a
+double colon `"::"`, followed by the number within the bus.  For
+example,
 
 .. code-block:: none
 
    GPIB::10
 
-denotes the GPIB instrument with the number 10.  If you have two GPIB boards
-and the instrument is connected to board number 1, you must write
+denotes the GPIB instrument with the number 10.  If you have two GPIB
+boards and the instrument is connected to board number 1, you must
+write
 
 .. code-block:: none
 
    GPIB1::10
 
 As for the bus, things like `"GPIB"`, `"USB"`, `"ASRL"` (for
-serial/parallel interface) are possible.  So for connecting to an instrument at
-COM2, the resource name is
+serial/parallel interface) are possible.  So for connecting to an
+instrument at COM2, the resource name is
 
 .. code-block:: none
 
    ASRL2
 
-(Since only one instrument can be connected with one serial interface, there is
-no double colon parameter.)  However, most VISA systems allow aliases such as
-`"COM2"` or `"LPT1"`.  You may also add your own aliases.
+(Since only one instrument can be connected with one serial interface,
+there is no double colon parameter.)  However, most VISA systems allow
+aliases such as `"COM2"` or `"LPT1"`.  You may also add your own
+aliases.
 
-The resource name is case-insensitive.  It doesn't matter whether you say  `"ASRL2"` or `"asrl2"`.
-For further information, I have to refer you to a comprehensive VISA
-description like `<http://www.ni.com/pdf/manuals/370423a.pdf>`_.
+The resource name is case-insensitive.  It doesn't matter whether you
+say `"ASRL2"` or `"asrl2"`.  For further information, I have to refer
+you to a comprehensive VISA description like
+`<http://www.ni.com/pdf/manuals/370423a.pdf>`_.
 
 
 
@@ -293,8 +301,8 @@ description like `<http://www.ni.com/pdf/manuals/370423a.pdf>`_.
 .. sectionauthor:: Torsten Bronger <bronger@physik.rwth-aachen.de>
 
 
-This section is a reference to the functions and classes of the :mod:`visa`
-module, which is the main module of the PyVISA package.
+This section is a reference to the functions and classes of the
+:mod:`visa` module, which is the main module of the PyVISA package.
 
 
 Module functions
@@ -307,33 +315,35 @@ Module functions
       single: alias
       single: Measurement and Automation Center
 
-   returns a list with all instruments that are known to the local VISA system.  If
-   you're lucky, these are all instruments connected with the computer.    The
-   boolean *use_aliases* is `True` by default, which means that the  more human-
-   friendly aliases like `"COM1"` instead of `"ASRL1"`  are returned.  With
-   some VISA systems [#]_ you can define your own  aliases for each device, e.g.
-   `"keithley617"` for  `"GPIB0::15::INSTR"`.  If *use_aliases* is `False`,
-   only  standard resource names are returned.
+   returns a list with all instruments that are known to the local
+   VISA system.  If you're lucky, these are all instruments connected
+   with the computer.  The boolean *use_aliases* is `True` by default,
+   which means that the more human- friendly aliases like `"COM1"`
+   instead of `"ASRL1"` are returned.  With some VISA systems [#]_ you
+   can define your own aliases for each device, e.g.  `"keithley617"`
+   for `"GPIB0::15::INSTR"`.  If *use_aliases* is `False`, only
+   standard resource names are returned.
 
 
 .. function:: instrument(resource_name[, **keyw])
 
    .. index:: single: factory function
 
-   returns an instrument variable for the instrument given by  *resource_name*.  It
-   saves you from calling one of the instrument classes  directly by choosing the
-   right one according to the type of the instrument.  So you have *one* function
-   to open *all* of your instruments.
+   returns an instrument variable for the instrument given by
+   *resource_name*.  It saves you from calling one of the instrument
+   classes directly by choosing the right one according to the type of
+   the instrument.  So you have *one* function to open *all* of your
+   instruments.
 
-   The parameter *resource_name* may be any
-   valid VISA instrument resource  name, see section
-   :ref:`sec:visa-resource-names`.  In particular, you can use  a name returned by
+   The parameter *resource_name* may be any valid VISA instrument
+   resource name, see section :ref:`sec:visa-resource-names`.  In
+   particular, you can use a name returned by
    :func:`get_instruments_list` above.
 
-   All further keyword arguments given to
-   this function are passed to the class  constructor of the respective instrument
-   class.  See  section :ref:`sec:general-devices` for a table with all allowed
-   keyword  arguments and their meanings.
+   All further keyword arguments given to this function are passed to
+   the class constructor of the respective instrument class.  See
+   section :ref:`sec:general-devices` for a table with all allowed
+   keyword arguments and their meanings.
 
 
 Module classes
@@ -348,15 +358,17 @@ General devices
 
 .. class:: Instrument(resource_name[, **keyw])
 
-   represents an instrument, e.g. a measurement device.  It is independent of  a
-   particular bus system, i.e. it may be a GPIB, serial, USB, or whatever
-   instrument.  However, it is not possible to perform bus-specific operations  on
-   instruments created by this class.  For this, have a look at the  specialised
-   classes like :class:`GpibInstrument`  (section :ref:`sec:gpib-devices`).
+   represents an instrument, e.g. a measurement device.  It is
+   independent of a particular bus system, i.e. it may be a GPIB,
+   serial, USB, or whatever instrument.  However, it is not possible
+   to perform bus-specific operations on instruments created by this
+   class.  For this, have a look at the specialised classes like
+   :class:`GpibInstrument` (section :ref:`sec:gpib-devices`).
 
-   The parameter *resource_name* takes the same syntax as resource  specifiers in VISA.  Thus, it begins with the bus system followed by  `"::"`, continues with the
-   location of the device within the bus  system, and ends with an optional
-   `"::INSTR"`.
+   The parameter *resource_name* takes the same syntax as resource
+   specifiers in VISA.  Thus, it begins with the bus system followed
+   by `"::"`, continues with the location of the device within the bus
+   system, and ends with an optional `"::INSTR"`.
 
    Possible keyword arguments are:
 
@@ -1023,9 +1035,9 @@ About PyVISA
 
 .. index:: single: authors
 
-PyVISA was originally programmed by Torsten Bronger, Aachen Germany  and
-Gregor Thalhammer, Innsbruck Austria.  It bases on earlier  experiences by
-Thalhammer.
+PyVISA was originally programmed by Torsten Bronger, Aachen, Germany
+and Gregor Thalhammer, Innsbruck, Austria.  It bases on earlier
+experiences by Thalhammer.
 
 Its homepage is `<http://sourceforge.net/projects/pyvisa/>`_.
 Please report  bugs there.

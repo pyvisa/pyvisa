@@ -40,7 +40,8 @@ Part of the PyVISA package
 
 :Date: |today|
 :Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
-:Maintainer: Florian Bauer <pyvisa-devel@sourceforge.net>
+:Maintainer: Florian Bauer <pyvisa-devel@lists.sourceforge.net>
+:Downloads: See the `PyVISA project page`_.
 
 
 :Abstract: This document covers the ``vpp43.py`` module, which is part of the
