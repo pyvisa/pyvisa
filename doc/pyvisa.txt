@@ -953,11 +953,12 @@ Windows
    single: visa32.dll
    single: PATH
 
-PyVISA expects a file called :file:`visa32.dll` in the :envvar:`PATH` .  For
-example, on my system you find this file in :file:`C:\WINNT\system32\`.  Either
-copy it there or expand your :envvar:`PATH`.  Alternatively, you can  create an
-INI file.  You must do this anyway if the file is not called  :file:`visa32.dll`
-on your system.
+PyVISA expects a file called :file:`visa32.dll` in the :envvar:`PATH`
+.  For example, on my system you find this file in
+:file:`C:\\WINNT\\system32\\` .  Either copy it there or expand your
+:envvar:`PATH`.  Alternatively, you can create an INI file.  You must
+do this anyway if the file is not called :file:`visa32.dll` on your
+system.
 
 
 Linux
@@ -986,14 +987,9 @@ interfaces with one library because sometimes you're lucky and it works.  Note
 that PyVISA is currently not able to switch between DLLs while the program is
 running.
 
-For Windows, place it in your "Documents and Settings" folder, [#]_ e.g.
-
-.. code-block:: none
-
-   C:\Documents and Settings\smith\.pyvisarc
-
-if "smith" is the name of your login account.  For Linux, put it in your home
-directory.
+For Windows, place it in your "Documents and Settings" folder, [#]_
+e.g. :file:`C:\\Documents and Settings\\smith\\.pyvisarc` if "smith" is the
+name of your login account.  For Linux, put it in your home directory.
 
 This file has the format of an INI file. For example, if the library is at  :file:`/usr/lib/libvisa.so.7`, the file :file:`.pyvisarc` must
 contain the  following::
@@ -1004,10 +1000,11 @@ contain the  following::
 
 Please note that `[Paths]` is treated case-sensitively.
 
-You can define a site-wide configuration file at  :file:`/usr/share/pyvisa/.pyvisarc`.  (It may
-also be :file:`/usr/local/...` depending on the location of your Python.)  Under
-Windows, this file is usually  placed at
-:file:`c:\Python24\share\pyvisa\.pyvisarc`.
+You can define a site-wide configuration file at
+:file:`/usr/share/pyvisa/.pyvisarc` (It may also be
+:file:`/usr/local/...` depending on the location of your Python).
+Under Windows, this file is usually placed at
+:file:`c:\\Python24\\share\\pyvisa\\.pyvisarc`.
 
 
 Setting the VISA library in the program
@@ -1025,7 +1022,7 @@ Keep in mind that the backslashes of Windows paths must be properly escaped, or
 the path must be preceeded by `r`::
 
    from pyvisa.vpp43 import visa_library
-   visa_library.load_library(r"c:\WINNT\system32\agvisa32.dll")
+   visa_library.load_library(r"c:\WINNT\system32\visa32.dll")
    from visa import *
    ...
 
