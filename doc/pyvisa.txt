@@ -991,8 +991,9 @@ For Windows, place it in your "Documents and Settings" folder, [#]_
 e.g. :file:`C:\\Documents and Settings\\smith\\.pyvisarc` if "smith" is the
 name of your login account.  For Linux, put it in your home directory.
 
-This file has the format of an INI file. For example, if the library is at  :file:`/usr/lib/libvisa.so.7`, the file :file:`.pyvisarc` must
-contain the  following::
+This file has the format of an INI file. For example, if the library
+is at :file:`/usr/lib/libvisa.so.7`, the file :file:`.pyvisarc` must
+contain the following::
 
    [Paths]
    
