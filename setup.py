@@ -54,11 +54,15 @@ setup(name = 'PyVISA',
       description = 'Python VISA bindings for GPIB, RS232, and USB instruments',
       version = '1.5',
       long_description = \
-      """A Python package for support of the Virtual Instrument Software Architecture
-(VISA), in order to control measurement devices and test equipment via GPIB,
-RS232, or USB.  Homepage: http://pyvisa.sourceforge.net""",
+      """A Python package for support of the Virtual Instrument
+Software Architecture (VISA), in order to control measurement devices
+and test equipment via GPIB, RS232, or USB.
+
+Homepage: http://pyvisa.sourceforge.net
+""",
       author = 'Torsten Bronger, Gregor Thalhammer',
       author_email = 'bronger@physik.rwth-aachen.de',
+      maintainer = 'Florian Bauer',
       maintainer_email = 'pyvisa-devel@lists.sourceforge.net',
       url = 'http://pyvisa.sourceforge.net',
       download_url = 'http://sourceforge.net/projects/pyvisa/',
