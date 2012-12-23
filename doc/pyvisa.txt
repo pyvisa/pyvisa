@@ -76,6 +76,7 @@ the PyVISA distribution.
    Instruments, Agilent, etc).
 
    It can be downloaded at the `PyVISA project page
+   It can be downloaded at `PyVISA's project page
    <http://sourceforge.net/projects/pyvisa>`_.  You can report bugs
    there, too.  Additionally, I'm happy about feedback from people
    who've given it a try.  So far, we have positive reports of various
