@@ -466,19 +466,20 @@ class Instrument(ResourceTemplate):
             data = self.read_raw()
         finally:
             self.term_chars = original_term_chars
-        hash_sign_position = data.find("#")
+        hash_sign_position = data.find(b"#")
         if hash_sign_position == -1 or len(data) - hash_sign_position < 3:
             raise InvalidBinaryFormat
         if hash_sign_position > 0:
             data = data[hash_sign_position:]
-        if data[1].isdigit() and int(data[1]) > 0:
-            number_of_digits = int(data[1])
+        data_1 = data[1:2].decode('ascii')
+        if data_1.isdigit() and int(data_1) > 0:
+            number_of_digits = int(data_1)
             # I store data and data_length in two separate variables in case
             # that data is too short.  FixMe: Maybe I should raise an error if
             # it's too long and the trailing part is not just CR/LF.
             data_length = int(data[2:2 + number_of_digits])
             data = data[2 + number_of_digits:2 + number_of_digits + data_length]
-        elif data[1] == "0" and data[-1] == "\n":
+        elif data_1 == "0" and data[-1] == "\n":
             data = data[2:-1]
             data_length = len(data)
         else:
