@@ -479,7 +479,7 @@ class Instrument(ResourceTemplate):
             # it's too long and the trailing part is not just CR/LF.
             data_length = int(data[2:2 + number_of_digits])
             data = data[2 + number_of_digits:2 + number_of_digits + data_length]
-        elif data_1 == "0" and data[-1] == "\n":
+        elif data_1 == "0" and data[-1:].decode('ascii') == "\n":
             data = data[2:-1]
             data_length = len(data)
         else:
