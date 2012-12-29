@@ -38,12 +38,12 @@ import collections
 import struct
 
 def packfloats1(fmt, floats):
-    data = ''.join(struct.pack(fmt, num) for num in floats)
-    datalen = str(len(data))
-    return b"#" + b"%d" % len(datalen) + datalen + data
+    data = b''.join(struct.pack(fmt, num) for num in floats)
+    datalen =  ("%d" % len(data)).encode('ascii')
+    return b"#" + ("%d" % len(datalen)).encode('ascii') + datalen + data
 
 def packfloats2(fmt, floats):
-    return b'#0' + ''.join(struct.pack(fmt, num) for num in floats) + '\n'
+    return b'#0' + b''.join(struct.pack(fmt, num) for num in floats) + b'\n'
 
 class TestInstrument(object):
     
