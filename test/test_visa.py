@@ -60,7 +60,8 @@ class TestInstrument(object):
     def test_repr(self, instrument):
         # XXX: refactor so that a resource_name is
         # printed here
-        assert repr(instrument) == 'Instrument("")'
+        assert repr(instrument) in ("Instrument('')",
+                                    "Instrument(b'')")
     
     @pytest.mark.parametrize(('message', 'expected'),
                              [(b"hi there", b"hi there\r\n"),
@@ -249,7 +250,8 @@ class TestGpibInstrument(TestInstrument):
         # XXX: refactor so that a resource_name is
         # printed here
         # XXX: maybe test can be merged with parent class
-        assert repr(instrument) == 'GpibInstrument("")'
+        assert repr(instrument) in  ("GpibInstrument('')",
+                                     "GpibInstrument(b'')")
 
 
 class TestSerialInstrument(TestInstrument):
@@ -272,7 +274,8 @@ class TestSerialInstrument(TestInstrument):
         # XXX: refactor so that a resource_name is
         # printed here
         # XXX: maybe test can be merged with parent class
-        assert repr(instrument) == 'SerialInstrument("")'
+        assert repr(instrument) in ("SerialInstrument('')",
+                                    "SerialInstrument(b'')")
 
     
     @pytest.mark.parametrize(('message', 'expected'),

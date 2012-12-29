@@ -379,7 +379,7 @@ class Instrument(ResourceTemplate):
                           % self.resource_class, stacklevel=2)
 
     def __repr__(self):
-        return "Instrument(\"%s\")" % self.resource_name
+        return "Instrument(%r)" % self.resource_name
 
     def write(self, message):
         """Write a string message to the device.
@@ -629,7 +629,7 @@ class GpibInstrument(Instrument):
             Instrument.__del__(self)
 
     def __repr__(self):
-        return "GpibInstrument(\"%s\")" % self.resource_name
+        return "GpibInstrument(%r)" % self.resource_name
 
     def __switch_events_off(self):
         self._vpp43.disable_event(self.vi, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
@@ -785,7 +785,7 @@ class SerialInstrument(Instrument):
         vpp43.set_attribute(self.vi, VI_ATTR_ASRL_END_IN, termination)
 
     def __repr__(self):
-        return "SerialInstrument(\"%s\")" % self.resource_name
+        return "SerialInstrument(%r)" % self.resource_name
 
 
 class Interface(ResourceTemplate):
@@ -813,7 +813,7 @@ class Interface(ResourceTemplate):
                           % self.resource_class, stacklevel=2)
 
     def __repr__(self):
-        return "Interface(\"%s\")" % self.resource_name
+        return "Interface(%r)" % self.resource_name
 
 
 class Gpib(Interface):
