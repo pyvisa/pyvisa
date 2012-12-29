@@ -490,11 +490,11 @@ class Instrument(ResourceTemplate):
             endianess = "<"
         try:
             if format & 0x03 == single:
-                result = list(struct.unpack(endianess +
-                                            str(data_length / 4) + "f", data))
+                result = list(struct.unpack((endianess +
+                                             str(data_length // 4) + "f").encode('ascii'), data))
             elif format & 0x03 == double:
                 result = list(struct.unpack(endianess +
-                                            str(data_length / 8) + "d", data))
+                                            str(data_length // 8) + "d", data))
             else:
                 raise ValueError("unknown data values format requested")
         except struct.error:
