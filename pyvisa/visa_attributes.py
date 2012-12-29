@@ -14,7 +14,6 @@
 import vpp43_constants as _constants
 from vpp43_types import *
 from visa_messages import completion_and_error_messages
-import string
 
 viRO = 'readonly'
 viRW = 'readwrite'
@@ -97,8 +96,8 @@ class _AttrBitSet(_AttrSet):
 
     def fromstring(self, expr):
         bitfield = 0
-        for s in map(string.strip, string.split(expr, '|')):  # split at | and remove whitespace
-            bitfield = bitfield | self.valuedict[s]
+        for s in expr.split('|'):  # split at | and remove whitespace
+            bitfield = bitfield | self.valuedict[s.strip()]
         return bitfield
 
 
