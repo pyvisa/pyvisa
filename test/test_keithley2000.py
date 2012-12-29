@@ -40,7 +40,7 @@ def test_keithley2000(monkeypatch):
     keithley = GpibInstrument(12)
     milliseconds = 500
     number_of_values = 10
-    keithley.write("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values))
+    keithley.write(("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values)).encode('ascii'))
     keithley.trigger()
     keithley.wait_for_srq()
     voltages = keithley.read_floats()
