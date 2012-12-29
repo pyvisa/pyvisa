@@ -455,10 +455,10 @@ class Instrument(ResourceTemplate):
         if not format:
             format = self.values_format
         if format & 0x01 == ascii:
-            float_regex = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)"
+            float_regex = re.compile(ur"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)"
                                      "(?:[eE][-+]?\d+)?")
             return [float(raw_value) for raw_value in
-                    float_regex.findall(self.read())]
+                    float_regex.findall(self.read().decode('ascii'))]
         # Okay, we need to read binary data
         original_term_chars = self.term_chars
         self.term_chars = b""
