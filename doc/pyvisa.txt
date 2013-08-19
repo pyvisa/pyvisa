@@ -40,7 +40,7 @@
 .. |release| replace:: 1.4
 
 :Date: |today|
-:Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
+:Author: Torsten Bronger
 :Maintainer: Florian Bauer <pyvisa-devel@lists.sourceforge.net>
 :Downloads: See the `PyVISA project page`_.
 

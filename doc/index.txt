@@ -39,7 +39,7 @@ Controlling GPIB, RS232, and USB instruments
 -------------------------------------------------------
 
 :Date: |today|
-:Author: Torsten Bronger <bronger@physik.rwth-aachen.de>
+:Author: Torsten Bronger
 :Maintainer: Florian Bauer <pyvisa-devel@lists.sourceforge.net>
 :Downloads: See the `PyVISA project page`_.
 
