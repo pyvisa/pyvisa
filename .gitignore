@@ -1,0 +1,14 @@
+*~
+__pycache__
+*egg-info*
+*.pyc
+.DS_Store
+docs/_build/
+.idea
+build/
+dist/
+MANIFEST
+.tox
+
+# WebDAV file system cache files
+.DAV/
