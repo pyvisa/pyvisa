@@ -1,27 +1,64 @@
-Python package 'PyVISA'
+PyVISA
+======
 
 A Python package for support of the "Virtual Instrument Software
 Architecture" (VISA), in order to control measurement devices and
 test equipment via GPIB, RS232, Ethernet or USB.
 
-* Prerequisites:
+
+Description
+-----------
+
+The programming of measurement instruments can be real pain. There are many
+different protocols, sent over many different interfaces and bus systems
+(GPIB, RS232, USB). For every programming language you want to use, you have to
+find libraries that support both your device and its bus system.
+
+In order to ease this unfortunate situation, the Virtual Instrument Software Architecture
+(VISA_) specification was defined in the middle of the 90'. Today VISA is implemented on
+all significant operating systems. A couple of vendors offer VISA libraries, partly
+with free download. These libraries work together with arbitrary peripherical devices,
+although they may be limited to certain interface devices, such as the vendor’s GPIB card.
+
+The VISA specification has explicit bindings to Visual Basic, C, and G (LabVIEW’s graphical
+language. However, you can use VISA with any language capable of calling functions in a DLL.
+Python is such a language.
+
+.. _VISA: http://www.ivifoundation.org/Downloads/Specifications.htm
+
+
+VISA and Python
+---------------
+
+Python has a couple of features that make it very interesting for measurement controlling:
+
+- Python is an easy-to-learn scripting language with short development cycles.
+- It represents a high abstraction level [2], which perfectly blends with the abstraction
+  level of measurement programs.
+- It has a very rich set of native libraries, including numerical and plotting modules for
+  data analysis and visualisation.
+- A large set of books (in many languages) and on-line publications is available.
+
+
+Requirements
+------------
 
 - VISA (tested with NI-VISA 3.2, WinXP, from www.ni.com/visa)
 - Python (tested with 2.6 and 2.7, 3.2 is on its way)
 
-* Installation:
 
-unzip source distribution file
+Installation
+--------------
 
-$ python setup.py install
+Using pip:
 
-or via easy_install / pip
+    $ pip install pyvisa
 
-$ easy_install pyvisa
-$ pip install pyvisa
+or easy_install:
 
-* Description
+    $ easy_install pyvisa
 
-See documentation in doc/.  A detailed specification of VISA can be
-found at http://www.ivifoundation.org/Downloads/Specifications.htm
+or download and unzip the source distribution file and:
+
+    $ python setup.py install
 
