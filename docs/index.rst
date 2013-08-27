@@ -1,50 +1,15 @@
+:orphan:
+
 .. -*- mode: rst; coding: utf-8; ispell-local-dictionary: "british"; -*-
-..
-..   index.txt - The reST source code of PyVISA's homepage
-..
-..   Copyright © 2005, 2006, 2007, 2008
-..               Torsten Bronger <bronger@physik.rwth-aachen.de>,
-..               Gregor Thalhammer <gth@users.sourceforge.net>.
-..
-..   This file is part of PyVISA.
-..
-..   PyVISA is free software; you can redistribute it and/or modify it under
-..   the terms of the MIT licence:
-..
-..   Permission is hereby granted, free of charge, to any person obtaining a
-..   copy of this software and associated documentation files (the "Software"),
-..   to deal in the Software without restriction, including without limitation
-..   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-..   and/or sell copies of the Software, and to permit persons to whom the
-..   Software is furnished to do so, subject to the following conditions:
-..
-..   The above copyright notice and this permission notice shall be included in
-..   all copies or substantial portions of the Software.
-..
-..   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-..   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-..   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-..   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-..   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-..   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-..   DEALINGS IN THE SOFTWARE.
-..
 
-==============================================
-Python GPIB etc. support with PyVISA
-==============================================
 
--------------------------------------------------------
-Controlling GPIB, RS232, and USB instruments
--------------------------------------------------------
+PyVISA: Python wrapper for the VISA library
+===========================================
 
-:Date: |today|
-:Author: Torsten Bronger
-:Maintainer: Florian Bauer <pyvisa-devel@lists.sourceforge.net>
-:Downloads: See the `PyVISA project page`_.
+.. image:: _static/logo-full.jpg
+   :alt: PyVISA
+   :class: floatingflask
 
-PyVISA
-=======
 
 The PyVISA package enables you to control all kinds of measurement equipment
 through various busses (GPIB, RS232, USB) with Python programs.  As an example,
@@ -83,7 +48,7 @@ Projects using PyVISA so far:
 
 
 General overview
-================
+----------------
 
 The programming of measurement instruments can be real pain.  There are many
 different protocols, sent over many different interfaces and bus systems (GPIB,
@@ -105,7 +70,7 @@ capable of calling functions in a DLL.  Python is such a language.
 
 
 VISA and Python
-===============
+---------------
 
 Python has a couple of features that make it very interesting for measurement
 controlling:
@@ -127,14 +92,15 @@ controlling:
        system with all its peculiarities.
 
 
+.. toctree::
+    :maxdepth: 1
+
+    pyvisa
+    vpp43
+
+
 Links
-=====
-
-* PyVISA itself:
-
-  - the `PyVISA project page`_ with download area and bug tracker
-  - the `PyVISA manual`_ 
-  - the `PyVISA low-level implementation`_ called ``vpp43``
+-----
 
 * The original VISA docs:
 
