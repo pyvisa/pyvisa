@@ -18,13 +18,14 @@ __version__ = "$Revision$"
 
 VI_SPEC_VERSION = 0x00300000
 
-import os
+import sys
+
 import warnings
 
 from ctypes import (byref, cdll, c_void_p, c_double, c_long,
                     create_string_buffer, POINTER)
 
-if os.name == 'nt':
+if sys.platform == 'win32':
     from ctypes import windll, WINFUNCTYPE as FUNCTYPE
 else:
     from ctypes import CFUNCTYPE as FUNCTYPE
@@ -118,16 +119,20 @@ class VisaLibrary(Singleton):
         file was not found.
 
         """
-        if os.name == 'nt':
+        if sys.platform.startswith('win32'):
             if path:
                 self.__lib       = windll.LoadLibrary(path)
                 self.__cdecl_lib = cdll.LoadLibrary(path)
             else:
                 self.__lib       = windll.visa32
                 self.__cdecl_lib = cdll.visa32
-        elif os.name == 'posix':
+        elif sys.platform.startswith('linux2'):
             if not path:
                 path = "/usr/local/vxipnp/linux/bin/libvisa.so.7"
+            self.__lib = self.__cdecl_lib = cdll.LoadLibrary(path)
+        elif sys.platform.startswith('darwin'):
+            if not path:
+                path = "/Library/Frameworks/VISA.framework/VISA"
             self.__lib = self.__cdecl_lib = cdll.LoadLibrary(path)
         else:
             self.__lib = self.__cdecl_lib = None
