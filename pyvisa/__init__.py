@@ -12,6 +12,8 @@
     :license: MIT, see COPYING for more details.
 """
 
+from __future__ import division, unicode_literals, print_function, absolute_import
+
 import os
 import sys
 import pkg_resources

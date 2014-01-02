@@ -19,6 +19,7 @@ means "ViUInt32" and such.
 
 """
 
+from __future__ import division, unicode_literals, print_function, absolute_import
 
 # ctypes and os shouldn't be re-exported.
 import ctypes as _ctypes

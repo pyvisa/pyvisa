@@ -30,7 +30,9 @@
 #    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #    DEALINGS IN THE SOFTWARE.
 #
-from __future__ import print_function
+
+from __future__ import division, unicode_literals, print_function, absolute_import
+
 from visa import *
 
 def test_itc4():

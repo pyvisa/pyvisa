@@ -11,6 +11,7 @@
     :license: MIT, see COPYING for more details.
 """
 
+from __future__ import division, unicode_literals, print_function, absolute_import
 
 from vpp43_constants import *
 from vpp43_types import *

@@ -11,6 +11,7 @@
     :license: MIT, see COPYING for more details.
 """
 
+from __future__ import division, unicode_literals, print_function, absolute_import
 
 """Makes all "completion and error codes", "attribute values", "event type
 values", and "values and ranges" defined in the VISA specification VPP-4.3.2,

@@ -37,6 +37,8 @@ resource_manager -- the single instance of ResourceManager.
 
 """
 
+from __future__ import division, unicode_literals, print_function, absolute_import
+
 import re
 import time
 import struct
