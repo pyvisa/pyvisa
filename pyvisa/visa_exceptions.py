@@ -12,9 +12,6 @@
 """
 
 
-__version__ = "$Revision$"
-# $Source$
-
 from visa_messages import completion_and_error_messages \
     as _completion_and_error_messages
 

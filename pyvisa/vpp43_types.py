@@ -19,9 +19,6 @@ means "ViUInt32" and such.
 
 """
 
-__version__ = "$Revision$"
-# $Source$
-
 
 # ctypes and os shouldn't be re-exported.
 import ctypes as _ctypes

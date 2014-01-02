@@ -12,10 +12,6 @@
 """
 
 
-__version__ = "$Revision$"
-# \$Source${}$\$
-
-
 VI_SPEC_VERSION = 0x00300000
 
 import os

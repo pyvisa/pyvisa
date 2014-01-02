@@ -20,10 +20,6 @@ The module exports the values under the original, all-uppercase names.
 
 """
 
-__version__ = "$Revision$"
-# $Source$
-
-
 # _to_int() is necessary because the VISA specification is flawed: It defines
 # the VISA codes, which have a value less than zero, in their internal 32-bit
 # signed integer representation.  However, this is positive.  ctypes doesn't

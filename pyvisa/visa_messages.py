@@ -20,8 +20,6 @@ description (both in a two-elements tuple).
 
 """
 
-__version__ = "$Revision$"
-# $Source$
 
 
 from vpp43_constants import *

@@ -37,9 +37,6 @@ resource_manager -- the single instance of ResourceManager.
 
 """
 
-__version__ = "$Revision$"
-# $Source$
-
 import re
 import time
 import struct
