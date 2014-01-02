@@ -5,6 +5,10 @@
 
     Defines textual explanations of VISA completion and error codes.
 
+    The only export is "completion_and_error_messages", which is a dictionary that
+    binds every completion and error value to its name and a short textual
+    description (both in a two-elements tuple).
+
     This file is part of PyVISA.
 
     :copyright: (c) 2012 by the PyVISA authors.
@@ -12,17 +16,9 @@
 """
 
 
-"""
-
-The only export is "completion_and_error_messages", which is a dictionary that
-binds every completion and error value to its name and a short textual
-description (both in a two-elements tuple).
-
-"""
-
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from vpp43_constants import *
+from .vpp43_constants import *
 
 
 # Don't export the VPP-4.3 constants, but only the messages.

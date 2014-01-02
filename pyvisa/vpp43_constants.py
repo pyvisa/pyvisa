@@ -5,6 +5,12 @@
 
     VISA VPP-4.3 constants (VPP-4.3.2 spec, section 3).
 
+    Makes all "completion and error codes", "attribute values", "event type
+    values", and "values and ranges" defined in the VISA specification VPP-4.3.2,
+    section 3, available as variable values.
+
+    The module exports the values under the original, all-uppercase names.
+
     This file is part of PyVISA.
 
     :copyright: (c) 2012 by the PyVISA authors.
@@ -13,13 +19,6 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-"""Makes all "completion and error codes", "attribute values", "event type
-values", and "values and ranges" defined in the VISA specification VPP-4.3.2,
-section 3, available as variable values.
-
-The module exports the values under the original, all-uppercase names.
-
-"""
 
 # _to_int() is necessary because the VISA specification is flawed: It defines
 # the VISA codes, which have a value less than zero, in their internal 32-bit

@@ -26,12 +26,12 @@ if os.name == 'nt':
 else:
     from ctypes import CFUNCTYPE as FUNCTYPE
 
-from visa_exceptions import *
-from visa_messages import completion_and_error_messages
+from .visa_exceptions import *
+from .visa_messages import completion_and_error_messages
 
-from vpp43_constants import *
-from vpp43_types import *
-from vpp43_attributes import attributes
+from .vpp43_constants import *
+from .vpp43_types import *
+from .vpp43_attributes import attributes
 
 visa_functions = [
     "assert_interrupt_signal", "assert_trigger", "assert_utility_signal",

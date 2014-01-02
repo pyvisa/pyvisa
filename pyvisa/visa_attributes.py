@@ -13,9 +13,9 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import vpp43_constants as _constants
-from vpp43_types import *
-from visa_messages import completion_and_error_messages
+from . import vpp43_constants as _constants
+from .vpp43_types import *
+from .visa_messages import completion_and_error_messages
 
 viRO = 'readonly'
 viRW = 'readwrite'

@@ -7,16 +7,13 @@
 
     This file is part of PyVISA.
 
+    All data types that are defined by VPP-4.3.2.
+
+    The module exports all data types including the pointer and array types.  This
+    means "ViUInt32" and such.
+
     :copyright: (c) 2012 by the PyVISA authors.
     :license: MIT, see COPYING for more details.
-"""
-
-
-"""All data types that are defined by VPP-4.3.2.
-
-The module exports all data types including the pointer and array types.  This
-means "ViUInt32" and such.
-
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import

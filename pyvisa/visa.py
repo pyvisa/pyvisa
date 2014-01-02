@@ -6,35 +6,29 @@
     Top-level module of PyVISA with object-oriented layer on top of the
     original VISA functions (in vpp43.py).
 
+    Exported functions:
+
+    get_instruments_list() -- return a list with all found instruments
+    instrument() -- factory function for creating instrument instances
+
+    Exported classes:
+
+    ResourceTemplate -- abstract base class of the VISA implementation
+    ResourceManager -- singleton class for the default resource manager
+    Instrument -- generic class for all kinds of Instruments
+    GpibInstrument -- class for GPIB instruments
+    SerialInstrument -- class for serial (COM, LPT) instruments
+    Interface -- base class for GPIB interfaces (rather than instruments)
+    Gpib -- class for GPIB interfaces (rather than instruments)
+
+    Exported variables:
+
+    resource_manager -- the single instance of ResourceManager.
+
     This file is part of PyVISA.
 
     :copyright: (c) 2012 by the PyVISA authors.
     :license: MIT, see COPYING for more details.
-"""
-
-
-""" See http://pyvisa.sourceforge.net/pyvisa/ for
-details.
-
-Exported functions:
-
-get_instruments_list() -- return a list with all found instruments
-instrument() -- factory function for creating instrument instances
-
-Exported classes:
-
-ResourceTemplate -- abstract base class of the VISA implementation
-ResourceManager -- singleton class for the default resource manager
-Instrument -- generic class for all kinds of Instruments
-GpibInstrument -- class for GPIB instruments
-SerialInstrument -- class for serial (COM, LPT) instruments
-Interface -- base class for GPIB interfaces (rather than instruments)
-Gpib -- class for GPIB interfaces (rather than instruments)
-
-Exported variables:
-
-resource_manager -- the single instance of ResourceManager.
-
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import
@@ -45,9 +39,9 @@ import struct
 import atexit
 import warnings
 
-import vpp43
-from vpp43_constants import *
-from visa_exceptions import *
+from . import vpp43
+from .vpp43_constants import *
+from .visa_exceptions import *
 
 
 def _removefilter(action, message="", category=Warning, module="", lineno=0,

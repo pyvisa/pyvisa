@@ -13,8 +13,8 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from visa_messages import completion_and_error_messages \
-    as _completion_and_error_messages
+from .visa_messages import completion_and_error_messages \
+     as _completion_and_error_messages
 
 
 class Error(Exception):
