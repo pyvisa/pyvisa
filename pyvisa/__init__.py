@@ -8,7 +8,7 @@
 
     This file is part of PyVISA.
 
-    :copyright: (c) 2012 by the PyVISA authors.
+    :copyright: (c) 2014 by the PyVISA authors.
     :license: MIT, see COPYING for more details.
 """
 

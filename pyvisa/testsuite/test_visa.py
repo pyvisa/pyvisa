@@ -5,7 +5,7 @@
 #
 #    test_visa.py - PyVISA test code for visa.py
 #
-#    Copyright © 2012
+#    Copyright © 2014
 #                Florian Bauer <fbauer.devel@gmail.com>
 #                     
 #    This file is part of PyVISA.
