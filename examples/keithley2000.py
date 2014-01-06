@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    test_keithley2000.py - PyVISA test code for Keithley 2000 multimeter
+#    keithley2000.py - PyVISA test code for Keithley 2000 multimeter
 #
 #    Copyright © 2005, 2006, 2007, 2008
 #                Torsten Bronger <bronger@physik.rwth-aachen.de>,
@@ -33,13 +33,13 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from visa import *
+import visa
 
 def test_keithley2000(monkeypatch):
-    monkeypatch.setattr(GpibInstrument, 'interface_type', VI_INTF_GPIB)
-    monkeypatch.setattr(GpibInstrument, 'stb', 0x40)
+    monkeypatch.setattr(visa.GpibInstrument, 'interface_type', VI_INTF_GPIB)
+    monkeypatch.setattr(visa.GpibInstrument, 'stb', 0x40)
     print("Test start")
-    keithley = GpibInstrument(12)
+    keithley = visa.GpibInstrument(12)
     milliseconds = 500
     number_of_values = 10
     keithley.write(("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values)).encode('ascii'))

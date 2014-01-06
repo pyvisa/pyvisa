@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    test_itc4.py - PyVISA test code for Oxfort ITC4 temperature controller
+#    itc4.py - PyVISA test code for Oxfort ITC4 temperature controller
 #
 #    Copyright © 2005, 2006, 2007, 2008
 #                Torsten Bronger <bronger@physik.rwth-aachen.de>,
@@ -33,11 +33,11 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from visa import *
+import visa
 
 def test_itc4():
     print("Test start")
-    itc4 = Instrument("COM2", term_chars = b"\r", timeout = 5)
+    itc4 = visa.Instrument("COM2", term_chars=b"\r", timeout=5)
     itc4.write(b"V")
     print(itc4.read())
     print("Test end")
