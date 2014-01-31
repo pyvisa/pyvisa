@@ -38,10 +38,11 @@ except:
     pass
 
 
-from distribute_setup import use_setuptools
-use_setuptools()
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    from distutils.core import setup, find_packages
 
-from setuptools import setup, find_packages
 
 import codecs
 
