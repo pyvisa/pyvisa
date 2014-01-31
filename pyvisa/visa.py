@@ -52,19 +52,13 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
     It is the opposite to warnings.filterwarnings() and has the same parameters
     as it."""
     import re
-    item = (action, re.compile(message, re.I), category, re.compile(module),
-            lineno)
-    new_filters = []
-    for filter in warnings.filters:
-        equal = 1
-        for j in range(len(item)):
-            if item[j] != filter[j]:
-                equal = 0
-                break
-        if not equal:
-            new_filters.append(filter)
+    item = (action, re.compile(message, re.I), category, re.compile(module), lineno)
+
+    new_filters = [fil for fil in warnings.filters if fil != item]
+
     if len(warnings.filters) == len(new_filters):
         warnings.warn("Warning filter not found", stacklevel=2)
+
     warnings.filters = new_filters
 
 
