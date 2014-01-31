@@ -63,14 +63,14 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
 
 
 def _warn_for_invalid_keyword_arguments(keyw, allowed_keys):
-    for key in keyw.iterkeys():
+    for key in keyw.keys():
         if key not in allowed_keys:
             warnings.warn('Keyword argument "%s" unknown' % key, stacklevel=3)
 
 
 def _filter_keyword_arguments(keyw, selected_keys):
     result = {}
-    for key, value in keyw.iteritems():
+    for key, value in keyw.items():
         if key in selected_keys:
             result[key] = value
     return result

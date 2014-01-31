@@ -397,7 +397,7 @@ attributes_s = {
 
 
 attributes = {}  # dict with attribute value (not name) as key
-for name, info in attributes_s.iteritems():
+for name, info in attributes_s.items():
     value = _constants.__dict__[name]  # convert attribute name to value
     info.attribute_name = name
     info.attribute_value = value
