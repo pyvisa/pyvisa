@@ -418,7 +418,7 @@ controller state of the local interface board.
         Unique logical identifier to a session.
     `mode` : integer
         Specifies the state of the ATN line and optionally the local active
-	controller state. See the Description section for actual values.
+    controller state. See the Description section for actual values.
 :Return values:
     None.
 
@@ -436,7 +436,7 @@ remote/local state of the device.
         Unique logical identifier to a session.
     `mode` : integer
         Specifies the state of the REN line and optionally the device
-	remote/local state. See the Description section for actual values.
+    remote/local state. See the Description section for actual values.
 :Return values:
     None.
 
@@ -456,8 +456,8 @@ Tell the GPIB device at the specified address to become controller in charge
         Primary address of the GPIB device to which you want to pass control.
     `secondary_address` : integer
         Secondary address of the targeted GPIB device. If the targeted device
-	does not have a secondary address, this parameter should contain the
-	value ``VI_NO_SEC_ADDR``.
+    does not have a secondary address, this parameter should contain the
+    value ``VI_NO_SEC_ADDR``.
 :Return values:
     None.
 
@@ -539,10 +539,10 @@ Its parameters mean the following:
 :Return values:
     `converted_user_handle` : ctypes type
         An object representing the user_handle.  Use it to communicate with
-	your handler.  If your user_handle was a list, you get its elements as
-	usual with ``converted_user_handle[index]``.  You can even convert it
-	to a list with ``list(converted_user_handle)`` (however, this yields a
-	copy).
+    your handler.  If your user_handle was a list, you get its elements as
+    usual with ``converted_user_handle[index]``.  You can even convert it
+    to a list with ``list(converted_user_handle)`` (however, this yields a
+    copy).
 
         For strings, use ``converted_user_handle.value`` if it's supposed to be
         interpreted as a null-terminated string, or
@@ -923,7 +923,7 @@ some older VISA implementation don't have the function ``viParseRsrcEx``.
         Specifies the user-defined alias for the given resource string, if a
         VISA implementation allows aliases and an alias exists for the given
         resource string.  If not, this is ``None``.
-        
+
 
 peek_8, peek_16, peek_32
 ........................
@@ -942,7 +942,7 @@ Read an 8-bit, 16-bit, or 32-bit value from the specified address.
 :Return values:
     `value_8`, `value_16`, `value_32` : integer
         Data read from bus (8 bits for peek_8, 16 bits for peek_16, and 32 bits
-	for peek_32).
+    for peek_32).
 
 
 poke_8, poke_16, poke_32
@@ -961,7 +961,7 @@ Write an 8-bit, 16-bit, or 32-bit value to the specified address.
         Specifies the destination address to store the value.
     `value_8`, `value_16`, `value_32` : integer
         Data to write to bus (8 bits for poke_8, 16 bits for poke_16, and 32
-	bits for poke_32).
+    bits for poke_32).
 :Return values:
     None.
 
@@ -1312,8 +1312,8 @@ Uninstall handlers for events.
     `user_handle` : ctypes type : optional
         A value specified by an application that can be used for identifying
         handlers uniquely in a session for an event.  It *must* be the object
-	returned by `install_handler`_.  Consequently, it defaults to
-	``None``.
+    returned by `install_handler`_.  Consequently, it defaults to
+    ``None``.
 :Return values:
     None.
 
@@ -1452,7 +1452,7 @@ to a previous query.
 :Return values:
     `response` : integer
         The response retrieved from the device.  If the mode specifies just
-	sending a command, this parameter may be ``VI_NULL``.
+    sending a command, this parameter may be ``VI_NULL``.
 
 
 wait_on_event
