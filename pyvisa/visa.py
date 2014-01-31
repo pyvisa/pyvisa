@@ -57,7 +57,7 @@ def _removefilter(action, message="", category=Warning, module="", lineno=0,
     new_filters = []
     for filter in warnings.filters:
         equal = 1
-        for j in xrange(len(item)):
+        for j in range(len(item)):
             if item[j] != filter[j]:
                 equal = 0
                 break
@@ -254,7 +254,7 @@ def get_instruments_list(use_aliases=True):
     find_list, return_counter, instrument_description = \
         vpp43.find_resources(resource_manager.session, "?*::INSTR")
     resource_names.append(instrument_description)
-    for i in xrange(return_counter - 1):
+    for i in range(return_counter - 1):
         resource_names.append(vpp43.find_next(find_list))
     # Phase two: If available and use_aliases is True, substitute the alias.
     # Otherwise, truncate the "::INSTR".

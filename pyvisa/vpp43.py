@@ -946,7 +946,7 @@ def terminate(vi, degree, job_id):
 
 
 def uninstall_handler(vi, event_type, handler, user_handle=None):
-    for i in xrange(len(handlers)):
+    for i in range(len(handlers)):
         element = handlers[i]
         if element[0] is handler and element[1] is user_handle:
             del handlers[i]
