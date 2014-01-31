@@ -26,9 +26,8 @@ if os.name == 'nt':
 else:
     from ctypes import CFUNCTYPE as FUNCTYPE
 
-from .visa_exceptions import *
 from .visa_messages import completion_and_error_messages
-
+from .exceptions import VisaIOError, VisaIOWarning, UnknownHandler, OSNotSupported, VisaTypeError, VisaTypeError
 from .vpp43_constants import *
 from .vpp43_types import *
 from .vpp43_attributes import attributes
@@ -58,10 +57,8 @@ __all__ = ["visa_library", "get_status"] + visa_functions
 
 # Add all symbols from #visa_exceptions# and #vpp43_constants# to the list of
 # exported symbols
-import visa_exceptions
-import vpp43_constants
-__all__.extend([name for name in vpp43_constants.__dict__.keys() +
-                visa_exceptions.__dict__.keys() if name[0] != '_'])
+from . import vpp43_constants
+__all__.extend([name for name in vpp43_constants.__dict__.keys()])
 
 
 # load VISA library
@@ -128,7 +125,7 @@ class VisaLibrary(Singleton):
             self.__lib = self.__cdecl_lib = cdll.LoadLibrary(path)
         else:
             self.__lib = self.__cdecl_lib = None
-            raise visa_exceptions.OSNotSupported(os.name)
+            raise OSNotSupported(os.name)
         self.__initialize_library_functions()
 
     def set_user_handle_type(self, user_handle):
@@ -382,11 +379,11 @@ def check_status(status):
     global visa_status
     visa_status = status
     if status < 0:
-        raise visa_exceptions.VisaIOError(status)
+        raise VisaIOError(status)
     if status in dodgy_completion_codes:
         abbreviation, description = completion_and_error_messages[status]
         warnings.warn("%s: %s" % (abbreviation, description),
-                      visa_exceptions.VisaIOWarning, stacklevel=2)
+                      VisaIOWarning, stacklevel=2)
     return status
 
 
@@ -424,7 +421,7 @@ def convert_argument_list(original_arguments):
         elif isinstance(argument, str):
             converted_arguments.append(argument)
         else:
-            raise visa_exceptions.VisaTypeError("Invalid type in scanf/printf: %s" % type(argument))
+            raise VisaTypeError("Invalid type in scanf/printf: %s" % type(argument))
     return tuple(converted_arguments)
 
 
@@ -455,7 +452,7 @@ def convert_to_byref(byvalue_arguments, buffer_length):
         elif isinstance(byvalue_arguments[i], (c_long, c_double)):
             converted_arguments.append(byref(byvalue_arguments[i]))
         else:
-            raise visa_exceptions.VisaTypeError("Invalid type in scanf: %s" % type(argument))
+            raise VisaTypeError("Invalid type in scanf: %s" % type(argument))
     return tuple(converted_arguments)
 
 
@@ -676,7 +673,7 @@ def install_handler(vi, event_type, handler, user_handle=None):
                 converted_user_handle = \
                     (c_long * len(user_handle))(*tuple(user_handle))
         else:
-            raise visa_exceptions.VisaTypeError("Type not allowed as user handle: %s" % type(user_handle))
+            raise VisaTypeError("Type not allowed as user handle: %s" % type(user_handle))
     visa_library.set_user_handle_type(converted_user_handle)
     converted_handler = ViHndlr(handler)
     if user_handle is None:
@@ -955,7 +952,7 @@ def uninstall_handler(vi, event_type, handler, user_handle=None):
             del handlers[i]
             break
     else:
-        raise visa_exceptions.UnknownHandler
+        raise UnknownHandler
     visa_library().viUninstallHandler(vi, event_type, element[2],
                                       byref(element[1]))
 

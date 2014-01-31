@@ -41,7 +41,7 @@ import warnings
 
 from . import vpp43
 from .vpp43_constants import *
-from .visa_exceptions import *
+from .exceptions import VisaIOError, InvalidBinaryFormat
 
 
 def _removefilter(action, message="", category=Warning, module="", lineno=0,
@@ -98,7 +98,7 @@ class ResourceTemplate(object):
     See :class:Instrument for a detailed description.
     """
 
-    import vpp43 as _vpp43  # Needed for finishing the object safely.
+    from . import vpp43 as _vpp43  # Needed for finishing the object safely.
 
     #: VISA handle of the resource"
     vi = None
