@@ -40,6 +40,7 @@ import atexit
 import warnings
 
 from . import vpp43
+from . import logger
 from .vpp43_constants import *
 from .exceptions import VisaIOError, InvalidBinaryFormat
 

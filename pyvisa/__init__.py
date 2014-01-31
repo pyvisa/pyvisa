@@ -16,11 +16,15 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import os
 import sys
+import logging
 import pkg_resources
 import subprocess
 import ConfigParser
 
 from . import vpp43
+
+logger = logging.getLogger('pyvisa')
+logger.addHandler(logging.NullHandler)
 
 __version__ = "unknown"
 try:  # try to grab the commit version of our package
