@@ -130,267 +130,267 @@ class viAttrInfo:
 
 #: List of VISA Attributes, as dictionary with string keys
 attributes_s = {
-    'VI_ATTR_RSRC_IMPL_VERSION': \
+    'VI_ATTR_RSRC_IMPL_VERSION':
     viAttrInfo(
-    viRO, viGlobal, ViVersion,
-    _AttrRange(0, 0xFFFFFFFF),
-    'implementation version',
-    "Resource version that uniquely identifies each of the different "
-    "revisions or implementations of a resource."
+        viRO, viGlobal, ViVersion,
+        _AttrRange(0, 0xFFFFFFFF),
+        'implementation version',
+        "Resource version that uniquely identifies each of the different "
+        "revisions or implementations of a resource."
     ),
 
-    'VI_ATTR_RSRC_LOCK_STATE': \
+    'VI_ATTR_RSRC_LOCK_STATE':
     viAttrInfo(
-    viRO, viGlobal, ViAccessMode,
-    _AttrSet('VI_NO_LOCK', 'VI_EXCLUSIVE_LOCK', 'VI_SHARED_LOCK'),
-    'lock state',
-    "The current locking state of the resource. The resource can be "
-    "unlocked, locked with an exclusive lock, or locked with a shared "
-    "lock."
+        viRO, viGlobal, ViAccessMode,
+        _AttrSet('VI_NO_LOCK', 'VI_EXCLUSIVE_LOCK', 'VI_SHARED_LOCK'),
+        'lock state',
+        "The current locking state of the resource. The resource can be "
+        "unlocked, locked with an exclusive lock, or locked with a shared "
+        "lock."
     ),
 
-    'VI_ATTR_RSRC_MANF_ID': \
+    'VI_ATTR_RSRC_MANF_ID':
     viAttrInfo(
-    viRO, viGlobal, ViUInt16, _AttrRange(0, 0x3FFF),
-    'resource manufacturer ID',
-    "A value that corresponds to the VXI manufacturer ID of the "
-    "manufacturer that created the implementation."
+        viRO, viGlobal, ViUInt16, _AttrRange(0, 0x3FFF),
+        'resource manufacturer ID',
+        "A value that corresponds to the VXI manufacturer ID of the "
+        "manufacturer that created the implementation."
     ),
 
-    'VI_ATTR_RSRC_MANF_NAME': \
+    'VI_ATTR_RSRC_MANF_NAME':
     viAttrInfo(
-    viRO, viGlobal, ViString, None,
-    'resource manufacturer name',
-    "A string that corresponds to the VXI manufacturer name of the "
-    "manufacturer that created the implementation."
+        viRO, viGlobal, ViString, None,
+        'resource manufacturer name',
+        "A string that corresponds to the VXI manufacturer name of the "
+        "manufacturer that created the implementation."
     ),
 
-    'VI_ATTR_RSRC_NAME': \
+    'VI_ATTR_RSRC_NAME':
     viAttrInfo(
-    viRO, viGlobal, ViRsrc, None,
-    'resource name',
-    "The unique identifier for a resource compliant with the address "
-    "structure presented in Section 4.4.1, Address String."
+        viRO, viGlobal, ViRsrc, None,
+        'resource name',
+        "The unique identifier for a resource compliant with the address "
+        "structure presented in Section 4.4.1, Address String."
     ),
 
     'VI_ATTR_RSRC_SPEC_VERSION': \
     viAttrInfo(
-    viRO, viGlobal, ViVersion, None,
-    'resource specification version',
-    "Resource version that uniquely identifies the version of the VISA "
-    "specification to which the implementation is compliant."
+        viRO, viGlobal, ViVersion, None,
+        'resource specification version',
+        "Resource version that uniquely identifies the version of the VISA "
+        "specification to which the implementation is compliant."
     ),
 
-    'VI_ATTR_RSRC_CLASS': \
+    'VI_ATTR_RSRC_CLASS':
     viAttrInfo(
-    viRO, viGlobal, ViString, None,
-    'resource class',
-    "Specifies the resource class (for example, INSTR)."
+        viRO, viGlobal, ViString, None,
+        'resource class',
+        "Specifies the resource class (for example, INSTR)."
     ),
 
     #Generic INSTR Resource Attributes
-    'VI_ATTR_INTF_NUM': \
-    viAttrInfo(
-    viRO, viGlobal, ViUInt16, _AttrRange(0, 0xFFFF),
-    'interface number',
-    "Board number for the given interface."
+    'VI_ATTR_INTF_NUM':
+        viAttrInfo(
+        viRO, viGlobal, ViUInt16, _AttrRange(0, 0xFFFF),
+        'interface number',
+        "Board number for the given interface."
     ),
 
-    'VI_ATTR_INTF_TYPE': \
+    'VI_ATTR_INTF_TYPE':
     viAttrInfo(
-    viRO, viGlobal, ViUInt16,
-    _AttrSet('VI_INTF_VXI', 'VI_INTF_GPIB', 'VI_INTF_GPIB_VXI', 'VI_INTF_ASRL',
-          'VI_INTF_TCPIP', 'VI_INTF_USB'),
-    'interface type',
-    "Interface type of the given session."
+        viRO, viGlobal, ViUInt16,
+        _AttrSet('VI_INTF_VXI', 'VI_INTF_GPIB', 'VI_INTF_GPIB_VXI', 'VI_INTF_ASRL',
+              'VI_INTF_TCPIP', 'VI_INTF_USB'),
+        'interface type',
+        "Interface type of the given session."
     ),
 
-    'VI_ATTR_INTF_INST_NAME': \
+    'VI_ATTR_INTF_INST_NAME':
     viAttrInfo(
-    viRO, viGlobal, ViString, None,
-    'interface name',
-    "Human-readable text describing the given interface."
+        viRO, viGlobal, ViString, None,
+        'interface name',
+        "Human-readable text describing the given interface."
     ),
 
     # ASRL Specific INSTR Resource Attributes
-    'VI_ATTR_ASRL_AVAIL_NUM': \
+    'VI_ATTR_ASRL_AVAIL_NUM':
     viAttrInfo(
-    viRO, viGlobal, ViUInt32, None,  # 0 to 0xFFFFFFFFL
-    'number of bytes available at serial port',
-    ""
+        viRO, viGlobal, ViUInt32, None,  # 0 to 0xFFFFFFFFL
+        'number of bytes available at serial port',
+        ""
     ),
 
-    'VI_ATTR_ASRL_BAUD': \
+    'VI_ATTR_ASRL_BAUD':
     viAttrInfo(
-    viRW, viGlobal, ViUInt32, None,  # 0 to 0xFFFFFFFFL
-    'serial baud rate',
-    ""
+        viRW, viGlobal, ViUInt32, None,  # 0 to 0xFFFFFFFFL
+        'serial baud rate',
+        ""
     ),
 
-    'VI_ATTR_ASRL_DATA_BITS': \
+    'VI_ATTR_ASRL_DATA_BITS':
     viAttrInfo(
-    viRW, viGlobal, ViUInt16, _AttrRange(5, 8),
-    '',
-    ""
+        viRW, viGlobal, ViUInt16, _AttrRange(5, 8),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_PARITY': \
+    'VI_ATTR_ASRL_PARITY':
     viAttrInfo(
-    viRW, viGlobal, ViUInt16,
-    _AttrSet('VI_ASRL_PAR_NONE', 'VI_ASRL_PAR_ODD', 'VI_ASRL_PAR_EVEN',
-             'VI_ASRL_PAR_MARK', 'VI_ASRL_PAR_SPACE'),
-    '',
-    ""
+        viRW, viGlobal, ViUInt16,
+        _AttrSet('VI_ASRL_PAR_NONE', 'VI_ASRL_PAR_ODD', 'VI_ASRL_PAR_EVEN',
+                 'VI_ASRL_PAR_MARK', 'VI_ASRL_PAR_SPACE'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_STOP_BITS': \
+    'VI_ATTR_ASRL_STOP_BITS':
     viAttrInfo(
-    viRW, viGlobal, ViUInt16,
-    _AttrSet('VI_ASRL_STOP_ONE', 'VI_ASRL_STOP_ONE5', 'VI_ASRL_STOP_TWO'),
-    '',
-    ""
+        viRW, viGlobal, ViUInt16,
+        _AttrSet('VI_ASRL_STOP_ONE', 'VI_ASRL_STOP_ONE5', 'VI_ASRL_STOP_TWO'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_FLOW_CNTRL': \
+    'VI_ATTR_ASRL_FLOW_CNTRL':
     viAttrInfo(
-    viRW, viGlobal, ViUInt16,
-    _AttrBitSet('VI_ASRL_FLOW_NONE', 'VI_ASRL_FLOW_XON_XOFF',
-             'VI_ASRL_FLOW_RTS_CTS', 'VI_ASRL_FLOW_DTR_DSR'),
-    '',
-    ""
+        viRW, viGlobal, ViUInt16,
+        _AttrBitSet('VI_ASRL_FLOW_NONE', 'VI_ASRL_FLOW_XON_XOFF',
+                 'VI_ASRL_FLOW_RTS_CTS', 'VI_ASRL_FLOW_DTR_DSR'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_END_IN': \
+    'VI_ATTR_ASRL_END_IN':
     viAttrInfo(
-    viRW, viLocal, ViUInt16,
-    _AttrSet('VI_ASRL_END_NONE', 'VI_ASRL_END_LAST_BIT',
-              'VI_ASRL_END_TERMCHAR'),
-    '',
-    ""
+        viRW, viLocal, ViUInt16,
+        _AttrSet('VI_ASRL_END_NONE', 'VI_ASRL_END_LAST_BIT',
+                  'VI_ASRL_END_TERMCHAR'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_END_OUT': \
+    'VI_ATTR_ASRL_END_OUT':
     viAttrInfo(
-    viRW, viLocal, ViUInt16,
-    _AttrSet('VI_ASRL_END_NONE', 'VI_ASRL_END_LAST_BIT',
-             'VI_ASRL_END_TERMCHAR', 'VI_ASRL_END_BREAK'),
-    '',
-    ""
+        viRW, viLocal, ViUInt16,
+        _AttrSet('VI_ASRL_END_NONE', 'VI_ASRL_END_LAST_BIT',
+                 'VI_ASRL_END_TERMCHAR', 'VI_ASRL_END_BREAK'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_CTS_STATE': \
+    'VI_ATTR_ASRL_CTS_STATE':
     viAttrInfo(
-    viRO, viGlobal, ViInt16,
-    _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
-    '',
-    ""
+        viRO, viGlobal, ViInt16,
+        _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_DCD_STATE': \
+    'VI_ATTR_ASRL_DCD_STATE':
     viAttrInfo(
-    viRO, viGlobal, ViInt16,
-    _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
-    '',
-    ""
+        viRO, viGlobal, ViInt16,
+        _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_DSR_STATE': \
+    'VI_ATTR_ASRL_DSR_STATE':
     viAttrInfo(
-    viRO, viGlobal, ViInt16,
-    _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
-    '',
-    ""
+        viRO, viGlobal, ViInt16,
+        _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_DTR_STATE': \
+    'VI_ATTR_ASRL_DTR_STATE':
     viAttrInfo(
-    viRW, viGlobal, ViInt16,
-    _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
-    '',
-    ""
+        viRW, viGlobal, ViInt16,
+        _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_RI_STATE': \
+    'VI_ATTR_ASRL_RI_STATE':
     viAttrInfo(
-    viRO, viGlobal, ViInt16,
-    _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
-    '',
-    ""
+        viRO, viGlobal, ViInt16,
+        _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_RTS_STATE': \
+    'VI_ATTR_ASRL_RTS_STATE':
     viAttrInfo(
-    viRW, viGlobal, ViInt16,
-    _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
-    '',
-    ""
+        viRW, viGlobal, ViInt16,
+        _AttrSet('VI_STATE_ASSERTED', 'VI_STATE_UNASSERTED', 'VI_STATE_UNKNOWN'),
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_REPLACE_CHAR': \
+    'VI_ATTR_ASRL_REPLACE_CHAR':
     viAttrInfo(
-    viRW, viLocal, ViUInt8, None,  # 0 to FFh,
-    '',
-    ""
+        viRW, viLocal, ViUInt8, None,  # 0 to FFh,
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_XON_CHAR': \
+    'VI_ATTR_ASRL_XON_CHAR':
     viAttrInfo(
-    viRW, viLocal, ViUInt8, None,  # 0 to FFh
-    '',
-    ""
+        viRW, viLocal, ViUInt8, None,  # 0 to FFh
+        '',
+        ""
     ),
 
-    'VI_ATTR_ASRL_XOFF_CHAR': \
+    'VI_ATTR_ASRL_XOFF_CHAR':
     viAttrInfo(
-    viRW, viLocal, ViUInt8, None,  # 0 to FFh
-    '',
-    ""
+        viRW, viLocal, ViUInt8, None,  # 0 to FFh
+        '',
+        ""
     ),
 
     #Event Attributes: VI_EVENT_IO_COMPLETION
-    'VI_ATTR_EVENT_TYPE': \
+    'VI_ATTR_EVENT_TYPE':
     viAttrInfo(
-    viRO, None, ViEventType,
-    _AttrSet('VI_EVENT_IO_COMPLETION'),  # FIXME: add other Events
-    'event type',
-    "Unique logical identifier of the event type."
+        viRO, None, ViEventType,
+        _AttrSet('VI_EVENT_IO_COMPLETION'),  # FIXME: add other Events
+        'event type',
+        "Unique logical identifier of the event type."
     ),
 
-    'VI_ATTR_STATUS': \
+    'VI_ATTR_STATUS':
     viAttrInfo(
-    viRO, None, ViStatus,
-    _AttrSet(*map(lambda x: x[0], completion_and_error_messages.values())),
-             # list of status codes, FIXME
-    'return code of asynchronous operation that has completed',
-    ""
+        viRO, None, ViStatus,
+        _AttrSet(*map(lambda x: x[0], completion_and_error_messages.values())),
+                 # list of status codes, FIXME
+        'return code of asynchronous operation that has completed',
+        ""
     ),
 
-    'VI_ATTR_JOB_ID': \
+    'VI_ATTR_JOB_ID':
     viAttrInfo(
-    viRO, None, ViJobId, None,
-    'job ID',
-    ""
+        viRO, None, ViJobId, None,
+        'job ID',
+        ""
     ),
 
-    'VI_ATTR_BUFFER': \
+    'VI_ATTR_BUFFER':
     viAttrInfo(
-    viRO, None, ViBuf, None,
-    'buffer address',
-    "Address of a buffer that was used in an asynchronous operation."
+        viRO, None, ViBuf, None,
+        'buffer address',
+        "Address of a buffer that was used in an asynchronous operation."
     ),
 
-    'VI_ATTR_RET_COUNT': \
+    'VI_ATTR_RET_COUNT':
     viAttrInfo(
-    viRO, None, ViUInt32, None,  # 0 to ffffffffh
-    'return count',
-    "actual number of elements that were asynchronously transferred"
+        viRO, None, ViUInt32, None,  # 0 to ffffffffh
+        'return count',
+        "actual number of elements that were asynchronously transferred"
     ),
 
-    'VI_ATTR_OPER_NAME': \
+    'VI_ATTR_OPER_NAME':
     viAttrInfo(
-    viRO, None, ViString, None,
-    'operation name',
-    "The name of the operation generating the event."
+        viRO, None, ViString, None,
+        'operation name',
+        "The name of the operation generating the event."
     )
 
     }
