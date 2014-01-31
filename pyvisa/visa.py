@@ -39,10 +39,9 @@ import struct
 import atexit
 import warnings
 
-from . import vpp43
-from . import logger
-from .vpp43_constants import *
+from .pyvisa.wrapper.vpp43_constants import *
 from .exceptions import VisaIOError, InvalidBinaryFormat
+from pyvisa.wrapper import functions
 
 
 def _removefilter(action, message="", category=Warning, module="", lineno=0,
@@ -93,8 +92,6 @@ class ResourceTemplate(object):
     See :class:Instrument for a detailed description.
     """
 
-    from . import vpp43 as _vpp43  # Needed for finishing the object safely.
-
     #: VISA handle of the resource"
     vi = None
 
@@ -109,10 +106,10 @@ class ResourceTemplate(object):
             return
 
         warnings.filterwarnings("ignore", "VI_SUCCESS_DEV_NPRESENT")
-        self.vi = vpp43.open(resource_manager.session, resource_name,
+        self.vi = functions.open(resource_manager.session, resource_name,
                              keyw.get("lock", VI_NO_LOCK))
 
-        if vpp43.get_status() == VI_SUCCESS_DEV_NPRESENT:
+        if functions.get_status() == VI_SUCCESS_DEV_NPRESENT:
             # okay, the device was not ready when we opened the session.
             # Now it gets five seconds more to become ready.  Every 0.1
             # seconds we probe it with viClear.
@@ -121,7 +118,7 @@ class ResourceTemplate(object):
                 time.sleep(0.1)
                 passed_time += 0.1
                 try:
-                    vpp43.clear(self.vi)
+                    functions.clear(self.vi)
                 except VisaIOError as error:
                     if error.error_code != VI_ERROR_NLISTENERS:
                         raise
@@ -130,12 +127,12 @@ class ResourceTemplate(object):
                 # Very last chance, this time without exception handling
                 time.sleep(0.1)
                 passed_time += 0.1
-                vpp43.clear(self.vi)
+                functions.clear(self.vi)
 
         _removefilter("ignore", "VI_SUCCESS_DEV_NPRESENT")
         timeout = keyw.get("timeout", 5)
         if timeout is None:
-            vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
+            functions.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
         else:
             self.timeout = timeout
 
@@ -151,7 +148,7 @@ class ResourceTemplate(object):
         and 10 seconds.
 
         """
-        timeout = vpp43.get_attribute(self.vi, VI_ATTR_TMO_VALUE)
+        timeout = functions.get_attribute(self.vi, VI_ATTR_TMO_VALUE)
         if timeout == VI_TMO_INFINITE:
             raise NameError("no timeout is specified")
         return timeout / 1000.0
@@ -160,12 +157,12 @@ class ResourceTemplate(object):
     def timeout(self, timeout):
         if not(0 <= timeout <= 4294967):
             raise ValueError("timeout value is invalid")
-        vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
+        functions.set_attribute(self.vi, VI_ATTR_TMO_VALUE, int(timeout * 1000))
 
     @timeout.deleter
     def timeout(self):
         timeout = self.timeout  # just to test whether it's defined
-        vpp43.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
+        functions.set_attribute(self.vi, VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
 
     @property
     def resource_class(self):
@@ -173,7 +170,7 @@ class ResourceTemplate(object):
 
         # TODO: Check possible outputs.
         try:
-            return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
+            return functions.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
         except VisaIOError as error:
             if error.error_code != VI_ERROR_NSUP_ATTR:
                 raise
@@ -182,12 +179,12 @@ class ResourceTemplate(object):
     @property
     def resource_name(self):
         """The VISA resource name of the resource as a string."""
-        return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
+        return functions.get_attribute(self.vi, VI_ATTR_RSRC_NAME)
 
     @property
     def interface_type(self):
         """The interface type of the resource as a number."""
-        interface_type, _ = vpp43.parse_resource(resource_manager.session,
+        interface_type, _ = functions.parse_resource(resource_manager.session,
                                                  self.resource_name)
         return interface_type
 
@@ -203,7 +200,7 @@ class ResourceTemplate(object):
             self.vi = None
 
 
-class ResourceManager(vpp43.Singleton, ResourceTemplate):
+class ResourceManager(functions.Singleton, ResourceTemplate):
     """Singleton class for the default resource manager."""
 
     def init(self):
@@ -215,7 +212,7 @@ class ResourceManager(vpp43.Singleton, ResourceTemplate):
         ResourceTemplate.__init__(self)
         # I have "session" as an alias because the specification calls the "vi"
         # handle "session" for the resource manager.
-        self.session = self.vi = vpp43.open_default_resource_manager()
+        self.session = self.vi = functions.open_default_resource_manager()
 
     def __repr__(self):
         return "ResourceManager()"
@@ -247,17 +244,17 @@ def get_instruments_list(use_aliases=True):
     # Phase I: Get all standard resource names (no aliases here)
     resource_names = []
     find_list, return_counter, instrument_description = \
-        vpp43.find_resources(resource_manager.session, "?*::INSTR")
+        functions.find_resources(resource_manager.session, "?*::INSTR")
     resource_names.append(instrument_description)
     for i in range(return_counter - 1):
-        resource_names.append(vpp43.find_next(find_list))
+        resource_names.append(functions.find_next(find_list))
     # Phase two: If available and use_aliases is True, substitute the alias.
     # Otherwise, truncate the "::INSTR".
     result = []
     for resource_name in resource_names:
         try:
             _, _, _, _, alias_if_exists = \
-             vpp43.parse_resource_extended(resource_manager.session,
+             functions.parse_resource_extended(resource_manager.session,
                                            resource_name)
         except AttributeError:
             alias_if_exists = None
@@ -279,7 +276,7 @@ def instrument(resource_name, **keyw):
     :return: The generated instrument instance.
 
     """
-    interface_type, _ = vpp43.parse_resource(resource_manager.session,
+    interface_type, _ = functions.parse_resource(resource_manager.session,
                                              resource_name)
     if interface_type == VI_INTF_GPIB:
         return GpibInstrument(resource_name, **keyw)
@@ -381,7 +378,7 @@ class Instrument(ResourceTemplate):
         elif self.__term_chars is None and not message.endswith(CR + LF):
             message += CR + LF
 
-        vpp43.write(self.vi, message)
+        functions.write(self.vi, message)
 
         if self.delay > 0.0:
             time.sleep(self.delay)
@@ -405,10 +402,10 @@ class Instrument(ResourceTemplate):
         warnings.filterwarnings("ignore", "VI_SUCCESS_MAX_CNT")
         try:
             buffer = b""
-            chunk = vpp43.read(self.vi, self.chunk_size)
+            chunk = functions.read(self.vi, self.chunk_size)
             buffer += chunk
-            while vpp43.get_status() == VI_SUCCESS_MAX_CNT:
-                chunk = vpp43.read(self.vi, self.chunk_size)
+            while functions.get_status() == VI_SUCCESS_MAX_CNT:
+                chunk = functions.read(self.vi, self.chunk_size)
                 buffer += chunk
         finally:
             _removefilter("ignore", "VI_SUCCESS_MAX_CNT")
@@ -511,13 +508,13 @@ class Instrument(ResourceTemplate):
     def clear(self):
         """Resets the device.  This operation is highly bus-dependent."""
 
-        vpp43.clear(self.vi)
+        functions.clear(self.vi)
 
     def trigger(self):
         """Sends a software trigger to the device."""
 
-        vpp43.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
-        vpp43.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
+        functions.set_attribute(self.vi, VI_ATTR_TRIG_ID, VI_TRIG_SW)
+        functions.assert_trigger(self.vi, VI_TRIG_PROT_DEFAULT)
 
     @property
     def term_chars(self):
@@ -544,7 +541,7 @@ class Instrument(ResourceTemplate):
         "term_char"."""
         # First, reset termination characters, in case something bad happens.
         self.__term_chars = b""
-        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
+        functions.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
         if term_chars == b"" or term_chars is None:
             self.__term_chars = term_chars
             return
@@ -557,8 +554,8 @@ class Instrument(ResourceTemplate):
         if term_chars[:-1].find(last_char) != -1:
             raise ValueError("ambiguous ending in termination characters")
 
-        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR, ord(last_char))
-        vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_TRUE)
+        functions.set_attribute(self.vi, VI_ATTR_TERMCHAR, ord(last_char))
+        functions.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_TRUE)
         self.__term_chars = term_chars
 
     @term_chars.deleter
@@ -571,14 +568,14 @@ class Instrument(ResourceTemplate):
         write operation.
         """
 
-        return vpp43.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_TRUE
+        return functions.get_attribute(self.vi, VI_ATTR_SEND_END_EN) == VI_TRUE
 
     @send_end.setter
     def send_end(self, send):
         if send:
-            vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
+            functions.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_TRUE)
         else:
-            vpp43.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_FALSE)
+            functions.set_attribute(self.vi, VI_ATTR_SEND_END_EN, VI_FALSE)
 
 
 
@@ -610,7 +607,7 @@ class GpibInstrument(Instrument):
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_GPIB:
             raise ValueError("device is not a GPIB instrument")
-        vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+        functions.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
 
     def __del__(self):
         if self.vi is not None:
@@ -635,7 +632,7 @@ class GpibInstrument(Instrument):
                         None means waiting forever if necessary.
         """
 
-        vpp43.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+        functions.enable_event(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
         if timeout and not(0 <= timeout <= 4294967):
             raise ValueError("timeout value is invalid")
         starting_time = time.clock()
@@ -648,18 +645,18 @@ class GpibInstrument(Instrument):
                 if adjusted_timeout < 0:
                     adjusted_timeout = 0
             event_type, context = \
-                vpp43.wait_on_event(self.vi, VI_EVENT_SERVICE_REQ,
+                functions.wait_on_event(self.vi, VI_EVENT_SERVICE_REQ,
                                     adjusted_timeout)
-            vpp43.close(context)
+            functions.close(context)
             if self.stb & 0x40:
                 break
-        vpp43.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+        functions.discard_events(self.vi, VI_EVENT_SERVICE_REQ, VI_QUEUE)
 
     @property
     def stb(self):
         """Service request status register."""
 
-        return vpp43.read_stb(self.vi)
+        return functions.read_stb(self.vi)
 
 # The following aliases are used for the "end_input" property
 no_end_input = VI_ASRL_END_NONE
@@ -711,29 +708,29 @@ class SerialInstrument(Instrument):
     @property
     def baud_rate(self):
         """The baud rate of the serial instrument."""
-        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_BAUD)
+        return functions.get_attribute(self.vi, VI_ATTR_ASRL_BAUD)
 
     @baud_rate.setter
     def baud_rate(self, rate):
-        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_BAUD, rate)
+        functions.set_attribute(self.vi, VI_ATTR_ASRL_BAUD, rate)
 
     @property
     def data_bits(self):
         """Number of data bits contained in each frame (from 5 to 8)."""
 
-        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS)
+        return functions.get_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS)
 
     @data_bits.setter
     def data_bits(self, bits):
         if not 5 <= bits <= 8:
             raise ValueError("number of data bits must be from 5 to 8")
-        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS, bits)
+        functions.set_attribute(self.vi, VI_ATTR_ASRL_DATA_BITS, bits)
 
     @property
     def stop_bits(self):
         """Number of stop bits contained in each frame (1, 1.5, or 2)."""
 
-        deci_bits = vpp43.get_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS)
+        deci_bits = functions.get_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS)
         if deci_bits == 10:
             return 1
         elif deci_bits == 15:
@@ -752,26 +749,26 @@ class SerialInstrument(Instrument):
             deci_bits = 20
         else:
             raise ValueError("invalid number of stop bits")
-        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS, deci_bits)
+        functions.set_attribute(self.vi, VI_ATTR_ASRL_STOP_BITS, deci_bits)
 
     @property
     def parity(self):
         """The parity used with every frame transmitted and received."""
 
-        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_PARITY)
+        return functions.get_attribute(self.vi, VI_ATTR_ASRL_PARITY)
 
     @parity.setter
     def parity(self, parity):
-        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_PARITY, parity)
+        functions.set_attribute(self.vi, VI_ATTR_ASRL_PARITY, parity)
 
     @property
     def end_input(self):
         """indicates the method used to terminate read operations"""
-        return vpp43.get_attribute(self.vi, VI_ATTR_ASRL_END_IN)
+        return functions.get_attribute(self.vi, VI_ATTR_ASRL_END_IN)
 
     @end_input.setter
     def end_input(self, termination):
-        vpp43.set_attribute(self.vi, VI_ATTR_ASRL_END_IN, termination)
+        functions.set_attribute(self.vi, VI_ATTR_ASRL_END_IN, termination)
 
     def __repr__(self):
         return "SerialInstrument(%r)" % self.resource_name
@@ -821,4 +818,4 @@ class Gpib(Interface):
 
     def send_ifc(self):
         """Send "interface clear" signal to the GPIB."""
-        vpp43.gpib_send_ifc(self.vi)
+        functions.gpib_send_ifc(self.vi)

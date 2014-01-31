@@ -13,8 +13,8 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from .vpp43_constants import *
-from .vpp43_types import *
+from .constants import *
+from .types import *
 
 attributes = {
     VI_ATTR_4882_COMPLIANT      : ViBoolean,

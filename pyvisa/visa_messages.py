@@ -18,7 +18,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from .vpp43_constants import *
+from .pyvisa.wrapper.vpp43_constants import *
 
 
 # Don't export the VPP-4.3 constants, but only the messages.

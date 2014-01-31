@@ -13,15 +13,15 @@
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import
-
 import os
 import sys
 import logging
-import pkg_resources
 import subprocess
-import ConfigParser
 
-from . import vpp43
+import pkg_resources
+
+import ConfigParser
+from pyvisa.wrapper import functions
 
 logger = logging.getLogger('pyvisa')
 logger.addHandler(logging.NullHandler)
@@ -46,4 +46,4 @@ try:
 except ConfigParser.Error:
     pass
 else:
-    vpp43.visa_library.load_library(_visa_library_path)
+    functions.visa_library.load_library(_visa_library_path)

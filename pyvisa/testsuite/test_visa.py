@@ -33,13 +33,13 @@
 #
 
 from __future__ import division, unicode_literals, print_function, absolute_import
+import collections
+import struct
 
 from pyvisa import visa
 from pyvisa.visa import InvalidBinaryFormat
 import pytest
 from mock import Mock
-import collections
-import struct
 
 def packfloats1(fmt, floats):
     data = b''.join(struct.pack(fmt, num) for num in floats)
@@ -57,8 +57,8 @@ class TestInstrument(object):
                             'interface_type',
                             visa.VI_INTF_GPIB)
         my_attr = MyAttribute()
-        monkeypatch.setattr(visa.vpp43, "get_attribute", my_attr.get_attribute)
-        monkeypatch.setattr(visa.vpp43, "set_attribute", my_attr.set_attribute)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, "get_attribute", my_attr.get_attribute)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, "set_attribute", my_attr.set_attribute)
         return visa.Instrument(1)
 
     def test_repr(self, instrument):
@@ -74,7 +74,7 @@ class TestInstrument(object):
                               (b"hi there\r\n", b"hi there\r\n")])
     def test_write(self, monkeypatch, instrument, message, expected):
         my_write = Mock()
-        monkeypatch.setattr(visa.vpp43, 'write', my_write)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'write', my_write)
         instrument.write(message)
         print(repr(instrument.term_chars))
         my_write.assert_called_with(0, expected)
@@ -87,7 +87,7 @@ class TestInstrument(object):
     def test_write_termchars_set(self, monkeypatch, instrument,
                                  message, expected):
         my_write = Mock()
-        monkeypatch.setattr(visa.vpp43, 'write', my_write)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'write', my_write)
         instrument.term_chars = b'\n'
         instrument.write(message)
         my_write.assert_called_with(0, expected)
@@ -100,7 +100,7 @@ class TestInstrument(object):
     def test_write_delay_set(self, monkeypatch, instrument, message, expected):
         my_write = Mock()
         my_sleep = Mock()
-        monkeypatch.setattr(visa.vpp43, 'write', my_write)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'write', my_write)
         monkeypatch.setattr(visa.time, 'sleep', my_sleep)
         instrument.delay = 1
         instrument.write(message)
@@ -140,16 +140,16 @@ class TestInstrument(object):
     def test_read_raw(self, monkeypatch, instrument):
         my_read = Mock(return_value=b'some bytes\r\n')
         my_get_status = Mock(side_effect=[visa.VI_SUCCESS_MAX_CNT, 0])
-        monkeypatch.setattr(visa.vpp43, 'read', my_read)
-        monkeypatch.setattr(visa.vpp43, 'get_status', my_get_status)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'read', my_read)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'get_status', my_get_status)
         result = instrument.read_raw()
         assert result == b'some bytes\r\nsome bytes\r\n'
 
     def test_read(self, monkeypatch, instrument):
         my_read = Mock(return_value=b'some bytes\r\n')
         my_get_status = Mock(side_effect=[visa.VI_SUCCESS_MAX_CNT, 0])
-        monkeypatch.setattr(visa.vpp43, 'read', my_read)
-        monkeypatch.setattr(visa.vpp43, 'get_status', my_get_status)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'read', my_read)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'get_status', my_get_status)
         result = instrument.read()
         assert result == b'some bytes\r\nsome bytes'
         
@@ -204,8 +204,8 @@ class TestInstrument(object):
                          format, input, expected):
         my_read = Mock(return_value=input)
         my_get_status = Mock(return_value=0)
-        monkeypatch.setattr(visa.vpp43, 'read', my_read)
-        monkeypatch.setattr(visa.vpp43, 'get_status', my_get_status)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'read', my_read)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'get_status', my_get_status)
         result = instrument.read_values(format)
         assert result == expected
         
@@ -220,8 +220,8 @@ class TestInstrument(object):
                                 format, input, expected_exception):
         my_read = Mock(return_value=input)
         my_get_status = Mock(return_value=0)
-        monkeypatch.setattr(visa.vpp43, 'read', my_read)
-        monkeypatch.setattr(visa.vpp43, 'get_status', my_get_status)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'read', my_read)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, 'get_status', my_get_status)
         with pytest.raises(expected_exception):
             instrument.read_values(format)
 
@@ -237,8 +237,8 @@ class TestGpibInstrument(TestInstrument):
                             visa.VI_INTF_GPIB)
         monkeypatch.setattr(visa.GpibInstrument, 'stb', 0x40)
         my_attr = MyAttribute()
-        monkeypatch.setattr(visa.vpp43, "get_attribute", my_attr.get_attribute)
-        monkeypatch.setattr(visa.vpp43, "set_attribute", my_attr.set_attribute)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, "get_attribute", my_attr.get_attribute)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, "set_attribute", my_attr.set_attribute)
         return visa.GpibInstrument(1)
     
     @pytest.mark.parametrize('timeout', [None, 0, 25, 4294967])
@@ -266,8 +266,8 @@ class TestSerialInstrument(TestInstrument):
                             'interface_type',
                             visa.VI_INTF_ASRL)
         my_attr = MyAttribute()
-        monkeypatch.setattr(visa.vpp43, "get_attribute", my_attr.get_attribute)
-        monkeypatch.setattr(visa.vpp43, "set_attribute", my_attr.set_attribute)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, "get_attribute", my_attr.get_attribute)
+        monkeypatch.setattr(pyvisa.wrapper.vpp43, "set_attribute", my_attr.set_attribute)
         return visa.SerialInstrument(1)
     
     def test_term_chars_default(self, instrument):

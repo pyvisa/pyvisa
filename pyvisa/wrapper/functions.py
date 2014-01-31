@@ -12,6 +12,7 @@
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import
+from pyvisa.wrapper import constants
 
 VI_SPEC_VERSION = 0x00300000
 
@@ -28,9 +29,9 @@ else:
 
 from .visa_messages import completion_and_error_messages
 from .exceptions import VisaIOError, VisaIOWarning, UnknownHandler, OSNotSupported, VisaTypeError, VisaTypeError
-from .vpp43_constants import *
-from .vpp43_types import *
-from .vpp43_attributes import attributes
+from .constants import *
+from .types import *
+from .attributes import attributes
 
 visa_functions = [
     "assert_interrupt_signal", "assert_trigger", "assert_utility_signal",
@@ -57,8 +58,7 @@ __all__ = ["visa_library", "get_status"] + visa_functions
 
 # Add all symbols from #visa_exceptions# and #vpp43_constants# to the list of
 # exported symbols
-from . import vpp43_constants
-__all__.extend([name for name in vpp43_constants.__dict__.keys()])
+__all__.extend([name for name in constants.__dict__.keys()])
 
 
 # load VISA library

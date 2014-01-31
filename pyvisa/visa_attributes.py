@@ -13,8 +13,8 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from . import vpp43_constants as _constants
-from .vpp43_types import *
+from .pyvisa.wrapper.vpp43_types import *
+from pyvisa.wrapper import constants as _constants
 from .visa_messages import completion_and_error_messages
 
 viRO = 'readonly'
