@@ -544,7 +544,7 @@ class Instrument(ResourceTemplate):
         # First, reset termination characters, in case something bad happens.
         self.__term_chars = b""
         vpp43.set_attribute(self.vi, VI_ATTR_TERMCHAR_EN, VI_FALSE)
-        if term_chars == b"" or term_chars == None:
+        if term_chars == b"" or term_chars is None:
             self.__term_chars = term_chars
             return
             # Only the last character in term_chars is the real low-level
