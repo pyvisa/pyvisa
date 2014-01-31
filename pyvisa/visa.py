@@ -170,13 +170,13 @@ class ResourceTemplate(object):
     def resource_class(self):
         """The resource class of the resource as a string."""
 
+        # TODO: Check possible outputs.
         try:
-            resource_class = \
-                vpp43.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
+            return vpp43.get_attribute(self.vi, VI_ATTR_RSRC_CLASS).upper()
         except VisaIOError as error:
             if error.error_code != VI_ERROR_NSUP_ATTR:
                 raise
-        return resource_class  # FIXME: local variable referenced before assignment
+        return 'Unknown'
 
     @property
     def resource_name(self):
