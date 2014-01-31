@@ -23,7 +23,7 @@ viGlobal = 'Global'
 viLocal = 'Local'
 
 
-class _AttrRange:
+class _AttrRange(object):
 
     def __init__(self, minimum, maximum):
         self.minimum = minimum
@@ -43,7 +43,7 @@ class _AttrRange:
         return val
 
 
-class _AttrSet:
+class _AttrSet(object):
     """encapsulates named attributes values,
     for conversion between name and value.
     """
@@ -103,7 +103,7 @@ class _AttrBitSet(_AttrSet):
         return bitfield
 
 
-class viAttrInfo:
+class viAttrInfo(object):
     """container for information about attribute (attribute name,
     value, access restriction, scope (local for session or global for
     device), ctypes data type, range of possible values, short and
