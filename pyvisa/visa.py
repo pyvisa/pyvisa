@@ -428,10 +428,10 @@ class Instrument(ResourceTemplate):
 
         return self._strip_term_chars(self.read_raw())
 
-    def read_values(self, format=None):
+    def read_values(self, fmt=None):
         """Read a list of floating point values from the device.
 
-        :param format: the format of the values.  If given, it overrides
+        :param fmt: the format of the values.  If given, it overrides
             the class attribute "values_format".  Possible values are bitwise
             disjunctions of the above constants ascii, single, double, and
             big_endian.  Default is ascii.
@@ -439,9 +439,9 @@ class Instrument(ResourceTemplate):
         :return: the list of read values
 
         """
-        if not format:
-            format = self.values_format
-        if format & 0x01 == ascii:
+        if not fmt:
+            fmt = self.values_format
+        if fmt & 0x01 == ascii:
             float_regex = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)"
                                      "(?:[eE][-+]?\d+)?")
             return [float(raw_value) for raw_value in
@@ -471,19 +471,19 @@ class Instrument(ResourceTemplate):
             data_length = len(data)
         else:
             raise InvalidBinaryFormat
-        if format & 0x04 == big_endian:
+        if fmt & 0x04 == big_endian:
             endianess = ">"
         else:
             endianess = "<"
         try:
-            if format & 0x03 == single:
+            if fmt & 0x03 == single:
                 result = list(struct.unpack((endianess +
                                              str(data_length // 4) + "f").encode('ascii'), data))
-            elif format & 0x03 == double:
+            elif fmt & 0x03 == double:
                 result = list(struct.unpack(endianess +
                                             str(data_length // 8) + "d", data))
             else:
-                raise ValueError("unknown data values format requested")
+                raise ValueError("unknown data values fmt requested")
         except struct.error:
             raise InvalidBinaryFormat("binary data itself was malformed")
         return result
@@ -493,7 +493,7 @@ class Instrument(ResourceTemplate):
 
         warnings.warn("read_floats() is deprecated.  Use read_values()",
                       stacklevel=2)
-        return self.read_values(format=ascii)
+        return self.read_values(fmt=ascii)
 
     def ask(self, message):
         """A combination of write(message) and read()"""
