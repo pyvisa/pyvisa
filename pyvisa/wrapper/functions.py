@@ -28,7 +28,6 @@ else:
 
 VI_SPEC_VERSION = 0x00300000
 
-from .visa_messages import completion_and_error_messages
 from .constants import *
 from .types import *
 from .attributes import attributes
@@ -57,9 +56,17 @@ __all__ = ["visa_library", "get_status"] + visa_functions
 
 #: Resource extended information
 ResourceInfo = collections.namedtuple('ResourceInfo',
-                                      'interface_type interface_board_number resource_class resource_name alias')
+                                      'interface_type interface_board_number '
+                                      'resource_class resource_name alias')
+
 
 def set_user_handle_type(library, user_handle):
+    """Set the type of the user handle to install and uninstall handler signature.
+
+    :param library: the visa library wrapped by ctypes.
+    :param user_handle: use None for a void_p
+    """
+
     # Actually, it's not necessary to change ViHndlr *globally*.  However,
     # I don't want to break symmetry too much with all the other VPP43
     # routines.
@@ -70,7 +77,7 @@ def set_user_handle_type(library, user_handle):
     else:
         user_handle_p = POINTER(type(user_handle))
 
-    ViHndlr = FUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent ,user_handle_p)
+    ViHndlr = FUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent, user_handle_p)
     library.viInstallHandler.argtypes = [ViSession, ViEventType, ViHndlr, user_handle_p]
     library.viUninstallHandler.argtypes = [ViSession, ViEventType, ViHndlr, user_handle_p]
 
@@ -187,9 +194,9 @@ def set_signatures(library, errcheck=None):
     apply("viUnmapAddress", [ViSession])
     apply("viUnmapTrigger", [ViSession, ViInt16, ViInt16])
     apply("viUsbControlIn", [ViSession, ViInt16, ViInt16, ViUInt16,
-                   ViUInt16, ViUInt16, ViPBuf, ViPUInt16])
+                             ViUInt16, ViUInt16, ViPBuf, ViPUInt16])
     apply("viUsbControlOut", [ViSession, ViInt16, ViInt16, ViUInt16,
-                   ViUInt16, ViUInt16, ViPBuf])
+                              ViUInt16, ViUInt16, ViPBuf])
 
     # The following "V" routines are *not* implemented in PyVISA, and will
     # never be: viVPrintf, viVQueryf, viVScanf, viVSPrintf, viVSScanf
@@ -198,7 +205,7 @@ def set_signatures(library, errcheck=None):
     apply("viWaitOnEvent", [ViSession, ViEventType, ViUInt32, ViPEventType, ViPEvent])
     apply("viWrite", [ViSession, ViBuf, ViUInt32, ViPUInt32])
     apply("viWriteAsync", [ViSession, ViBuf, ViUInt32, ViPJobId])
-    apply("viWriteFromFile", [ViSession, ViString,ViUInt32, ViPUInt32])
+    apply("viWriteFromFile", [ViSession, ViString, ViUInt32, ViPUInt32])
 
     # Functions that return void.
     apply = functools.partial(set_signature, library=library, restype=None, errcheck=None)
@@ -358,7 +365,7 @@ def buffer_read(library, session, count):
     return buffer.raw[:return_count.value]
 
 
-def buffer_write(library, session, buffer):
+def buffer_write(library, session, data):
     """Writes data to a formatted I/O write buffer synchronously.
 
     :param library: the visa library wrapped by ctypes.
@@ -367,7 +374,7 @@ def buffer_write(library, session, buffer):
     :return: number of written bytes.
     """
     return_count = ViUInt32()
-    library.viBufWrite(session, buffer, len(buffer), byref(return_count))
+    library.viBufWrite(session, data, len(data), byref(return_count))
     return return_count.value
 
 
@@ -430,6 +437,7 @@ def enable_event(library, session, event_type, mechanism, context=VI_NULL):
 def find_next(library, find_list):
     """Returns the next resource from the list of resources found during a previous call to find_resources().
 
+    :param library: the visa library wrapped by ctypes.
     :param find_list: Describes a find list. This parameter must be created by find_resources().
     :return: Returns a string identifying the location of a device.
     """
@@ -438,7 +446,7 @@ def find_next(library, find_list):
     return instrument_description.value
 
 
-def find_resources(library, session, regular_expression):
+def find_resources(library, session, query):
     """Queries a VISA system to locate the resources associated with a specified interface.
 
     :param library: the visa library wrapped by ctypes.
@@ -449,7 +457,7 @@ def find_resources(library, session, regular_expression):
     find_list = ViFindList()
     return_counter = ViUInt32()
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
-    library.viFindRsrc(session, regular_expression,
+    library.viFindRsrc(session, query,
                        byref(find_list), byref(return_counter),
                        instrument_description)
     return find_list, return_counter.value, instrument_description.value
@@ -491,7 +499,7 @@ def get_attribute(library, session, attribute):
     return attribute_state.value
 
 
-def gpib_command(library, session, buffer):
+def gpib_command(library, session, data):
     """Write GPIB command bytes on the bus.
 
     :param library: the visa library wrapped by ctypes.
@@ -500,7 +508,7 @@ def gpib_command(library, session, buffer):
     :return: Number of written bytes.
     """
     return_count = ViUInt32()
-    library.viGpibCommand(session, buffer, len(buffer), byref(return_count))
+    library.viGpibCommand(session, data, len(data), byref(return_count))
     return return_count.value
 
 
@@ -635,6 +643,7 @@ def in_64(library, session, space, offset, extended=False):
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
+    :param extended: Use 64 bits offset independent of the platform.
     :return: Data read from memory.
     """
     value_64 = ViUInt64()
@@ -749,7 +758,7 @@ def map_trigger(library, session, trigger_source, trigger_destination, mode):
     library.viMapTrigger(session, trigger_source, trigger_destination, mode)
 
 
-def memory_allocation(library, session, size):
+def memory_allocation(library, session, size, extended=False):
     """Allocates memory from a resource's memory region.
 
     :param library: the visa library wrapped by ctypes.
@@ -759,19 +768,25 @@ def memory_allocation(library, session, size):
     :return: Returns the offset of the allocated memory.
     """
     offset = ViBusAddress()
-    library.viMemAlloc(session, size, byref(offset))
+    if extended:
+        library.viMemAllocEx(session, size, byref(offset))
+    else:
+        library.viMemAlloc(session, size, byref(offset))
     return offset
 
 
-def memory_free(library, session, offset):
+def memory_free(library, session, offset, extended=False):
     """Frees memory previously allocated using the memory_allocation() operation.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
-    :param size: Specifies the size of the allocation.
+    :param offset: Offset of the memory to free.
     :param extended: Use 64 bits offset independent of the platform.
     """
-    library.viMemFree(session, offset)
+    if extended:
+        library.viMemFreeEx(session, offset)
+    else:
+        library.viMemFree(session, offset)
 
 
 def move(library, session, source_space, source_offset, source_width, destination_space,
@@ -1061,19 +1076,18 @@ def open(library, session, resource_name, access_mode=VI_NO_LOCK, open_timeout=V
 def open_default_resource_manager(library):
     """This function returns a session to the Default Resource Manager resource.
 
+    :param library: the visa library wrapped by ctypes.
     :return: Unique logical identifier to a Default Resource Manager session.
     """
     session = ViSession()
     library.viOpenDefaultRM(byref(session))
     return session.value
 
-get_default_resource_manager = open_default_resource_manager
-"""A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
-
 
 def write_memory(library, session, space, offset, data, width, extended=False):
     """Write in an 8-bit, 16-bit, 32-bit, value to the specified memory space and offset.
 
+    :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
@@ -1475,6 +1489,7 @@ def uninstall_handler(library, session, event_type, handler, user_handle=None):
     library.viUninstallHandler(session, event_type, element[2],
                                byref(element[1]))
 
+
 def unlock(library, session):
     """Relinquishes a lock for the specified resource.
 
@@ -1578,7 +1593,7 @@ def wait_on_event(library, session, in_event_type, timeout):
     return out_event_type.value, out_context
 
 
-def write(library, session, buffer):
+def write(library, session, data):
     """Writes data to device or interface synchronously.
 
     :param library: the visa library wrapped by ctypes.
@@ -1587,11 +1602,11 @@ def write(library, session, buffer):
     :return: Number of bytes actually transferred.
     """
     return_count = ViUInt32()
-    library.viWrite(session, buffer, len(buffer), byref(return_count))
+    library.viWrite(session, data, len(data), byref(return_count))
     return return_count.value
 
 
-def write_asynchronously(library, session, buffer):
+def write_asynchronously(library, session, data):
     """Writes data to device or interface asynchronously.
 
     :param library: the visa library wrapped by ctypes.
@@ -1600,7 +1615,7 @@ def write_asynchronously(library, session, buffer):
     :return: Job ID of this asynchronous write operation.
     """
     job_id = ViJobId()
-    library.viWriteAsync(session, buffer, len(buffer), byref(job_id))
+    library.viWriteAsync(session, data, len(data), byref(job_id))
     return job_id
 
 
@@ -1621,29 +1636,29 @@ def write_from_file(library, session, filename, count):
 # To be deprecated in PyVISA 1.6
 # All these functions are easy to replace by Python equivalents.
 
-def set_cdecl_signatures(clibrary):
+def set_cdecl_signatures(clibrary, errcheck=None):
     """Set the signatures of visa functions requiring a cdecl calling convention.
 
     .. note: This function and the support for string formatting operations in the
              VISA library will be removed in PyVISA 1.6. as these functions can be
              easily replaced by Python equivalents.
 
-    :param library: the visa library wrapped by ctypes.
-    :type library: ctypes.CDLL
+    :param clibrary: the visa library wrapped by ctypes.
+    :type clibrary: ctypes.CDLL
+    :param errcheck: error checking callable used for visa functions that return
+                     ViStatus.
+                     It should be take three areguments (result, func, arguments).
+                     See errcheck in ctypes.
     """
     assert isinstance(clibrary, _ctypes.CDLL)
 
-    set_signature(clibrary, "viSPrintf",
-                  [ViSession, ViPBuf, ViString])
-    set_signature(clibrary, "viSScanf",
-                  [ViSession, ViBuf, ViString])
-    set_signature(clibrary, "viScanf",
-                  [ViSession, ViString])
-    set_signature(clibrary, "viPrintf",
-                  [ViSession, ViString])
-    set_signature(clibrary, "viQueryf",
-                  [ViSession, ViString, ViString])
+    apply = functools.partial(set_signature, library=clibrary, restype=ViStatus, errcheck=errcheck)
 
+    apply("viSPrintf", [ViSession, ViPBuf, ViString])
+    apply("viSScanf", [ViSession, ViBuf, ViString])
+    apply("viScanf", [ViSession, ViString])
+    apply("viPrintf", [ViSession, ViString])
+    apply("viQueryf", [ViSession, ViString, ViString])
 
 
 # convert_argument_list is used for VISA routines with variable argument list,
@@ -1771,3 +1786,6 @@ vqueryf = queryf
 vscanf = scanf
 vsprintf = sprintf
 vsscanf = sscanf
+
+get_default_resource_manager = open_default_resource_manager
+"""A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
