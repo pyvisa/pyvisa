@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    vpp43_attributes
-    ~~~~~~~~~~~~~~~~
+    visa.wrapper.attributes
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
     Defines VPP 4.3.2 attribute data.
 

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-    vpp43
-    ~~~~~
+    visa.wrapper.functions
+    ~~~~~~~~~~~~~~~~~~~~~~
 
-    Defines VPP 4.3.2 routines.
+    Defines VPP 4.3.2 wrapping functions, adding signatures to the library.
 
     This file is part of PyVISA.
 

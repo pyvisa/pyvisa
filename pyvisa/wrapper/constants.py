@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    vpp43_constants
-    ~~~~~~~~~~~~~~~
+    visa.wrapper.constants
+    ~~~~~~~~~~~~~~~~~~~~~~
 
     VISA VPP-4.3 constants (VPP-4.3.2 spec, section 3).
 
