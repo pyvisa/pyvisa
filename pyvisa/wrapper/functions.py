@@ -55,6 +55,10 @@ visa_functions = [
 
 __all__ = ["visa_library", "get_status"] + visa_functions
 
+#: Resource extended information
+ResourceInfo = collections.namedtuple('ResourceInfo',
+                                      'interface_type interface_board_number resource_class resource_name alias')
+
 def set_user_handle_type(library, user_handle):
     # Actually, it's not necessary to change ViHndlr *globally*.  However,
     # I don't want to break symmetry too much with all the other VPP43
@@ -910,12 +914,14 @@ def parse_resource(library, session, resource_name):
                     returned from open_default_resource_manager()).
     :param resource_name: Unique symbolic name of a resource.
     :return: Resource information with interface type and board number.
+    :rtype: :class:ResourceInfo
     """
     interface_type = ViUInt16()
     interface_board_number = ViUInt16()
     library.viParseRsrc(session, resource_name, byref(interface_type),
                         byref(interface_board_number))
-    return interface_type.value, interface_board_number.value
+    return ResourceInfo(interface_type.value, interface_board_number.value,
+                        None, None, None, None)
 
 
 def parse_resource_extended(library, session, resource_name):
@@ -926,6 +932,7 @@ def parse_resource_extended(library, session, resource_name):
                     returned from open_default_resource_manager()).
     :param resource_name: Unique symbolic name of a resource.
     :return: Resource information.
+    :rtype: :class:ResourceInfo
     """
     interface_type = ViUInt16()
     interface_board_number = ViUInt16()
@@ -940,9 +947,9 @@ def parse_resource_extended(library, session, resource_name):
         alias_if_exists = None
     else:
         alias_if_exists = alias_if_exists.value
-    return (interface_type.value, interface_board_number.value,
-            resource_class.value, unaliased_expanded_resource_name.value,
-            alias_if_exists)
+    return ResourceInfo(interface_type.value, interface_board_number.value,
+                        resource_class.value, unaliased_expanded_resource_name.value,
+                        alias_if_exists)
 
 
 def peek_8(library, session, address):
