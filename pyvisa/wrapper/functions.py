@@ -516,6 +516,29 @@ def gpib_send_ifc(library, session):
     library.viGpibSendIFC(session)
 
 
+def read_memory(library, session, space, offset, width):
+    """Reads in an 8-bit, 16-bit, 32-bit, or 64-bit value from the specified memory space and offset.
+
+    :param library: the visa library wrapped by ctypes.
+    :param session: Unique logical identifier to a session.
+    :param space: Specifies the address space. (Constants.*SPACE*)
+    :param offset: Offset (in bytes) of the address or register from which to read.
+    :param width: Number of bits to read.
+    :param extended: Use 64 bits offset independent of the platform.
+    :return: Data read from memory.
+
+    Corresponds to viIn* functions of the visa library.
+    """
+    if width == 8:
+        return in_8(library, session, space, offset)
+    elif width == 16:
+        return in_16(library, session, space, offset)
+    elif width == 32:
+        return in_32(library, session, space, offset)
+
+    raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+
+
 def in_8(library, session, space, offset):
     """Reads in an 8-bit value from the specified memory space and offset.
 
@@ -563,6 +586,7 @@ def in_32(library, session, space, offset):
 #: - user handle (a ctypes object)
 #: - ctypes handler (ctypes object wrapping handler)
 handlers = []
+
 
 def install_handler(library, session, event_type, handler, user_handle=None):
     """Installs handlers for event callbacks.
@@ -731,6 +755,27 @@ def move_asynchronously(library, session, source_space, source_offset, source_wi
     return job_id
 
 
+def move_in(library, session, space, offset, length, width):
+    """Moves a block of data to local memory from the specified address space and offset.
+
+    :param library: the visa library wrapped by ctypes.
+    :param session: Unique logical identifier to a session.
+    :param space: Specifies the address space. (Constants.*SPACE*)
+    :param offset: Offset (in bytes) of the address or register from which to read.
+    :param length: Number of elements to transfer, where the data width of the elements to transfer
+                   is identical to the source data width.
+    :param width: Number of bits to read per element.
+    """
+    if width == 8:
+        return move_in_8(library, session, space, offset, length)
+    elif width == 16:
+        return move_in_16(library, session, space, offset, length)
+    elif width == 32:
+        return move_in_32(library, session, space, offset, length)
+
+    raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+
+
 def move_in_8(library, session, space, offset, length):
     """Moves an 8-bit block of data from the specified address space and offset to local memory.
 
@@ -785,6 +830,28 @@ def move_in_32(library, session, space, offset, length):
     return list(buffer_32)
 
 
+def move_out(library, session, space, offset, length, data, width):
+    """Moves a block of data from local memory to the specified address space and offset.
+
+    :param library: the visa library wrapped by ctypes.
+    :param session: Unique logical identifier to a session.
+    :param space: Specifies the address space. (Constants.*SPACE*)
+    :param offset: Offset (in bytes) of the address or register from which to read.
+    :param length: Number of elements to transfer, where the data width of the elements to transfer
+                   is identical to the source data width.
+    :param data: Data to write to bus.
+    :param width: Number of bits to read per element.
+    """
+    if width == 8:
+        return move_out_8(library, session, space, offset, length, data)
+    elif width == 16:
+        return move_out_16(library, session, space, offset, length, data)
+    elif width == 32:
+        return move_out_32(library, session, space, offset, length, data)
+
+    raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+
+
 def move_out_8(library, session, space, offset, length, data):
     """Moves an 8-bit block of data from local memory to the specified address space and offset.
 
@@ -836,8 +903,7 @@ def move_out_32(library, session, space, offset, length, data):
     library.viMoveOut32(session, space, offset, length, converted_buffer)
 
 
-def open(library, session, resource_name,
-         access_mode=VI_NO_LOCK, open_timeout=VI_TMO_IMMEDIATE):
+def open(library, session, resource_name, access_mode=VI_NO_LOCK, open_timeout=VI_TMO_IMMEDIATE):
     """Opens a session to the specified resource.
 
     :param library: the visa library wrapped by ctypes.
@@ -848,10 +914,9 @@ def open(library, session, resource_name,
                          before returning an error.
     :return: Unique logical identifier reference to a session.
     """
-    session = ViSession()
-    library.viOpen(session, resource_name, access_mode, open_timeout,
-                   byref(session))
-    return session.value
+    out_session = ViSession()
+    library.viOpen(session, resource_name, access_mode, open_timeout, byref(out_session))
+    return out_session.value
 
 
 def open_default_resource_manager(library):
@@ -865,6 +930,27 @@ def open_default_resource_manager(library):
 
 get_default_resource_manager = open_default_resource_manager
 """A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
+
+
+def write_memory(library, session, space, offset, data, width):
+    """Reads in an 8-bit, 16-bit, 32-bit, value from the specified memory space and offset.
+
+    :param session: Unique logical identifier to a session.
+    :param space: Specifies the address space. (Constants.*SPACE*)
+    :param offset: Offset (in bytes) of the address or register from which to read.
+    :param data: Data to write to bus.
+    :param width: Number of bits to read.
+
+    Corresponds to viOut* functions of the visa library.
+    """
+    if width == 8:
+        return out_8(library, session, space, offset, data)
+    elif width == 16:
+        return out_16(library, session, space, offset, data)
+    elif width == 32:
+        return out_32(library, session, space, offset, data)
+
+    raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
 
 
 def out_8(library, session, space, offset, data):
@@ -952,13 +1038,33 @@ def parse_resource_extended(library, session, resource_name):
                         alias_if_exists)
 
 
+def peek(library, session, address, width):
+    """Read an 8, 16 or 32-bit value from the specified address.
+
+    :param library: the visa library wrapped by ctypes.
+    :param session: Unique logical identifier to a session.
+    :param address: Source address to read the value.
+    :param width: Number of bits to read.
+    :return: Data read from bus.
+    :rtype: bytes
+    """
+
+    if width == 8:
+        return peek_8(library, session, address)
+    elif width == 16:
+        return peek_16(library, session, address)
+    elif width == 32:
+        return peek_32(library, session, address)
+
+    raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+
+
 def peek_8(library, session, address):
     """Writes an 8-bit value from the specified address.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
-    :param width: Number of bits to read.
     :return: Data read from bus.
     :rtype: bytes
     """
@@ -973,7 +1079,6 @@ def peek_16(library, session, address):
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
-    :param width: Number of bits to read.
     :return: Data read from bus.
     :rtype: bytes
     """
@@ -988,13 +1093,32 @@ def peek_32(library, session, address):
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
-    :param width: Number of bits to read.
     :return: Data read from bus.
     :rtype: bytes
     """
     value_32 = ViUInt32()
     library.viPeek32(session, address, byref(value_32))
     return value_32.value
+
+
+def poke(library, session, address, width, data):
+    """Writes an 8, 16 or 32-bit value from the specified address.
+
+    :param library: the visa library wrapped by ctypes.
+    :param session: Unique logical identifier to a session.
+    :param address: Source address to read the value.
+    :param width: Number of bits to read.
+    :param data: Data to be written to the bus.
+    """
+
+    if width == 8:
+        return poke_8(library, session, address, data)
+    elif width == 16:
+        return poke_16(library, session, address, data)
+    elif width == 32:
+        return poke_32(library, session, address, data)
+
+    raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
 
 
 def poke_8(library, session, address, data):
