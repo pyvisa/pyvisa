@@ -36,6 +36,8 @@ def _type_pair(ctypes_type):
 def _type_triplet(ctypes_type):
     return _type_pair(ctypes_type) + (_ctypes.POINTER(ctypes_type),)
 
+ViUInt64, ViPUInt64, ViAUInt64    = _type_triplet(_ctypes.c_uint64)
+ViInt64, ViPInt64, ViAInt64       = _type_triplet(_ctypes.c_long)
 ViUInt32, ViPUInt32, ViAUInt32    = _type_triplet(_ctypes.c_ulong)
 ViInt32, ViPInt32, ViAInt32       = _type_triplet(_ctypes.c_long)
 ViUInt16, ViPUInt16, ViAUInt16    = _type_triplet(_ctypes.c_ushort)
@@ -89,6 +91,7 @@ ViConstString = _ctypes.POINTER(ViChar)
 
 ViAccessMode, ViPAccessMode = _type_pair(ViUInt32)
 ViBusAddress, ViPBusAddress = _type_pair(ViUInt32)
+ViBusAddress64, ViPBusAddress64 = _type_pair(ViUInt64)
 
 ViBusSize     = ViUInt32
 
