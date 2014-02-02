@@ -18,7 +18,7 @@ import warnings
 import functools
 import collections
 
-from ctypes import (byref, cdll, c_void_p, c_double, c_long,
+from ctypes import (byref, c_void_p, c_double, c_long,
                     create_string_buffer, POINTER)
 
 if os.name == 'nt':
@@ -28,7 +28,7 @@ else:
 
 VI_SPEC_VERSION = 0x00300000
 
-from .constants import *
+from ..constants import *
 from .types import *
 from .attributes import attributes
 

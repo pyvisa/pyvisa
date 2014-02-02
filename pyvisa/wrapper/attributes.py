@@ -13,7 +13,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from .constants import *
+from ..constants import *
 from .types import *
 
 attributes = {
