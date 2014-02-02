@@ -13,18 +13,14 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import os
-import warnings
 import functools
 import collections
 
 from ctypes import (byref, c_void_p, c_double, c_long,
                     create_string_buffer, POINTER)
 
-if os.name == 'nt':
-    from ctypes import windll, WINFUNCTYPE as FUNCTYPE
-else:
-    from ctypes import CFUNCTYPE as FUNCTYPE
+from . import FUNCTYPE
+
 
 VI_SPEC_VERSION = 0x00300000
 
@@ -245,35 +241,6 @@ def set_signature(library, function_name, argtypes, restype, errcheck, may_be_mi
     except AttributeError:
         if not may_be_missing:
             raise
-
-visa_library = VisaLibrary()
-
-visa_status = 0
-
-#: For these completion codes, warnings are issued.
-dodgy_completion_codes = \
-    [VI_SUCCESS_MAX_CNT, VI_SUCCESS_DEV_NPRESENT, VI_SUCCESS_SYNC,
-    VI_WARN_QUEUE_OVERFLOW, VI_WARN_CONFIG_NLOADED, VI_WARN_NULL_OBJECT,
-    VI_WARN_NSUP_ATTR_STATE, VI_WARN_UNKNOWN_STATUS, VI_WARN_NSUP_BUF,
-    VI_WARN_EXT_FUNC_NIMPL]
-
-
-def default_error_check(status):
-    """Check return values for errors and warnings.
-    """
-    global visa_status
-    visa_status = status
-    if status < 0:
-        raise VisaIOError(status)
-    if status in dodgy_completion_codes:
-        abbreviation, description = completion_and_error_messages[status]
-        warnings.warn("%s: %s" % (abbreviation, description),
-                      VisaIOWarning, stacklevel=2)
-    return status
-
-
-def get_status():
-    return visa_status
 
 
 # The VPP-4.3.2 routines
@@ -678,7 +645,7 @@ def install_handler(library, session, event_type, handler, user_handle=None):
         elif isinstance(user_handle, float):
             converted_user_handle = c_double(user_handle)
         elif isinstance(user_handle, str):
-            converted_user_handle = c_create_string_buffer(user_handle)
+            converted_user_handle = create_string_buffer(user_handle)
         elif isinstance(user_handle, list):
             for element in user_handle:
                 if not isinstance(element, int):
@@ -689,8 +656,8 @@ def install_handler(library, session, event_type, handler, user_handle=None):
                 converted_user_handle = \
                     (c_long * len(user_handle))(*tuple(user_handle))
         else:
-            raise VisaTypeError("Type not allowed as user handle: %s" % type(user_handle))
-    visa_library.set_user_handle_type(converted_user_handle)
+            raise TypeError("Type not allowed as user handle: %s" % type(user_handle))
+    library.set_user_handle_type(converted_user_handle)
     converted_handler = ViHndlr(handler)
     if user_handle is None:
         library.viInstallHandler(session, event_type, converted_handler,
@@ -1687,7 +1654,7 @@ def convert_argument_list(original_arguments):
         elif isinstance(argument, str):
             converted_arguments.append(argument)
         else:
-            raise VisaTypeError("Invalid type in scanf/printf: %s" % type(argument))
+            raise TypeError("Invalid type in scanf/printf: %s" % type(argument))
     return tuple(converted_arguments)
 
 
@@ -1716,7 +1683,7 @@ def convert_to_byref(byvalue_arguments, buffer_length):
         elif isinstance(byvalue_arguments[i], (c_long, c_double)):
             converted_arguments.append(byref(byvalue_arguments[i]))
         else:
-            raise VisaTypeError("Invalid type in scanf: %s" % type(argument))
+            raise TypeError("Invalid type in scanf: %s" % type(byvalue_arguments[i]))
     return tuple(converted_arguments)
 
 
