@@ -52,7 +52,7 @@ visa_functions = [
     "vscanf", "vsprintf", "vsscanf", "vxi_command_query", "wait_on_event",
     "write", "write_asynchronously", "write_from_file"]
 
-__all__ = ["visa_library", "get_status"] + visa_functions
+__all__ = ["visa_functions", "visa_library", "get_status"] + visa_functions
 
 #: Resource extended information
 ResourceInfo = collections.namedtuple('ResourceInfo',

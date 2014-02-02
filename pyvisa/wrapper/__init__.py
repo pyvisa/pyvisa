@@ -10,3 +10,9 @@
     :copyright: (c) 2014 by the PyVISA authors.
     :license: MIT, see COPYING for more details.
 """
+
+from ctypes.util import find_library
+
+from .functions import *
+
+
