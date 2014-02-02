@@ -620,14 +620,8 @@ def in_64(library, session, space, offset, extended=False):
         library.viIn64(session, space, offset, byref(value_64))
     return value_64.value
 
-#: Contains all installed event handlers as three elements tuple:
-#: - handler (a python callable)
-#: - user handle (a ctypes object)
-#: - ctypes handler (ctypes object wrapping handler)
-handlers = []
 
-
-def install_handler(library, session, event_type, handler, user_handle=None):
+def install_handler(library, session, event_type, handler, user_handle):
     """Installs handlers for event callbacks.
 
     :param library: the visa library wrapped by ctypes.
@@ -636,6 +630,10 @@ def install_handler(library, session, event_type, handler, user_handle=None):
     :param handler: Interpreted as a valid reference to a handler to be installed by a client application.
     :param user_handle: A value specified by an application that can be used for identifying handlers
                         uniquely for an event type.
+    :returns: a handler descriptor which consists of three elements:
+             - handler (a python callable)
+             - user handle (a ctypes object)
+             - ctypes handler (ctypes object wrapping handler)
     """
     if user_handle is None:
         converted_user_handle = None
@@ -657,16 +655,16 @@ def install_handler(library, session, event_type, handler, user_handle=None):
                     (c_long * len(user_handle))(*tuple(user_handle))
         else:
             raise TypeError("Type not allowed as user handle: %s" % type(user_handle))
-    library.set_user_handle_type(converted_user_handle)
+
+    set_user_handle_type(library, converted_user_handle)
     converted_handler = ViHndlr(handler)
     if user_handle is None:
-        library.viInstallHandler(session, event_type, converted_handler,
-                                 None)
+        library.viInstallHandler(session, event_type, converted_handler, None)
     else:
         library.viInstallHandler(session, event_type, converted_handler,
                                  byref(converted_user_handle))
-    handlers.append((handler, converted_user_handle, converted_handler))
-    return converted_user_handle
+
+    return handler, converted_user_handle, converted_handler
 
 
 def lock(library, session, lock_type, timeout, requested_key=None):
@@ -1436,7 +1434,7 @@ def terminate(library, session, degree, job_id):
     library.viTerminate(session, degree, job_id)
 
 
-def uninstall_handler(library, session, event_type, handler, user_handle=None):
+def uninstall_handler(library, session, event_type, handler, user_handle=None, handlers=[]):
     """Uninstalls handlers for events.
 
     :param library: the visa library wrapped by ctypes.
@@ -1446,15 +1444,7 @@ def uninstall_handler(library, session, event_type, handler, user_handle=None):
     :param user_handle: A value specified by an application that can be used for identifying handlers
                         uniquely in a session for an event.
     """
-    for i in range(len(handlers)):
-        element = handlers[i]
-        if element[0] is handler and element[1] is user_handle:
-            del handlers[i]
-            break
-    else:
-        raise UnknownHandler
-    library.viUninstallHandler(session, event_type, element[2],
-                               byref(element[1]))
+    library.viUninstallHandler(session, event_type, element[2], byref(element[1]))
 
 
 def unlock(library, session):

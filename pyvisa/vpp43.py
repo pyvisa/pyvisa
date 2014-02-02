@@ -201,4 +201,32 @@ visa_library = VisaLibrary()
 # Load the functions defined in the wrapper module using the default VisaLibrary
 for name in visa_functions:
     func = getattr(wrapper, name)
-    locals()[name] = functools.partial(func, visa_library)
+    locals()[name] = functools.partial(func, visa_library())
+
+
+#: Contains all installed event handlers.
+#: Its elements are tuples with three elements:
+#: - The handler itself (a Python callable)
+#: - the user handle (as a ctypes object)
+#: - the handler again, this time as a ctypes object created with CFUNCTYPE.
+handlers = []
+
+def install_handler(vi, event_type, handler, user_handle=None):
+    try:
+        new_handler = wrapper.install_handler(visa_library(), vi, event_type, handler, user_handle)
+    except TypeError as e:
+        raise errors.VisaTypeError(str(e))
+
+    handlers.append(new_handler)
+    return new_handler[1]
+
+
+def uninstall_handler(vi, event_type, handler, user_handle=None):
+    for i in range(len(handlers)):
+        element = handlers[i]
+        if element[0] is handler and element[1] is user_handle:
+            del handlers[i]
+            break
+    else:
+        raise errors.UnknownHandler
+    wrapper.uninstall_handler(visa_library(), vi, event_type, element[2], element[1])
