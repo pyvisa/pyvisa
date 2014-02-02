@@ -40,7 +40,7 @@ import atexit
 import warnings
 
 from .pyvisa.wrapper.vpp43_constants import *
-from .exceptions import VisaIOError, InvalidBinaryFormat
+from .errors import VisaIOError, InvalidBinaryFormat
 from pyvisa.wrapper import functions
 
 

@@ -14,14 +14,10 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 import os
-import sys
 import logging
 import subprocess
 
 import pkg_resources
-
-import ConfigParser
-from pyvisa.wrapper import functions
 
 logger = logging.getLogger('pyvisa')
 logger.addHandler(logging.NullHandler)
@@ -38,12 +34,5 @@ except:  # on any error just try to grab the version that is installed on the sy
         pass  # we seem to have a local copy without any repository control or installed without setuptools
               # so the reported version will be __unknown__
 
-_config_parser = ConfigParser.SafeConfigParser()
-_config_parser.read([os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
-                     os.path.join(os.path.expanduser("~"), ".pyvisarc")])
-try:
-    _visa_library_path = _config_parser.get("Paths", "visa library")
-except ConfigParser.Error:
-    pass
-else:
-    functions.visa_library.load_library(_visa_library_path)
+from .visa import instrument, ResourceManager, Instrument, SerialInstrument,
+from .errors import *
