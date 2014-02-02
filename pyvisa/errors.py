@@ -354,8 +354,9 @@ class VisaIOError(Error):
     """
 
     def __init__(self, error_code):
-        abbreviation, description = _completion_and_error_messages[error_code]
-        Error.__init__(self, abbreviation + ": " + description)
+        abbreviation, description = completion_and_error_messages.get(error_code,
+                                                                      ('?', 'Unknown code.'))
+        Error.__init__(self, '%s (%d): %s' % (abbreviation, error_code, description))
         self.error_code = error_code
 
 
@@ -366,8 +367,11 @@ class VisaIOWarning(Warning):
 
     """
 
-    def __init__(self, description):
-        Warning.__init__(self, description)
+    def __init__(self, error_code):
+        abbreviation, description = completion_and_error_messages.get(error_code,
+                                                                     ('?', 'Unknown code.'))
+        Warning.__init__(self, '%s (%d): %s' % (abbreviation, error_code, description))
+        self.error_code = error_code
 
 
 class VisaTypeError(Error):
