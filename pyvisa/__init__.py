@@ -34,5 +34,15 @@ except:  # on any error just try to grab the version that is installed on the sy
         pass  # we seem to have a local copy without any repository control or installed without setuptools
               # so the reported version will be __unknown__
 
+import wrapper
 from .visa import instrument, ResourceManager, Instrument, SerialInstrument,
 from .errors import *
+
+
+from .library import read_user_settings
+_user_lib = read_user_settings()
+
+if _user_lib:
+    from . import vpp43
+    vpp43.visa_library.load_library(_user_lib)
+
