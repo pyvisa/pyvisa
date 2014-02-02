@@ -13,7 +13,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from .pyvisa.wrapper.vpp43_types import *
+from .wrapper.types import *
 from . import constants as _constants
 from .errors import completion_and_error_messages
 
