@@ -35,7 +35,7 @@ except:  # on any error just try to grab the version that is installed on the sy
               # so the reported version will be __unknown__
 
 import wrapper
-from .visa import instrument, ResourceManager, Instrument, SerialInstrument,
+from .visa import instrument, ResourceManager, Instrument, SerialInstrument, get_instruments_list
 from .errors import *
 
 
