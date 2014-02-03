@@ -34,7 +34,7 @@ except:  # on any error just try to grab the version that is installed on the sy
         pass  # we seem to have a local copy without any repository control or installed without setuptools
               # so the reported version will be __unknown__
 
-import wrapper
+from . import wrapper
 from .visa import instrument, ResourceManager, Instrument, SerialInstrument, get_instruments_list
 from .errors import *
 

@@ -17,7 +17,7 @@ import functools
 import collections
 
 from ctypes import (byref, c_void_p, c_double, c_long,
-                    create_string_buffer, POINTER)
+                    create_string_buffer, POINTER, CDLL)
 
 from . import FUNCTYPE
 
@@ -48,7 +48,7 @@ visa_functions = [
     "vscanf", "vsprintf", "vsscanf", "vxi_command_query", "wait_on_event",
     "write", "write_asynchronously", "write_from_file"]
 
-__all__ = ["visa_functions", "visa_library", "get_status"] + visa_functions
+__all__ = ["visa_functions", 'set_signatures', 'set_cdecl_signatures'] + visa_functions
 
 #: Resource extended information
 ResourceInfo = collections.namedtuple('ResourceInfo',

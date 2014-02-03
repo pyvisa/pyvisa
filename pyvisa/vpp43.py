@@ -25,10 +25,9 @@ import functools
 from ctypes import cdll, c_void_p, POINTER
 
 from . import errors
-
-import wrapper
 from . import constants
 from .constants import *
+from . import wrapper
 from .wrapper.types import *
 
 if os.name == 'nt':
@@ -63,9 +62,8 @@ __all__ = ["visa_library", "get_status"] + visa_functions
 # Add all symbols from #visa_exceptions# and #vpp43_constants# to the list of
 # exported symbols
 
-__all__.extend([name for name in constants.__dict__.keys() +
-                errors.__dict__.keys() if name[0] != '_'])
-
+__all__.extend((name for name in dir(constants) if not name[0].startswith('_')))
+__all__.extend((name for name in dir(errors) if not name[0].startswith('_')))
 
 #: Global status code for the singleton library
 visa_status = 0
