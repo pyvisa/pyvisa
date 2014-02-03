@@ -94,8 +94,13 @@ def set_signatures(library, errcheck=None):
                      See errcheck in ctypes.
     """
 
+    def applier(library, restype, errcheck_):
+        def internal(function_name, argtypes, maybe_missing=False):
+            set_signature(library, function_name, argtypes, restype, errcheck_, maybe_missing)
+        return internal
+
     # Visa functions with ViStatus return code
-    apply = functools.partial(set_signature, library=library, restype=ViStatus, errcheck=errcheck)
+    apply = applier(library, ViStatus, errcheck)
     apply("viAssertIntrSignal", [ViSession, ViInt16, ViUInt32])
     apply("viAssertTrigger", [ViSession, ViUInt16])
     apply("viAssertUtilSignal", [ViSession, ViUInt16])
@@ -158,7 +163,7 @@ def set_signatures(library, errcheck=None):
     apply("viMoveOut32Ex", [ViSession, ViUInt16, ViBusAddress64, ViBusSize, ViAUInt32])
     apply("viMoveOut64Ex", [ViSession, ViUInt16, ViBusAddress64, ViBusSize, ViAUInt64])
 
-    apply("viOpen", [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession], may_be_missing=False)
+    apply("viOpen", [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession], maybe_missing=False)
 
     apply("viOpenDefaultRM", [ViPSession])
 
@@ -204,7 +209,7 @@ def set_signatures(library, errcheck=None):
     apply("viWriteFromFile", [ViSession, ViString, ViUInt32, ViPUInt32])
 
     # Functions that return void.
-    apply = functools.partial(set_signature, library=library, restype=None, errcheck=None)
+    apply = applier(library, None, None)
     apply("viPeek8", [ViSession, ViAddr, ViPUInt8])
     apply("viPeek16", [ViSession, ViAddr, ViPUInt16])
     apply("viPeek32", [ViSession, ViAddr, ViPUInt32])
@@ -216,7 +221,7 @@ def set_signatures(library, errcheck=None):
     apply("viPoke64", [ViSession, ViAddr, ViUInt64])
 
 
-def set_signature(library, function_name, argtypes, restype, errcheck, may_be_missing=True):
+def set_signature(library, function_name, argtypes, restype, errcheck, maybe_missing=True):
     """Set the signature of single function in a library.
 
     :param library: ctypes wrapped library.
@@ -236,10 +241,12 @@ def set_signature(library, function_name, argtypes, restype, errcheck, may_be_mi
     try:
         func = getattr(library, function_name)
         func.argtypes = argtypes
-        func.restype = restype
-        func.errcheck = errcheck
+        if restype is not None:
+            func.restype = restype
+        if errcheck is not None:
+            func.errcheck = errcheck
     except AttributeError:
-        if not may_be_missing:
+        if not maybe_missing:
             raise
 
 
@@ -1607,9 +1614,14 @@ def set_cdecl_signatures(clibrary, errcheck=None):
                      It should be take three areguments (result, func, arguments).
                      See errcheck in ctypes.
     """
-    assert isinstance(clibrary, _ctypes.CDLL)
+    assert isinstance(clibrary, CDLL)
 
-    apply = functools.partial(set_signature, library=clibrary, restype=ViStatus, errcheck=errcheck)
+    def applier(library, restype, errcheck_):
+        def internal(function_name, argtypes, maybe_missing=False):
+            set_signature(library, function_name, argtypes, restype, errcheck_, maybe_missing)
+        return internal
+
+    apply = applier(clibrary, ViStatus, errcheck)
 
     apply("viSPrintf", [ViSession, ViPBuf, ViString])
     apply("viSScanf", [ViSession, ViBuf, ViString])
