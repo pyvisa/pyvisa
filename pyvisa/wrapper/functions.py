@@ -13,17 +13,12 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import functools
 import collections
 
 from ctypes import (byref, c_void_p, c_double, c_long,
                     create_string_buffer, POINTER, CDLL)
 
 from . import FUNCTYPE
-
-
-VI_SPEC_VERSION = 0x00300000
-
 from ..constants import *
 from .types import *
 from .attributes import attributes
@@ -49,6 +44,8 @@ visa_functions = [
     "write", "write_asynchronously", "write_from_file"]
 
 __all__ = ["visa_functions", 'set_signatures', 'set_cdecl_signatures'] + visa_functions
+
+VI_SPEC_VERSION = 0x00300000
 
 #: Resource extended information
 ResourceInfo = collections.namedtuple('ResourceInfo',
@@ -93,14 +90,17 @@ def set_signatures(library, errcheck=None):
                      It should be take three areguments (result, func, arguments).
                      See errcheck in ctypes.
     """
+    if not hasattr(library, '_functions'):
+        library._functions = []
 
-    def applier(library, restype, errcheck_):
-        def internal(function_name, argtypes, maybe_missing=False):
+    def _applier(restype, errcheck_):
+        def _internal(function_name, argtypes, maybe_missing=False):
+            library._functions.append(function_name)
             set_signature(library, function_name, argtypes, restype, errcheck_, maybe_missing)
-        return internal
+        return _internal
 
     # Visa functions with ViStatus return code
-    apply = applier(library, ViStatus, errcheck)
+    apply = _applier(ViStatus, errcheck)
     apply("viAssertIntrSignal", [ViSession, ViInt16, ViUInt32])
     apply("viAssertTrigger", [ViSession, ViUInt16])
     apply("viAssertUtilSignal", [ViSession, ViUInt16])
@@ -209,7 +209,7 @@ def set_signatures(library, errcheck=None):
     apply("viWriteFromFile", [ViSession, ViString, ViUInt32, ViPUInt32])
 
     # Functions that return void.
-    apply = applier(library, None, None)
+    apply = _applier(None, None)
     apply("viPeek8", [ViSession, ViAddr, ViPUInt8])
     apply("viPeek16", [ViSession, ViAddr, ViPUInt16])
     apply("viPeek32", [ViSession, ViAddr, ViPUInt32])
@@ -232,7 +232,7 @@ def set_signature(library, function_name, argtypes, restype, errcheck, maybe_mis
     :param restype: A ctypes type to specify the result type of the foreign function.
                     Use None for void, a function not returning anything.
     :param errcheck: a callabe
-    :param may_be_missing: if False, an Attribute error will be raised if the
+    :param maybe_missing: if False, an Attribute error will be raised if the
                            function_name is not found.
 
     :raises: AttributeError
@@ -1441,7 +1441,7 @@ def terminate(library, session, degree, job_id):
     library.viTerminate(session, degree, job_id)
 
 
-def uninstall_handler(library, session, event_type, handler, user_handle=None, handlers=[]):
+def uninstall_handler(library, session, event_type, handler, user_handle=None):
     """Uninstalls handlers for events.
 
     :param library: the visa library wrapped by ctypes.
@@ -1451,7 +1451,7 @@ def uninstall_handler(library, session, event_type, handler, user_handle=None, h
     :param user_handle: A value specified by an application that can be used for identifying handlers
                         uniquely in a session for an event.
     """
-    library.viUninstallHandler(session, event_type, element[2], byref(element[1]))
+    library.viUninstallHandler(session, event_type, handler, byref(user_handle))
 
 
 def unlock(library, session):
@@ -1616,12 +1616,16 @@ def set_cdecl_signatures(clibrary, errcheck=None):
     """
     assert isinstance(clibrary, CDLL)
 
-    def applier(library, restype, errcheck_):
-        def internal(function_name, argtypes, maybe_missing=False):
-            set_signature(library, function_name, argtypes, restype, errcheck_, maybe_missing)
-        return internal
+    if not hasattr(clibrary, '_functions'):
+        clibrary._functions = []
 
-    apply = applier(clibrary, ViStatus, errcheck)
+    def _applier(restype, errcheck_):
+        def _internal(function_name, argtypes, maybe_missing=False):
+            clibrary._functions.append(function_name)
+            set_signature(clibrary, function_name, argtypes, restype, errcheck_, maybe_missing)
+        return _internal
+
+    apply = _applier(ViStatus, errcheck)
 
     apply("viSPrintf", [ViSession, ViPBuf, ViString])
     apply("viSScanf", [ViSession, ViBuf, ViString])
@@ -1756,5 +1760,5 @@ vscanf = scanf
 vsprintf = sprintf
 vsscanf = sscanf
 
+#: A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2.
 get_default_resource_manager = open_default_resource_manager
-"""A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2."""
