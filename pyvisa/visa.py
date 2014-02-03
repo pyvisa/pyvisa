@@ -222,9 +222,9 @@ class ResourceManager(vpp43.Singleton, ResourceTemplate):
 resource_manager = ResourceManager()
 
 
-def _destroy_resource_manager():
+def _destroy_resource_manager(closefun=vpp43.close):
     # delete self-reference for clean finishing
-    del ResourceManager.__it__
+    closefun(resource_manager.vi)
 
 
 atexit.register(_destroy_resource_manager)
