@@ -198,6 +198,12 @@ class VisaLibrary(Singleton):
 # Create a default instance for VisaLibrary
 visa_library = VisaLibrary()
 
+from .library import read_user_settings
+_user_lib = read_user_settings()
+
+if _user_lib:
+    visa_library.load_library(_user_lib)
+
 # Load the functions defined in the wrapper module using the default VisaLibrary
 for name in visa_functions:
     func = getattr(wrapper, name)

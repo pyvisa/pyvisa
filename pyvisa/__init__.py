@@ -38,11 +38,3 @@ import wrapper
 from .visa import instrument, ResourceManager, Instrument, SerialInstrument, get_instruments_list
 from .errors import *
 
-
-from .library import read_user_settings
-_user_lib = read_user_settings()
-
-if _user_lib:
-    from . import vpp43
-    vpp43.visa_library.load_library(_user_lib)
-
