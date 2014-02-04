@@ -342,7 +342,7 @@ class Error(Exception):
     """Abstract basic exception class for this module."""
 
     def __init__(self, description):
-        Exception.__init__(self, description)
+        super(Error, self).__init__(description)
 
 
 class VisaIOError(Error):
@@ -356,7 +356,7 @@ class VisaIOError(Error):
     def __init__(self, error_code):
         abbreviation, description = completion_and_error_messages.get(error_code,
                                                                       ('?', 'Unknown code.'))
-        Error.__init__(self, '%s (%d): %s' % (abbreviation, error_code, description))
+        super(VisaIOError, self).__init__('%s (%d): %s' % (abbreviation, error_code, description))
         self.error_code = error_code
 
 
@@ -369,8 +369,8 @@ class VisaIOWarning(Warning):
 
     def __init__(self, error_code):
         abbreviation, description = completion_and_error_messages.get(error_code,
-                                                                     ('?', 'Unknown code.'))
-        Warning.__init__(self, '%s (%d): %s' % (abbreviation, error_code, description))
+                                                                      ('?', 'Unknown code.'))
+        super(VisaIOWarning, self).__init__('%s (%d): %s' % (abbreviation, error_code, description))
         self.error_code = error_code
 
 
@@ -386,9 +386,6 @@ class VisaTypeError(Error):
 
     """
 
-    def __init__(self, description):
-        Error.__init__(self, description)
-
 
 class UnknownHandler(Error):
     """Exception class for invalid handler data given to uninstall_handler().
@@ -399,15 +396,11 @@ class UnknownHandler(Error):
 
     """
 
-    def __init__(self):
-        Error.__init__(self, "Handler with this handler function and user data"
-                       " not found")
-
 
 class OSNotSupported(Error):
 
     def __init__(self, os):
-        Error.__init__(self, os + " is not yet supported by PyVISA")
+        super(OSNotSupported, self).__init__(os + " is not yet supported by PyVISA")
 
 
 class InvalidBinaryFormat(Error):
@@ -415,4 +408,4 @@ class InvalidBinaryFormat(Error):
     def __init__(self, description=""):
         if description:
             description = ": " + description
-        Error.__init__(self, "unrecognized binary data format" + description)
+        super(InvalidBinaryFormat, self).__init__("Unrecognized binary data format" + description)
