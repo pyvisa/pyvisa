@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-    vpp43
-    ~~~~~
+    visa.vpp43
+    ~~~~~~~~~~
 
     Defines VPP 4.3.2 routines.
 
-    This module is kept for backwards compatibility reasons but it will
-    be deprecated in 1.6.
+    This is a legacy module for backwards compatibility with PyVISA < 1.5
 
     This file is part of PyVISA.
 
@@ -196,8 +195,8 @@ class VisaLibrary(Singleton):
 # Create a default instance for VisaLibrary
 visa_library = VisaLibrary()
 
-from .library import read_user_settings
-_user_lib = read_user_settings()
+from .library import read_user_library_path
+_user_lib = read_user_library_path()
 
 if _user_lib:
     visa_library.load_library(_user_lib)

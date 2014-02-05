@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa_attributes
-    ~~~~~~~~~~~~~~~
+    visa.visa_attributes
+    ~~~~~~~~~~~~~~~~~~~~
 
     Defines VISA attributes.
 

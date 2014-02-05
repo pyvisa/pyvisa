@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    pyvisa.errors
-    ~~~~~~~~~~~~~
+    visa.errors
+    ~~~~~~~~~~~
 
     Defines exceptions hierarchy and textual explanations of VISA completion and error codes.
 
