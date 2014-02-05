@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    pyvisa
-    ~~~~~~
+    visa
+    ~~~~
 
     Python wrapper of National Instrument (NI) Virtual Instruments Software
     Architecture library (VISA).
@@ -35,6 +35,6 @@ except:  # on any error just try to grab the version that is installed on the sy
               # so the reported version will be __unknown__
 
 from . import wrapper
-from .visa import instrument, ResourceManager, Instrument, SerialInstrument, get_instruments_list
+from .legacy import instrument, ResourceManager, Instrument, SerialInstrument, get_instruments_list
 from .errors import *
 

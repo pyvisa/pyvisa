@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-    visa
-    ~~~~
+    visa.legacy
+    ~~~~~~~~~~~
 
     Top-level module of PyVISA with object-oriented layer on top of the
     original VISA functions (in vpp43.py).
+
+    This is a legacy module for backwards compatibility with PyVISA < 1.5
 
     Exported functions:
 

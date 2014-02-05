@@ -36,8 +36,8 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import collections
 import struct
 
-from pyvisa import visa
-from pyvisa.visa import InvalidBinaryFormat
+from pyvisa import legacy
+from pyvisa.legacy import InvalidBinaryFormat
 import pytest
 from mock import Mock
 
@@ -53,13 +53,13 @@ class TestInstrument(object):
     
     def pytest_funcarg__instrument(self, request):
         monkeypatch = request.getfuncargvalue('monkeypatch')
-        monkeypatch.setattr(visa.Instrument,
+        monkeypatch.setattr(legacy.Instrument,
                             'interface_type',
-                            visa.VI_INTF_GPIB)
+                            legacy.VI_INTF_GPIB)
         my_attr = MyAttribute()
         monkeypatch.setattr(pyvisa.wrapper.vpp43, "get_attribute", my_attr.get_attribute)
         monkeypatch.setattr(pyvisa.wrapper.vpp43, "set_attribute", my_attr.set_attribute)
-        return visa.Instrument(1)
+        return legacy.Instrument(1)
 
     def test_repr(self, instrument):
         # XXX: refactor so that a resource_name is
@@ -101,7 +101,7 @@ class TestInstrument(object):
         my_write = Mock()
         my_sleep = Mock()
         monkeypatch.setattr(pyvisa.wrapper.vpp43, 'write', my_write)
-        monkeypatch.setattr(visa.time, 'sleep', my_sleep)
+        monkeypatch.setattr(legacy.time, 'sleep', my_sleep)
         instrument.delay = 1
         instrument.write(message)
         print(repr(instrument.term_chars))
@@ -139,7 +139,7 @@ class TestInstrument(object):
 
     def test_read_raw(self, monkeypatch, instrument):
         my_read = Mock(return_value=b'some bytes\r\n')
-        my_get_status = Mock(side_effect=[visa.VI_SUCCESS_MAX_CNT, 0])
+        my_get_status = Mock(side_effect=[legacy.VI_SUCCESS_MAX_CNT, 0])
         monkeypatch.setattr(pyvisa.wrapper.vpp43, 'read', my_read)
         monkeypatch.setattr(pyvisa.wrapper.vpp43, 'get_status', my_get_status)
         result = instrument.read_raw()
@@ -147,7 +147,7 @@ class TestInstrument(object):
 
     def test_read(self, monkeypatch, instrument):
         my_read = Mock(return_value=b'some bytes\r\n')
-        my_get_status = Mock(side_effect=[visa.VI_SUCCESS_MAX_CNT, 0])
+        my_get_status = Mock(side_effect=[legacy.VI_SUCCESS_MAX_CNT, 0])
         monkeypatch.setattr(pyvisa.wrapper.vpp43, 'read', my_read)
         monkeypatch.setattr(pyvisa.wrapper.vpp43, 'get_status', my_get_status)
         result = instrument.read()
@@ -155,49 +155,49 @@ class TestInstrument(object):
         
     @pytest.mark.parametrize(('format', 'input', 'expected'),
                              [(None, b'some bytes\r\n', []),
-                              (visa.ascii, b'some bytes\r\n', []),
-                              (visa.ascii, b'1.25', [1.25]),
-                              (visa.ascii, b'1.25 2.5', [1.25, 2.5]),
-                              (visa.ascii, b'1.25, 2.5', [1.25, 2.5]),
+                              (legacy.ascii, b'some bytes\r\n', []),
+                              (legacy.ascii, b'1.25', [1.25]),
+                              (legacy.ascii, b'1.25 2.5', [1.25, 2.5]),
+                              (legacy.ascii, b'1.25, 2.5', [1.25, 2.5]),
 
-                              (visa.single, packfloats1('<f', [1.25]), [1.25]),
-                              (visa.single, b'junk' + packfloats1('<f', [1.25]), [1.25]),
-                              (visa.single, packfloats1('<f', [1.25, 2.5]), [1.25, 2.5]),
-                              (visa.single | visa.big_endian,
+                              (legacy.single, packfloats1('<f', [1.25]), [1.25]),
+                              (legacy.single, b'junk' + packfloats1('<f', [1.25]), [1.25]),
+                              (legacy.single, packfloats1('<f', [1.25, 2.5]), [1.25, 2.5]),
+                              (legacy.single | legacy.big_endian,
                                packfloats1('>f', [1.25]), [1.25]),
-                              (visa.single | visa.big_endian,
+                              (legacy.single | legacy.big_endian,
                                b'junk' + packfloats1('>f', [1.25]), [1.25]),
-                              (visa.single | visa.big_endian,
+                              (legacy.single | legacy.big_endian,
                                packfloats1('>f', [1.25, 2.5]), [1.25, 2.5]),
 
-                              (visa.double, packfloats1('<d', [1.25]), [1.25]),
-                              (visa.double, b'junk' + packfloats1('<d', [1.25]), [1.25]),
-                              (visa.double, packfloats1('<d', [1.25, 2.5]), [1.25, 2.5]),
-                              (visa.double | visa.big_endian,
+                              (legacy.double, packfloats1('<d', [1.25]), [1.25]),
+                              (legacy.double, b'junk' + packfloats1('<d', [1.25]), [1.25]),
+                              (legacy.double, packfloats1('<d', [1.25, 2.5]), [1.25, 2.5]),
+                              (legacy.double | legacy.big_endian,
                                packfloats1('>d', [1.25]), [1.25]),
-                              (visa.double | visa.big_endian,
+                              (legacy.double | legacy.big_endian,
                                b'junk' + packfloats1('>d', [1.25]), [1.25]),
-                              (visa.double | visa.big_endian,
+                              (legacy.double | legacy.big_endian,
                                packfloats1('>d', [1.25, 2.5]), [1.25, 2.5]),
                               
-                              (visa.single, packfloats2('<f', [1.25]), [1.25]),
-                              (visa.single, b'junk' + packfloats2('<f', [1.25]), [1.25]),
-                              (visa.single, packfloats2('<f', [1.25, 2.5]), [1.25, 2.5]),
-                              (visa.single | visa.big_endian,
+                              (legacy.single, packfloats2('<f', [1.25]), [1.25]),
+                              (legacy.single, b'junk' + packfloats2('<f', [1.25]), [1.25]),
+                              (legacy.single, packfloats2('<f', [1.25, 2.5]), [1.25, 2.5]),
+                              (legacy.single | legacy.big_endian,
                                packfloats2('>f', [1.25]), [1.25]),
-                              (visa.single | visa.big_endian,
+                              (legacy.single | legacy.big_endian,
                                b'junk' + packfloats2('>f', [1.25]), [1.25]),
-                              (visa.single | visa.big_endian,
+                              (legacy.single | legacy.big_endian,
                                packfloats2('>f', [1.25, 2.5]), [1.25, 2.5]),
 
-                              (visa.double, packfloats2('<d', [1.25]), [1.25]),
-                              (visa.double, b'junk' + packfloats2('<d', [1.25]), [1.25]),
-                              (visa.double, packfloats2('<d', [1.25, 2.5]), [1.25, 2.5]),
-                              (visa.double | visa.big_endian,
+                              (legacy.double, packfloats2('<d', [1.25]), [1.25]),
+                              (legacy.double, b'junk' + packfloats2('<d', [1.25]), [1.25]),
+                              (legacy.double, packfloats2('<d', [1.25, 2.5]), [1.25, 2.5]),
+                              (legacy.double | legacy.big_endian,
                                packfloats2('>d', [1.25]), [1.25]),
-                              (visa.double | visa.big_endian,
+                              (legacy.double | legacy.big_endian,
                                b'junk' + packfloats2('>d', [1.25]), [1.25]),
-                              (visa.double | visa.big_endian,
+                              (legacy.double | legacy.big_endian,
                                packfloats2('>d', [1.25, 2.5]), [1.25, 2.5]), 
                               ])
     def test_read_values(self, monkeypatch, instrument,
@@ -210,11 +210,11 @@ class TestInstrument(object):
         assert result == expected
         
     @pytest.mark.parametrize(('format', 'input', 'expected_exception'),
-                             [(visa.single, b'bytes\r\n', InvalidBinaryFormat),
-                              (visa.single, b'#8', InvalidBinaryFormat),
-                              (visa.single, b'#0deadbeef', InvalidBinaryFormat),
-                              (visa.single, b'#deadbeef', InvalidBinaryFormat),
-                              (visa.double, packfloats1('<f', [1.25]), InvalidBinaryFormat),
+                             [(legacy.single, b'bytes\r\n', InvalidBinaryFormat),
+                              (legacy.single, b'#8', InvalidBinaryFormat),
+                              (legacy.single, b'#0deadbeef', InvalidBinaryFormat),
+                              (legacy.single, b'#deadbeef', InvalidBinaryFormat),
+                              (legacy.double, packfloats1('<f', [1.25]), InvalidBinaryFormat),
                               ])
     def test_read_values_errors(self, monkeypatch, instrument,
                                 format, input, expected_exception):
@@ -232,14 +232,14 @@ class TestGpibInstrument(TestInstrument):
     
     def pytest_funcarg__instrument(self, request):
         monkeypatch = request.getfuncargvalue('monkeypatch')
-        monkeypatch.setattr(visa.GpibInstrument,
+        monkeypatch.setattr(legacy.GpibInstrument,
                             'interface_type',
-                            visa.VI_INTF_GPIB)
-        monkeypatch.setattr(visa.GpibInstrument, 'stb', 0x40)
+                            legacy.VI_INTF_GPIB)
+        monkeypatch.setattr(legacy.GpibInstrument, 'stb', 0x40)
         my_attr = MyAttribute()
         monkeypatch.setattr(pyvisa.wrapper.vpp43, "get_attribute", my_attr.get_attribute)
         monkeypatch.setattr(pyvisa.wrapper.vpp43, "set_attribute", my_attr.set_attribute)
-        return visa.GpibInstrument(1)
+        return legacy.GpibInstrument(1)
     
     @pytest.mark.parametrize('timeout', [None, 0, 25, 4294967])
     def test_wait_for_srq(self, instrument, timeout):
@@ -262,13 +262,13 @@ class TestSerialInstrument(TestInstrument):
 
     def pytest_funcarg__instrument(self, request):
         monkeypatch = request.getfuncargvalue('monkeypatch')
-        monkeypatch.setattr(visa.SerialInstrument,
+        monkeypatch.setattr(legacy.SerialInstrument,
                             'interface_type',
-                            visa.VI_INTF_ASRL)
+                            legacy.VI_INTF_ASRL)
         my_attr = MyAttribute()
         monkeypatch.setattr(pyvisa.wrapper.vpp43, "get_attribute", my_attr.get_attribute)
         monkeypatch.setattr(pyvisa.wrapper.vpp43, "set_attribute", my_attr.set_attribute)
-        return visa.SerialInstrument(1)
+        return legacy.SerialInstrument(1)
     
     def test_term_chars_default(self, instrument):
         """default term char is CR"""
@@ -324,19 +324,19 @@ class TestSerialInstrument(TestInstrument):
             instrument.stop_bits = value
 
     @pytest.mark.parametrize("value", [
-        visa.no_parity,
-        visa.odd_parity,
-        visa.even_parity,
-        visa.mark_parity,
-        visa.space_parity,])
+        legacy.no_parity,
+        legacy.odd_parity,
+        legacy.even_parity,
+        legacy.mark_parity,
+        legacy.space_parity,])
     def test_parity(self, instrument, value):
         instrument.parity = value
         assert instrument.parity == value
 
     @pytest.mark.parametrize("value", [
-        visa.no_end_input,
-        visa.last_bit_end_input,
-        visa.term_chars_end_input,
+        legacy.no_end_input,
+        legacy.last_bit_end_input,
+        legacy.term_chars_end_input,
         ])
     def test_end_input(self, instrument, value):
         instrument.end_input = value
