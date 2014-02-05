@@ -396,6 +396,9 @@ class UnknownHandler(Error):
 
     """
 
+    def __init__(self, event_type, handler, user_handle):
+        super(UnknownHandler, self).__init__('%s, %s, %s' % (event_type, handler, user_handle))
+
 
 class OSNotSupported(Error):
 
