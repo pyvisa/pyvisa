@@ -58,23 +58,32 @@ ViBuf         = ViPByte
 ViPBuf        = ViBuf
 ViABuf        = _ctypes.POINTER(ViBuf)
 
-ViString      = _ctypes.c_char_p  # ViPChar in the spec
-ViPString     = _ctypes.c_char_p  # ViPChar in the spec
-ViAString     = _ctypes.POINTER(ViString)
 
-# It is impractical to have ViBuf defined as an array of unsigned chars,
-# because ctypes forces me then to cast the string buffer to an array type.
-# The only semantic difference is that ViString is null terminated while ViBuf
-# is not (as I understand it).  However, in Python there is no difference.
-# Since the memory representation is the same -- which is guaranteed by the C
-# language specification -- the following ViBuf re-definitions are sensible:
+class ViString(object):
+
+    @classmethod
+    def from_param(cls, obj):
+        if isinstance(obj, str):
+            return bytes(obj, 'ascii')
+        return obj
+
+ViPString = ViString
+
+
+class ViAString(object):
+
+    @classmethod
+    def from_param(cls, obj):
+        return _ctypes.POINTER(obj)
 
 ViBuf = ViPBuf = ViString
-ViABuf        = _ctypes.POINTER(ViBuf)
+ViABuf = ViAString #_ctypes.POINTER(ViBuf)
 
-ViRsrc        = ViString
-ViPRsrc       = ViString
-ViARsrc       = _ctypes.POINTER(ViRsrc)
+ViRsrc = ViString
+ViPRsrc = ViString
+ViARsrc = ViAString
+
+ViKeyId, ViPKeyId = ViString, ViPString
 
 ViStatus, ViPStatus, ViAStatus    = _type_triplet(ViInt32)
 ViVersion, ViPVersion, ViAVersion = _type_triplet(ViUInt32)
@@ -109,7 +118,6 @@ ViEventFilter = ViUInt32
 
 ViFindList, ViPFindList     = _type_pair(ViObject)
 ViEvent, ViPEvent           = _type_pair(ViObject)
-ViKeyId, ViPKeyId           = _type_pair(ViString)
 ViJobId, ViPJobId           = _type_pair(ViUInt32)
 
 # Class of callback functions for event handling, first type is result type
@@ -119,3 +127,6 @@ if _os.name == 'nt':
 else:
     ViHndlr = _ctypes.CFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
                                 ViAddr)
+
+def from_string_buffer(buf):
+    return buf.value.decode('ascii')

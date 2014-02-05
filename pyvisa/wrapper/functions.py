@@ -417,7 +417,7 @@ def find_next(library, find_list):
     """
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
     library.viFindNext(find_list, instrument_description)
-    return instrument_description.value
+    return from_string_buffer(instrument_description)
 
 
 def find_resources(library, session, query):
@@ -434,7 +434,7 @@ def find_resources(library, session, query):
     library.viFindRsrc(session, query,
                        byref(find_list), byref(return_counter),
                        instrument_description)
-    return find_list, return_counter.value, instrument_description.value
+    return find_list, return_counter.value, from_string_buffer(instrument_description)
 
 
 def flush(library, session, mask):

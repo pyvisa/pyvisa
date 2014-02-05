@@ -195,7 +195,7 @@ class VisaLibrary(Singleton):
 # Create a default instance for VisaLibrary
 visa_library = VisaLibrary()
 
-from .library import read_user_library_path
+from .highlevel import read_user_library_path
 _user_lib = read_user_library_path()
 
 if _user_lib:
