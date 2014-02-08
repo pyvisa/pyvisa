@@ -64,7 +64,7 @@ display at the moment?"::
 
 Finally, I print the instrument's answer on the screen: ::
 
-   print my_instrument.read()
+   print(my_instrument.read())
 
 
 Example for serial (RS232) device
@@ -83,7 +83,7 @@ following code prints its self-identification on the screen::
    
    itc4 = instrument("COM2")
    itc4.write("V")
-   print itc4.read()
+   print(itc4.read())
 
 .. index:: single: instrument()
 
@@ -93,7 +93,7 @@ one `ask()` call.  Thus, the above source code is equivalent to::
    from visa import *
    
    itc4 = instrument("COM2")
-   print itc4.ask("V")
+   print(itc4.ask("V"))
 
 It couldn't be simpler.  See section :ref:`sec:serial-devices` for
 further information about serial devices.

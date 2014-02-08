@@ -1,8 +1,12 @@
 .. _vpp43:
 
 
-About the vpp43 module
-======================
+.. note:: This is a legacy module kept for backwards compatiblity with PyVISA < 1.5.
+          The functionality in this module is now implemented in the `wrapper` module.
+
+
+About the legacy vpp43 module
+=============================
 
 This module ``vpp43`` is a cautious yet thorough adaption of the VISA
 specification for Python.  The "textual languages" VISA specification can't be

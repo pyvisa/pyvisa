@@ -18,33 +18,38 @@ as easy as three lines of Python code::
 
     import visa
     keithley = visa.instrument("GPIB::12")
-    print keithley.ask("*IDN?")
+    print(keithley.ask("*IDN?"))
 
-(That's the whole program; really!) It is tailored to work on both Windows and
-Linux, and with arbitrary adapters (e.g. National Instruments, Agilent,
+(That's the whole program; really!) It is tailored to work on Windows,
+Linux and Mac; with arbitrary adapters (e.g. National Instruments, Agilent,
 Tektronix, Stanford Research Systems).  In order to achieve this, PyVISA
 relies on an external library file which is bundled with hardware and software
 of those vendors.  (So only in rare cases you have to purchase it separately.)
 
 PyVISA implements convenient and Pythonic programming in two layers:
 
-1. An object-oriented Python module has been created simply called ``visa``.
-   It is the recommended way to use PyVISA.  See the `PyVISA manual`_ for more
-   information.
-
-2. Additionally, there is the lower level module ``vpp43``, which directly
+1. A wrapper module around the visa library.
+   This module
+Additionally, there is the lower level module ``vpp43``, which directly
    calls the VISA functions from Python.  See the `PyVISA low-level
    implementation`_ for more information.  This is only for people who need
    full control or the official VISA functions for some reason.
+
+2. An object-oriented Python module has been created simply called ``visa``.
+   It is the recommended way to use PyVISA.  See the `PyVISA manual`_ for more
+   information.
+
 
 PyVISA is free open-source software.  The `PyVISA project page`_ contains the
 bug tracker and the download area.
 
 Projects using PyVISA so far:
 
-* `pyvLab`_ -- program to control VISA-talking instruments
+* `pyvLab`_ -- program to control VISA-talking instruments.
+* `Lantz`_ -- a Python instrumentation toolkit.
 
 .. _`pyvLab`: http://pyvlab.sourceforge.net/
+.. _`Lantz`: https://lantz.readthedocs.org/
 
 
 General overview
