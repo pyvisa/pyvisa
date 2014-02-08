@@ -20,6 +20,7 @@ else:
     from ctypes import CFUNCTYPE as FUNCTYPE, CDLL as Library
 
 
+from . import types
 from .functions import *
 
 
