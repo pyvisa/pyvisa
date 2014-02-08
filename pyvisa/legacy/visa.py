@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa.legacy
-    ~~~~~~~~~~~
+    visa.legacy.visa
+    ~~~~~~~~~~~~~~~~
 
     Top-level module of PyVISA with object-oriented layer on top of the
     original VISA functions (in vpp43.py).
@@ -41,41 +41,14 @@ import struct
 import atexit
 import warnings
 
+from ..constants import *
+from ..errors import VisaIOError, InvalidBinaryFormat
 from . import vpp43
-from .constants import *
-from .errors import VisaIOError, InvalidBinaryFormat
+from ..util import (warn_for_invalid_kwargs as _warn_for_invalid_keyword_arguments,
+                    filter_kwargs as _filter_keyword_arguments,
+                    removefilter as _removefilter)
 
 
-def _removefilter(action, message="", category=Warning, module="", lineno=0,
-                 append=0):
-    """Remove all entries from the list of warnings filters that match the
-    given filter.
-
-    It is the opposite to warnings.filterwarnings() and has the same parameters
-    as it."""
-    import re
-    item = (action, re.compile(message, re.I), category, re.compile(module), lineno)
-
-    new_filters = [fil for fil in warnings.filters if fil != item]
-
-    if len(warnings.filters) == len(new_filters):
-        warnings.warn("Warning filter not found", stacklevel=2)
-
-    warnings.filters = new_filters
-
-
-def _warn_for_invalid_keyword_arguments(keyw, allowed_keys):
-    for key in keyw.keys():
-        if key not in allowed_keys:
-            warnings.warn('Keyword argument "%s" unknown' % key, stacklevel=3)
-
-
-def _filter_keyword_arguments(keyw, selected_keys):
-    result = {}
-    for key, value in keyw.items():
-        if key in selected_keys:
-            result[key] = value
-    return result
 
 
 class ResourceTemplate(object):

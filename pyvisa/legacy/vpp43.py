@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa.vpp43
-    ~~~~~~~~~~
+    visa.legacy.vpp43
+    ~~~~~~~~~~~~~~~~~
 
     Defines VPP 4.3.2 routines.
 
@@ -23,11 +23,11 @@ import functools
 
 from ctypes import cdll, c_void_p, POINTER
 
-from . import errors
-from . import constants
-from .constants import *
-from . import wrapper
-from .wrapper.types import *
+from .. import errors
+from .. import constants
+from ..constants import *
+from .. import ctwrapper
+from ..ctwrapper import types
 
 if os.name == 'nt':
     from ctypes import windll, WINFUNCTYPE as FUNCTYPE
@@ -166,11 +166,11 @@ class VisaLibrary(Singleton):
             user_handle_p = c_void_p
         else:
             user_handle_p = POINTER(type(user_handle))
-        ViHndlr = FUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
+        ViHndlr = FUNCTYPE(types.ViStatus, types.ViSession, types.ViEventType, types.ViEvent,
                            user_handle_p)
-        self.__lib.viInstallHandler.argtypes = [ViSession, ViEventType,
+        self.__lib.viInstallHandler.argtypes = [types.ViSession, types.ViEventType,
                                                 ViHndlr, user_handle_p]
-        self.__lib.viUninstallHandler.argtypes = [ViSession, ViEventType,
+        self.__lib.viUninstallHandler.argtypes = [types.ViSession, types.ViEventType,
                                                   ViHndlr, user_handle_p]
 
     def __call__(self, force_cdecl=False):
@@ -188,14 +188,14 @@ class VisaLibrary(Singleton):
         return self.__lib
 
     def __initialize_library_functions(self):
-        wrapper.set_signatures(self.__lib, errcheck=check_status)
-        wrapper.set_cdecl_signatures(self.__cdecl_lib, errcheck=check_status)
+        ctwrapper.set_signatures(self.__lib, errcheck=check_status)
+        ctwrapper.set_cdecl_signatures(self.__cdecl_lib, errcheck=check_status)
 
 
 # Create a default instance for VisaLibrary
 visa_library = VisaLibrary()
 
-from .highlevel import read_user_library_path
+from ..highlevel import read_user_library_path
 _user_lib = read_user_library_path()
 
 if _user_lib:
@@ -203,7 +203,7 @@ if _user_lib:
 
 # Load the functions defined in the wrapper module using the default VisaLibrary
 for name in visa_functions:
-    func = getattr(wrapper, name)
+    func = getattr(ctwrapper, name)
     locals()[name] = functools.partial(func, visa_library())
 
 
@@ -216,7 +216,7 @@ handlers = []
 
 def install_handler(vi, event_type, handler, user_handle=None):
     try:
-        new_handler = wrapper.install_handler(visa_library(), vi, event_type, handler, user_handle)
+        new_handler = ctwrapper.install_handler(visa_library(), vi, event_type, handler, user_handle)
     except TypeError as e:
         raise errors.VisaTypeError(str(e))
 
@@ -232,4 +232,4 @@ def uninstall_handler(vi, event_type, handler, user_handle=None):
             break
     else:
         raise errors.UnknownHandler
-    wrapper.uninstall_handler(visa_library(), vi, event_type, element[2], element[1])
+    ctwrapper.uninstall_handler(visa_library(), vi, event_type, element[2], element[1])
