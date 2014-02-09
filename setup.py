@@ -87,6 +87,5 @@ setup(name='PyVISA',
       packages=find_packages(),
       platforms="Linux, Windows",
       py_modules=['visa'],
-      setup_requires=["sphinx>=1.0", "Mock"],
-      use_2to3=True,
+      use_2to3=False,
       zip_safe=False)
