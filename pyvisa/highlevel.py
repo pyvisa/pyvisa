@@ -11,60 +11,17 @@
     :license: MIT, see COPYING for more details.
 """
 
-import os
-import sys
+import time
+import atexit
 import warnings
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 
 from . import logger
 from .constants import *
 from . import ctwrapper
 from . import errors
-
-
-def read_user_library_path():
-    """Return the library path stored in one of the following configuration files:
-
-        <sys prefix>/share/pyvisa/.pyvisarc
-        ~/.pyvisarc
-
-    <sys prefix> is the site-specific directory prefix where the platform
-    independent Python files are installed.
-
-    Example configuration file:
-
-        [Paths]
-        visa library=/my/path/visa.so
-
-    Return `None` if  configuration files or keys are not present.
-
-    """
-    try:
-        from ConfigParser import SafeConfigParser as ConfigParser
-    except ImportError:
-        from configparser import ConfigParser
-
-    config_parser = ConfigParser()
-    config_parser.read([os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
-                        os.path.join(os.path.expanduser("~"), ".pyvisarc")])
-
-    try:
-        return config_parser.get("Paths", "visa library")
-    except KeyError:
-        return None
-
-
-def get_library_paths(wrapper_module):
-    """Return a tuple of possible library paths.
-
-    These paths are tried when `VisaLibrary` is instantiated without arguments.
-
-    :param wrapper_module: the python module/package that wraps the visa library.
-    """
-    tmp = [read_user_library_path(), ] + \
-          [wrapper_module.find_library(library_path)
-           for library_path in ('visa', 'visa32')]
-    return tuple([p for p in tmp if p is not None])
+from .util import (warning_context, split_kwargs, warn_for_invalid_kwargs,
+                   parse_ascii, parse_binary, get_library_paths)
 
 
 def add_visa_methods(wrapper_module):
@@ -127,7 +84,7 @@ class VisaLibrary(object):
 
     def __new__(cls, library_path=None):
         if library_path is None:
-            obj = cls.from_paths(get_library_paths(cls._wrapper_module))
+            return cls.from_paths(*get_library_paths(cls._wrapper_module))
         else:
             if library_path in cls._registry:
                 return cls._registry[library_path]
@@ -172,7 +129,7 @@ class VisaLibrary(object):
         return 'Visa Library at %s' % self.library_path
 
     def __repr__(self):
-        return '<VisaLibrary(%s)>' % self.library_path
+        return '<VisaLibrary(%r)>' % self.library_path
 
     @property
     def resource_manager(self):
@@ -235,11 +192,6 @@ class VisaLibrary(object):
         self._uninstall_handler(self.lib, session, event_type, handler, user_handle)
 
 
-#: Resource extended information
-ResourceInfo = namedtuple('ResourceInfo', 'interface_type interface_board_number '
-                                          'resource_class resource_name alias')
-
-
 class ResourceManager(object):
     """VISA Resource Manager
 
@@ -250,24 +202,29 @@ class ResourceManager(object):
     #: Maps VisaLibrary instance to ResourceManager
     _registry = dict()
 
-    def __new__(cls, visa_library):
+    def __new__(cls, visa_library=None):
         if visa_library is None or isinstance(visa_library, str):
             visa_library = VisaLibrary(visa_library)
 
-        if visa_library in cls.visa_library:
+        if visa_library in cls._registry:
             return cls._registry[visa_library]
 
         cls._registry[visa_library] = obj = super(ResourceManager, cls).__new__(cls)
 
-        obj.visa = visa_library
+        obj.visalib = visa_library
 
-        obj.session = obj.visa.open_default_resource_manager()
-        logger.debug('Created ResourceManager (session: {}) for {}'.format(obj.session, obj.visa))
+        obj.session = obj.visalib.open_default_resource_manager()
+        logger.debug('Created ResourceManager (session: %s) for %s',  obj.session, obj.visalib)
+        return obj
 
-        obj.session = None
+    def __str__(self):
+        return 'Resource Manager of %s' % self.visalib
+
+    def __repr__(self):
+        return '<ResourceManager(%r)>' % self.visalib
 
     def __del__(self):
-        self.visa.close(self.session)
+        self.visalib.close(self.session)
 
     def list_resources(self, query='?*::INSTR'):
         """Returns a tuple of all connected devices matching query.
@@ -275,7 +232,7 @@ class ResourceManager(object):
         :param query: regular expression used to match devices.
         """
 
-        lib = self.visa
+        lib = self.visalib
 
         resources = []
         find_list, return_counter, instrument_description = lib.find_resources(self.session, query)
@@ -303,7 +260,7 @@ class ResourceManager(object):
 
         :rtype: ResourceInfo
         """
-        return self.visa.parse_resource_extended(self.session, resource_name)
+        return self.visalib.parse_resource_extended(self.session, resource_name)
 
     def open_resource(self, resource_name, access_mode=VI_NO_LOCK, open_timeout=VI_TMO_IMMEDIATE):
         """Open the specified resources.
@@ -314,6 +271,663 @@ class ResourceManager(object):
 
         :return: Unique logical identifier reference to a session.
         """
-        return self.visa.open(self.session, resource_name, access_mode, open_timeout)
+        return self.visalib.open(self.session, resource_name, access_mode, open_timeout)
+
+    def instrument(self, resource_name, **kwargs):
+        """Return an instrument for the resource name.
+
+        :param resource_name: name or alias of the resource to open.
+        :param kwargs: keyword arguments to be passed to the instrument constructor.
+        """
+        interface_type = self.resource_info(resource_name).interface_type
+
+        if interface_type == VI_INTF_GPIB:
+            return GpibInstrument(resource_name, **kwargs)
+        elif interface_type == VI_INTF_ASRL:
+            return SerialInstrument(resource_name, **kwargs)
+        else:
+            return Instrument(resource_name, **kwargs)
 
 
+class _BaseInstrument(object):
+    """Base class for instruments.
+
+    :param resource_name: the VISA name for the resource (eg. "GPIB::10")
+                          If None, it's assumed that the resource manager
+                          is to be constructed.
+    :param resource_manager: A resource manager instance.
+                             If None, the default resource manager will be used.
+    :param lock:
+    :param timeout:
+
+    See :class:Instrument for a detailed description.
+    """
+
+    DEFAULT_KWARGS = {'lock': VI_NO_LOCK,
+                      'timeout': 5}
+
+    def __init__(self, resource_name=None, resource_manager=None, **kwargs):
+        warn_for_invalid_kwargs(kwargs, self.DEFAULT_KWARGS.keys())
+
+        self.resource_manager = resource_manager or get_resource_manager()
+        self.visalib = self.resource_manager.visalib
+
+    def open(self, lock=VI_NO_LOCK, timeout=5):
+        with warning_context("ignore", "VI_SUCCESS_DEV_NPRESENT"):
+            self.session = self.resource_manager.open_resource(self._resource_name, lock)
+
+            if self.visalib.status == VI_SUCCESS_DEV_NPRESENT:
+                # okay, the device was not ready when we opened the session.
+                # Now it gets five seconds more to become ready.
+                # Every 0.1 seconds we probe it with viClear.
+                start_time = time.time()
+                sleep_time = 0.1
+                try_time = 5
+                while time.time() - start_time < try_time:
+                    time.sleep(sleep_time)
+                    try:
+                        self.clear()
+                        break
+                    except errors.VisaIOError as error:
+                        if error.error_code != VI_ERROR_NLISTENERS:
+                            raise
+
+        if timeout is None:
+            self.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
+        else:
+            self.timeout = timeout
+
+    def close(self):
+        """Closes the VISA session and marks the handle as invalid.
+
+        This method can be called to ensure that all resources are freed.
+        Finishing the object by __del__ seems to work safely enough though.
+
+        """
+        if self.session is not None:
+            self.visalib.close(self.session)
+            self.session = None
+
+    def __del__(self):
+        self.close()
+
+    def __str__(self):
+        return "%s at %s" % (self.__class__.__name__, self.resource_name)
+
+    def __repr__(self):
+        return "<%r(%r)>" % (self.__class__.__name__, self.resource_name)
+
+    def get_visa_attribute(self, name):
+        return self.visalib.get_attribute(self.session, name)
+
+    def set_visa_attribute(self, name, status):
+        self.visalib.set_attribute(self.session, name, status)
+
+    def clear(self):
+        self.visalib.clear(self.session)
+
+    @property
+    def timeout(self):
+        """The timeout in seconds for all resource I/O operations.
+
+        Note that the VISA library may round up this value heavily.  I
+        experienced that my NI VISA implementation had only the values 0, 1, 3
+        and 10 seconds.
+
+        """
+        timeout = self.get_visa_attribute(VI_ATTR_TMO_VALUE)
+        if timeout == VI_TMO_INFINITE:
+            raise NameError("no timeout is specified")
+        return timeout / 1000.0
+
+    @timeout.setter
+    def timeout(self, timeout):
+        if not(0 <= timeout <= 4294967):
+            raise ValueError("timeout value is invalid")
+        self.set_visa_attribute(VI_ATTR_TMO_VALUE, int(timeout * 1000))
+
+    @timeout.deleter
+    def timeout(self):
+        timeout = self.timeout  # just to test whether it's defined
+        self.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
+
+    @property
+    def resource_class(self):
+        """The resource class of the resource as a string.
+        """
+
+        # TODO: Check possible outputs.
+        try:
+            return self.get_visa_attribute(VI_ATTR_RSRC_CLASS).upper()
+        except errors.VisaIOError as error:
+            if error.error_code != VI_ERROR_NSUP_ATTR:
+                raise
+        return 'Unknown'
+
+    @property
+    def resource_name(self):
+        """The VISA resource name of the resource as a string.
+        """
+        return self.get_visa_attribute(VI_ATTR_RSRC_NAME)
+
+    @property
+    def interface_type(self):
+        """The interface type of the resource as a number.
+        """
+        interface_type, _ = self.visalib.parse_resource(resource_manager.session,
+                                                        self.resource_name)
+        return interface_type
+
+
+# The bits in the bitfield mean the following:
+#
+# bit number   if set / if not set
+#     0          binary/ascii
+#     1          double/single (IEEE floating point)
+#     2          big-endian/little-endian
+#
+# This leads to the following constants:
+
+ascii      = 0
+single     = 1
+double     = 3
+big_endian = 4
+
+CR = b"\r"
+LF = b"\n"
+
+
+class Instrument(_BaseInstrument):
+    """Class for all kinds of Instruments.
+
+    It can be instantiated, however, if you want to use special features of a
+    certain interface system (GPIB, USB, RS232, etc), you must instantiate one
+    of its child classes.
+
+    :param resource_name: the instrument's resource name or an alias,
+                          may be taken from the list from
+                          get_instruments_list().
+    :param timeout: the VISA timeout for each low-level operation in
+                    milliseconds.
+    :param term_chars: the termination characters for this device.
+    :param chunk_size: size of data packets in bytes that are read from the
+                       device.
+    :param lock: whether you want to have exclusive access to the device.
+                 Default: VI_NO_LOCK
+    :param delay: waiting time in seconds after each write command.
+                  Default: 0
+    :param send_end: whether to assert end line after each write command.
+                     Default: True
+    :param values_format: floating point data value format. Default: ascii (0)
+    """
+
+    #: How many bytes are read per low-level call.
+    chunk_size = 20 * 1024
+
+    #: Termination character sequence.
+    __term_chars = None
+
+    #: Seconds to wait after each high-level write
+    delay = 0.0
+
+    #: floating point data value format
+    values_format = ascii
+
+    DEFAULT_KWARGS = {'term_chars': None,
+                      'chunk_size': 20 * 1024,
+                      'delay': 0.0,
+                      'send_end': True,
+                      'values_format': ascii}
+
+
+    def __init__(self, resource_name, resource_manager=None, **kwargs):
+        skwargs, pkwargs = split_kwargs(kwargs, self.DEFAULT_KWARGS,
+                                        _BaseInstrument.DEFAULT_KWARGS)
+        super(Instrument, self).__init__(resource_name, resource_manager, pkwargs)
+
+        self.term_chars    = kwargs.get("term_chars")
+        self.chunk_size    = kwargs.get("chunk_size", self.chunk_size)
+        self.delay         = kwargs.get("delay", 0.0)
+        self.send_end      = kwargs.get("send_end", True)
+        self.values_format = kwargs.get("values_format", self.values_format)
+
+        if not self.resource_class:
+            warnings.warn("resource class of instrument could not be determined",
+                          stacklevel=2)
+        elif self.resource_class not in ("INSTR", "RAW", "SOCKET"):
+            warnings.warn("given resource was not an INSTR but %s"
+                          % self.resource_class, stacklevel=2)
+
+    def write(self, message):
+        """Write a string message to the device.
+
+        The term_chars are appended to it, unless they are already.
+
+        :param message: the string message to be sent.
+        """
+
+        if self.__term_chars and not message.endswith(self.__term_chars):
+            message += self.__term_chars
+        elif self.__term_chars is None and not message.endswith(CR + LF):
+            message += CR + LF
+
+        self.visalib.write(self.session, message)
+
+        if self.delay > 0.0:
+            time.sleep(self.delay)
+
+    def _strip_term_chars(self, buffer):
+        if self.__term_chars:
+            if buffer.endswith(self.__term_chars):
+                buffer = buffer[:-len(self.__term_chars)]
+            else:
+                warnings.warn("read string doesn't end with "
+                              "termination characters", stacklevel=2)
+        return buffer.rstrip(CR + LF)
+
+    def read_raw(self):
+        """Read the unmodified string sent from the instrument to the computer.
+
+        In contrast to read(), no termination characters are checked or
+        stripped.  You get the pristine message.
+
+        """
+        buffer = b""
+        with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
+            try:
+                chunk = self.visalib.read(self.session, self.chunk_size)
+                buffer += chunk
+                while self.visalib.get_status() == VI_SUCCESS_MAX_CNT:
+                    chunk = self.visalib.read(self.session, self.chunk_size)
+                    buffer += chunk
+            except:
+                pass
+
+        return buffer
+
+    def read(self):
+        """Read a string from the device.
+
+        Reading stops when the device stops sending (e.g. by setting
+        appropriate bus lines), or the termination characters sequence was
+        detected.  Attention: Only the last character of the termination
+        characters is really used to stop reading, however, the whole sequence
+        is compared to the ending of the read string message.  If they don't
+        match, a warning is issued.
+
+        All line-ending characters are stripped from the end of the string.
+        """
+
+        return self._strip_term_chars(self.read_raw())
+
+    def read_values(self, fmt=None):
+        """Read a list of floating point values from the device.
+
+        :param fmt: the format of the values.  If given, it overrides
+            the class attribute "values_format".  Possible values are bitwise
+            disjunctions of the above constants ascii, single, double, and
+            big_endian.  Default is ascii.
+
+        :return: the list of read values
+
+        """
+        if not fmt:
+            fmt = self.values_format
+
+        if fmt & 0x01 == ascii:
+            return parse_ascii(self.read())
+
+
+        original_term_chars = self.term_chars
+        self.term_chars = b""
+        try:
+            data = self.read_raw()
+        finally:
+            self.term_chars = original_term_chars
+
+        try:
+            if fmt & 0x03 == single:
+                is_single = True
+            elif fmt & 0x03 == double:
+                is_single = False
+            else:
+                raise ValueError("unknown data values fmt requested")
+            return parse_binary(data, fmt & 0x04 == big_endian, is_single)
+        except ValueError as e:
+            raise errors.InvalidBinaryFormat(e.args)
+
+    def ask(self, message):
+        """A combination of write(message) and read()"""
+
+        self.write(message)
+        return self.read()
+
+    def ask_for_values(self, message, format=None):
+        """A combination of write(message) and read_values()"""
+
+        self.write(message)
+        return self.read_values(format)
+
+    def trigger(self):
+        """Sends a software trigger to the device."""
+
+        self.set_visa_attribute(VI_ATTR_TRIG_ID, VI_TRIG_SW)
+        self.visalib.assert_trigger(self.session, VI_TRIG_PROT_DEFAULT)
+
+    @property
+    def term_chars(self):
+        """Set or read a new termination character sequence (property).
+
+        Normally, you just give the new termination sequence, which is appended
+        to each write operation (unless it's already there), and expected as
+        the ending mark during each read operation.  A typical example is CR+LF
+        or just CR.  If you assign "" to this property, the termination
+        sequence is deleted.
+
+        The default is None, which means that CR is appended to each write
+        operation but not expected after each read operation (but stripped if
+        present).
+        """
+
+        return self.__term_chars
+
+    @term_chars.setter
+    def term_chars(self, term_chars):
+
+        # First, reset termination characters, in case something bad happens.
+        self.__term_chars = b""
+        self.set_visa_attribute(VI_ATTR_TERMCHAR_EN, VI_FALSE)
+        if term_chars == b"" or term_chars is None:
+            self.__term_chars = term_chars
+            return
+            # Only the last character in term_chars is the real low-level
+
+        # termination character, the rest is just used for verification after
+        # each read operation.
+        last_char = term_chars[-1:]
+        # Consequently, it's illogical to have the real termination character
+        # twice in the sequence (otherwise reading would stop prematurely).
+
+        if term_chars[:-1].find(last_char) != -1:
+            raise ValueError("ambiguous ending in termination characters")
+
+        self.set_visa_attribute(VI_ATTR_TERMCHAR, ord(last_char))
+        self.set_visa_attribute(VI_ATTR_TERMCHAR_EN, VI_TRUE)
+        self.__term_chars = term_chars
+
+    @term_chars.deleter
+    def term_chars(self):
+        self.term_chars = None
+
+    @property
+    def send_end(self):
+        """Whether or not to assert EOI (or something equivalent after each
+        write operation.
+        """
+
+        return self.get_visa_attribute(VI_ATTR_SEND_END_EN) == VI_TRUE
+
+    @send_end.setter
+    def send_end(self, send):
+        self.set_visa_attribute(VI_ATTR_SEND_END_EN, VI_TRUE if send else VI_FALSE)
+
+
+class GpibInstrument(Instrument):
+    """Class for GPIB instruments.
+
+    This class extents the Instrument class with special operations and
+    properties of GPIB instruments.
+
+    :param gpib_identifier: strings are interpreted as instrument's VISA resource name.
+                            Numbers are interpreted as GPIB number.
+    :param board_number: the number of the GPIB bus.
+
+    Further keyword arguments are passed to the constructor of class
+    Instrument.
+
+    """
+
+    def __init__(self, gpib_identifier, board_number=0, **keyw):
+        _warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
+                                                   "chunk_size", "lock",
+                                                   "delay", "send_end",
+                                                   "values_format"))
+        if isinstance(gpib_identifier, int):
+            resource_name = "GPIB%d::%d" % (board_number, gpib_identifier)
+        else:
+            resource_name = gpib_identifier
+
+        Instrument.__init__(self, resource_name, **keyw)
+
+        # Now check whether the instrument is really valid
+        if self.interface_type != VI_INTF_GPIB:
+            raise ValueError("device is not a GPIB instrument")
+
+        self.visalib.enable_event(self.session, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+
+    def __del__(self):
+        if self.session is not None:
+            self.__switch_events_off()
+            super(GpibInstrument, self).__del__()
+
+    def __switch_events_off(self):
+        self.visalib.disable_event(self.session, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+        self.visalib.vpp43.discard_events(self.session, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+
+    def wait_for_srq(self, timeout=25):
+        """Wait for a serial request (SRQ) coming from the instrument.
+
+        Note that this method is not ended when *another* instrument signals an
+        SRQ, only *this* instrument.
+
+        :param timeout: the maximum waiting time in seconds.
+                        Defaul: 25 (seconds).
+                        None means waiting forever if necessary.
+        """
+        lib = self.visalib
+
+        lib.enable_event(self.session, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+
+        if timeout and not(0 <= timeout <= 4294967):
+            raise ValueError("timeout value is invalid")
+
+        starting_time = time.clock()
+
+        while True:
+            if timeout is None:
+                adjusted_timeout = VI_TMO_INFINITE
+            else:
+                adjusted_timeout = int((starting_time + timeout - time.clock()) * 1000)
+                if adjusted_timeout < 0:
+                    adjusted_timeout = 0
+
+            event_type, context = lib.wait_on_event(self.session, VI_EVENT_SERVICE_REQ,
+                                                    adjusted_timeout)
+            lib.close(context)
+            if self.stb & 0x40:
+                break
+
+        lib.discard_events(self.session, VI_EVENT_SERVICE_REQ, VI_QUEUE)
+
+    @property
+    def stb(self):
+        """Service request status register."""
+
+        return self.visalib.read_stb(self.session)
+
+# The following aliases are used for the "end_input" property
+no_end_input = VI_ASRL_END_NONE
+last_bit_end_input = VI_ASRL_END_LAST_BIT
+term_chars_end_input = VI_ASRL_END_TERMCHAR
+
+# The following aliases are used for the "parity" property
+no_parity = VI_ASRL_PAR_NONE
+odd_parity = VI_ASRL_PAR_ODD
+even_parity = VI_ASRL_PAR_EVEN
+mark_parity = VI_ASRL_PAR_MARK
+space_parity = VI_ASRL_PAR_SPACE
+
+
+class SerialInstrument(Instrument):
+    """Class for serial (RS232 or parallel port) instruments.  Not USB!
+
+    This class extents the Instrument class with special operations and
+    properties of serial instruments.
+
+    :param resource_name: the instrument's resource name or an alias, may be
+        taken from the list from get_instruments_list().
+
+    Further keyword arguments are passed to the constructor of class
+    Instrument.
+    """
+
+    def __init__(self, resource_name, **keyw):
+
+        _warn_for_invalid_keyword_arguments(keyw,
+           ("timeout", "term_chars", "chunk_size", "lock",
+            "delay", "send_end", "values_format",
+            "baud_rate", "data_bits", "end_input", "parity", "stop_bits"))
+        keyw.setdefault("term_chars", CR)
+        Instrument.__init__(self, resource_name,
+                            **_filter_keyword_arguments(keyw,
+                              ("timeout", "term_chars", "chunk_size", "lock",
+                               "delay", "send_end", "values_format")))
+        # Now check whether the instrument is really valid
+        if self.interface_type != VI_INTF_ASRL:
+            raise ValueError("device is not a serial instrument")
+
+        self.baud_rate = keyw.get("baud_rate", 9600)
+        self.data_bits = keyw.get("data_bits", 8)
+        self.stop_bits = keyw.get("stop_bits", 1)
+        self.parity    = keyw.get("parity", no_parity)
+        self.end_input = keyw.get("end_input", term_chars_end_input)
+
+    @property
+    def baud_rate(self):
+        """The baud rate of the serial instrument.
+        """
+        return self.get_visa_attribute(VI_ATTR_ASRL_BAUD)
+
+    @baud_rate.setter
+    def baud_rate(self, rate):
+        self.set_visa_attribute(VI_ATTR_ASRL_BAUD, rate)
+
+    @property
+    def data_bits(self):
+        """Number of data bits contained in each frame (from 5 to 8).
+        """
+
+        return self.get_visa_attribute(VI_ATTR_ASRL_DATA_BITS)
+
+    @data_bits.setter
+    def data_bits(self, bits):
+        if not 5 <= bits <= 8:
+            raise ValueError("number of data bits must be from 5 to 8")
+
+        self.set_visa_attribute(VI_ATTR_ASRL_DATA_BITS, bits)
+
+    @property
+    def stop_bits(self):
+        """Number of stop bits contained in each frame (1, 1.5, or 2).
+        """
+
+        deci_bits = self.get_visa_attribute(VI_ATTR_ASRL_STOP_BITS)
+        if deci_bits == 10:
+            return 1
+        elif deci_bits == 15:
+            return 1.5
+        elif deci_bits == 20:
+            return 2
+
+    @stop_bits.setter
+    def stop_bits(self, bits):
+        deci_bits = 10 * bits
+        if 9 < deci_bits < 11:
+            deci_bits = 10
+        elif 14 < deci_bits < 16:
+            deci_bits = 15
+        elif 19 < deci_bits < 21:
+            deci_bits = 20
+        else:
+            raise ValueError("invalid number of stop bits")
+
+        self.set_visa_attribute(VI_ATTR_ASRL_STOP_BITS, deci_bits)
+
+    @property
+    def parity(self):
+        """The parity used with every frame transmitted and received."""
+
+        return self.get_visa_attribute(VI_ATTR_ASRL_PARITY)
+
+    @parity.setter
+    def parity(self, parity):
+
+        self.set_visa_attribute(VI_ATTR_ASRL_PARITY, parity)
+
+    @property
+    def end_input(self):
+        """indicates the method used to terminate read operations"""
+
+        return self.get_visa_attribute(VI_ATTR_ASRL_END_IN)
+
+    @end_input.setter
+    def end_input(self, termination):
+        self.set_visa_attribute(VI_ATTR_ASRL_END_IN, termination)
+
+
+def get_instruments_list(use_aliases=True):
+    """Get a list of all connected devices.
+
+    This function is kept for backwards compatibility with PyVISA < 1.5.
+
+    Use::
+
+        >>> rm = ResourceManager()
+        >>> rm.list_resources()
+
+    or::
+
+        >>> rm = ResourceManager()
+        >>> rm.list_resources_info()
+
+    in the future.
+
+    :param use_aliases: if True (default), return the device alias if it has one.
+                        Otherwise, always return the standard resource name
+                        like "GPIB::10".
+
+    :return: A list of strings with the names of all connected devices,
+             ready for being used to open each of them.
+
+    """
+
+    if use_aliases:
+        return [info.alias or resource_name
+                for resource_name, info in get_resource_manager().list_resources_info()]
+
+    return get_resource_manager().list_resources()
+
+
+def instrument(resource_name, **kwargs):
+    """Factory function for instrument instances.
+
+    :param resource_name: the VISA resource name of the device.
+                          It may be an alias.
+    :param kwargs: keyword argument for the class constructor of the device instance
+                   to be generated.  See the class Instrument for further information.
+
+    :return: The generated instrument instance.
+
+    """
+
+    return get_resource_manager().instrument(resource_name, **kwargs)
+
+
+resource_manager = None
+
+def get_resource_manager():
+    global resource_manager
+    if resource_manager is None:
+        resource_manager = ResourceManager()
+        atexit.register(resource_manager.close)
+    return resource_manager
