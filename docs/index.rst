@@ -100,42 +100,23 @@ controlling:
 .. toctree::
     :maxdepth: 1
 
+    getting
     pyvisa
     vpp43
 
 
+More information
+----------------
+
+.. toctree::
+    :maxdepth: 1
+
+    contributing
+    faq
+
 Links
 -----
 
-* The original VISA docs:
-
-  - `VISA specification`_ (scroll down to the end)
-  - `VISA library specification`_
-  - `VISA specification for textual languages`_
-
-* The very good VISA manuals from `National Instruments's VISA pages`_:
-
-  - `NI-VISA User Manual`_
-  - `NI-VISA Programmer Reference Manual`_
-  - `NI-VISA help file`_ in HTML
-
-.. _`PyVISA manual`: http://pyvisa.sourceforge.net/pyvisa.html
-.. _`as PDF`: http://pyvisa.sourceforge.net/pyvisa.pdf
-.. _`PyVISA project page`: http://sourceforge.net/projects/pyvisa/
-.. _`PyVISA low-level implementation`: http://pyvisa.sourceforge.net/vpp43.html
-.. _`VISA specification`:
-       http://www.ivifoundation.org/Downloads/Specifications.htm
-.. _`VISA library specification`:
-       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
-.. _`VISA specification for textual languages`:
-       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp432.doc
-.. _`National Instruments's VISA pages`: http://ni.com/visa/
-.. _`NI-VISA Programmer Reference Manual`:
-       http://digital.ni.com/manuals.nsf/websearch/87E52268CF9ACCEE86256D0F006E860D
-.. _`NI-VISA help file`:
-       http://digital.ni.com/manuals.nsf/websearch/21992F3750B967ED86256F47007B00B3
-.. _`NI-VISA User Manual`:
-       http://digital.ni.com/manuals.nsf/websearch/266526277DFF74F786256ADC0065C50C
 
 
 ..  LocalWords:  rst british reST ies vpp pyvisa docs pyvLab

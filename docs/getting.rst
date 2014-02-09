@@ -3,7 +3,9 @@
 Installation
 ============
 
-PyVISA has no dependencies except Python_ itself. In runs on Python 2.6+ and 3.2+.
+PyVISA is a wrapper around the `National Instruments's VISA` library, which you need to download and install in order to use PyVISA.
+
+PyVISA has no additional dependencies except Python_ itself. In runs on Python 2.6+ and 3.2+.
 
 You can install it using pip_::
 
@@ -49,3 +51,4 @@ Once you have a copy of the source, you can embed it in your Python package, or 
 .. _`Anaconda CE`: https://store.continuum.io/cshop/anaconda
 .. _PyPI: https://pypi.python.org/pypi/PyVISA
 .. _GitHub: https://github.com/hgrecco/pyvisa
+.. _`National Instruments's VISA`: http://ni.com/visa/
