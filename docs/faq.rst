@@ -14,7 +14,8 @@ for the VISA library.
 Who makes *PyVISA*?
 -------------------
 
-PyVISA was originally programmed by Torsten Bronger and Gregor Thalhammer, Innsbruck, Austria. It is based on earlier experiences by Thalhammer.
+PyVISA was originally programmed by Torsten Bronger and Gregor Thalhammer.
+It is based on earlier experiences by Thalhammer.
 
 It was maintained from March 2012 to August 2013 by Florian Bauer.
 It is currently maintained by Hernan E. Grecco <hernan.grecco@gmail.com>.
@@ -25,23 +26,87 @@ Take a look at AUTHORS_ for more information
 I found a bug, how can I report it?
 -----------------------------------
 
-Please report it on the `Issue Tracker`_, including operating system, python version and library version.
+Please report it on the `Issue Tracker`_, including operating system, python
+version and library version. In addition you might add supporting information
+by pasting the output of this command::
+
+    python -c "from pyvisa import util; util.get_debug_info()"
 
 
 
-OSError: dlopen(/Library/Frameworks/visa.framework/visa, 6): no suitable image found.  Did find:
-	/Library/Frameworks/visa.framework/visa: no matching architecture in universal wrapper
-	/Library/Frameworks/visa.framework/visa: no matching architecture in universal wrapper
+Error: Image not found
+----------------------
 
-It is possible to force OSX to run Python in 32 bit mode by
-$ export VERSIONER_PYTHON_PREFER_32_BIT=yes
+This error occurs when you have provided an invalid path for the VISA library.
+Check that the path provided to the constructor or in the configuration file
 
-Which you could put in your .profile or .bashrc to run every time you open a new shell. But I didn’t want to default to 32 bit python, I’d rather force it into 32 bit mode when needed.
 
-So, to my .profile I added
-alias python386='arch -i386 python'
+Error: Could not found VISA library
+-----------------------------------
 
-To force a script to execute under 32 bit Python, rather than including the line #!/usr/bin/python, I start my script with #!/usr/bin/env arch -i386 python.
+This error occurs when you have not provided a path for the VISA library and PyVISA
+is not able to find it for you. You can solve it by providing the library path to the
+`VisaLibrary` or `ResourceManager` constructor::
+
+    >>> visalib = VisaLibrary('/path/to/library')
+
+or by create a configuration file as described HERE XXXX.
+
+
+Error: No matching architecture
+-------------------------------
+
+This error occurs when you the Python architecture does not match the VISA
+architecture. It is common on Mac OS X and the error message looks like this::
+
+    OSError: dlopen(/Library/Frameworks/visa.framework/visa, 6): no suitable image found.  Did find:
+        /Library/Frameworks/visa.framework/visa: no matching architecture in universal wrapper
+        /Library/Frameworks/visa.framework/visa: no matching architecture in universal wrapper
+
+First, determine the details of your installation with the help of the following debug command::
+
+    python -c "from pyvisa import util; util.get_debug_info()"
+
+You will see the 'bitness' of the Python interpreter and at the end you will see the list of VISA
+libraries that PyVISA was able to find.
+
+The solution is to:
+
+  1. Install and use a VISA library matching your Python 'bitness'
+
+     Download and install it from `National Instruments's VISA`. Run the debug
+     command again to see if the new library was found by PyVISA. If not,
+     create a configuration file as described HERE XXXX.
+
+     If there is no VISA library with the correct bitness available, try solution 2.
+
+or
+
+  2. Install and use a Python matching your VISA library 'bitness'
+
+     In Windows and Linux: Download and install Python with the matching bitness.
+     Run your script again using the new Python
+
+     In Mac OS X, Python is usually delivered as universal binary (32 and 64 bits).
+
+     You can run it in 32 bit by running::
+
+        arch -i386 python myscript.py
+
+     or in 64 bits by running::
+
+        arch -x86_64 python myscript.py
+
+     You can create an alias by adding the following line
+
+        alias python32="arch -i386 python"
+
+     into your .bashrc or .profile or ~/.bash_profile (or whatever file depending
+     on which shell you are using.)
+
+     You can also create a `virtual environment`_ for this.
+
+
 
 
 Where can I get more information about VISA?
@@ -54,7 +119,7 @@ Where can I get more information about VISA?
   - `VISA library specification`_
   - `VISA specification for textual languages`_
 
-* The very good VISA manuals from `National Instruments's VISA pages`_:
+* The very good VISA manuals from `National Instruments's VISA`_:
 
   - `NI-VISA User Manual`_
   - `NI-VISA Programmer Reference Manual`_
@@ -66,7 +131,7 @@ Where can I get more information about VISA?
        http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
 .. _`VISA specification for textual languages`:
        http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp432.doc
-.. _`National Instruments's VISA pages`: http://ni.com/visa/
+.. _`National Instruments's VISA`: http://ni.com/visa/
 .. _`NI-VISA Programmer Reference Manual`:
        http://digital.ni.com/manuals.nsf/websearch/87E52268CF9ACCEE86256D0F006E860D
 .. _`NI-VISA help file`:
@@ -77,4 +142,4 @@ Where can I get more information about VISA?
 
 .. _`AUTHORS`: https://github.com/hgrecco/pyvisa/blob/master/AUTHORS
 .. _`Issue Tracker`: https://github.com/hgrecco/pyvisa/issues
-.. _
+.. _`virtual environment`: http://www.virtualenv.org/en/latest/

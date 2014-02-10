@@ -11,6 +11,9 @@ PyVISA: Python wrapper for the VISA library
    :class: floatingflask
 
 
+..warning: This Documentation is undergoing heavy reorganization.
+
+
 The PyVISA package enables you to control all kinds of measurement equipment
 through various busses (GPIB, RS232, USB) with Python programs.  As an example,
 reading self-identification from a Keithley Multimeter with GPIB number 12 is
@@ -113,9 +116,6 @@ More information
 
     contributing
     faq
-
-Links
------
 
 
 
