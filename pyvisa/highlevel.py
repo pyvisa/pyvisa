@@ -77,14 +77,17 @@ class VisaLibrary(object):
             try:
                 return cls(path)
             except OSError as e:
-                logger.debug('Could not open library %s: %s', path, str(e))
+                logger.debug('Could not open VISA library %s: %s', path, str(e))
                 errs.append(str(e))
         else:
-            raise OSError('Could not open library:\n' + '\n'.join(errs))
+            raise OSError('Could not open VISA library:\n' + '\n'.join(errs))
 
     def __new__(cls, library_path=None):
         if library_path is None:
-            return cls.from_paths(*get_library_paths(cls._wrapper_module))
+            paths = get_library_paths(cls._wrapper_module)
+            if not paths:
+                raise OSError('Could not found VISA library.')
+            return cls.from_paths(*paths)
         else:
             if library_path in cls._registry:
                 return cls._registry[library_path]
@@ -176,7 +179,7 @@ class VisaLibrary(object):
 
     def uninstall_handler(self, session, event_type, handler, user_handle=None):
         """Uninstalls handlers for events.
-\
+
         :param session: Unique logical identifier to a session.
         :param event_type: Logical event identifier.
         :param handler: Interpreted as a valid reference to a handler to be uninstalled by a client application.
@@ -273,7 +276,7 @@ class ResourceManager(object):
         """
         return self.visalib.open(self.session, resource_name, access_mode, open_timeout)
 
-    def instrument(self, resource_name, **kwargs):
+    def get_instrument(self, resource_name, **kwargs):
         """Return an instrument for the resource name.
 
         :param resource_name: name or alias of the resource to open.
@@ -920,7 +923,7 @@ def instrument(resource_name, **kwargs):
 
     """
 
-    return get_resource_manager().instrument(resource_name, **kwargs)
+    return get_resource_manager().get_instrument(resource_name, **kwargs)
 
 
 resource_manager = None
