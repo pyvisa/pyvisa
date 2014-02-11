@@ -34,7 +34,7 @@ the new names are mere expansions of the original ones.
 
 
 Connecting to the VISA shared object
-====================================
+------------------------------------
 
 ``vpp43`` tries to find the VISA library for itself.  On Windows, this is not a
 big problem.  ``visa32.dll`` must be in your ``PATH``.  If it isn't, move it
@@ -67,7 +67,7 @@ on the location of your Python.)
 
 
 Diagnostics
-===========
+-----------
 
 This module can raise a couple of ``vpp43``-specific exceptions.
 
@@ -118,7 +118,7 @@ see why the exception was raised, contact the current maintainers of PyVISA.
 
 
 The PyVISA function reference
-=============================
+-----------------------------
 
 Please note that all descriptions given in this reference serve mostly as
 reminders.  For real descriptions consult a `VISA specification`_ or `NI-VISA

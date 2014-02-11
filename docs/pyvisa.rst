@@ -2,6 +2,9 @@
 .. -*- mode: rst; coding: utf-8; ispell-local-dictionary: "british"; -*-
 
 
+About the legacy visa module
+============================
+
 .. topic:: Abstract
 
    PyVISA enables you to control your measurement and test equipment
@@ -32,7 +35,7 @@
 .. contents::
 
 An example
-==========
+----------
 
 Let's go *in medias res* and have a look at a simple example::
 
@@ -233,7 +236,7 @@ you to a comprehensive VISA description like
 
 
 :mod:`visa` --- module contents
-===============================
+-------------------------------
 
 .. module:: visa
    :platform: Linux,Windows
@@ -596,7 +599,7 @@ the class constructor or :func:`instrument`.
 
 
 Common properties of instrument variables
-=========================================
+-----------------------------------------
 
 
 .. _sec:timeouts:
@@ -813,7 +816,7 @@ should know what you're doing.
 
 
 Mixing with direct VISA commands
-================================
+--------------------------------
 
 .. index:: single: VISA commands, mixing with
 
@@ -845,111 +848,6 @@ stored in :attr:`resource_manager.session`::
                                      VI_EXCLUSIVE_LOCK)
 
 
-Installation
-============
-
-.. index:: single: installation
-
-
-Prerequisites
--------------
-
-.. index::
-   single: prerequisites
-   module: ctypes
-
-PyVISA needs Python version 2.3 or newer.
-
-The PyVISA package doesn't include
-a low-level VISA implementation itself.  You  have to get it from one of the
-VISA vendors, e.g. from the `National  Instruments VISA pages
-<http://ni.com/visa/>`_.  NI sells its VISA kit for  approx. $400.  However,
-it's bundled with most of NI's hardware and  software.  Besides, the download
-itself is free, and one user reported that he  had successfully installed VISA
-support without buying anything.
-
-I can't really tell about other vendors but
-well-equipped labs probably have  VISA already (even if they don't know).
-Please install VISA properly before  you proceed.
-
-Additionally, your Python installation needs a fresh version of  `ctypes
-<http://starship.python.net/crew/theller/ctypes/>`_.
-
-By the way, if you use Windows, I recommend to install `Enthought Python
-<http://www.enthought.com/python/>`_.  It is a special Python version  with all-
-included philosophy for scientific and engineering  applications. [#]_
-
-
-Setting up the module
----------------------
-
-.. index::
-   single: configuration
-   single: setting up PyVISA
-
-
-Windows
-^^^^^^^
-
-.. index::
-   single: visa32.dll
-   single: PATH
-
-PyVISA expects a file called :file:`visa32.dll` in the :envvar:`PATH`
-.  For example, on my system you find this file in
-:file:`C:\\WINNT\\system32\\` .  Either copy it there or expand your
-:envvar:`PATH`.  Alternatively, you can create an INI file.  You must
-do this anyway if the file is not called :file:`visa32.dll` on your
-system.
-
-
-Linux
-^^^^^
-
-For Linux, the VISA library is by default at
-:file:`/usr/local/vxipnp/linux/bin/libvisa.so.7`.  If this is not the case on
-your installation, you have to create an INI file.
-
-
-INI file for customisation
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. index::
-   single: INI file
-   single: pyvisarc@.pyvisarc
-
-If the VISA library file is not at the default place, or doesn't have the
-default name for your operating system (see above), you can tell PyVISA by
-creating a file called :file:`.pyvisarc` (mind the leading dot).
-
-Another motivation for setting up an INI file is that you have more than one  VISA
-library, e.g. because two GPIB interfaces of two different vendors are
-connected with the computer.  However, in this case I'd try to use both
-interfaces with one library because sometimes you're lucky and it works.  Note
-that PyVISA is currently not able to switch between DLLs while the program is
-running.
-
-For Windows, place it in your "Documents and Settings" folder, [#]_
-e.g. :file:`C:\\Documents and Settings\\smith\\.pyvisarc` if "smith" is the
-name of your login account.  For Linux, put it in your home directory.
-
-This file has the format of an INI file. For example, if the library
-is at :file:`/usr/lib/libvisa.so.7`, the file :file:`.pyvisarc` must
-contain the following::
-
-   [Paths]
-   
-   VISA library: /usr/lib/libvisa.so.7
-
-Please note that `[Paths]` is treated case-sensitively.
-
-You can define a site-wide configuration file at
-:file:`/usr/share/pyvisa/.pyvisarc` (It may also be
-:file:`/usr/local/...` depending on the location of your Python).
-Under Windows, this file is usually placed at
-:file:`c:\\Python24\\share\\pyvisa\\.pyvisarc`.
-
-
 Setting the VISA library in the program
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -968,21 +866,6 @@ the path must be preceeded by `r`::
    visa_library.load_library(r"c:\WINNT\system32\visa32.dll")
    from visa import *
    ...
-
-
-About PyVISA
-============
-
-.. index:: single: authors
-
-PyVISA was originally programmed by Torsten Bronger, Aachen, Germany
-and Gregor Thalhammer, Innsbruck, Austria.  It bases on earlier
-experiences by Thalhammer.
-
-Its homepage is `<http://sourceforge.net/projects/pyvisa/>`_.
-Please report  bugs there.
-
-**I'm also very keen to know whether PyVISA works for you or not.  Thank you!**
 
 
 .. rubric:: Footnotes

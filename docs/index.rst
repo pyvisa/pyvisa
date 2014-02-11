@@ -1,7 +1,5 @@
 :orphan:
 
-.. -*- mode: rst; coding: utf-8; ispell-local-dictionary: "british"; -*-
-
 
 PyVISA: Python wrapper for the VISA library
 ===========================================
@@ -11,7 +9,7 @@ PyVISA: Python wrapper for the VISA library
    :class: floatingflask
 
 
-..warning: This Documentation is undergoing heavy reorganization.
+.. warning: This Documentation is undergoing heavy reorganization.
 
 
 The PyVISA package enables you to control all kinds of measurement equipment
@@ -23,90 +21,45 @@ as easy as three lines of Python code::
     keithley = visa.instrument("GPIB::12")
     print(keithley.ask("*IDN?"))
 
-(That's the whole program; really!) It is tailored to work on Windows,
-Linux and Mac; with arbitrary adapters (e.g. National Instruments, Agilent,
-Tektronix, Stanford Research Systems).  In order to achieve this, PyVISA
-relies on an external library file which is bundled with hardware and software
-of those vendors.  (So only in rare cases you have to purchase it separately.)
-
-PyVISA implements convenient and Pythonic programming in two layers:
-
-1. A wrapper module around the visa library.
-   This module
-Additionally, there is the lower level module ``vpp43``, which directly
-   calls the VISA functions from Python.  See the `PyVISA low-level
-   implementation`_ for more information.  This is only for people who need
-   full control or the official VISA functions for some reason.
-
-2. An object-oriented Python module has been created simply called ``visa``.
-   It is the recommended way to use PyVISA.  See the `PyVISA manual`_ for more
-   information.
-
-
-PyVISA is free open-source software.  The `PyVISA project page`_ contains the
-bug tracker and the download area.
-
-Projects using PyVISA so far:
-
-* `pyvLab`_ -- program to control VISA-talking instruments.
-* `Lantz`_ -- a Python instrumentation toolkit.
-
-.. _`pyvLab`: http://pyvlab.sourceforge.net/
-.. _`Lantz`: https://lantz.readthedocs.org/
+(That's the whole program; really!) It works on Windows, Linux and Mac;
+with arbitrary adapters (e.g. National Instruments, Agilent, Tektronix,
+Stanford Research Systems).  In order to achieve this, PyVISA relies on
+an external library file which is bundled with hardware and software
+of those vendors.
 
 
 General overview
 ----------------
 
-The programming of measurement instruments can be real pain.  There are many
+The programming of measurement instruments can be real pain. There are many
 different protocols, sent over many different interfaces and bus systems (GPIB,
-RS232, USB).  For every programming language you want to use, you have to find
+RS232, USB). For every programming language you want to use, you have to find
 libraries that support both your device and its bus system.
 
-In order to ease this unfortunate situation, the VISA [#]_ specification was
-defined in the middle of the 90ies.  Today VISA is implemented on all
-significant operating systems.  A couple of vendors offer VISA libraries,
-partly with free download.  These libraries work together with arbitrary
-peripherical devices, although they may be limited to certain interface
-devices, such as the vendor's GPIB card.
-
-.. [#] Virtual Instrument Software Architecture
+In order to ease this unfortunate situation, the VISA (Virtual Instrument
+Software Architecture specification was defined in the middle of the 90ies.
+Today VISA is implemented on all significant operating systems. A couple
+of vendors offer VISA libraries, partly with free download.  These libraries
+work together with arbitrary peripherical devices, although they may be
+limited to certain interface devices, such as the vendor's GPIB card.
 
 The VISA specification has explicit bindings to Visual Basic, C, and G
-(LabVIEW's graphical language).  However, you can use VISA with any language
-capable of calling functions in a DLL.  Python is such a language.
+(LabVIEW's graphical language). However, you can use VISA with any language
+capable of calling functions in a shared library (`.dll`, `.so`, `.dylib`).
+PyVISA is Python wrapper for such shared library.
 
 
-VISA and Python
----------------
-
-Python has a couple of features that make it very interesting for measurement
-controlling:
-
-* Python is an easy-to-learn scripting language with short development cycles.
-
-* It represents a high abstraction level [#]_, which perfectly blends with the
-  abstraction level of measurement programs.
-
-* It has a very rich set of native libraries, including numerical and plotting
-  modules for data analysis and visualisation.
-
-* A large set of books (in many languages) and on-line publications is
-  available.
-
-* You can download it for free at http://www.python.org.
-
-.. [#] For example, you don't need to care about the underlying operating
-       system with all its peculiarities.
-
+User guide
+----------
 
 .. toctree::
     :maxdepth: 1
 
     getting
-    pyvisa
-    vpp43
-
+    tutorial
+    configuring
+    instruments
+    architechture
 
 More information
 ----------------
@@ -114,9 +67,20 @@ More information
 .. toctree::
     :maxdepth: 1
 
+    migrating
     contributing
     faq
+    api/index
 
+
+Legacy Modules
+--------------
+
+.. toctree::
+    :maxdepth: 1
+
+    vpp43
+    pyvisa
 
 
 ..  LocalWords:  rst british reST ies vpp pyvisa docs pyvLab

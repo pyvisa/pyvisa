@@ -33,7 +33,6 @@ by pasting the output of this command::
     python -c "from pyvisa import util; util.get_debug_info()"
 
 
-
 Error: Image not found
 ----------------------
 
@@ -50,7 +49,11 @@ is not able to find it for you. You can solve it by providing the library path t
 
     >>> visalib = VisaLibrary('/path/to/library')
 
-or by create a configuration file as described HERE XXXX.
+or::
+
+    >>> rm = ResourceManager('Path to library')
+
+or by create a configuration file as described in ref:`configuring`.
 
 
 Error: No matching architecture
@@ -76,7 +79,7 @@ The solution is to:
 
      Download and install it from `National Instruments's VISA`. Run the debug
      command again to see if the new library was found by PyVISA. If not,
-     create a configuration file as described HERE XXXX.
+     create a configuration file as described in ref:`configuring`.
 
      If there is no VISA library with the correct bitness available, try solution 2.
 
@@ -105,8 +108,6 @@ or
      on which shell you are using.)
 
      You can also create a `virtual environment`_ for this.
-
-
 
 
 Where can I get more information about VISA?

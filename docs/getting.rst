@@ -18,10 +18,9 @@ or using easy_install_::
 That's all! You can check that PyVISA is correctly installed by starting up python, and importing PyVISA:
 
     >>> import visa
+    >>> lib = visa.VisaLibrary()
 
-.. note:: If you have an old system installation of Python and you don't want to
-   mess with it, you can try `Anaconda CE`_. It is a free Python distribution by
-   Continuum Analytics that includes many scientific packages.
+If you encounter any problem, take a look at the :ref:`faq`.
 
 
 Getting the code
@@ -43,6 +42,10 @@ Once you have a copy of the source, you can embed it in your Python package, or 
 
     $ python setup.py install
 
+
+.. note:: If you have an old system installation of Python and you don't want to
+   mess with it, you can try `Anaconda CE`_. It is a free Python distribution by
+   Continuum Analytics that includes many scientific packages.
 
 
 .. _easy_install: http://pypi.python.org/pypi/setuptools
