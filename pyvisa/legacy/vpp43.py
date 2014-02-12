@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa.legacy.vpp43
-    ~~~~~~~~~~~~~~~~~
+    pyvisa.legacy.vpp43
+    ~~~~~~~~~~~~~~~~~~~
 
     Defines VPP 4.3.2 routines.
 

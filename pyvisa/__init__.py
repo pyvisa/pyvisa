@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa
-    ~~~~
+    pyvisa
+    ~~~~~~
 
     Python wrapper of National Instrument (NI) Virtual Instruments Software
     Architecture library (VISA).

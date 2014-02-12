@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa.legacy
-    ~~~~~~~~~~~
+    pyvisa.legacy
+    ~~~~~~~~~~~~~
 
     This is a legacy module for backwards compatibility with PyVISA < 1.5
 

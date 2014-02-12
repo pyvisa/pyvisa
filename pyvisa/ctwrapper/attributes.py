@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa.wrapper.attributes
-    ~~~~~~~~~~~~~~~~~~~~~~~
+    pyvisa.wrapper.attributes
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Defines VPP 4.3.2 attribute data.
 

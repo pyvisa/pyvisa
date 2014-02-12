@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa.visa_attributes
-    ~~~~~~~~~~~~~~~~~~~~
+    pyvisa.visa_attributes
+    ~~~~~~~~~~~~~~~~~~~~~~
 
     Defines VISA attributes.
 

@@ -1,31 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-    visa.legacy.visa
-    ~~~~~~~~~~~~~~~~
+    pyvisa.legacy.visa
+    ~~~~~~~~~~~~~~~~~~
 
     Top-level module of PyVISA with object-oriented layer on top of the
     original VISA functions (in vpp43.py).
 
-    This is a legacy module for backwards compatibility with PyVISA < 1.5
-
-    Exported functions:
-
-    get_instruments_list() -- return a list with all found instruments
-    instrument() -- factory function for creating instrument instances
-
-    Exported classes:
-
-    ResourceTemplate -- abstract base class of the VISA implementation
-    ResourceManager -- singleton class for the default resource manager
-    Instrument -- generic class for all kinds of Instruments
-    GpibInstrument -- class for GPIB instruments
-    SerialInstrument -- class for serial (COM, LPT) instruments
-    Interface -- base class for GPIB interfaces (rather than instruments)
-    Gpib -- class for GPIB interfaces (rather than instruments)
-
-    Exported variables:
-
-    resource_manager -- the single instance of ResourceManager.
+    This is a legacy module for backwards compatibility with PyVISA < 1.
 
     This file is part of PyVISA.
 

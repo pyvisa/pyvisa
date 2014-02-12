@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+    pyvisa.util
+    ~~~~~~~~~~~
+
+    General utility functions.
+
+    This file is part of PyVISA.
+
+    :copyright: (c) 2014 by the PyVISA authors.
+    :license: MIT, see COPYING for more details.
+"""
+
+from __future__ import division, unicode_literals, print_function, absolute_import
 
 import io
 import os

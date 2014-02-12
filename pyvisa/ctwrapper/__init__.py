@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa.wrapper
-    ~~~~~~~~~~~~
+    pyvisa.wrapper
+    ~~~~~~~~~~~~~~
 
     ctypes wrapper for VISA library.
 

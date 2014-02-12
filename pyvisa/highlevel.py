@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa.highlevel
-    ~~~~~~~~~~~~~~
+    pyvisa.highlevel
+    ~~~~~~~~~~~~~~~~
 
     High level Visa library wrapper.
 

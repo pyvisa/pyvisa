@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    visa.wrapper.functions
-    ~~~~~~~~~~~~~~~~~~~~~~
+    pyvisa.wrapper.functions
+    ~~~~~~~~~~~~~~~~~~~~~~~~
 
     Defines VPP 4.3.2 wrapping functions, adding signatures to the library.
 
