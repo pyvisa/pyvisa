@@ -38,7 +38,9 @@ ctypes wrapper). The higher level uses `ctwrapper` but in principle can use any 
 This will allow us to create other wrappers.
 
 We have two wrappers planned:
+
 - a Mock module that allows you to test a PyVISA program even if you do not have
   VISA installed.
+
 - a CFFI based wrapper. CFFI is new python package that allows easier and more
   robust wrapping of foreign libraries. It might be part of Python in the future.

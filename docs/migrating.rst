@@ -88,8 +88,10 @@ it also allow us to build new low level modules that can used as drop in replace
 for `ctwrapper` in high level modules.
 
 We have two modules planned:
+
 - a Mock module that allows you to test a PyVISA program even if you do not have
   VISA installed.
+
 - a CFFI based wrapper. CFFI is new python package that allows easier and more
   robust wrapping of foreign libraries. It might be part of Python in the future.
 
@@ -156,12 +158,10 @@ or equivanlently:
 You can still access the legacy classes and global objects::
 
     >>> from pyvisa.legacy import vpp43
-    >>> from pyvisa.legacy import VisaLibrary
-    >>> from pyvisa.legacy import `visa_library` and `resource_manager`
+    >>> from pyvisa.legacy import visa_library, resource_manager
 
 In 1.5, `visa_library` and `resource_manager`, instances of the legacy classes,
-will be instantiated on import. In 1.6+ you will need to manually instantiate
-these classes.
+will be instantiated on import.
 
 
 VisaLibrary methods as way to call Visa functions

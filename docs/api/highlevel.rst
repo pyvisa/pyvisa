@@ -1,6 +1,23 @@
+.. _api_highlevel:
+
+Highlevel module
+----------------
+
+.. autoclass:: pyvisa.highlevel.VisaLibrary
+    :members:
 
 
+.. autoclass:: pyvisa.highlevel.ResourceManager
+    :members:
 
 
-.. automodule:: pyvisa.highlevel
-   :members:
+.. autoclass:: pyvisa.highlevel.Instrument
+    :members:
+
+
+.. autoclass:: pyvisa.highlevel.SerialInstrument
+    :members:
+
+
+.. autoclass:: pyvisa.highlevel.GpibInstrument
+    :members:

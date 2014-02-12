@@ -58,8 +58,9 @@ User guide
     getting
     tutorial
     configuring
+    advanced
     instruments
-    architechture
+    architecture
 
 More information
 ----------------
@@ -79,8 +80,9 @@ Legacy Modules
 .. toctree::
     :maxdepth: 1
 
-    vpp43
-    pyvisa
+    legacy_visa
+    legacy_vpp43
+    api/legacy
 
 
 ..  LocalWords:  rst british reST ies vpp pyvisa docs pyvLab

@@ -4,17 +4,9 @@
 API
 ===
 
-.. toctree::
-   :maxdepth: 2
-
-   highlevel
-
-==========
-Legacy API
-==========
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 1
 
-   legacy_visa
-   vpp43
+    highlevel
+    ctwrapper

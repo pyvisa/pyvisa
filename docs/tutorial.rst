@@ -45,7 +45,7 @@ resource name, `get_instrument` has given you an instance of `GpibInstrument`
 class (a subclass of the more generic instrument).
 
     >>> print(my_instrument)
-    GpibInstrument('GPIB::14')
+    <GpibInstrument('GPIB::14')>
 
 See section :ref:`sec:visa-resource-names` for a short explanation of that.
 Then, I send the message `"\*IDN?"` to the device, which is the standard GPIB
