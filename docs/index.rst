@@ -23,9 +23,12 @@ through various busses (GPIB, RS232, USB) with Python programs.  As an example,
 reading self-identification from a Keithley Multimeter with GPIB number 12 is
 as easy as three lines of Python code::
 
-    import visa
-    keithley = visa.instrument("GPIB::12")
-    print(keithley.ask("*IDN?"))
+    >>> import visa
+    >>> rm = visa.ResourceManager()
+    >>> rm.list_resources()
+    ['ASRL1', 'ASRL2', 'GPIB::12']
+    >>> keithley = rm.instrument("GPIB::12")
+    >>> print(keithley.ask("*IDN?"))
 
 (That's the whole program; really!) It works on Windows, Linux and Mac;
 with arbitrary adapters (e.g. National Instruments, Agilent, Tektronix,

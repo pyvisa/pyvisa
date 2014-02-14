@@ -15,7 +15,7 @@ This covers almost every single program that I have seen on the internet.
 However, if you use other parts of PyVISA or you are interested in the design
 decisions behind the new version you might want to read on.
 
-Some of these decisions were inspired by the `visalib` package as a part of `Lantz`
+Some of these decisions were inspired by the `visalib` package as a part of Lantz_
 
 
 Short summary
@@ -25,7 +25,7 @@ PyVISA 1.5 has full compatibility with previous versions of PyVISA. (changing so
 of the underlying implementation). But you are encouraged to do a few things
 differently if you want to keep up with the latest developments:
 
-If you are doing:
+**If you are doing:**
 
     >>> import visa
     >>> keithley = visa.instrument("GPIB::12")
@@ -38,7 +38,7 @@ change it to:
     >>> keithley = rm.instrument("GPIB::12")
     >>> print(keithley.ask("*IDN?"))
 
-If you are doing
+**If you are doing:**
 
     >>> print(visa.get_instruments_list())
 
@@ -46,18 +46,18 @@ change it to:
 
     >>> print(rm.list_resources())
 
-If you were using::
+**If you are doing:**
 
     >>> import pyvisa.vpp43 as vpp43
     >>> vpp43.visa_library.load_library("/path/to/my/libvisa.so.7")
 
-change it to::
+change it to:
 
     >>> import visa
     >>> lib = visa.VisaLibrary("/path/to/my/libvisa.so.7")
 
 
-If you were using::
+**If you are doing::**
 
     >>> vpp43.lock(session)
 
@@ -74,8 +74,25 @@ If you were using `printf`, `queryf`, `scanf`, `sprintf` or `sscanf` of `vpp43`,
 rewrite as pure python code.
 
 
+A more detailed description
+---------------------------
+
+
+Dropped support for string related functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The VISA library includes functions to search and manipulte strings such as `printf`,
+`queryf`, `scanf`, `sprintf` and `sscanf`. This makes sense as visa involves a lot of
+string handling operations. The original PyVISA implementation wrapped these functions.
+But these operations are easily expressed in pure python and therefore were rarely used.
+
+PyVISA 1.5 keeps these functions for backwards compatibility but it will be removed in 1.6.
+
+We suggest that you replace such functions by pure python version.
+
+
 Isolated low-level wrapping module
-----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the original PyVISA implementation, the low level implementation (`vpp43`) was
 mixed with higher level constructs such as `VisaLibrary`, `VisaException` and error
@@ -95,31 +112,18 @@ We have two modules planned:
 - a CFFI based wrapper. CFFI is new python package that allows easier and more
   robust wrapping of foreign libraries. It might be part of Python in the future.
 
-PyVISA 1.5 keeps `vpp43` (reimplemented on top of `ctwrapper`) for backwards
-compatibility but will be removed in future versions.
+PyVISA 1.5 keeps `vpp43` in the legacy subpackage (reimplemented on top of `ctwrapper`)
+to help with the migration but it will be removed in the future.
 
 All functions that were present in `vpp43` are now present in `ctwrapper` but they
 take an additional first parameter: the foreign library wrapper.
 
-We suggest that you replace `vpp43` by using the new VisaLibrary object which provides
+We suggest that you replace `vpp43` by using the new `VisaLibrary` object which provides
 all foreign functions as bound methods (see below).
 
 
-Dropped support for string related functions
---------------------------------------------
-
-The VISA library includes functions to search and manipulte strings such as `printf`,
-`queryf`, `scanf`, `sprintf` and `sscanf`. This makes sense as visa involves a lot of
-string handling operations. The original PyVISA implementation wrapped these functions.
-But these operations are easily expressed in pure python and therefore were rarely used.
-
-PyVISA 1.5 keeps these functions for backwards compatibility but it will be removed in 1.6.
-
-We suggest that you replace such functions by pure python version.
-
-
 No singleton objects
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 The original PyVISA implementation relied on a singleton, global objects for the
 library wrapper (named `visa_library`, an instance of the old `pyvisa.vpp43.VisaLibrary`)
@@ -165,7 +169,7 @@ will be instantiated on import.
 
 
 VisaLibrary methods as way to call Visa functions
--------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the original PyVISA implementation, the `VisaLibrary` class was just having
 a reference to the ctypes library and a few functions.
@@ -187,3 +191,4 @@ method. In code, this means that you can do::
     >>> print(ret.value)
 
 
+.. _Lantz: https://lantz.readthedocs.org/
