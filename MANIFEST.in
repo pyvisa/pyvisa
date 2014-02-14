@@ -1,6 +1,5 @@
-include distribute_setup.py
 include README AUTHORS CHANGES LICENSE
-recursive-include pint *
+recursive-include pyvisa *
 recursive-include docs *
 prune docs/_build
 prune docs/_themes/.git
