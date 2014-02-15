@@ -482,17 +482,15 @@ class Instrument(_BaseInstrument):
                       'send_end': True,
                       'values_format': ascii}
 
+    ALL_KWARGS = dict(DEFAULT_KWARGS, **_BaseInstrument.DEFAULT_KWARGS)
 
     def __init__(self, resource_name, resource_manager=None, **kwargs):
         skwargs, pkwargs = split_kwargs(kwargs, self.DEFAULT_KWARGS,
                                         _BaseInstrument.DEFAULT_KWARGS)
         super(Instrument, self).__init__(resource_name, resource_manager, pkwargs)
 
-        self.term_chars    = kwargs.get("term_chars")
-        self.chunk_size    = kwargs.get("chunk_size", self.chunk_size)
-        self.delay         = kwargs.get("delay", 0.0)
-        self.send_end      = kwargs.get("send_end", True)
-        self.values_format = kwargs.get("values_format", self.values_format)
+        for key, value in self.DEFAULT_KWARGS:
+            setattr(self, key, skwargs.get(key, value))
 
         if not self.resource_class:
             warnings.warn("resource class of instrument could not be determined",
@@ -691,16 +689,13 @@ class GpibInstrument(Instrument):
     """
 
     def __init__(self, gpib_identifier, board_number=0, **keyw):
-        _warn_for_invalid_keyword_arguments(keyw, ("timeout", "term_chars",
-                                                   "chunk_size", "lock",
-                                                   "delay", "send_end",
-                                                   "values_format"))
+        warn_for_invalid_kwargs(keyw, Instrument.ALL_KWARGS.keys())
         if isinstance(gpib_identifier, int):
             resource_name = "GPIB%d::%d" % (board_number, gpib_identifier)
         else:
             resource_name = gpib_identifier
 
-        Instrument.__init__(self, resource_name, **keyw)
+        super(GpibInstrument, self).__init__(self, resource_name, **keyw)
 
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_GPIB:
@@ -784,26 +779,25 @@ class SerialInstrument(Instrument):
     Instrument.
     """
 
-    def __init__(self, resource_name, **keyw):
+    DEFAULT_KWARGS = {'baud_rate': 9600,
+                      'data_bits': 8,
+                      'stop_bits': 1,
+                      'parity': no_parity,
+                      'end_input': term_chars_end_input}
 
-        _warn_for_invalid_keyword_arguments(keyw,
-           ("timeout", "term_chars", "chunk_size", "lock",
-            "delay", "send_end", "values_format",
-            "baud_rate", "data_bits", "end_input", "parity", "stop_bits"))
-        keyw.setdefault("term_chars", CR)
-        Instrument.__init__(self, resource_name,
-                            **_filter_keyword_arguments(keyw,
-                              ("timeout", "term_chars", "chunk_size", "lock",
-                               "delay", "send_end", "values_format")))
+    def __init__(self, resource_name, **keyw):
+        skwargs, pkwargs = split_kwargs(keyw, SerialInstrument.DEFAULT_KWARGS.keys(),
+                                        Instrument.ALL_KWARGS.keys())
+
+        pkwargs.setdefault("term_chars", CR)
+
+        super(SerialInstrument, self).__init__(self, resource_name, **pkwargs)
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_ASRL:
             raise ValueError("device is not a serial instrument")
 
-        self.baud_rate = keyw.get("baud_rate", 9600)
-        self.data_bits = keyw.get("data_bits", 8)
-        self.stop_bits = keyw.get("stop_bits", 1)
-        self.parity    = keyw.get("parity", no_parity)
-        self.end_input = keyw.get("end_input", term_chars_end_input)
+        for key, value in self.DEFAULT_KWARGS:
+            setattr(self, key, skwargs.get(key, value))
 
     @property
     def baud_rate(self):
