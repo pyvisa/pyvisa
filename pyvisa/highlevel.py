@@ -695,7 +695,7 @@ class GpibInstrument(Instrument):
         else:
             resource_name = gpib_identifier
 
-        super(GpibInstrument, self).__init__(self, resource_name, **keyw)
+        super(GpibInstrument, self).__init__(resource_name, **keyw)
 
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_GPIB:
@@ -791,7 +791,7 @@ class SerialInstrument(Instrument):
 
         pkwargs.setdefault("term_chars", CR)
 
-        super(SerialInstrument, self).__init__(self, resource_name, **pkwargs)
+        super(SerialInstrument, self).__init__(resource_name, **pkwargs)
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_ASRL:
             raise ValueError("device is not a serial instrument")
