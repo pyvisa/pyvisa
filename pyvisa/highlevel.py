@@ -487,7 +487,7 @@ class Instrument(_BaseInstrument):
     def __init__(self, resource_name, resource_manager=None, **kwargs):
         skwargs, pkwargs = split_kwargs(kwargs, self.DEFAULT_KWARGS,
                                         _BaseInstrument.DEFAULT_KWARGS)
-        super(Instrument, self).__init__(resource_name, resource_manager, pkwargs)
+        super(Instrument, self).__init__(resource_name, resource_manager, **pkwargs)
 
         for key, value in self.DEFAULT_KWARGS:
             setattr(self, key, skwargs.get(key, value))

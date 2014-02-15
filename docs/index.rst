@@ -13,7 +13,7 @@ PyVISA: Python wrapper for the VISA library
              under development. You can install it from the GitHub using the
              following command::
 
-                 pip install https://github.com/hgrecco/pyvisa/zipball/master
+                 pip install -U https://github.com/hgrecco/pyvisa/zipball/master
 
              The old documentations is here: http://pyvisa.readthedocs.org/en/1.4/
 
