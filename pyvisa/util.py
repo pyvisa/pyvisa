@@ -144,7 +144,9 @@ def filter_kwargs(keyw, selected_keys):
 def split_kwargs(keyw, self_keys, parent_keys, warn=True):
     self_kwargs = dict()
     parent_kwargs = dict()
-    all_keys = set(self_keys) | set(parent_keys)
+    self_keys = set(self_keys)
+    parent_keys = set(parent_keys)
+    all_keys = self_keys | parent_keys
     for key, value in keyw.items():
         if warn and key not in all_keys:
             warnings.warn('Keyword argument "%s" unknown' % key, stacklevel=3)
