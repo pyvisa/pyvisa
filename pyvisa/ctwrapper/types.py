@@ -21,6 +21,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 # ctypes and os shouldn't be re-exported.
 import ctypes as _ctypes
 import os as _os
+import sys as _sys
 
 
 # Part One: Type Assignments for VISA and Instrument Drivers, see spec table
@@ -59,22 +60,36 @@ ViPBuf        = ViBuf
 ViABuf        = _ctypes.POINTER(ViBuf)
 
 
-class ViString(object):
+if _sys.version_info >= (3, 0):
+    class ViString(object):
 
-    @classmethod
-    def from_param(cls, obj):
-        if isinstance(obj, str):
-            return bytes(obj, 'ascii')
-        return obj
+        @classmethod
+        def from_param(cls, obj):
+            if isinstance(obj, str):
+                return bytes(obj, 'ascii')
+            return obj
 
-ViPString = ViString
+    class ViAString(object):
 
+        @classmethod
+        def from_param(cls, obj):
+            return _ctypes.POINTER(obj)
 
-class ViAString(object):
+    ViPString = ViString
 
-    @classmethod
-    def from_param(cls, obj):
-        return _ctypes.POINTER(obj)
+    def from_string_buffer(buf):
+        return buf.value.decode('ascii')
+
+else:
+    visa_create_string_buffer = _ctypes.create_string_buffer
+
+    ViString      = _ctypes.c_char_p  # ViPChar in the spec
+    ViPString     = _ctypes.c_char_p  # ViPChar in the spec
+    ViAString     = _ctypes.POINTER(ViString)
+
+    def from_string_buffer(buf):
+        return buf.value
+
 
 ViBuf = ViPBuf = ViString
 ViABuf = ViAString #_ctypes.POINTER(ViBuf)
@@ -127,6 +142,3 @@ if _os.name == 'nt':
 else:
     ViHndlr = _ctypes.CFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
                                 ViAddr)
-
-def from_string_buffer(buf):
-    return buf.value.decode('ascii')

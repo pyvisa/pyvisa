@@ -462,6 +462,7 @@ def get_attribute(library, session, attribute):
     if datatype == ViString:
         attribute_state = create_string_buffer(256)
         library.viGetAttribute(session, attribute, attribute_state)
+        return from_string_buffer(attribute_state)
     elif datatype == ViAUInt8:
         length = get_attribute(library, session, VI_ATTR_USB_RECV_INTR_SIZE)
         attribute_state = (ViUInt8 * length)()
@@ -470,7 +471,7 @@ def get_attribute(library, session, attribute):
     else:
         attribute_state = datatype()
         library.viGetAttribute(session, attribute, byref(attribute_state))
-    return attribute_state.value
+        return attribute_state.value
 
 
 def gpib_command(library, session, data):
@@ -1185,13 +1186,16 @@ def parse_resource_extended(library, session, resource_name):
                           byref(interface_board_number), resource_class,
                           unaliased_expanded_resource_name,
                           alias_if_exists)
-    if alias_if_exists.value == "":
-        alias_if_exists = None
-    else:
-        alias_if_exists = alias_if_exists.value
-    return ResourceInfo(interface_type.value, interface_board_number.value,
-                        resource_class.value, unaliased_expanded_resource_name.value,
-                        alias_if_exists)
+
+    res = [from_string_buffer(val)
+           for val in (resource_class,
+                       unaliased_expanded_resource_name,
+                       alias_if_exists)]
+
+    if res[-1] == '':
+        res[-1] = None
+
+    return ResourceInfo(interface_type, interface_board_number, *res)
 
 
 def peek(library, session, address, width):
@@ -1427,7 +1431,7 @@ def status_description(library, session, status):
     """
     description = create_string_buffer(256)
     library.viStatusDesc(session, status, description)
-    return description.value
+    return from_string_buffer(description)
 
 
 def terminate(library, session, degree, job_id):

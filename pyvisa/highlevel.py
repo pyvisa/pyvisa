@@ -314,6 +314,9 @@ class _BaseInstrument(object):
 
         self.resource_manager = resource_manager or get_resource_manager()
         self.visalib = self.resource_manager.visalib
+        self._resource_name = resource_name
+
+        self.open()
 
     def open(self, lock=VI_NO_LOCK, timeout=5):
         with warning_context("ignore", "VI_SUCCESS_DEV_NPRESENT"):
@@ -417,9 +420,8 @@ class _BaseInstrument(object):
     def interface_type(self):
         """The interface type of the resource as a number.
         """
-        interface_type, _ = self.visalib.parse_resource(resource_manager.session,
-                                                        self.resource_name)
-        return interface_type
+        return self.visalib.parse_resource(resource_manager.session,
+                                           self.resource_name).interface_type
 
 
 # The bits in the bitfield mean the following:
@@ -489,7 +491,7 @@ class Instrument(_BaseInstrument):
                                         _BaseInstrument.DEFAULT_KWARGS)
         super(Instrument, self).__init__(resource_name, resource_manager, **pkwargs)
 
-        for key, value in self.DEFAULT_KWARGS:
+        for key, value in self.DEFAULT_KWARGS.items():
             setattr(self, key, skwargs.get(key, value))
 
         if not self.resource_class:
@@ -796,7 +798,7 @@ class SerialInstrument(Instrument):
         if self.interface_type != VI_INTF_ASRL:
             raise ValueError("device is not a serial instrument")
 
-        for key, value in self.DEFAULT_KWARGS:
+        for key, value in self.DEFAULT_KWARGS.items():
             setattr(self, key, skwargs.get(key, value))
 
     @property
@@ -926,5 +928,5 @@ def get_resource_manager():
     global resource_manager
     if resource_manager is None:
         resource_manager = ResourceManager()
-        atexit.register(resource_manager.close)
+        atexit.register(resource_manager.__del__)
     return resource_manager
