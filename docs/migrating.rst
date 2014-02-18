@@ -21,7 +21,7 @@ Some of these decisions were inspired by the `visalib` package as a part of Lant
 Short summary
 -------------
 
-PyVISA 1.5 has full compatibility with previous versions of PyVISA. (changing some
+PyVISA 1.5 has full compatibility with previous versions of PyVISA (changing some
 of the underlying implementation). But you are encouraged to do a few things
 differently if you want to keep up with the latest developments:
 
@@ -66,7 +66,7 @@ change it to::
     >>> lib.lock(session)
 
 
-As you see, most of the code shown above is above making a few things explict.
+As you see, most of the code shown above is making a few things explict.
 It adds 1 line of code (instantiating the VisaLibrary or ResourceManager object)
 which is not a big deal but it makes things cleaner.
 
@@ -81,14 +81,14 @@ A more detailed description
 Dropped support for string related functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The VISA library includes functions to search and manipulte strings such as `printf`,
+The VISA library includes functions to search and manipulate strings such as `printf`,
 `queryf`, `scanf`, `sprintf` and `sscanf`. This makes sense as visa involves a lot of
 string handling operations. The original PyVISA implementation wrapped these functions.
 But these operations are easily expressed in pure python and therefore were rarely used.
 
 PyVISA 1.5 keeps these functions for backwards compatibility but it will be removed in 1.6.
 
-We suggest that you replace such functions by pure python version.
+We suggest that you replace such functions by a pure python version.
 
 
 Isolated low-level wrapping module
@@ -99,9 +99,9 @@ mixed with higher level constructs such as `VisaLibrary`, `VisaException` and er
 messages. The VISA library was wrapped using ctypes.
 
 In 1.5, we refactored it as `ctwrapper`, also a ctypes wrapper module but it only
-depends on the constants definitions (`constants.py`). This allow us to test the
+depends on the constants definitions (`constants.py`). This allows us to test the
 foreign function calls by isolating them from higher level abstractions. More importantly,
-it also allow us to build new low level modules that can used as drop in replacements
+it also allows us to build new low level modules that can be used as drop in replacements
 for `ctwrapper` in high level modules.
 
 We have two modules planned:
@@ -129,8 +129,8 @@ The original PyVISA implementation relied on a singleton, global objects for the
 library wrapper (named `visa_library`, an instance of the old `pyvisa.vpp43.VisaLibrary`)
 and the resource manager (named `resource_manager`, and instance of the old
 `pyvisa.visa.ResourceManager`). These were instantiated on import and the user
-could rebind to a different library usingthe `load_library` method. Calling this
-method however did not affected `resource_manager` and might lead to an insconsistent
+could rebind to a different library using the `load_library` method. Calling this
+method however did not affect `resource_manager` and might lead to an inconsistent
 state.
 
 In 1.5, there is a new `VisaLibrary` class and a new `ResourceManager` class (they are
@@ -152,7 +152,7 @@ You can do:
     >>> lib = visa.VisaLibrary("/path/to/my/libvisa.so.7")
     >>> rm = lib.resource_manager
 
-or equivanlently:
+or equivalently:
 
     >>> rm = visa.ResourceManager("/path/to/my/libvisa.so.7")
 
@@ -174,9 +174,9 @@ VisaLibrary methods as way to call Visa functions
 In the original PyVISA implementation, the `VisaLibrary` class was just having
 a reference to the ctypes library and a few functions.
 
-In 1.5, we introduced a new `VisaLibrary` class (`pyvisa.highlevel`) which has as
-bound methods every single low level function defined in `ctwrapper`. In code, this
-means that you can do::
+In 1.5, we introduced a new `VisaLibrary` class (`pyvisa.highlevel`) which has 
+every single low level function defined in `ctwrapper` as bound methods. In code, 
+this means that you can do::
 
     >>> import visa
     >>> lib = visa.VisaLibrary("/path/to/my/libvisa.so.7")
