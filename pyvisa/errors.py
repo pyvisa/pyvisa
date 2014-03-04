@@ -13,6 +13,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+from . import util
 from .constants import *
 
 completion_and_error_messages = {
@@ -358,6 +359,8 @@ class VisaIOError(Error):
                                                                       ('?', 'Unknown code.'))
         super(VisaIOError, self).__init__('%s (%d): %s' % (abbreviation, error_code, description))
         self.error_code = error_code
+        self.abbreviation = abbreviation
+        self.description = description
 
 
 class VisaIOWarning(Warning):
@@ -372,6 +375,8 @@ class VisaIOWarning(Warning):
                                                                       ('?', 'Unknown code.'))
         super(VisaIOWarning, self).__init__('%s (%d): %s' % (abbreviation, error_code, description))
         self.error_code = error_code
+        self.abbreviation = abbreviation
+        self.description = description
 
 
 class VisaTypeError(Error):
@@ -412,3 +417,33 @@ class InvalidBinaryFormat(Error):
         if description:
             description = ": " + description
         super(InvalidBinaryFormat, self).__init__("Unrecognized binary data format" + description)
+
+
+class LibraryError(OSError, Error):
+
+    @classmethod
+    def from_exception(cls, exc, filename):
+
+        msg = str(exc)
+
+        s = 'Error while accessing %s:' % filename
+
+        if ': image not found' in msg:
+            s += ' File not found or not readable.'
+
+        elif ': no suitable image found' in msg:
+            if 'no matching architecture' in msg:
+                details = util.get_system_details(visa=False)
+                visalib = util.LibraryPath(filename, 'user' if filename == util.read_user_library_path() else 'auto')
+                s += ' No matching architecture.\n'
+                s += '    Current Python interpreter is %s bits\n' % details['bits']
+                s += '    The library in: %s\n' % visalib.path
+                s += '      found by: %s\n' % visalib.found_by
+                s += '      32bit: %s\n' % visalib.is_32bit
+                s += '      64bit: %s' % visalib.is_64bit
+            else:
+                s += ' Could not determine file type.'
+        else:
+            s += str(exc)
+
+        return cls(s)

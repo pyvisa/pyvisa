@@ -86,7 +86,8 @@ class VisaLibrary(object):
         if library_path is None:
             paths = get_library_paths(cls._wrapper_module)
             if not paths:
-                raise OSError('Could not found VISA library.')
+                raise OSError('Could not found VISA library. '
+                              'Please install VISA or pass its location as an argument.')
             return cls.from_paths(*paths)
         else:
             if library_path in cls._registry:
@@ -94,7 +95,11 @@ class VisaLibrary(object):
 
             cls._registry[library_path] = obj = super(VisaLibrary, cls).__new__(cls)
 
-        obj.lib = cls._wrapper_module.Library(library_path)
+        try:
+            obj.lib = cls._wrapper_module.Library(library_path)
+        except OSError as exc:
+            raise errors.LibraryError.from_exception(exc, library_path)
+
         obj.library_path = library_path
 
         logger.debug('Created library wrapper for %s', library_path)
