@@ -24,6 +24,13 @@ import platform
 import warnings
 
 
+if sys.version >= '3':
+    _struct_unpack = struct.unpack
+else:
+    def _struct_unpack(fmt, string):
+        return struct.unpack(str(fmt), string)
+
+
 def read_user_library_path():
     """Return the library path stored in one of the following configuration files:
 
@@ -206,10 +213,10 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
 
     try:
         if is_single:
-            result = list(struct.unpack((endianess +
+            result = list(_struct_unpack((endianess +
                                          str(data_length // 4) + "f").encode('ascii'), data))
         else:
-            result = list(struct.unpack(endianess +
+            result = list(_struct_unpack(endianess +
                                         str(data_length // 8) + "d", data))
     except struct.error:
         raise ValueError("Binary data itself was malformed")
@@ -217,7 +224,7 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
     return result
 
 
-def get_system_details():
+def get_system_details(visa=True):
     """Return a dictionary with information about the system
     """
     buildno, builddate = platform.python_build()
@@ -230,9 +237,7 @@ def get_system_details():
         unitype = 'UCS4'
     bits, linkage = platform.architecture()
 
-    from . import ctwrapper
-
-    return {
+    d = {
         'platform': platform.platform(),
         'processor': platform.processor(),
         'executable': sys.executable,
@@ -244,8 +249,12 @@ def get_system_details():
         'builddate': builddate,
         'unicode': unitype,
         'bits': bits,
-        'visa': get_library_paths(ctwrapper)
         }
+
+    if visa:
+        from . import ctwrapper
+        d['visa'] = get_library_paths(ctwrapper)
+    return d
 
 
 def system_details_to_str(d, indent=''):
@@ -334,7 +343,7 @@ def get_shared_library_arch(filename):
         dos_headers = fp.read(64)
         _ = fp.read(4)
 
-        magic, skip, offset = struct.unpack('2s58sl', dos_headers)
+        magic, skip, offset = _struct_unpack(str('2s58sl'), dos_headers)
 
         if magic != b'MZ':
             raise Exception('Not an executable')
@@ -342,7 +351,7 @@ def get_shared_library_arch(filename):
         fp.seek(offset, io.SEEK_SET)
         pe_header = fp.read(6)
 
-        sig, skip, machine = struct.unpack('2s2sH', pe_header)
+        sig, skip, machine = _struct_unpack(str('2s2sH'), pe_header)
 
         if sig != b'PE':
             raise Exception('Not a PE executable')
