@@ -256,6 +256,7 @@ class ResourceManager(object):
 
         :param query: regular expression used to match devices.
         :return: Mapping of resource name to ResourceInfo
+        :rtype: dict
         """
 
         return dict((resource, self.resource_info(resource))
@@ -932,7 +933,7 @@ def get_instruments_list(use_aliases=True):
 
     if use_aliases:
         return [info.alias or resource_name
-                for resource_name, info in get_resource_manager().list_resources_info()]
+                for resource_name, info in get_resource_manager().list_resources_info().items()]
 
     return get_resource_manager().list_resources()
 
