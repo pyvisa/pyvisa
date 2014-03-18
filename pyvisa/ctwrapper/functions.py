@@ -331,12 +331,12 @@ def buffer_read(library, session, count):
     :param session: Unique logical identifier to a session.
     :param count: Number of bytes to be read.
     :return: data read.
-    :rtype: bytes
+    :rtype: str
     """
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
     library.viBufRead(session, buffer, count, byref(return_count))
-    return buffer.raw[:return_count.value]
+    return from_string_buffer_raw(buffer, return_count.value)
 
 
 def buffer_write(library, session, data):
@@ -345,6 +345,7 @@ def buffer_write(library, session, data):
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param data: data to be written.
+    :type data: str
     :return: number of written bytes.
     """
     return_count = ViUInt32()
@@ -1352,11 +1353,12 @@ def read(library, session, count):
     :param session: Unique logical identifier to a session.
     :param count: Number of bytes to be read.
     :return: data read.
+    :rtype: str
     """
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
     library.viRead(session, buffer, count, byref(return_count))
-    return buffer.raw[:return_count.value]
+    return from_string_buffer_raw(buffer, return_count.value)
 
 
 def read_asynchronously(library, session, count):
@@ -1567,6 +1569,7 @@ def write(library, session, data):
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param data: data to be written.
+    :type data: str
     :return: Number of bytes actually transferred.
     """
     return_count = ViUInt32()

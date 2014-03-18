@@ -80,6 +80,9 @@ if _sys.version_info >= (3, 0):
     def from_string_buffer(buf):
         return buf.value.decode('ascii')
 
+    def from_string_buffer_raw(buf, end):
+        return buf.raw[:end].decode('ascii')
+
 else:
     visa_create_string_buffer = _ctypes.create_string_buffer
 
@@ -90,6 +93,8 @@ else:
     def from_string_buffer(buf):
         return buf.value
 
+    def from_string_buffer_raw(buf, end):
+        return buf.raw[:end].decode('ascii')
 
 ViBuf = ViPBuf = ViString
 ViABuf = ViAString #_ctypes.POINTER(ViBuf)

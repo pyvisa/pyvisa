@@ -443,8 +443,8 @@ single     = 1
 double     = 3
 big_endian = 4
 
-CR = b"\r"
-LF = b"\n"
+CR = '\r'
+LF = '\n'
 
 
 class Instrument(_BaseInstrument):
@@ -511,7 +511,10 @@ class Instrument(_BaseInstrument):
 
         The term_chars are appended to it, unless they are already.
 
-        :param message: the string message to be sent.
+        :param message: the message to be sent.
+        :type message: str
+        :return: number of bytes written.
+        :rtype: int
         """
 
         if self.__term_chars and not message.endswith(self.__term_chars):
@@ -519,39 +522,46 @@ class Instrument(_BaseInstrument):
         elif self.__term_chars is None and not message.endswith(CR + LF):
             message += CR + LF
 
-        self.visalib.write(self.session, message)
+        count = self.visalib.write(self.session, message)
 
         if self.delay > 0.0:
             time.sleep(self.delay)
 
-    def _strip_term_chars(self, buffer):
+        return count
+
+    def _strip_term_chars(self, message):
+        """Strips termination chars from a message
+
+        :type message: str
+        """
         if self.__term_chars:
-            if buffer.endswith(self.__term_chars):
-                buffer = buffer[:-len(self.__term_chars)]
+            if message.endswith(self.__term_chars):
+                message = message[:-len(self.__term_chars)]
             else:
                 warnings.warn("read string doesn't end with "
                               "termination characters", stacklevel=2)
-        return buffer.rstrip(CR + LF)
+
+        return message.rstrip(CR + LF)
 
     def read_raw(self):
         """Read the unmodified string sent from the instrument to the computer.
 
         In contrast to read(), no termination characters are checked or
-        stripped.  You get the pristine message.
+        stripped. You get the pristine message.
 
         """
-        buffer = b""
+        answer = ''
         with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
             try:
                 chunk = self.visalib.read(self.session, self.chunk_size)
-                buffer += chunk
+                answer += chunk
                 while self.visalib.get_status() == VI_SUCCESS_MAX_CNT:
                     chunk = self.visalib.read(self.session, self.chunk_size)
-                    buffer += chunk
+                    answer += chunk
             except:
                 pass
 
-        return buffer
+        return answer
 
     def read(self):
         """Read a string from the device.
@@ -564,6 +574,8 @@ class Instrument(_BaseInstrument):
         match, a warning is issued.
 
         All line-ending characters are stripped from the end of the string.
+
+        :rtype: str
         """
 
         return self._strip_term_chars(self.read_raw())
@@ -577,7 +589,7 @@ class Instrument(_BaseInstrument):
             big_endian.  Default is ascii.
 
         :return: the list of read values
-
+        :rtype: list
         """
         if not fmt:
             fmt = self.values_format
@@ -605,19 +617,32 @@ class Instrument(_BaseInstrument):
             raise errors.InvalidBinaryFormat(e.args)
 
     def ask(self, message):
-        """A combination of write(message) and read()"""
+        """A combination of write(message) and read()
+
+        :param message: the message to send.
+        :type message: str
+        :returns: the answer from the device.
+        :rtype: str
+        """
 
         self.write(message)
         return self.read()
 
     def ask_for_values(self, message, format=None):
-        """A combination of write(message) and read_values()"""
+        """A combination of write(message) and read_values()
+
+        :param message: the message to send.
+        :type message: str
+        :returns: the answer from the device.
+        :rtype: list
+        """
 
         self.write(message)
         return self.read_values(format)
 
     def trigger(self):
-        """Sends a software trigger to the device."""
+        """Sends a software trigger to the device.
+        """
 
         self.set_visa_attribute(VI_ATTR_TRIG_ID, VI_TRIG_SW)
         self.visalib.assert_trigger(self.session, VI_TRIG_PROT_DEFAULT)
@@ -643,9 +668,9 @@ class Instrument(_BaseInstrument):
     def term_chars(self, term_chars):
 
         # First, reset termination characters, in case something bad happens.
-        self.__term_chars = b""
+        self.__term_chars = ""
         self.set_visa_attribute(VI_ATTR_TERMCHAR_EN, VI_FALSE)
-        if term_chars == b"" or term_chars is None:
+        if term_chars == "" or term_chars is None:
             self.__term_chars = term_chars
             return
             # Only the last character in term_chars is the real low-level
