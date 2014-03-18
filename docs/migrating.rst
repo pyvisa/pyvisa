@@ -35,7 +35,7 @@ change it to:
 
     >>> import visa
     >>> rm = visa.ResourceManager()
-    >>> keithley = rm.instrument("GPIB::12")
+    >>> keithley = rm.get_instrument("GPIB::12")
     >>> print(keithley.ask("*IDN?"))
 
 **If you are doing:**

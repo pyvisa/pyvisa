@@ -27,7 +27,7 @@ as easy as three lines of Python code::
     >>> rm = visa.ResourceManager()
     >>> rm.list_resources()
     ['ASRL1', 'ASRL2', 'GPIB::12']
-    >>> keithley = rm.instrument("GPIB::12")
+    >>> keithley = rm.get_instrument("GPIB::12")
     >>> print(keithley.ask("*IDN?"))
 
 (That's the whole program; really!) It works on Windows, Linux and Mac;
