@@ -1165,7 +1165,7 @@ def parse_resource(library, session, resource_name):
     library.viParseRsrc(session, resource_name, byref(interface_type),
                         byref(interface_board_number))
     return ResourceInfo(interface_type.value, interface_board_number.value,
-                        None, None, None, None)
+                        None, None, None)
 
 
 def parse_resource_extended(library, session, resource_name):
