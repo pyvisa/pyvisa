@@ -15,6 +15,6 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from pyvisa.highlevel import VisaLibrary, ResourceManager, get_instruments_list, instrument
+from pyvisa.highlevel import VisaLibrary, ResourceManager, get_instruments_list, Instrument
 from pyvisa.errors import (Error, VisaIOError, VisaIOWarning, VisaTypeError,
                            UnknownHandler, OSNotSupported, InvalidBinaryFormat)
