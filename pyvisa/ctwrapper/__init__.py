@@ -66,7 +66,10 @@ if os.name == "posix" and sys.platform.startswith('linux'):
         return res.group(0)
 
     def find_library(name):
-        return _findLib_ldconfig(name) or _findLib_gcc(name)
+        path = _findLib_ldconfig(name) or _findLib_gcc(name)
+        if path:
+            return os.path.realpath(path)
+        return path
 
 else:
     from ctypes.util import find_library
