@@ -543,15 +543,12 @@ class Instrument(_BaseInstrument):
         """
         buffer = b""
         with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
-            try:
+            
+            buffer = self.visalib.read(self.session, self.chunk_size)
+            while self.visalib.status == VI_SUCCESS_MAX_CNT:
                 chunk = self.visalib.read(self.session, self.chunk_size)
                 buffer += chunk
-                while self.visalib.get_status() == VI_SUCCESS_MAX_CNT:
-                    chunk = self.visalib.read(self.session, self.chunk_size)
-                    buffer += chunk
-            except:
-                pass
-
+        
         return buffer
 
     def read(self):
