@@ -21,7 +21,7 @@ from .constants import *
 from . import ctwrapper
 from . import errors
 from .util import (warning_context, split_kwargs, warn_for_invalid_kwargs,
-                   parse_ascii, parse_binary, get_library_paths)
+                   parse_ascii, parse_binary, get_library_paths, as_bytes)
 
 
 def add_visa_methods(wrapper_module):
@@ -514,11 +514,13 @@ class Instrument(_BaseInstrument):
 
         :param message: the string message to be sent.
         """
-
+        message = as_bytes(message)
+        
         if self.__term_chars and not message.endswith(self.__term_chars):
             message += self.__term_chars
         elif self.__term_chars is None and not message.endswith(CR + LF):
             message += CR + LF
+        #FIXME: termination chars are always appended
 
         self.visalib.write(self.session, message)
 
