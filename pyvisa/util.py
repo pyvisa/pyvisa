@@ -30,6 +30,21 @@ else:
     def _struct_unpack(fmt, string):
         return struct.unpack(str(fmt), string)
 
+#TODO: writ tests
+if sys.version >= '3':
+    def as_bytes(s):
+        if isinstance(s, bytes):
+            return s
+        else:
+            return bytes(s, 'ascii') #latin1 ???
+else:
+    def as_bytes(s):
+        if isinstance(s, str):
+            return s
+        elif isinstance(s, unicode):
+            return s.encode('ascii')
+        else:
+            return bytes(s)
 
 def read_user_library_path():
     """Return the library path stored in one of the following configuration files:
