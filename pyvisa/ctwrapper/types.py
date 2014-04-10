@@ -34,6 +34,7 @@ import sys as _sys
 def _type_pair(ctypes_type):
     return ctypes_type, _ctypes.POINTER(ctypes_type)
 
+
 def _type_triplet(ctypes_type):
     return _type_pair(ctypes_type) + (_ctypes.POINTER(ctypes_type),)
 
@@ -52,19 +53,6 @@ ViBoolean, ViPBoolean, ViABoolean = _type_triplet(ViUInt16)
 ViReal32, ViPReal32, ViAReal32    = _type_triplet(_ctypes.c_float)
 ViReal64, ViPReal64, ViAReal64    = _type_triplet(_ctypes.c_double)
 
-# The following three type triplets are defined rather pathologically, both in
-# the spec and the reference .h file.  Therefore, I can't use _type_triplet.
-
-ViBuf         = ViPByte
-ViPBuf        = ViBuf
-ViABuf        = _ctypes.POINTER(ViBuf)
-
-
-def create_visa_buffer(count, typ=ViPBuf):
-    return (typ * count)()
-
-def buffer_to_text(buf):
-    return buf.value.decode('ascii')
 
 if _sys.version_info >= (3, 0):
     class ViString(object):
@@ -103,13 +91,18 @@ else:
 
     ViPString = ViString
 
-    ViString      = _ctypes.c_char_p  # ViPChar in the spec
-    ViPString     = _ctypes.c_char_p  # ViPChar in the spec
-    ViAString     = _ctypes.POINTER(ViString)
+# This follows visa.h definition, but involves a lot of manual conversion.
+# ViBuf, ViPBuf, ViABuf = ViPByte, ViPByte, _ctypes.POINTER(ViPByte)
+
+ViBuf, ViPBuf, ViABuf = ViPString, ViPString, ViAString
 
 
-#ViBuf = ViPBuf = ViString
-ViABuf = _ctypes.POINTER(ViBuf)
+def create_visa_buffer(count, typ=ViPBuf):
+    return (typ * count)()
+
+def buffer_to_text(buf):
+    return buf.value.decode('ascii')
+
 
 ViRsrc = ViString
 ViPRsrc = ViString

@@ -347,8 +347,9 @@ def buffer_write(library, session, data):
     :type data: bytes
     :return: number of written bytes.
     """
-    data = ViString.from_param(data)
+
     return_count = ViUInt32()
+    # [ViSession, ViBuf, ViUInt32, ViPUInt32]
     library.viBufWrite(session, data, len(data), byref(return_count))
     return return_count.value
 
@@ -490,7 +491,6 @@ def gpib_command(library, session, data):
     :type data: bytes
     :return: Number of written bytes.
     """
-    data = ViString.from_param(data)
     return_count = ViUInt32()
 
     # [ViSession, ViBuf, ViUInt32, ViPUInt32]
@@ -1592,8 +1592,8 @@ def write(library, session, data):
     :type data: str
     :return: Number of bytes actually transferred.
     """
-    data = ViString.from_param(data)
     return_count = ViUInt32()
+    # [ViSession, ViBuf, ViUInt32, ViPUInt32]
     library.viWrite(session, data, len(data), byref(return_count))
     return return_count.value
 
@@ -1606,8 +1606,8 @@ def write_asynchronously(library, session, data):
     :param data: data to be written.
     :return: Job ID of this asynchronous write operation.
     """
-    data = ViString.from_param(data)
     job_id = ViJobId()
+    # [ViSession, ViBuf, ViUInt32, ViPJobId]
     library.viWriteAsync(session, data, len(data), byref(job_id))
     return job_id
 
