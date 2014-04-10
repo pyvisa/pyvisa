@@ -15,8 +15,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import collections
 
-from ctypes import (byref, c_void_p, c_double, c_long,
-                    create_string_buffer, POINTER, CDLL)
+from ctypes import (byref, c_void_p, c_double, c_long, POINTER, CDLL, create_string_buffer)
 
 from . import FUNCTYPE
 from ..constants import *
@@ -331,12 +330,12 @@ def buffer_read(library, session, count):
     :param session: Unique logical identifier to a session.
     :param count: Number of bytes to be read.
     :return: data read.
-    :rtype: str
+    :rtype: bytes
     """
-    buffer = create_string_buffer(count)
+    buffer = create_visa_buffer(count)
     return_count = ViUInt32()
     library.viBufRead(session, buffer, count, byref(return_count))
-    return from_string_buffer_raw(buffer, return_count.value)
+    return buffer.raw[:return_count.value]
 
 
 def buffer_write(library, session, data):
@@ -345,9 +344,10 @@ def buffer_write(library, session, data):
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param data: data to be written.
-    :type data: str
+    :type data: bytes
     :return: number of written bytes.
     """
+    data = ViString.from_param(data)
     return_count = ViUInt32()
     library.viBufWrite(session, data, len(data), byref(return_count))
     return return_count.value
@@ -415,10 +415,11 @@ def find_next(library, find_list):
     :param library: the visa library wrapped by ctypes.
     :param find_list: Describes a find list. This parameter must be created by find_resources().
     :return: Returns a string identifying the location of a device.
+    :rtype: unicode (Py2) or str (Py3)
     """
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
     library.viFindNext(find_list, instrument_description)
-    return from_string_buffer(instrument_description)
+    return buffer_to_text(instrument_description)
 
 
 def find_resources(library, session, query):
@@ -428,14 +429,18 @@ def find_resources(library, session, query):
     :param session: Unique logical identifier to a session (unused, just to uniform signatures).
     :param query: A regular expression followed by an optional logical expression. Use '?*' for all.
     :return: find_list, return_counter, instrument_description
+    :rtype: ViFindList, int, unicode (Py2) or str (Py3)
     """
     find_list = ViFindList()
     return_counter = ViUInt32()
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
+
+    # [ViSession, ViString, ViPFindList, ViPUInt32, ViAChar]
+    # ViString converts from (str, unicode, bytes) to bytes
     library.viFindRsrc(session, query,
                        byref(find_list), byref(return_counter),
                        instrument_description)
-    return find_list, return_counter.value, from_string_buffer(instrument_description)
+    return find_list, return_counter.value, buffer_to_text(instrument_description)
 
 
 def flush(library, session, mask):
@@ -456,6 +461,7 @@ def get_attribute(library, session, attribute):
     :param session: Unique logical identifier to a session, event, or find list.
     :param attribute: Resource attribute for which the state query is made (see Attributes.*)
     :return: The state of the queried attribute for a specified resource.
+    :rtype: unicode (Py2) or str (Py3), list or other type
     """
 
     # FixMe: How to deal with ViBuf?
@@ -463,7 +469,7 @@ def get_attribute(library, session, attribute):
     if datatype == ViString:
         attribute_state = create_string_buffer(256)
         library.viGetAttribute(session, attribute, attribute_state)
-        return from_string_buffer(attribute_state)
+        return buffer_to_text(attribute_state)
     elif datatype == ViAUInt8:
         length = get_attribute(library, session, VI_ATTR_USB_RECV_INTR_SIZE)
         attribute_state = (ViUInt8 * length)()
@@ -481,9 +487,13 @@ def gpib_command(library, session, data):
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param data: data tor write.
+    :type data: bytes
     :return: Number of written bytes.
     """
+    data = ViString.from_param(data)
     return_count = ViUInt32()
+
+    # [ViSession, ViBuf, ViUInt32, ViPUInt32]
     library.viGpibCommand(session, data, len(data), byref(return_count))
     return return_count.value
 
@@ -652,7 +662,7 @@ def install_handler(library, session, event_type, handler, user_handle):
         elif isinstance(user_handle, float):
             converted_user_handle = c_double(user_handle)
         elif isinstance(user_handle, str):
-            converted_user_handle = create_string_buffer(user_handle)
+            converted_user_handle = create_visa_buffer(user_handle)
         elif isinstance(user_handle, list):
             for element in user_handle:
                 if not isinstance(element, int):
@@ -691,7 +701,7 @@ def lock(library, session, lock_type, timeout, requested_key=None):
         requested_key = None
         access_key = None
     else:
-        access_key = create_string_buffer(256)
+        access_key = create_visa_buffer(256)
     library.viLock(session, lock_type, timeout, requested_key, access_key)
     return access_key
 
@@ -1043,6 +1053,9 @@ def open(library, session, resource_name, access_mode=VI_NO_LOCK, open_timeout=V
     :return: Unique logical identifier reference to a session.
     """
     out_session = ViSession()
+
+    # [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession]
+    # ViRsrc converts from (str, unicode, bytes) to bytes
     library.viOpen(session, resource_name, access_mode, open_timeout, byref(out_session))
     return out_session.value
 
@@ -1162,6 +1175,9 @@ def parse_resource(library, session, resource_name):
     """
     interface_type = ViUInt16()
     interface_board_number = ViUInt16()
+
+    # [ViSession, ViRsrc, ViPUInt16, ViPUInt16]
+    # ViRsrc converts from (str, unicode, bytes) to bytes
     library.viParseRsrc(session, resource_name, byref(interface_type),
                         byref(interface_board_number))
     return ResourceInfo(interface_type.value, interface_board_number.value,
@@ -1183,12 +1199,15 @@ def parse_resource_extended(library, session, resource_name):
     resource_class = create_string_buffer(VI_FIND_BUFLEN)
     unaliased_expanded_resource_name = create_string_buffer(VI_FIND_BUFLEN)
     alias_if_exists = create_string_buffer(VI_FIND_BUFLEN)
+
+    # [ViSession, ViRsrc, ViPUInt16, ViPUInt16, ViAChar, ViAChar, ViAChar]
+    # ViRsrc converts from (str, unicode, bytes) to bytes
     library.viParseRsrcEx(session, resource_name, byref(interface_type),
                           byref(interface_board_number), resource_class,
                           unaliased_expanded_resource_name,
                           alias_if_exists)
 
-    res = [from_string_buffer(val)
+    res = [buffer_to_text(val)
            for val in (resource_class,
                        unaliased_expanded_resource_name,
                        alias_if_exists)]
@@ -1196,7 +1215,7 @@ def parse_resource_extended(library, session, resource_name):
     if res[-1] == '':
         res[-1] = None
 
-    return ResourceInfo(interface_type, interface_board_number, *res)
+    return ResourceInfo(interface_type.value, interface_board_number.value, *res)
 
 
 def peek(library, session, address, width):
@@ -1353,12 +1372,12 @@ def read(library, session, count):
     :param session: Unique logical identifier to a session.
     :param count: Number of bytes to be read.
     :return: data read.
-    :rtype: str
+    :rtype: bytes
     """
-    buffer = create_string_buffer(count)
+    buffer = create_visa_buffer(count)
     return_count = ViUInt32()
     library.viRead(session, buffer, count, byref(return_count))
-    return from_string_buffer_raw(buffer, return_count.value)
+    return buffer.raw[:return_count.value]
 
 
 def read_asynchronously(library, session, count):
@@ -1369,7 +1388,7 @@ def read_asynchronously(library, session, count):
     :param count: Number of bytes to be read.
     :return: (ctypes buffer with result, jobid)
     """
-    buffer = create_string_buffer(count)
+    buffer = create_visa_buffer(count)
     job_id = ViJobId()
     library.viReadAsync(session, buffer, count, byref(job_id))
     return buffer, job_id
@@ -1430,10 +1449,11 @@ def status_description(library, session, status):
     :param session: Unique logical identifier to a session.
     :param status: Status code to interpret.
     :return: The user-readable string interpretation of the status code passed to the operation.
+    :rtype: unicode (Py2) or str (Py3)
     """
     description = create_string_buffer(256)
     library.viStatusDesc(session, status, description)
-    return from_string_buffer(description)
+    return buffer_to_text(description)
 
 
 def terminate(library, session, degree, job_id):
@@ -1506,7 +1526,7 @@ def usb_control_in(library, session, request_type_bitmap_field, request_id, requ
     :return: The data buffer that receives the data from the optional data stage of the control transfer.
     :rtype: bytes
     """
-    buffer = create_string_buffer(length)
+    buffer = create_visa_buffer(length)
     return_count = ViUInt16()
     library.viUsbControlIn(session, request_type_bitmap_field, request_id,
                            request_value, index, length, buffer,
@@ -1572,6 +1592,7 @@ def write(library, session, data):
     :type data: str
     :return: Number of bytes actually transferred.
     """
+    data = ViString.from_param(data)
     return_count = ViUInt32()
     library.viWrite(session, data, len(data), byref(return_count))
     return return_count.value
@@ -1585,6 +1606,7 @@ def write_asynchronously(library, session, data):
     :param data: data to be written.
     :return: Job ID of this asynchronous write operation.
     """
+    data = ViString.from_param(data)
     job_id = ViJobId()
     library.viWriteAsync(session, data, len(data), byref(job_id))
     return job_id
@@ -1689,7 +1711,7 @@ def convert_to_byref(byvalue_arguments, buffer_length):
     for i in range(len(byvalue_arguments)):
         if isinstance(byvalue_arguments[i], str):
             byvalue_arguments[i] = \
-                create_string_buffer(byvalue_arguments[i],
+                create_visa_buffer(byvalue_arguments[i],
                                      max(len(byvalue_arguments[i]) + 1,
                                          buffer_length))
             converted_arguments.append(byvalue_arguments[i])
@@ -1748,7 +1770,7 @@ def scanf(clibrary, session, read_format, *args, **keyw):
 
 def sprintf(clibrary, session, write_format, *args, **keyw):
     assert isinstance(clibrary, _ctypes.CDLL)
-    buffer = create_string_buffer(keyw.get("buffer_length", 1024))
+    buffer = create_visa_buffer(keyw.get("buffer_length", 1024))
     clibrary.viSPrintf(session, buffer, write_format,
                                              *convert_argument_list(args))
     return buffer.raw

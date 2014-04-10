@@ -550,6 +550,8 @@ class Instrument(_BaseInstrument):
         In contrast to read(), no termination characters are checked or
         stripped. You get the pristine message.
 
+        :rtype: bytes
+
         """
         answer = ''
         with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
@@ -579,7 +581,7 @@ class Instrument(_BaseInstrument):
         :rtype: str
         """
 
-        return self._strip_term_chars(self.read_raw())
+        return self._strip_term_chars(self.read_raw().decode('ascii'))
 
     def read_values(self, fmt=None):
         """Read a list of floating point values from the device.

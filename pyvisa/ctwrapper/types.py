@@ -60,6 +60,12 @@ ViPBuf        = ViBuf
 ViABuf        = _ctypes.POINTER(ViBuf)
 
 
+def create_visa_buffer(count, typ=ViPBuf):
+    return (typ * count)()
+
+def buffer_to_text(buf):
+    return buf.value.decode('ascii')
+
 if _sys.version_info >= (3, 0):
     class ViString(object):
 
@@ -77,27 +83,33 @@ if _sys.version_info >= (3, 0):
 
     ViPString = ViString
 
-    def from_string_buffer(buf):
-        return buf.value.decode('ascii')
-
-    def from_string_buffer_raw(buf, end):
-        return buf.raw[:end].decode('ascii')
-
 else:
-    visa_create_string_buffer = _ctypes.create_string_buffer
+
+    class ViString(object):
+
+        @classmethod
+        def from_param(cls, obj):
+            if isinstance(obj, str):
+                return obj
+            elif isinstance(obj, unicode):
+                return obj.encode('ascii')
+            return obj
+
+    class ViAString(object):
+
+        @classmethod
+        def from_param(cls, obj):
+            return _ctypes.POINTER(obj)
+
+    ViPString = ViString
 
     ViString      = _ctypes.c_char_p  # ViPChar in the spec
     ViPString     = _ctypes.c_char_p  # ViPChar in the spec
     ViAString     = _ctypes.POINTER(ViString)
 
-    def from_string_buffer(buf):
-        return buf.value
 
-    def from_string_buffer_raw(buf, end):
-        return buf.raw[:end].decode('ascii')
-
-ViBuf = ViPBuf = ViString
-ViABuf = ViAString #_ctypes.POINTER(ViBuf)
+#ViBuf = ViPBuf = ViString
+ViABuf = _ctypes.POINTER(ViBuf)
 
 ViRsrc = ViString
 ViPRsrc = ViString
