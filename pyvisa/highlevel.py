@@ -426,7 +426,7 @@ class _BaseInstrument(object):
     def interface_type(self):
         """The interface type of the resource as a number.
         """
-        return self.visalib.parse_resource(resource_manager.session,
+        return self.visalib.parse_resource(self.resource_manager.session,
                                            self.resource_name).interface_type
 
 
