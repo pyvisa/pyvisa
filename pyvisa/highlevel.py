@@ -329,10 +329,10 @@ class _BaseInstrument(object):
         self.visalib = self.resource_manager.visalib
         self._resource_name = resource_name
 
+        self.open()
+
         for key, value in _BaseInstrument.DEFAULT_KWARGS.items():
             setattr(self, key, kwargs.get(key, value))
-
-        self.open()
 
     def open(self, lock=VI_NO_LOCK, timeout=5):
         with warning_context("ignore", "VI_SUCCESS_DEV_NPRESENT"):
