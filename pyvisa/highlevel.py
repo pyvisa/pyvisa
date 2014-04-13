@@ -23,6 +23,7 @@ from . import errors
 from .util import (warning_context, split_kwargs, warn_for_invalid_kwargs,
                    parse_ascii, parse_binary, get_library_paths)
 
+from . compat import PYTHON3
 
 def add_visa_methods(wrapper_module):
     """Decorator factory to add methods in `wrapper_module.visa_functions`
@@ -127,7 +128,7 @@ class VisaLibrary(object):
         obj.handlers = defaultdict(list)
 
         #: Last return value of the library.
-        obj.status = 0
+        obj._status = 0
 
         #: Default ResourceManager instance for this library.
         obj._resource_manager = None
@@ -138,6 +139,12 @@ class VisaLibrary(object):
 
     def __repr__(self):
         return '<VisaLibrary(%r)>' % self.library_path
+
+    @property
+    def status(self):
+        """Last return value of the library.
+        """
+        return self._status
 
     @property
     def resource_manager(self):
@@ -154,7 +161,7 @@ class VisaLibrary(object):
         logger.debug('%s: %s%s -> %s',
                      self, func.__name__, arguments, ret_value)
 
-        self.status = ret_value
+        self._status = ret_value
 
         if ret_value < 0:
             raise errors.VisaIOError(ret_value)
@@ -316,7 +323,7 @@ class _BaseInstrument(object):
                       'timeout': 5}
 
     def __init__(self, resource_name=None, resource_manager=None, **kwargs):
-        warn_for_invalid_kwargs(kwargs, self.DEFAULT_KWARGS.keys())
+        warn_for_invalid_kwargs(kwargs, _BaseInstrument.DEFAULT_KWARGS.keys())
 
         self.resource_manager = resource_manager or get_resource_manager()
         self.visalib = self.resource_manager.visalib
@@ -472,32 +479,30 @@ class Instrument(_BaseInstrument):
     :param values_format: floating point data value format. Default: ascii (0)
     """
 
-    #: How many bytes are read per low-level call.
-    chunk_size = 20 * 1024
-
     #: Termination character sequence.
     __term_chars = None
 
-    #: Seconds to wait after each high-level write
-    delay = 0.0
 
-    #: floating point data value format
-    values_format = ascii
-
-    DEFAULT_KWARGS = {'term_chars': None,
+    DEFAULT_KWARGS = {#: Termination character sequence.
+                      'term_chars': None,
+                      #: How many bytes are read per low-level call.
                       'chunk_size': 20 * 1024,
+                      #: Seconds to wait after each high-level write
                       'delay': 0.0,
                       'send_end': True,
+                      #: floating point data value format
                       'values_format': ascii}
 
     ALL_KWARGS = dict(DEFAULT_KWARGS, **_BaseInstrument.DEFAULT_KWARGS)
 
     def __init__(self, resource_name, resource_manager=None, **kwargs):
-        skwargs, pkwargs = split_kwargs(kwargs, self.DEFAULT_KWARGS,
-                                        _BaseInstrument.DEFAULT_KWARGS)
+        skwargs, pkwargs = split_kwargs(kwargs,
+                                        Instrument.DEFAULT_KWARGS.keys(),
+                                        _BaseInstrument.DEFAULT_KWARGS.keys())
+
         super(Instrument, self).__init__(resource_name, resource_manager, **pkwargs)
 
-        for key, value in self.DEFAULT_KWARGS.items():
+        for key, value in Instrument.DEFAULT_KWARGS.items():
             setattr(self, key, skwargs.get(key, value))
 
         if not self.resource_class:
@@ -507,13 +512,26 @@ class Instrument(_BaseInstrument):
             warnings.warn("given resource was not an INSTR but %s"
                           % self.resource_class, stacklevel=2)
 
+    def write_raw(self, message):
+        """Write a string message to the device.
+
+        The term_chars are appended to it, unless they are already.
+
+        :param message: the message to be sent.
+        :type message: bytes
+        :return: number of bytes written.
+        :rtype: int
+        """
+
+        return self.visalib.write(self.session, message)
+
     def write(self, message):
         """Write a string message to the device.
 
         The term_chars are appended to it, unless they are already.
 
         :param message: the message to be sent.
-        :type message: str
+        :type message: unicode (Py2) or str (Py3)
         :return: number of bytes written.
         :rtype: int
         """
@@ -523,7 +541,7 @@ class Instrument(_BaseInstrument):
         elif self.__term_chars is None and not message.endswith(CR + LF):
             message += CR + LF
 
-        count = self.visalib.write(self.session, message)
+        count = self.write_raw(message.encode('ascii'))
 
         if self.delay > 0.0:
             time.sleep(self.delay)
@@ -553,18 +571,20 @@ class Instrument(_BaseInstrument):
         :rtype: bytes
 
         """
-        answer = ''
+        ret = bytes()
         with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
             try:
-                chunk = self.visalib.read(self.session, self.chunk_size)
-                answer += chunk
-                while self.visalib.get_status() == VI_SUCCESS_MAX_CNT:
-                    chunk = self.visalib.read(self.session, self.chunk_size)
-                    answer += chunk
-            except:
-                pass
+                status = None
+                while status is None or status == VI_SUCCESS:
+                    logger.debug('Reading %d bytes from session %s (last status %r, not %r)',
+                                 self.chunk_size, self.session, status, VI_SUCCESS_MAX_CNT)
+                    ret += self.visalib.read(self.session, self.chunk_size)
+                    status = self.visalib.status
+            except errors.VisaIOError as e:
+                logger.debug('Exception while reading: %s', e)
+                raise
 
-        return answer
+        return ret
 
     def read(self):
         """Read a string from the device.
@@ -600,13 +620,7 @@ class Instrument(_BaseInstrument):
         if fmt & 0x01 == ascii:
             return parse_ascii(self.read())
 
-
-        original_term_chars = self.term_chars
-        self.term_chars = b""
-        try:
-            data = self.read_raw()
-        finally:
-            self.term_chars = original_term_chars
+        data = self.read_raw()
 
         try:
             if fmt & 0x03 == single:
@@ -821,7 +835,8 @@ class SerialInstrument(Instrument):
                       'end_input': term_chars_end_input}
 
     def __init__(self, resource_name, **keyw):
-        skwargs, pkwargs = split_kwargs(keyw, SerialInstrument.DEFAULT_KWARGS.keys(),
+        skwargs, pkwargs = split_kwargs(keyw,
+                                        SerialInstrument.DEFAULT_KWARGS.keys(),
                                         Instrument.ALL_KWARGS.keys())
 
         pkwargs.setdefault("term_chars", CR)
@@ -831,7 +846,7 @@ class SerialInstrument(Instrument):
         if self.interface_type != VI_INTF_ASRL:
             raise ValueError("device is not a serial instrument")
 
-        for key, value in self.DEFAULT_KWARGS.items():
+        for key, value in SerialInstrument.DEFAULT_KWARGS.items():
             setattr(self, key, skwargs.get(key, value))
 
     @property

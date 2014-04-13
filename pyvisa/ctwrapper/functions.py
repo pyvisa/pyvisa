@@ -332,7 +332,7 @@ def buffer_read(library, session, count):
     :return: data read.
     :rtype: bytes
     """
-    buffer = create_visa_buffer(count)
+    buffer = create_string_buffer(count)
     return_count = ViUInt32()
     library.viBufRead(session, buffer, count, byref(return_count))
     return buffer.raw[:return_count.value]
@@ -662,7 +662,7 @@ def install_handler(library, session, event_type, handler, user_handle):
         elif isinstance(user_handle, float):
             converted_user_handle = c_double(user_handle)
         elif isinstance(user_handle, str):
-            converted_user_handle = create_visa_buffer(user_handle)
+            converted_user_handle = create_string_buffer(user_handle)
         elif isinstance(user_handle, list):
             for element in user_handle:
                 if not isinstance(element, int):
@@ -701,7 +701,7 @@ def lock(library, session, lock_type, timeout, requested_key=None):
         requested_key = None
         access_key = None
     else:
-        access_key = create_visa_buffer(256)
+        access_key = create_string_buffer(256)
     library.viLock(session, lock_type, timeout, requested_key, access_key)
     return access_key
 
@@ -1374,7 +1374,7 @@ def read(library, session, count):
     :return: data read.
     :rtype: bytes
     """
-    buffer = create_visa_buffer(count)
+    buffer = create_string_buffer(count)
     return_count = ViUInt32()
     library.viRead(session, buffer, count, byref(return_count))
     return buffer.raw[:return_count.value]
@@ -1388,7 +1388,7 @@ def read_asynchronously(library, session, count):
     :param count: Number of bytes to be read.
     :return: (ctypes buffer with result, jobid)
     """
-    buffer = create_visa_buffer(count)
+    buffer = create_string_buffer(count)
     job_id = ViJobId()
     library.viReadAsync(session, buffer, count, byref(job_id))
     return buffer, job_id
@@ -1526,7 +1526,7 @@ def usb_control_in(library, session, request_type_bitmap_field, request_id, requ
     :return: The data buffer that receives the data from the optional data stage of the control transfer.
     :rtype: bytes
     """
-    buffer = create_visa_buffer(length)
+    buffer = create_string_buffer(length)
     return_count = ViUInt16()
     library.viUsbControlIn(session, request_type_bitmap_field, request_id,
                            request_value, index, length, buffer,
@@ -1711,7 +1711,7 @@ def convert_to_byref(byvalue_arguments, buffer_length):
     for i in range(len(byvalue_arguments)):
         if isinstance(byvalue_arguments[i], str):
             byvalue_arguments[i] = \
-                create_visa_buffer(byvalue_arguments[i],
+                create_string_buffer(byvalue_arguments[i],
                                      max(len(byvalue_arguments[i]) + 1,
                                          buffer_length))
             converted_arguments.append(byvalue_arguments[i])
@@ -1770,7 +1770,7 @@ def scanf(clibrary, session, read_format, *args, **keyw):
 
 def sprintf(clibrary, session, write_format, *args, **keyw):
     assert isinstance(clibrary, _ctypes.CDLL)
-    buffer = create_visa_buffer(keyw.get("buffer_length", 1024))
+    buffer = create_string_buffer(keyw.get("buffer_length", 1024))
     clibrary.viSPrintf(session, buffer, write_format,
                                              *convert_argument_list(args))
     return buffer.raw

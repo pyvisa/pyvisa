@@ -97,9 +97,6 @@ else:
 ViBuf, ViPBuf, ViABuf = ViPString, ViPString, ViAString
 
 
-def create_visa_buffer(count, typ=ViPBuf):
-    return (typ * count)()
-
 def buffer_to_text(buf):
     return buf.value.decode('ascii')
 
