@@ -19,8 +19,9 @@ import subprocess
 
 import pkg_resources
 
+from . import compat
 logger = logging.getLogger('pyvisa')
-logger.addHandler(logging.NullHandler)
+logger.addHandler(compat.NullHandler())
 
 __version__ = "unknown"
 try:  # try to grab the commit version of our package
