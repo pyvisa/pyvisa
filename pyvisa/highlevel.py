@@ -579,8 +579,8 @@ class Instrument(_BaseInstrument):
             try:
                 status = VI_SUCCESS_MAX_CNT
                 while status == VI_SUCCESS_MAX_CNT:
-                    logger.debug('Reading %d bytes from session %s (last status %r, not %r)',
-                                 self.chunk_size, self.session, status, done_code)
+                    logger.debug('Reading %d bytes from session %s (last status %r)',
+                                 self.chunk_size, self.session, status)
                     ret += self.visalib.read(self.session, self.chunk_size)
                     status = self.visalib.status
             except errors.VisaIOError as e:
