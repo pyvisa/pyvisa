@@ -575,14 +575,10 @@ class Instrument(_BaseInstrument):
 
         """
         ret = bytes()
-        if self.__term_chars is None:
-            done_code = VI_SUCCESS_MAX_CNT
-        else:
-            done_code = VI_SUCCESS_TERM_CHAR
         with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
             try:
-                status = None
-                while not status == done_code:
+                status = VI_SUCCESS_MAX_CNT
+                while status == VI_SUCCESS_MAX_CNT:
                     logger.debug('Reading %d bytes from session %s (last status %r, not %r)',
                                  self.chunk_size, self.session, status, done_code)
                     ret += self.visalib.read(self.session, self.chunk_size)
