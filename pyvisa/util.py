@@ -23,6 +23,7 @@ import contextlib
 import platform
 import warnings
 
+from . import __version__
 
 if sys.version >= '3':
     _struct_unpack = struct.unpack
@@ -249,6 +250,7 @@ def get_system_details(visa=True):
         'builddate': builddate,
         'unicode': unitype,
         'bits': bits,
+        'pyvisa': __version__
         }
 
     if visa:
@@ -276,6 +278,8 @@ def system_details_to_str(d, indent=''):
          '   Unicode:        %s' % d.get('unicode', 'n/a'),
          '',
          'VISA:',
+         '   PyVISA Version: %s' % d.get('pyvisa', 'n/a'),
+         '',
          ]
 
     for ndx, visalib in enumerate(d.get('visa', ()), 1):
