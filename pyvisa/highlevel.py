@@ -239,7 +239,9 @@ class ResourceManager(object):
         return '<ResourceManager(%r)>' % self.visalib
 
     def __del__(self):
-        self.visalib.close(self.session)
+        if self.session is not None:
+            self.visalib.close(self.session)
+            self.session = None
 
     def list_resources(self, query='?*::INSTR'):
         """Returns a tuple of all connected devices matching query.
