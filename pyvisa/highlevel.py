@@ -636,16 +636,19 @@ class Instrument(_BaseInstrument):
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
-    def ask(self, message):
+    def ask(self, message, delay=0):
         """A combination of write(message) and read()
 
         :param message: the message to send.
         :type message: str
+        :[param delay]: the delay between write and read.
+        :[type delay]: int
         :returns: the answer from the device.
         :rtype: str
         """
 
         self.write(message)
+        time.sleep(delay)
         return self.read()
 
     def ask_for_values(self, message, format=None):
