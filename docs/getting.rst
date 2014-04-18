@@ -3,7 +3,7 @@
 Installation
 ============
 
-PyVISA is a wrapper around the `National Instruments's VISA` library, which you need to download and install in order to use PyVISA.
+PyVISA is a wrapper around the `National Instruments's VISA` library, which you need to download and install in order to use PyVISA (:ref:`getting_nivisa`).
 
 PyVISA has no additional dependencies except Python_ itself. In runs on Python 2.6+ and 3.2+.
 
