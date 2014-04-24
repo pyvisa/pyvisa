@@ -23,7 +23,6 @@ from . import errors
 from .util import (warning_context, split_kwargs, warn_for_invalid_kwargs,
                    parse_ascii, parse_binary, get_library_paths)
 
-from . compat import PYTHON3
 
 def add_visa_methods(wrapper_module):
     """Decorator factory to add methods in `wrapper_module.visa_functions`
@@ -239,7 +238,11 @@ class ResourceManager(object):
         return '<ResourceManager(%r)>' % self.visalib
 
     def __del__(self):
+        self.close()
+
+    def close(self):
         if self.session is not None:
+            logger.debug('Closing ResourceManager (session: %s) for %s', self.session, self.visalib)
             self.visalib.close(self.session)
             self.session = None
 
@@ -369,6 +372,7 @@ class _BaseInstrument(object):
 
         """
         if self.session is not None:
+            logger.debug('Closing Instrument (session: %s) for %s', self.session, self.visalib)
             self.visalib.close(self.session)
             self.session = None
 
