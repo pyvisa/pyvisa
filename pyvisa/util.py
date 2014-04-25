@@ -100,7 +100,7 @@ def get_library_paths(wrapper_module):
     """
     user_lib = read_user_library_path()
     tmp = [wrapper_module.find_library(library_path)
-           for library_path in ('visa', 'visa32')]
+           for library_path in ('visa', 'visa32', 'visa32.dll')]
 
     tmp = [LibraryPath(library_path)
            for library_path in tmp
