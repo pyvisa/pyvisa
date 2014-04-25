@@ -62,3 +62,8 @@ or download and unzip the source distribution file and:
 
     $ python setup.py install
 
+
+Documentation
+--------------
+
+The documentation can be read online at https://pyvisa.readthedocs.org/en/latest/index.html
