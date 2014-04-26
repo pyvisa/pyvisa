@@ -303,11 +303,11 @@ class ResourceManager(object):
         interface_type = self.resource_info(resource_name).interface_type
 
         if interface_type == VI_INTF_GPIB:
-            return GpibInstrument(resource_name, **kwargs)
+            return GpibInstrument(resource_name, resource_manager=self, **kwargs)
         elif interface_type == VI_INTF_ASRL:
-            return SerialInstrument(resource_name, **kwargs)
+            return SerialInstrument(resource_name, resource_manager=self, **kwargs)
         else:
-            return Instrument(resource_name, **kwargs)
+            return Instrument(resource_name, resource_manager=self, **kwargs)
 
 
 class _BaseInstrument(object):
@@ -473,7 +473,7 @@ class Instrument(_BaseInstrument):
 
     :param resource_name: the instrument's resource name or an alias,
                           may be taken from the list from
-                          get_instruments_list().
+                          `list_resources` method from a ResourceManager.
     :param timeout: the VISA timeout for each low-level operation in
                     milliseconds.
     :param term_chars: the termination characters for this device.
@@ -746,14 +746,14 @@ class GpibInstrument(Instrument):
 
     """
 
-    def __init__(self, gpib_identifier, board_number=0, **keyw):
+    def __init__(self, gpib_identifier, board_number=0, resource_manager=None, **keyw):
         warn_for_invalid_kwargs(keyw, Instrument.ALL_KWARGS.keys())
         if isinstance(gpib_identifier, int):
             resource_name = "GPIB%d::%d" % (board_number, gpib_identifier)
         else:
             resource_name = gpib_identifier
 
-        super(GpibInstrument, self).__init__(resource_name, **keyw)
+        super(GpibInstrument, self).__init__(resource_name, resource_manager, **keyw)
 
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_GPIB:
@@ -831,7 +831,7 @@ class SerialInstrument(Instrument):
     properties of serial instruments.
 
     :param resource_name: the instrument's resource name or an alias, may be
-        taken from the list from get_instruments_list().
+        taken from the list from `list_resources` method from a ResourceManager.
 
     Further keyword arguments are passed to the constructor of class
     Instrument.
@@ -843,14 +843,14 @@ class SerialInstrument(Instrument):
                       'parity': no_parity,
                       'end_input': term_chars_end_input}
 
-    def __init__(self, resource_name, **keyw):
+    def __init__(self, resource_name, resource_manager=None, **keyw):
         skwargs, pkwargs = split_kwargs(keyw,
                                         SerialInstrument.DEFAULT_KWARGS.keys(),
                                         Instrument.ALL_KWARGS.keys())
 
         pkwargs.setdefault("term_chars", CR)
 
-        super(SerialInstrument, self).__init__(resource_name, **pkwargs)
+        super(SerialInstrument, self).__init__(resource_name, resource_manager, **pkwargs)
         # Now check whether the instrument is really valid
         if self.interface_type != VI_INTF_ASRL:
             raise ValueError("device is not a serial instrument")
