@@ -2,6 +2,11 @@
 .. -*- mode: rst; coding: utf-8; ispell-local-dictionary: "british"; -*-
 
 
+.. note:: This is a legacy module kept for backwards compatiblity with PyVISA < 1.5
+          and will be deprecated in future versions of PyVISA.
+          You are strongly encouraged to switch to the new implementation.
+
+
 About the legacy visa module
 ============================
 
@@ -39,7 +44,7 @@ An example
 
 Let's go *in medias res* and have a look at a simple example::
 
-   from visa import *
+   from pyvisa.legacy import visa
    
    my_instrument = instrument("GPIB::14")
    my_instrument.write("*IDN?")
@@ -82,9 +87,9 @@ The only RS232 device in my lab is an old Oxford ITC4 temperature
 controller, which is connected through COM2 with my computer.  The
 following code prints its self-identification on the screen::
 
-   from visa import *
+   from pyvisa.legacy import visa
    
-   itc4 = instrument("COM2")
+   itc4 = visa.instrument("COM2")
    itc4.write("V")
    print(itc4.read())
 
@@ -93,9 +98,9 @@ following code prints its self-identification on the screen::
 Instead of separate write and read operations, you can do both with
 one `ask()` call.  Thus, the above source code is equivalent to::
 
-   from visa import *
+   from pyvisa.legacy import visa
    
-   itc4 = instrument("COM2")
+   itc4 = visa.instrument("COM2")
    print(itc4.ask("V"))
 
 It couldn't be simpler.  See section :ref:`sec:serial-devices` for
@@ -119,9 +124,9 @@ screen.
 I'll explain the program step-by-step.  First, we have to initialise
 the instrument::
 
-   from visa import instrument
+   from pyvisa.legacy import visa
    
-   keithley = instrument("GPIB::12")
+   keithley = visa.instrument("GPIB::12")
    keithley.write("*rst; status:preset; *cls")
 
 .. index:: single: instrument()

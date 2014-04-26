@@ -2,7 +2,8 @@
 
 
 .. note:: This is a legacy module kept for backwards compatiblity with PyVISA < 1.5.
-          The functionality in this module is now implemented in the `wrapper` module.
+          and will be deprecated in future versions of PyVISA.
+          You are strongly encouraged to switch to the new implementation.
 
 
 About the legacy vpp43 module
@@ -43,7 +44,7 @@ there or expand your ``PATH``.
 However, on Linux you may need to give the explicit path to the shared object
 file.  You do so by saying for example::
 
-    import pyvisa.vpp43 as vpp43
+    from pyvisa.legacy import vpp43
     vpp43.visa_library.load_library("/path/to/my/libvisa.so.7")
 
 By default, ``vpp43`` looks for the library in

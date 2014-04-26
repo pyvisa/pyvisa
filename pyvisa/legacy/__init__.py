@@ -13,4 +13,4 @@
 
 
 from . import vpp43
-from .visa import *
+from . import visa
