@@ -366,15 +366,13 @@ class _BaseInstrument(object):
 
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
-
-        This method can be called to ensure that all resources are freed.
-        Finishing the object by __del__ seems to work safely enough though.
-
         """
-        if self.session is not None:
-            logger.debug('Closing Instrument (session: %s) for %s', self.session, self.visalib)
-            self.visalib.close(self.session)
-            self.session = None
+        if self.resource_manager.session is None or self.session is None:
+            return
+
+        logger.debug('Closing Instrument (session: %s) for %s', self.session, self.visalib)
+        self.visalib.close(self.session)
+        self.session = None
 
     def __del__(self):
         self.close()
