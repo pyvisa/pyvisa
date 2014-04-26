@@ -479,8 +479,8 @@ class Instrument(_BaseInstrument):
                        device.
     :param lock: whether you want to have exclusive access to the device.
                  Default: VI_NO_LOCK
-    :param delay: waiting time in seconds after each write command.
-                  Default: 0
+    :param ask_delay: waiting time in seconds after each write command.
+                      Default: 0.0
     :param send_end: whether to assert end line after each write command.
                      Default: True
     :param values_format: floating point data value format. Default: ascii (0)
@@ -494,8 +494,8 @@ class Instrument(_BaseInstrument):
                       'term_chars': None,
                       #: How many bytes are read per low-level call.
                       'chunk_size': 20 * 1024,
-                      #: Seconds to wait after each high-level write
-                      'delay': 0.0,
+                      #: Seconds to wait between write and read operations inside ask.
+                      'ask_delay': 0.0,
                       'send_end': True,
                       #: floating point data value format
                       'values_format': ascii}
@@ -549,9 +549,6 @@ class Instrument(_BaseInstrument):
             message += CR + LF
 
         count = self.write_raw(message.encode('ascii'))
-
-        if self.delay > 0.0:
-            time.sleep(self.delay)
 
         return count
 
@@ -640,28 +637,40 @@ class Instrument(_BaseInstrument):
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
-    def ask(self, message):
+    def ask(self, message, delay=None):
         """A combination of write(message) and read()
 
         :param message: the message to send.
         :type message: str
+        :param delay: delay in seconds between write and read operations.
+                      if None, defaults to self.ask_delay
         :returns: the answer from the device.
         :rtype: str
         """
 
         self.write(message)
+        if delay is None:
+            delay = self.ask_delay
+        if delay > 0.0:
+            time.sleep(delay)
         return self.read()
 
-    def ask_for_values(self, message, format=None):
+    def ask_for_values(self, message, format=None, delay=None):
         """A combination of write(message) and read_values()
 
         :param message: the message to send.
         :type message: str
+        :param delay: delay in seconds between write and read operations.
+                      if None, defaults to self.ask_delay
         :returns: the answer from the device.
         :rtype: list
         """
 
         self.write(message)
+        if delay is None:
+            delay = self.ask_delay
+        if delay > 0.0:
+            time.sleep(delay)
         return self.read_values(format)
 
     def trigger(self):

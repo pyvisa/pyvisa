@@ -21,9 +21,10 @@ Some of these decisions were inspired by the `visalib` package as a part of Lant
 Short summary
 -------------
 
-PyVISA 1.5 has full compatibility with previous versions of PyVISA (changing some
-of the underlying implementation). But you are encouraged to do a few things
-differently if you want to keep up with the latest developments:
+PyVISA 1.5 has full compatibility with previous versions of PyVISA using the
+legacy module (changing some of the underlying implementation). But you are
+encouraged to do a few things differently if you want to keep up with the
+latest developments and be compatible with PyVISA > 1.5.
 
 **If you are doing:**
 
@@ -71,7 +72,10 @@ It adds 1 line of code (instantiating the VisaLibrary or ResourceManager object)
 which is not a big deal but it makes things cleaner.
 
 If you were using `printf`, `queryf`, `scanf`, `sprintf` or `sscanf` of `vpp43`,
-rewrite as pure python code.
+rewrite as pure python code (see below).
+
+If you were using `Instrument.delay`, change your code or use `Instrument.ask_delay`
+(see below).
 
 
 A more detailed description
@@ -189,6 +193,20 @@ method. In code, this means that you can do::
     >>> status = ctypes.c_ushort()
     >>> ret library.viReadSTB(session, ctypes.byref(status))
     >>> print(ret.value)
+
+
+Removal of Instrument.delay and added Instrument.ask_delay
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the original PyVISA implementation, `Instrument` takes a `delay`
+argument that adds a pause after each write operation (This also can
+be changed using the `delay` attribute).
+
+In PyVISA 1.5, `delay` is removed. Delays after write operations must
+be added to the application code. Instead, a new attribute and argument
+`ask_delay` is available. This allows you to pause between `write` and `read`
+operations inside `ask`. Additionally, `ask` takes an optional argument
+called `delay` allowing you to change it for each method call.
 
 
 .. _Lantz: https://lantz.readthedocs.org/
