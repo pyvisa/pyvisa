@@ -79,17 +79,30 @@ class LibraryPath(str):
     @property
     def arch(self):
         if self._arch is None:
-            self._arch = get_arch(self.path)
+            try:
+                self._arch = get_arch(self.path)
+            except Exception as e:
+                self._arch = tuple()
 
         return self._arch
 
     @property
     def is_32bit(self):
+        if not self.arch:
+            return 'n/a'
         return 32 in self.arch
 
     @property
     def is_64bit(self):
+        if not self.arch:
+            return 'n/a'
         return 64 in self.arch
+
+    @property
+    def bitness(self):
+        if not self.arch:
+            return 'n/a'
+        return ', '.join(str(a) for a in self.arch)
 
 
 def get_library_paths(wrapper_module):
@@ -286,8 +299,7 @@ def system_details_to_str(d, indent=''):
     for ndx, visalib in enumerate(d.get('visa', ()), 1):
         l.append('   #%d: %s' % (ndx, visalib))
         l.append('      found by: %s' % visalib.found_by)
-        l.append('      32bit: %s' % visalib.is_32bit)
-        l.append('      64bit: %s' % visalib.is_64bit)
+        l.append('      bitness: %s' % visalib.bitness)
 
     if not d.get('visa', ()):
         l.append('   Not found.')
