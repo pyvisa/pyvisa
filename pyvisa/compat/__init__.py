@@ -32,3 +32,8 @@ try:
 except ImportError:
     from .nullhandler import NullHandler
 
+try:
+    from subprocess import check_output
+except ImportError:
+    from .check_output import check_output
+

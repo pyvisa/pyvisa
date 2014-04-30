@@ -19,6 +19,7 @@ import re
 import sys
 import struct
 import subprocess
+from .compat import check_output
 import contextlib
 import platform
 import warnings
@@ -376,8 +377,7 @@ def get_arch(filename):
     elif not platform in ('linux2', 'linux3', 'linux', 'darwin'):
         raise OSError('')
 
-    out = subprocess.check_output(["file", filename],
-                                  stderr=subprocess.STDOUT)
+    out = check_output(["file", filename], stderr=subprocess.STDOUT)
     out = out.decode('ascii')
     ret = []
     if platform.startswith('linux'):
