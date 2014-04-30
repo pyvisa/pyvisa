@@ -60,11 +60,23 @@ Error: No matching architecture
 -------------------------------
 
 This error occurs when you the Python architecture does not match the VISA
-architecture. It is common on Mac OS X and the error message looks like this::
+architecture.
+
+.. note:: PyVISA tries to parse the error from the underlying foreign function
+   library to provide a more useful error message. If it does not succeed, it
+   shows the original one.
+
+   In Mac OS X the original error message looks like this::
 
     OSError: dlopen(/Library/Frameworks/visa.framework/visa, 6): no suitable image found.  Did find:
         /Library/Frameworks/visa.framework/visa: no matching architecture in universal wrapper
         /Library/Frameworks/visa.framework/visa: no matching architecture in universal wrapper
+
+   In Linux the original error message looks like this::
+
+    OSError: Could not open VISA library:
+        Error while accessing /usr/local/vxipnp/linux/bin/libvisa.so.7:/usr/local/vxipnp/linux/bin/libvisa.so.7: wrong ELF class: ELFCLASS32
+
 
 First, determine the details of your installation with the help of the following debug command::
 

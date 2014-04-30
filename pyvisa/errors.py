@@ -426,24 +426,29 @@ class LibraryError(OSError, Error):
 
         msg = str(exc)
 
-        s = 'Error while accessing %s:' % filename
-
         if ': image not found' in msg:
-            s += ' File not found or not readable.'
+            msg = ' File not found or not readable.'
 
         elif ': no suitable image found' in msg:
             if 'no matching architecture' in msg:
-                details = util.get_system_details(visa=False)
-                visalib = util.LibraryPath(filename, 'user' if filename == util.read_user_library_path() else 'auto')
-                s += ' No matching architecture.\n'
-                s += '    Current Python interpreter is %s bits\n' % details['bits']
-                s += '    The library in: %s\n' % visalib.path
-                s += '      found by: %s\n' % visalib.found_by
-                s += '      32bit: %s\n' % visalib.is_32bit
-                s += '      64bit: %s' % visalib.is_64bit
+                return LibraryError.from_wrong_arch(filename)
             else:
-                s += ' Could not determine file type.'
-        else:
-            s += str(exc)
+                msg = 'Could not determine filetype.'
+                
+        elif 'wrong ELF class' in msg:
+            return LibraryError.from_wrong_arch(filename)
 
-        return cls(s)
+        return cls('Error while accessing %s: %s' % (filename, msg))
+
+    @classmethod
+    def from_wrong_arch(cls, filename):
+        s = ''
+        details = util.get_system_details(visa=False)
+        visalib = util.LibraryPath(filename, 'user' if filename == util.read_user_library_path() else 'auto')
+        s += 'No matching architecture.\n'
+        s += '    Current Python interpreter is %s bits\n' % details['bits']
+        s += '    The library in: %s\n' % visalib.path
+        s += '      found by: %s\n' % visalib.found_by
+        s += '      bitness: %s\n' % visalib.bitness
+
+        return cls('Error while accessing %s: %s' % (filename, s))
