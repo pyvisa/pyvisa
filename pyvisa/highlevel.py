@@ -14,6 +14,7 @@
 import time
 import atexit
 import warnings
+import contextlib
 from collections import defaultdict
 
 from . import logger
@@ -443,6 +444,12 @@ class _BaseInstrument(object):
         return self.visalib.parse_resource(self.resource_manager.session,
                                            self.resource_name).interface_type
 
+    @contextlib.contextmanager
+    def read_termination_context(self, new_termination):
+        term = self.get_visa_attribute(VI_ATTR_TERMCHAR)
+        self.set_visa_attribute(VI_ATTR_TERMCHAR, ord(new_termination[-1]))
+        yield
+        self.set_visa_attribute(VI_ATTR_TERMCHAR, term)
 
 # The bits in the bitfield mean the following:
 #
@@ -507,6 +514,9 @@ class Instrument(_BaseInstrument):
                                         Instrument.DEFAULT_KWARGS.keys(),
                                         _BaseInstrument.DEFAULT_KWARGS.keys())
 
+        self._read_termination = None
+        self._write_termination = None
+
         super(Instrument, self).__init__(resource_name, resource_manager, **pkwargs)
 
         for key, value in Instrument.DEFAULT_KWARGS.items():
@@ -518,6 +528,42 @@ class Instrument(_BaseInstrument):
         elif self.resource_class not in ("INSTR", "RAW", "SOCKET"):
             warnings.warn("given resource was not an INSTR but %s"
                           % self.resource_class, stacklevel=2)
+
+    @property
+    def read_termination(self):
+        """Read termination character.
+        """
+        return self._read_termination
+
+    @read_termination.setter
+    def read_termination(self, value):
+
+        if value:
+            # termination character, the rest is just used for verification after
+            # each read operation.
+            last_char = value[-1:]
+            # Consequently, it's illogical to have the real termination character
+            # twice in the sequence (otherwise reading would stop prematurely).
+
+            if value[:-1].find(last_char) != -1:
+                raise ValueError("ambiguous ending in termination characters")
+
+            self.set_visa_attribute(VI_ATTR_TERMCHAR, ord(last_char))
+            self.set_visa_attribute(VI_ATTR_TERMCHAR_EN, VI_TRUE)
+        else:
+            self.set_visa_attribute(VI_ATTR_TERMCHAR_EN, VI_FALSE)
+
+        self._read_termination = value
+
+    @property
+    def write_termination(self):
+        """Writer termination character.
+        """
+        return self._write_termination
+
+    @write_termination.setter
+    def write_termination(self, value):
+        self._write_termination = value
 
     def write_raw(self, message):
         """Write a string message to the device.
@@ -532,7 +578,7 @@ class Instrument(_BaseInstrument):
 
         return self.visalib.write(self.session, message)
 
-    def write(self, message):
+    def write(self, message, termination=None):
         """Write a string message to the device.
 
         The term_chars are appended to it, unless they are already.
@@ -543,10 +589,13 @@ class Instrument(_BaseInstrument):
         :rtype: int
         """
 
-        if self.__term_chars and not message.endswith(self.__term_chars):
-            message += self.__term_chars
-        elif self.__term_chars is None and not message.endswith(CR + LF):
-            message += CR + LF
+        term = self._write_termination if termination is None else termination
+
+        if term:
+            if message.endswith(term):
+                warnings.warn("write message already ends with "
+                              "termination characters", stacklevel=2)
+            message += term
 
         count = self.write_raw(message.encode('ascii'))
 
@@ -590,7 +639,7 @@ class Instrument(_BaseInstrument):
 
         return ret
 
-    def read(self):
+    def read(self, termination=None):
         """Read a string from the device.
 
         Reading stops when the device stops sending (e.g. by setting
@@ -605,7 +654,21 @@ class Instrument(_BaseInstrument):
         :rtype: str
         """
 
-        return self._strip_term_chars(self.read_raw().decode('ascii'))
+        if termination is not None:
+            with self.read_termination_context(termination):
+                message = self.read_raw().decode('ascii')
+        else:
+            termination = self._read_termination
+            message = self.read_raw().decode('ascii')
+
+        if not termination:
+            return message
+
+        if not message.endswith(termination):
+            warnings.warn("read string doesn't end with "
+                          "termination characters", stacklevel=2)
+
+        return message[:-len(termination)]
 
     def read_values(self, fmt=None):
         """Read a list of floating point values from the device.
@@ -690,7 +753,7 @@ class Instrument(_BaseInstrument):
         or just CR.  If you assign "" to this property, the termination
         sequence is deleted.
 
-        The default is None, which means that CR is appended to each write
+        The default is None, which means that CR + LF is appended to each write
         operation but not expected after each read operation (but stripped if
         present).
         """
@@ -702,24 +765,16 @@ class Instrument(_BaseInstrument):
 
         # First, reset termination characters, in case something bad happens.
         self.__term_chars = ""
-        self.set_visa_attribute(VI_ATTR_TERMCHAR_EN, VI_FALSE)
+
         if term_chars == "" or term_chars is None:
+            self.read_termination = None
+            self.write_termination = CR + LF
             self.__term_chars = term_chars
             return
             # Only the last character in term_chars is the real low-level
 
-        # termination character, the rest is just used for verification after
-        # each read operation.
-        last_char = term_chars[-1:]
-        # Consequently, it's illogical to have the real termination character
-        # twice in the sequence (otherwise reading would stop prematurely).
-
-        if term_chars[:-1].find(last_char) != -1:
-            raise ValueError("ambiguous ending in termination characters")
-
-        self.set_visa_attribute(VI_ATTR_TERMCHAR, ord(last_char))
-        self.set_visa_attribute(VI_ATTR_TERMCHAR_EN, VI_TRUE)
-        self.__term_chars = term_chars
+        self.read_termination = term_chars
+        self.write_termination = term_chars
 
     @term_chars.deleter
     def term_chars(self):
@@ -775,7 +830,7 @@ class GpibInstrument(Instrument):
 
     def __switch_events_off(self):
         self.visalib.disable_event(self.session, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
-        self.visalib.vpp43.discard_events(self.session, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
+        self.visalib.discard_events(self.session, VI_ALL_ENABLED_EVENTS, VI_ALL_MECH)
 
     def wait_for_srq(self, timeout=25):
         """Wait for a serial request (SRQ) coming from the instrument.
