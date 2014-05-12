@@ -39,9 +39,9 @@ except:
 
 
 try:
-    from setuptools import setup, find_packages
+    from setuptools import setup
 except ImportError:
-    from distutils.core import setup, find_packages
+    from distutils.core import setup
 
 
 import codecs
@@ -85,7 +85,9 @@ setup(name='PyVISA',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         ],
-      packages=find_packages(),
+      packages=['pyvisa', 'pyvisa.compat',
+                'pyvisa.ctwrapper', 'pyvisa.legacy',
+                'pyvisa.testsuite'],
       platforms="Linux, Windows,Mac",
       py_modules=['visa'],
       use_2to3=False,
