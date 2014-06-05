@@ -505,7 +505,9 @@ class Instrument(_BaseInstrument):
                       'ask_delay': 0.0,
                       'send_end': True,
                       #: floating point data value format
-                      'values_format': ascii}
+                      'values_format': ascii,
+                      #: encoding of the messages
+                      'encoding': 'ascii'}
 
     ALL_KWARGS = dict(DEFAULT_KWARGS, **_BaseInstrument.DEFAULT_KWARGS)
 
@@ -528,6 +530,17 @@ class Instrument(_BaseInstrument):
         elif self.resource_class not in ("INSTR", "RAW", "SOCKET"):
             warnings.warn("given resource was not an INSTR but %s"
                           % self.resource_class, stacklevel=2)
+
+    @property
+    def encoding(self):
+        """Encoding used for read and write operations.
+        """
+        return self._encoding
+
+    @encoding.setter
+    def encoding(self, encoding):
+        _ = 'test encoding'.encode(encoding).decode(encoding)
+        self._encoding = encoding
 
     @property
     def read_termination(self):
@@ -578,7 +591,7 @@ class Instrument(_BaseInstrument):
 
         return self.visalib.write(self.session, message)
 
-    def write(self, message, termination=None):
+    def write(self, message, termination=None, encoding=None):
         """Write a string message to the device.
 
         The term_chars are appended to it, unless they are already.
@@ -590,6 +603,7 @@ class Instrument(_BaseInstrument):
         """
 
         term = self._write_termination if termination is None else termination
+        enco = self._encoding if encoding is None else encoding
 
         if term:
             if message.endswith(term):
@@ -597,7 +611,7 @@ class Instrument(_BaseInstrument):
                               "termination characters", stacklevel=2)
             message += term
 
-        count = self.write_raw(message.encode('ascii'))
+        count = self.write_raw(message.encode(enco))
 
         return count
 
@@ -639,7 +653,7 @@ class Instrument(_BaseInstrument):
 
         return ret
 
-    def read(self, termination=None):
+    def read(self, termination=None, encoding=None):
         """Read a string from the device.
 
         Reading stops when the device stops sending (e.g. by setting
@@ -653,13 +667,14 @@ class Instrument(_BaseInstrument):
 
         :rtype: str
         """
+        enco = self._encoding if encoding is None else encoding
 
         if termination is not None:
             with self.read_termination_context(termination):
-                message = self.read_raw().decode('ascii')
+                message = self.read_raw().decode(enco)
         else:
             termination = self._read_termination
-            message = self.read_raw().decode('ascii')
+            message = self.read_raw().decode(enco)
 
         if not termination:
             return message
