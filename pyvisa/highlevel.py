@@ -335,12 +335,22 @@ class _BaseInstrument(object):
         self.visalib = self.resource_manager.visalib
         self._resource_name = resource_name
 
-        self.open()
-
         for key, value in _BaseInstrument.DEFAULT_KWARGS.items():
             setattr(self, key, kwargs.get(key, value))
 
-    def open(self, lock=VI_NO_LOCK, timeout=5):
+        self.open()
+
+    def open(self, lock=None, timeout=5):
+        """Opens a session to the specified resource.
+
+        :param lock: Specifies the mode by which the resource is to be accessed.
+                     Valid values: VI_NO_LOCK, VI_EXCLUSIVE_LOCK, VI_SHARED_LOCK
+        :param timeout: Specifies the maximum time period (in milliseconds)
+                        that this operation waits before returning an error.
+        """
+        lock = self.lock if lock is None else lock
+
+        logger.debug('Opening Instrument (resource: %s) for %s', self._resource_name, self.visalib)
         with warning_context("ignore", "VI_SUCCESS_DEV_NPRESENT"):
             self.session = self.resource_manager.open_resource(self._resource_name, lock)
 
@@ -364,6 +374,9 @@ class _BaseInstrument(object):
             self.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
         else:
             self.timeout = timeout
+
+        logger.debug('Opened Instrument (resource: %s) session %s',
+                     self._resource_name, self.visalib, self.session)
 
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
@@ -397,9 +410,9 @@ class _BaseInstrument(object):
     def timeout(self):
         """The timeout in seconds for all resource I/O operations.
 
-        Note that the VISA library may round up this value heavily.  I
-        experienced that my NI VISA implementation had only the values 0, 1, 3
-        and 10 seconds.
+        Note that the VISA library may round up this value heavily.
+        I experienced that my NI VISA implementation had only the
+        values 0, 1, 3 and 10 seconds.
 
         """
         timeout = self.get_visa_attribute(VI_ATTR_TMO_VALUE)
@@ -409,7 +422,7 @@ class _BaseInstrument(object):
 
     @timeout.setter
     def timeout(self, timeout):
-        if not(0 <= timeout <= 4294967):
+        if not (0 <= timeout <= 4294967):
             raise ValueError("timeout value is invalid")
         self.set_visa_attribute(VI_ATTR_TMO_VALUE, int(timeout * 1000))
 
@@ -497,8 +510,8 @@ class Instrument(_BaseInstrument):
     __term_chars = None
 
 
-    DEFAULT_KWARGS = {#: Termination character sequence.
-                      'term_chars': None,
+    DEFAULT_KWARGS = {'read_termination': None,
+                      'write_termination': CR + LF,
                       #: How many bytes are read per low-level call.
                       'chunk_size': 20 * 1024,
                       #: Seconds to wait between write and read operations inside ask.
