@@ -67,6 +67,17 @@ change it to::
     >>> lib.lock(session)
 
 
+**If you are doing::**
+
+    >>> inst.term_chars = '\r'
+
+change it to::
+
+    >>> inst.read_termination = '\r'
+    >>> inst.write_termination = '\r'
+
+
+
 As you see, most of the code shown above is making a few things explict.
 It adds 1 line of code (instantiating the VisaLibrary or ResourceManager object)
 which is not a big deal but it makes things cleaner.
@@ -207,6 +218,21 @@ be added to the application code. Instead, a new attribute and argument
 `ask_delay` is available. This allows you to pause between `write` and `read`
 operations inside `ask`. Additionally, `ask` takes an optional argument
 called `delay` allowing you to change it for each method call.
+
+
+Deprecated term_chars and automatic removal of CR + LF
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the original PyVISA implementation, `Instrument` takes a `term_chars`
+argument to change at the read and write termination characters. If this
+argument is `None`, `CR + LF` is appended to each outgoing message and
+not expected for incoming messages (although removed if present).
+
+In PyVISA 1.5, `term_chars` is replaced by `read_termination` and
+`write_termination`. In this way, you can set independently the termination
+for each operation. `term_chars` is still present in 1.5 (but will be removed)
+and sets both at the same time. Automatic removal of `CR + LF` is still
+present in 1.5 but will be removed in 1.6.
 
 
 .. _Lantz: https://lantz.readthedocs.org/
