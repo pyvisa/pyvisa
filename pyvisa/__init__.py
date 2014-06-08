@@ -23,6 +23,19 @@ from . import compat
 logger = logging.getLogger('pyvisa')
 logger.addHandler(compat.NullHandler())
 
+
+def log_to_screen(level=logging.DEBUG):
+    logger.setLevel(level)
+    ch = logging.StreamHandler()
+    ch.setLevel(level)
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    ch.setFormatter(formatter)
+
+    logger.addHandler(ch)
+
+
 __version__ = "unknown"
 try:  # try to grab the commit version of our package
     __version__ = (subprocess.check_output(["git", "describe"],
