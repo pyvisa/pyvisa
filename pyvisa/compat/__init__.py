@@ -5,7 +5,7 @@
 
     Compatibility layer.
 
-    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 

@@ -12,8 +12,8 @@
     The module exports all data types including the pointer and array types.  This
     means "ViUInt32" and such.
 
-    :copyright: (c) 2014 by the PyVISA authors.
-    :license: MIT, see COPYING for more details.
+    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
+    :license: MIT, see LICENSE for more details.
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import
