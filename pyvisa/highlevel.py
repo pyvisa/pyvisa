@@ -645,21 +645,23 @@ class Instrument(_BaseInstrument):
 
         return count
 
-    def read_raw(self):
+    def read_raw(self, size=None):
         """Read the unmodified string sent from the instrument to the computer.
 
         In contrast to read(), no termination characters are stripped.
 
         :rtype: bytes
         """
+        size = self.chunk_size if size is None else size
+
         ret = bytes()
         with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
             try:
                 status = VI_SUCCESS_MAX_CNT
                 while status == VI_SUCCESS_MAX_CNT:
                     logger.debug('%s - reading %d bytes (last status %r)',
-                                 self._resource_name, self.chunk_size, status)
-                    ret += self.visalib.read(self.session, self.chunk_size)
+                                 self._resource_name, size, status)
+                    ret += self.visalib.read(self.session, size)
                     status = self.visalib.status
             except errors.VisaIOError as e:
                 logger.debug('%s - exception while reading: %s', self._resource_name, e)
