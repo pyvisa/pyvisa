@@ -5,13 +5,41 @@ PyVISA Changelog
 1.5 (unreleased)
 ----------------
 
-- Updated package structure.
+- Python 3.2+ compatibility.
+  (Issue #32)
+- Change source encoding to utf-8.
+- Reorganized package structure.
+  (Issue #13)
+- Improved installation.
 - Moved tests inside the package.
-- Added Travis
-- Python 3.2 support
-- Removed latex documentation
-- Change source encoding to utf-8
-- Cleaned up code
+- Added CI using Travis.
+- Created new wrapper for the underlying library.
+- Moved vpp43 code to legacy subpackage.
+- Moved documentation to readthedocs.
+- Make documentation mobile-friendly.
+  (Issue #2)
+- Removed latex documentation.
+- ResourceManager is no longer a singleton.
+  (Issue #8)
+- VisaLibrary is no longer a singleton.
+  (Issue #7)
+- VISA functions are VisaLibrary methods.
+  (Issue #11)
+- Improved detection of VISA library path in all OS.
+- Added diagnostics functions to help debugging.
+- Added extensive logging to help debugging.
+  (Issue #12)
+- Improved error messages.
+- Added encoding parameter to read and write.
+  (Issue #38)
+- Added termination parameter to read and write.
+  (Issue #38)
+- Added size to read_raw.
+  (Issue #37)
+- Removed delay parameter in favor of ask_delay
+  (Issue #34)
+- Added 64 bits VISA library methods.
+- Cleaned up code.
 
 
 1.4 (2012-05-13)
