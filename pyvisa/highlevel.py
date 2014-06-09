@@ -132,6 +132,9 @@ class VisaLibrary(object):
 
         #: Default ResourceManager instance for this library.
         obj._resource_manager = None
+
+        obj._logging_extra = {'library_path': obj.library_path}
+
         return obj
 
     def __str__(self):
@@ -158,8 +161,9 @@ class VisaLibrary(object):
         """Check return values for errors and warnings.
         """
 
-        logger.debug('%s: %s%s -> %s',
-                     self, func.__name__, arguments, ret_value)
+        logger.debug('%s%s -> %s',
+                     func.__name__, arguments, ret_value,
+                     extra=self._logging_extra)
 
         self._status = ret_value
 
@@ -229,7 +233,7 @@ class ResourceManager(object):
         obj.visalib = visa_library
 
         obj.session = obj.visalib.open_default_resource_manager()
-        logger.debug('Created ResourceManager (session: %s) for %s',  obj.session, obj.visalib)
+        logger.debug('Created ResourceManager with session %s',  obj.session)
         return obj
 
     def __str__(self):
@@ -243,7 +247,7 @@ class ResourceManager(object):
 
     def close(self):
         if self.session is not None:
-            logger.debug('Closing ResourceManager (session: %s) for %s', self.session, self.visalib)
+            logger.debug('Closing ResourceManager (session: %s)', self.session)
             self.visalib.close(self.session)
             self.session = None
 
@@ -335,10 +339,15 @@ class _BaseInstrument(object):
         self.visalib = self.resource_manager.visalib
         self._resource_name = resource_name
 
+        self._logging_extra = {'library_path': self.visalib.library_path,
+                               'resource_manager.session': self.resource_manager.session,
+                               'resource_name': self._resource_name,
+                               'session': None}
+
+        self.open(kwargs.get('lock', _BaseInstrument.DEFAULT_KWARGS['lock']))
+
         for key, value in _BaseInstrument.DEFAULT_KWARGS.items():
             setattr(self, key, kwargs.get(key, value))
-
-        self.open()
 
     def open(self, lock=None, timeout=5):
         """Opens a session to the specified resource.
@@ -350,7 +359,7 @@ class _BaseInstrument(object):
         """
         lock = self.lock if lock is None else lock
 
-        logger.debug('Opening Instrument (resource: %s) for %s', self._resource_name, self.visalib)
+        logger.debug('%s - opening ...', self._resource_name, extra=self._logging_extra)
         with warning_context("ignore", "VI_SUCCESS_DEV_NPRESENT"):
             self.session = self.resource_manager.open_resource(self._resource_name, lock)
 
@@ -375,8 +384,10 @@ class _BaseInstrument(object):
         else:
             self.timeout = timeout
 
-        logger.debug('Opened Instrument (resource: %s) session %s',
-                     self._resource_name, self.visalib, self.session)
+        self._logging_extra['session'] = self.session
+        logger.debug('%s - is open with session %s',
+                     self._resource_name, self.session,
+                     extra=self._logging_extra)
 
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
@@ -384,8 +395,11 @@ class _BaseInstrument(object):
         if self.resource_manager.session is None or self.session is None:
             return
 
-        logger.debug('Closing Instrument (session: %s) for %s', self.session, self.visalib)
+        logger.debug('%s - closing', self._resource_name,
+                     extra=self._logging_extra)
         self.visalib.close(self.session)
+        logger.debug('%s - is closed', self._resource_name,
+                     extra=self._logging_extra)
         self.session = None
 
     def __del__(self):
@@ -628,40 +642,24 @@ class Instrument(_BaseInstrument):
 
         return count
 
-    def _strip_term_chars(self, message):
-        """Strips termination chars from a message
-
-        :type message: str
-        """
-        if self.__term_chars:
-            if message.endswith(self.__term_chars):
-                message = message[:-len(self.__term_chars)]
-            else:
-                warnings.warn("read string doesn't end with "
-                              "termination characters", stacklevel=2)
-
-        return message.rstrip(CR + LF)
-
     def read_raw(self):
         """Read the unmodified string sent from the instrument to the computer.
 
-        In contrast to read(), no termination characters are checked or
-        stripped. You get the pristine message.
+        In contrast to read(), no termination characters are stripped.
 
         :rtype: bytes
-
         """
         ret = bytes()
         with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
             try:
                 status = VI_SUCCESS_MAX_CNT
                 while status == VI_SUCCESS_MAX_CNT:
-                    logger.debug('Reading %d bytes from session %s (last status %r)',
-                                 self.chunk_size, self.session, status)
+                    logger.debug('%s - reading %d bytes (last status %r)',
+                                 self._resource_name, self.chunk_size, status)
                     ret += self.visalib.read(self.session, self.chunk_size)
                     status = self.visalib.status
             except errors.VisaIOError as e:
-                logger.debug('Exception while reading: %s', e)
+                logger.debug('%s - exception while reading: %s', self._resource_name, e)
                 raise
 
         return ret
