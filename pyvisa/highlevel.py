@@ -520,7 +520,7 @@ class Instrument(_BaseInstrument):
     :param values_format: floating point data value format. Default: ascii (0)
     """
 
-    #: Termination character sequence.
+    #: Termination character sequence (Legacy, to be removed in 1.6).
     __term_chars = None
 
 
@@ -545,6 +545,10 @@ class Instrument(_BaseInstrument):
 
         self._read_termination = None
         self._write_termination = None
+
+        if 'term_chars' in kwargs:
+            kwargs['read_termination'] = kwargs['term_chars']
+            kwargs['write_termination'] = kwargs['term_chars']
 
         super(Instrument, self).__init__(resource_name, resource_manager, **pkwargs)
 
@@ -585,7 +589,7 @@ class Instrument(_BaseInstrument):
             # Consequently, it's illogical to have the real termination character
             # twice in the sequence (otherwise reading would stop prematurely).
 
-            if value[:-1].find(last_char) != -1:
+            if last_char in value[:-1]:
                 raise ValueError("ambiguous ending in termination characters")
 
             self.set_visa_attribute(VI_ATTR_TERMCHAR, ord(last_char))
@@ -615,7 +619,6 @@ class Instrument(_BaseInstrument):
         :return: number of bytes written.
         :rtype: int
         """
-
         return self.visalib.write(self.session, message)
 
     def write(self, message, termination=None, encoding=None):
@@ -680,12 +683,12 @@ class Instrument(_BaseInstrument):
         """
         enco = self._encoding if encoding is None else encoding
 
-        if termination is not None:
-            with self.read_termination_context(termination):
-                message = self.read_raw().decode(enco)
-        else:
+        if termination is None:
             termination = self._read_termination
             message = self.read_raw().decode(enco)
+        else:
+            with self.read_termination_context(termination):
+                message = self.read_raw().decode(enco)
 
         if not termination:
             return message
@@ -693,6 +696,9 @@ class Instrument(_BaseInstrument):
         if not message.endswith(termination):
             warnings.warn("read string doesn't end with "
                           "termination characters", stacklevel=2)
+
+        if self.__term_chars is None:
+            return message.rstrip(CR + LF)
 
         return message[:-len(termination)]
 
@@ -795,7 +801,7 @@ class Instrument(_BaseInstrument):
         if term_chars == "" or term_chars is None:
             self.read_termination = None
             self.write_termination = CR + LF
-            self.__term_chars = term_chars
+            self.__term_chars = None
             return
             # Only the last character in term_chars is the real low-level
 
@@ -936,7 +942,8 @@ class SerialInstrument(Instrument):
                                         SerialInstrument.DEFAULT_KWARGS.keys(),
                                         Instrument.ALL_KWARGS.keys())
 
-        pkwargs.setdefault("term_chars", CR)
+        pkwargs.setdefault("read_termination", CR)
+        pkwargs.setdefault("write_termination", CR)
 
         super(SerialInstrument, self).__init__(resource_name, resource_manager, **pkwargs)
         # Now check whether the instrument is really valid
