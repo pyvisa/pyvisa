@@ -9,13 +9,13 @@ PyVISA: Python wrapper for the VISA library
    :class: floatingflask
 
 
-.. warning:: This documentation corresponds to PyVISA 1.5 which is currently
-             under development. You can install it from the GitHub using the
-             following command::
+.. warning:: This documentation corresponds to PyVISA 1.5. If you are still
+             using the old version, please update using following command::
 
-                 pip install -U https://github.com/hgrecco/pyvisa/zipball/master
+                 pip install -U pyvisa
 
-             The old documentations is here: http://pyvisa.readthedocs.org/en/1.4/
+             Just in case you need them, the old docs are
+             here: http://pyvisa.readthedocs.org/en/1.4/
 
 
 The PyVISA package enables you to control all kinds of measurement equipment
