@@ -1,6 +1,7 @@
-include README AUTHORS CHANGES LICENSE
+include README AUTHORS CHANGES LICENSE ChangeLog
 recursive-include pyvisa *
 recursive-include docs *
+recursive-include examples *
 prune docs/_build
 prune docs/_themes/.git
 global-exclude *.pyc *~ .DS_Store *__pycache__* *.pyo

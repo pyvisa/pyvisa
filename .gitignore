@@ -9,6 +9,6 @@ build/
 dist/
 MANIFEST
 .tox
-
+.coveragerc
 # WebDAV file system cache files
 .DAV/
