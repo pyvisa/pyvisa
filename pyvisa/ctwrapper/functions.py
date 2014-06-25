@@ -34,15 +34,15 @@ visa_functions = [
     "move_out_16", "move_out_32", "move_out_8", "open",
     "open_default_resource_manager", "out_16", "out_32", "out_8",
     "parse_resource", "parse_resource_extended", "peek_16", "peek_32",
-    "peek_8", "poke_16", "poke_32", "poke_8", "printf", "queryf", "read",
-    "read_asynchronously", "read_to_file", "read_stb", "scanf",
-    "set_attribute", "set_buffer", "sprintf", "sscanf", "status_description",
+    "peek_8", "poke_16", "poke_32", "poke_8", "read",
+    "read_asynchronously", "read_to_file", "read_stb",
+    "set_attribute", "set_buffer", "status_description",
     "terminate", "uninstall_handler", "unlock", "unmap_address",
-    "unmap_trigger", "usb_control_in", "usb_control_out", "vprintf", "vqueryf",
-    "vscanf", "vsprintf", "vsscanf", "vxi_command_query", "wait_on_event",
+    "unmap_trigger", "usb_control_in", "usb_control_out",
+    "vxi_command_query", "wait_on_event",
     "write", "write_asynchronously", "write_from_file"]
 
-__all__ = ["visa_functions", 'set_signatures', 'set_cdecl_signatures'] + visa_functions
+__all__ = ["visa_functions", 'set_signatures'] + visa_functions
 
 VI_SPEC_VERSION = 0x00300000
 
@@ -78,9 +78,6 @@ def set_signatures(library, errcheck=None):
     """Set the signatures of most visa functions in the library.
 
     All instrumentation related functions are specified here.
-    String related functions such as `viPrintf` require a cdecl
-    calling convention even in windows and therefore are require
-    a CDLL object. See `set_cdecl_signatures`.
 
     :param library: the visa library wrapped by ctypes.
     :type library: ctypes.WinDLL or ctypes.CDLL
@@ -1624,170 +1621,3 @@ def write_from_file(library, session, filename, count):
     return_count = ViUInt32()
     library.viWriteFromFile(session, filename, count, return_count)
     return return_count
-
-
-# To be deprecated in PyVISA 1.6
-# All these functions are easy to replace by Python equivalents.
-
-def set_cdecl_signatures(clibrary, errcheck=None):
-    """Set the signatures of visa functions requiring a cdecl calling convention.
-
-    .. note: This function and the support for string formatting operations in the
-             VISA library will be removed in PyVISA 1.6. as these functions can be
-             easily replaced by Python equivalents.
-
-    :param clibrary: the visa library wrapped by ctypes.
-    :type clibrary: ctypes.CDLL
-    :param errcheck: error checking callable used for visa functions that return
-                     ViStatus.
-                     It should be take three areguments (result, func, arguments).
-                     See errcheck in ctypes.
-    """
-    assert isinstance(clibrary, CDLL)
-
-    if not hasattr(clibrary, '_functions'):
-        clibrary._functions = []
-
-    def _applier(restype, errcheck_):
-        def _internal(function_name, argtypes, maybe_missing=False):
-            clibrary._functions.append(function_name)
-            set_signature(clibrary, function_name, argtypes, restype, errcheck_, maybe_missing)
-        return _internal
-
-    apply = _applier(ViStatus, errcheck)
-
-    apply("viSPrintf", [ViSession, ViPBuf, ViString])
-    apply("viSScanf", [ViSession, ViBuf, ViString])
-    apply("viScanf", [ViSession, ViString])
-    apply("viPrintf", [ViSession, ViString])
-    apply("viQueryf", [ViSession, ViString, ViString])
-
-
-# convert_argument_list is used for VISA routines with variable argument list,
-# which means that also the types are unknown.  Therefore I convert the Python
-# types to well-defined ctypes types.
-#
-# Attention: This means that only C doubles, C long ints, and strings can be
-# used in format strings!  No "float"s, no "long doubles", no "int"s etc.
-# Further, only floats, integers and strings can be passed to printf and scanf,
-# but neither unicode strings nor sequence types.
-def convert_argument_list(original_arguments):
-    """Converts a Python arguments list to the equivalent ctypes list.
-
-    :param original_arguments: a sequence type with the arguments that should be
-                               used with ctypes.
-
-    :return: a tuple with the ctypes version of the argument list.
-    """
-
-    converted_arguments = []
-    for argument in original_arguments:
-        if isinstance(argument, float):
-            converted_arguments.append(c_double(argument))
-        elif isinstance(argument, int):
-            converted_arguments.append(c_long(argument))
-        elif isinstance(argument, str):
-            converted_arguments.append(argument)
-        else:
-            raise TypeError("Invalid type in scanf/printf: %s" % type(argument))
-    return tuple(converted_arguments)
-
-
-def convert_to_byref(byvalue_arguments, buffer_length):
-    """Converts a list of ctypes objects to a tuple with ctypes references
-    (pointers) to them, for use in scanf-like functions.
-
-    :param byvalue_arguments: a list (sic!) with the original arguments. They must
-        be simple ctypes objects or Python strings. If there are Python
-        strings, they are converted in place to ctypes buffers of the same
-        length and same contents.
-    :param buffer_length: minimal length of ctypes buffers generated from Python
-        strings.
-
-    :returns: a tuple with the by-references arguments.
-    """
-
-    converted_arguments = []
-    for i in range(len(byvalue_arguments)):
-        if isinstance(byvalue_arguments[i], str):
-            byvalue_arguments[i] = \
-                create_string_buffer(byvalue_arguments[i],
-                                     max(len(byvalue_arguments[i]) + 1,
-                                         buffer_length))
-            converted_arguments.append(byvalue_arguments[i])
-        elif isinstance(byvalue_arguments[i], (c_long, c_double)):
-            converted_arguments.append(byref(byvalue_arguments[i]))
-        else:
-            raise TypeError("Invalid type in scanf: %s" % type(byvalue_arguments[i]))
-    return tuple(converted_arguments)
-
-
-def construct_return_tuple(original_ctypes_sequence):
-    """Generate a return value for queryf(), scanf(), and sscanf() out of the
-    list of ctypes objects.
-
-    :param original_ctypes_sequence: a sequence of ctypes objects, i.e. c_long,
-                                     c_double, and ctypes strings.
-
-    :returns: The pythonic variants of the ctypes objects, in a form
-              suitable to be returned by a function: None if empty, single value, or
-              tuple of all values.
-    """
-
-    length = len(original_ctypes_sequence)
-    if length == 0:
-        return None
-    elif length == 1:
-        return original_ctypes_sequence[0].value
-    else:
-        return tuple([argument.value for argument in original_ctypes_sequence])
-
-
-def printf(clibrary, session, write_format, *args):
-    assert isinstance(clibrary, _ctypes.CDLL)
-    clibrary.viPrintf(session, write_format, *convert_argument_list(args))
-
-
-def queryf(clibrary, session, write_format, read_format, write_args, *read_args, **keyw):
-    assert isinstance(clibrary, _ctypes.CDLL)
-    maximal_string_length = keyw.get("maxmial_string_length", 1024)
-    argument_list = list(convert_argument_list(read_args))
-    if write_args is None: write_args = ()
-    clibrary.viQueryf(session, write_format, read_format,
-                      *(convert_argument_list(write_args) + convert_to_byref(argument_list,  maximal_string_length)))
-    return construct_return_tuple(argument_list)
-
-# FixMe: I have to test whether the results are really written to
-# "argument_list" rather than only to a local copy within "viScanf".
-
-def scanf(clibrary, session, read_format, *args, **keyw):
-    assert isinstance(clibrary, _ctypes.CDLL)
-    maximal_string_length = keyw.get("maxmial_string_length", 1024)
-    argument_list = list(convert_argument_list(args))
-    clibrary.viScanf(session, read_format, *convert_to_byref(argument_list, maximal_string_length))
-    return construct_return_tuple(argument_list)
-
-
-def sprintf(clibrary, session, write_format, *args, **keyw):
-    assert isinstance(clibrary, _ctypes.CDLL)
-    buffer = create_string_buffer(keyw.get("buffer_length", 1024))
-    clibrary.viSPrintf(session, buffer, write_format,
-                                             *convert_argument_list(args))
-    return buffer.raw
-
-
-def sscanf(clibrary, session, buffer, read_format, *args, **keyw):
-    assert isinstance(clibrary, _ctypes.CDLL)
-    maximal_string_length = keyw.get("maxmial_string_length", 1024)
-    argument_list = list(convert_argument_list(args))
-    clibrary.viSScanf(session, buffer, read_format, *convert_to_byref(argument_list, maximal_string_length))
-    return construct_return_tuple(argument_list)
-
-vprintf = printf
-vqueryf = queryf
-vscanf = scanf
-vsprintf = sprintf
-vsscanf = sscanf
-
-#: A deprecated alias.  See VPP-4.3, rule 4.3.5 and observation 4.3.2.
-get_default_resource_manager = open_default_resource_manager
