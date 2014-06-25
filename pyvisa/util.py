@@ -81,7 +81,7 @@ class LibraryPath(str):
         if self._arch is None:
             try:
                 self._arch = get_arch(self.path)
-            except Exception as e:
+            except Exception:
                 self._arch = tuple()
 
         return self._arch
@@ -229,10 +229,10 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
     try:
         if is_single:
             result = list(_struct_unpack((endianess +
-                                         str(data_length // 4) + "f").encode('ascii'), data))
+                                          str(data_length // 4) + "f").encode('ascii'), data))
         else:
             result = list(_struct_unpack(endianess +
-                                        str(data_length // 8) + "d", data))
+                                         str(data_length // 8) + "d", data))
     except struct.error:
         raise ValueError("Binary data itself was malformed")
 
@@ -243,7 +243,6 @@ def get_system_details(visa=True):
     """Return a dictionary with information about the system
     """
     buildno, builddate = platform.python_build()
-    python = platform.python_version()
     if sys.maxunicode == 65535:
         # UCS2 build (standard)
         unitype = 'UCS2'
@@ -257,7 +256,7 @@ def get_system_details(visa=True):
         'processor': platform.processor(),
         'executable': sys.executable,
         'implementation': getattr(platform, 'python_implementation',
-                                  lambda:'n/a')(),
+                                  lambda: 'n/a')(),
         'python': platform.python_version(),
         'compiler': platform.python_compiler(),
         'buildno': buildno,
@@ -265,7 +264,7 @@ def get_system_details(visa=True):
         'unicode': unitype,
         'bits': bits,
         'pyvisa': __version__
-        }
+    }
 
     if visa:
         from . import ctwrapper
@@ -343,7 +342,7 @@ machine_types = {
     0x0200: 'IA64',
     0x0266: 'MIPS16',
     0x0284: 'ALPHA64',
-    0x0284: 'AXP64', # same
+   #0x0284: 'AXP64', # same
     0x0366: 'MIPSFPU',
     0x0466: 'MIPSFPU16',
     0x0520: 'TRICORE',
@@ -377,27 +376,27 @@ def get_shared_library_arch(filename):
 
 
 def get_arch(filename):
-    platform = sys.platform
-    if platform.startswith('win'):
+    this_platform = sys.platform
+    if this_platform.startswith('win'):
         machine_type = get_shared_library_arch(filename)
         if machine_type == 'I386':
-            return (32, )
+            return 32,
         elif machine_type in ('IA64', 'AMD64'):
-            return (64, )
+            return 64,
         else:
             return ()
-    elif not platform in ('linux2', 'linux3', 'linux', 'darwin'):
+    elif not this_platform in ('linux2', 'linux3', 'linux', 'darwin'):
         raise OSError('')
 
     out = check_output(["file", filename], stderr=subprocess.STDOUT)
     out = out.decode('ascii')
     ret = []
-    if platform.startswith('linux'):
+    if this_platform.startswith('linux'):
         if '32-bit' in out:
             ret.append(32)
         if '64-bit' in out:
             ret.append(64)
-    elif platform == 'darwin':
+    elif this_platform == 'darwin':
         if '(for architecture i386)' in out:
             ret.append(32)
         if '(for architecture x86_64)' in out:

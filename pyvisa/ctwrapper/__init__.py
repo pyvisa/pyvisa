@@ -29,14 +29,17 @@ from .functions import *
 if os.name == "posix" and sys.platform.startswith('linux'):
 
     # Andreas Degert's find functions, using gcc, /sbin/ldconfig, objdump
-    import re, tempfile, errno
+    import re
+    import tempfile
+    import errno
 
-    def _findLib_gcc(name):
+    def _findlib_gcc(name):
         expr = r'[^\(\)\s]*lib%s\.[^\(\)\s]*' % re.escape(name)
         fdout, ccout = tempfile.mkstemp()
         os.close(fdout)
         cmd = 'if type gcc >/dev/null 2>&1; then CC=gcc; else CC=cc; fi;' \
               '$CC -Wl,-t -o ' + ccout + ' 2>&1 -l' + name
+        trace = ''
         try:
             f = os.popen(cmd)
             trace = f.read()
@@ -52,7 +55,7 @@ if os.name == "posix" and sys.platform.startswith('linux'):
             return None
         return res.group(0)
 
-    def _findLib_ldconfig(name):
+    def _findlib_ldconfig(name):
         # XXX assuming GLIBC's ldconfig (with option -p)
         expr = r'/[^\(\)\s]*lib%s\.[^\(\)\s]*' % re.escape(name)
         res = re.search(expr,
@@ -66,7 +69,7 @@ if os.name == "posix" and sys.platform.startswith('linux'):
         return res.group(0)
 
     def find_library(name):
-        path = _findLib_ldconfig(name) or _findLib_gcc(name)
+        path = _findlib_ldconfig(name) or _findlib_gcc(name)
         if path:
             return os.path.realpath(path)
         return path

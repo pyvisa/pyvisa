@@ -442,7 +442,7 @@ class _BaseInstrument(object):
 
     @timeout.deleter
     def timeout(self):
-        timeout = self.timeout  # just to test whether it's defined
+        _ = self.timeout  # just to test whether it's defined
         self.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
 
     @property
@@ -522,7 +522,6 @@ class Instrument(_BaseInstrument):
 
     #: Termination character sequence (Legacy, to be removed in 1.6).
     __term_chars = None
-
 
     DEFAULT_KWARGS = {'read_termination': None,
                       'write_termination': CR + LF,
@@ -1077,6 +1076,7 @@ def instrument(resource_name, **kwargs):
 
 
 resource_manager = None
+
 
 def get_resource_manager():
     global resource_manager

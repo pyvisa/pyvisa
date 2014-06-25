@@ -173,7 +173,7 @@ attributes_s = {
         "structure presented in Section 4.4.1, Address String."
     ),
 
-    'VI_ATTR_RSRC_SPEC_VERSION': \
+    'VI_ATTR_RSRC_SPEC_VERSION':
     viAttrInfo(
         viRO, viGlobal, types.ViVersion, None,
         'resource specification version',

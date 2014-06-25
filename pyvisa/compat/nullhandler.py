@@ -12,6 +12,7 @@
 
 import logging
 
+
 class NullHandler(logging.Handler):
     """
     This handler does nothing. It's intended to be used to avoid the
