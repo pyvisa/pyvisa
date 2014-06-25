@@ -90,9 +90,13 @@ def set_signatures(library, errcheck=None):
         library._functions = []
 
     def _applier(restype, errcheck_):
-        def _internal(function_name, argtypes, maybe_missing=False):
-            library._functions.append(function_name)
-            set_signature(library, function_name, argtypes, restype, errcheck_, maybe_missing)
+        def _internal(function_name, argtypes, required=False):
+            try:
+                set_signature(library, function_name, argtypes, restype, errcheck_)
+                library._functions.append(function_name)
+            except AttributeError:
+                if required:
+                    raise
         return _internal
 
     # Visa functions with ViStatus return code
@@ -159,9 +163,9 @@ def set_signatures(library, errcheck=None):
     apply("viMoveOut32Ex", [ViSession, ViUInt16, ViBusAddress64, ViBusSize, ViAUInt32])
     apply("viMoveOut64Ex", [ViSession, ViUInt16, ViBusAddress64, ViBusSize, ViAUInt64])
 
-    apply("viOpen", [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession], maybe_missing=False)
+    apply("viOpen", [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession], required=True)
 
-    apply("viOpenDefaultRM", [ViPSession])
+    apply("viOpenDefaultRM", [ViPSession], required=True)
 
     apply("viOut8", [ViSession, ViUInt16, ViBusAddress, ViUInt8])
     apply("viOut16", [ViSession, ViUInt16, ViBusAddress, ViUInt16])
@@ -217,7 +221,7 @@ def set_signatures(library, errcheck=None):
     apply("viPoke64", [ViSession, ViAddr, ViUInt64])
 
 
-def set_signature(library, function_name, argtypes, restype, errcheck, maybe_missing=True):
+def set_signature(library, function_name, argtypes, restype, errcheck):
     """Set the signature of single function in a library.
 
     :param library: ctypes wrapped library.
@@ -234,16 +238,12 @@ def set_signature(library, function_name, argtypes, restype, errcheck, maybe_mis
     :raises: AttributeError
     """
 
-    try:
-        func = getattr(library, function_name)
-        func.argtypes = argtypes
-        if restype is not None:
-            func.restype = restype
-        if errcheck is not None:
-            func.errcheck = errcheck
-    except AttributeError:
-        if not maybe_missing:
-            raise
+    func = getattr(library, function_name)
+    func.argtypes = argtypes
+    if restype is not None:
+        func.restype = restype
+    if errcheck is not None:
+        func.errcheck = errcheck
 
 
 # The VPP-4.3.2 routines
