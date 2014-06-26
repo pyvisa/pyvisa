@@ -42,7 +42,6 @@ class MessageBasedInstrument(Resource):
                           `list_resources` method from a ResourceManager.
     :param timeout: the VISA timeout for each low-level operation in
                     milliseconds.
-    :param term_chars: the termination characters for this device.
     :param chunk_size: size of data packets in bytes that are read from the
                        device.
     :param lock: whether you want to have exclusive access to the device.
@@ -53,9 +52,6 @@ class MessageBasedInstrument(Resource):
                      Default: True
     :param values_format: floating point data value format. Default: ascii (0)
     """
-
-    #: Termination character sequence (Legacy, to be removed in 1.6).
-    __term_chars = None
 
     DEFAULT_KWARGS = {'read_termination': None,
                       'write_termination': CR + LF,
@@ -78,10 +74,6 @@ class MessageBasedInstrument(Resource):
 
         self._read_termination = None
         self._write_termination = None
-
-        if 'term_chars' in kwargs:
-            kwargs['read_termination'] = kwargs['term_chars']
-            kwargs['write_termination'] = kwargs['term_chars']
 
         super(MessageBasedInstrument, self).__init__(resource_name, resource_manager, **pkwargs)
 
@@ -143,9 +135,7 @@ class MessageBasedInstrument(Resource):
         self._write_termination = value
 
     def write_raw(self, message):
-        """Write a string message to the device.
-
-        The term_chars are appended to it, unless they are already.
+        """Write a byte message to the device.
 
         :param message: the message to be sent.
         :type message: bytes
@@ -157,7 +147,7 @@ class MessageBasedInstrument(Resource):
     def write(self, message, termination=None, encoding=None):
         """Write a string message to the device.
 
-        The term_chars are appended to it, unless they are already.
+        The write_termination is always appended to it.
 
         :param message: the message to be sent.
         :type message: unicode (Py2) or str (Py3)
@@ -231,9 +221,6 @@ class MessageBasedInstrument(Resource):
         if not message.endswith(termination):
             warnings.warn("read string doesn't end with "
                           "termination characters", stacklevel=2)
-
-        if self.__term_chars is None:
-            return message.rstrip(CR + LF)
 
         return message[:-len(termination)]
 
@@ -309,43 +296,6 @@ class MessageBasedInstrument(Resource):
 
         self.set_visa_attribute(VI_ATTR_TRIG_ID, VI_TRIG_SW)
         self.visalib.assert_trigger(self.session, VI_TRIG_PROT_DEFAULT)
-
-    @property
-    def term_chars(self):
-        """Set or read a new termination character sequence (property).
-
-        Normally, you just give the new termination sequence, which is appended
-        to each write operation (unless it's already there), and expected as
-        the ending mark during each read operation.  A typical example is CR+LF
-        or just CR.  If you assign "" to this property, the termination
-        sequence is deleted.
-
-        The default is None, which means that CR + LF is appended to each write
-        operation but not expected after each read operation (but stripped if
-        present).
-        """
-
-        return self.__term_chars
-
-    @term_chars.setter
-    def term_chars(self, term_chars):
-
-        # First, reset termination characters, in case something bad happens.
-        self.__term_chars = ""
-
-        if term_chars == "" or term_chars is None:
-            self.read_termination = None
-            self.write_termination = CR + LF
-            self.__term_chars = None
-            return
-            # Only the last character in term_chars is the real low-level
-
-        self.read_termination = term_chars
-        self.write_termination = term_chars
-
-    @term_chars.deleter
-    def term_chars(self):
-        self.term_chars = None
 
     @property
     def send_end(self):
