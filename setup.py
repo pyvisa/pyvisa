@@ -27,6 +27,10 @@ long_description = '\n\n'.join([read('README'),
 
 __doc__ = long_description
 
+requirements = []
+if sys.version_info < (3, 4):
+    requirements.append('enum34')
+
 setup(name='PyVISA',
       description='Python VISA bindings for GPIB, RS232, and USB instruments',
       version='1.6.dev0',
@@ -39,6 +43,7 @@ setup(name='PyVISA',
       keywords='VISA GPIB USB serial RS232 measurement acquisition',
       license='MIT License',
       test_suite='visa.testsuite.testsuite',
+      install_requires=requirements,
       classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
