@@ -3,7 +3,7 @@
     pyvisa.resources
     ~~~~~~~~~~~~~~~~
 
-    High level Resource Wrappers.
+    High level wrapper for resources.
 
     This file is part of PyVISA.
 

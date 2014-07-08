@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-    pyvisa.highlevel
-    ~~~~~~~~~~~~~~~~
+    pyvisa.resources.resource
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    High level Visa library wrapper.
+    High level wrapper for a Resource.
 
     This file is part of PyVISA.
 
@@ -11,6 +11,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import math
 import time
 
 from .. import logger
@@ -22,13 +23,11 @@ from ..util import warning_context, warn_for_invalid_kwargs
 class Resource(object):
     """Base class for resources.
 
-    :param resource_name: the VISA name for the resource (eg. "GPIB::10")
-                          If None, it's assumed that the resource manager
-                          is to be constructed.
     :param resource_manager: A resource manager instance.
-                             If None, the default resource manager will be used.
-    :param lock:
-    :param timeout:
+    :param resource_name: the VISA name for the resource (eg. "GPIB::10")
+    :param lock: Specifies the mode by which the resource is to be accessed.
+                 Valid values: VI_NO_LOCK, VI_EXCLUSIVE_LOCK, VI_SHARED_LOCK
+    :param timeout: The timeout in seconds for all resource I/O operations.
 
     See :class:Instrument for a detailed description.
     """
@@ -36,15 +35,15 @@ class Resource(object):
     DEFAULT_KWARGS = {'lock': VI_NO_LOCK,
                       'timeout': 5}
 
-    def __init__(self, resource_name=None, resource_manager=None, **kwargs):
+    def __init__(self, resource_manager, resource_name=None, **kwargs):
         warn_for_invalid_kwargs(kwargs, Resource.DEFAULT_KWARGS.keys())
 
-        self.resource_manager = resource_manager or get_resource_manager()
-        self.visalib = self.resource_manager.visalib
+        self._resource_manager = resource_manager
+        self._visalib = self._resource_manager.visalib
         self._resource_name = resource_name
 
-        self._logging_extra = {'library_path': self.visalib.library_path,
-                               'resource_manager.session': self.resource_manager.session,
+        self._logging_extra = {'library_path': self._visalib.library_path,
+                               'resource_manager.session': self._resource_manager.session,
                                'resource_name': self._resource_name,
                                'session': None}
 
@@ -54,21 +53,19 @@ class Resource(object):
         for key, value in Resource.DEFAULT_KWARGS.items():
             setattr(self, key, kwargs.get(key, value))
 
-    def open(self, lock=None, timeout=5):
+    def open(self, lock=None):
         """Opens a session to the specified resource.
 
         :param lock: Specifies the mode by which the resource is to be accessed.
                      Valid values: VI_NO_LOCK, VI_EXCLUSIVE_LOCK, VI_SHARED_LOCK
-        :param timeout: Specifies the maximum time period (in milliseconds)
-                        that this operation waits before returning an error.
         """
         lock = self.lock if lock is None else lock
 
         logger.debug('%s - opening ...', self._resource_name, extra=self._logging_extra)
         with warning_context("ignore", "VI_SUCCESS_DEV_NPRESENT"):
-            self.session = self.resource_manager.open_resource(self._resource_name, lock)
+            self.session = self._resource_manager.open_resource(self._resource_name, lock)
 
-            if self.visalib.status == VI_SUCCESS_DEV_NPRESENT:
+            if self._visalib.status == VI_SUCCESS_DEV_NPRESENT:
                 # okay, the device was not ready when we opened the session.
                 # Now it gets five seconds more to become ready.
                 # Every 0.1 seconds we probe it with viClear.
@@ -84,11 +81,6 @@ class Resource(object):
                         if error.error_code != VI_ERROR_NLISTENERS:
                             raise
 
-        if timeout is None:
-            self.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
-        else:
-            self.timeout = timeout
-
         self._logging_extra['session'] = self.session
         logger.debug('%s - is open with session %s',
                      self._resource_name, self.session,
@@ -97,12 +89,12 @@ class Resource(object):
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
         """
-        if self.resource_manager.session is None or self.session is None:
+        if self._resource_manager.session is None or self.session is None:
             return
 
         logger.debug('%s - closing', self._resource_name,
                      extra=self._logging_extra)
-        self.visalib.close(self.session)
+        self._visalib.close(self.session)
         logger.debug('%s - is closed', self._resource_name,
                      extra=self._logging_extra)
         self.session = None
@@ -117,13 +109,13 @@ class Resource(object):
         return "<%r(%r)>" % (self.__class__.__name__, self.resource_name)
 
     def get_visa_attribute(self, name):
-        return self.visalib.get_attribute(self.session, name)
+        return self._visalib.get_attribute(self.session, name)
 
     def set_visa_attribute(self, name, status):
-        self.visalib.set_attribute(self.session, name, status)
+        self._visalib.set_attribute(self.session, name, status)
 
     def clear(self):
-        self.visalib.clear(self.session)
+        self._visalib.clear(self.session)
 
     @property
     def timeout(self):
@@ -136,19 +128,18 @@ class Resource(object):
         """
         timeout = self.get_visa_attribute(VI_ATTR_TMO_VALUE)
         if timeout == VI_TMO_INFINITE:
-            raise NameError("no timeout is specified")
+            return float('+nan')
         return timeout / 1000.0
 
     @timeout.setter
     def timeout(self, timeout):
-        if not (0 <= timeout <= 4294967):
+        if timeout < 0 or math.isnan(timeout):
+            timeout = VI_TMO_INFINITE
+        elif not (0 <= timeout <= 4294967):
             raise ValueError("timeout value is invalid")
-        self.set_visa_attribute(VI_ATTR_TMO_VALUE, int(timeout * 1000))
-
-    @timeout.deleter
-    def timeout(self):
-        _ = self.timeout  # just to test whether it's defined
-        self.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
+        else:
+            timeout = int(timeout * 1000)
+        self.set_visa_attribute(VI_ATTR_TMO_VALUE, timeout)
 
     @property
     def resource_class(self):
@@ -172,6 +163,6 @@ class Resource(object):
     def interface_type(self):
         """The interface type of the resource as a number.
         """
-        return self.visalib.parse_resource(self.resource_manager.session,
-                                           self.resource_name).interface_type
+        return self._visalib.parse_resource(self._resource_manager.session,
+                                            self.resource_name).interface_type
 
