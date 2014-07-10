@@ -1194,6 +1194,9 @@ def parse_resource_extended(library, session, resource_name):
     :return: Resource information.
     :rtype: :class:ResourceInfo
     """
+    if not isinstance(resource_name, (str, unicode, bytes)):
+        raise TypeError("Type not allowed as resource name: %s" % type(resource_name))
+
     interface_type = ViUInt16()
     interface_board_number = ViUInt16()
     resource_class = create_string_buffer(VI_FIND_BUFLEN)
