@@ -54,7 +54,7 @@ class MessageBasedInstrument(Resource):
                           `list_resources` method from a ResourceManager.
     :param timeout: the VISA timeout for each low-level operation in
                     milliseconds.
-    :param chunk_size: size of data packets in bytes that are read from the
+    :param buffer_size: size of data packets in bytes that are read from the
                        device.
     :param lock: whether you want to have exclusive access to the device.
                  Default: VI_NO_LOCK
@@ -67,10 +67,11 @@ class MessageBasedInstrument(Resource):
 
     DEFAULT_KWARGS = {'read_termination': None,
                       'write_termination': CR + LF,
-                      #: How many bytes are read per low-level call.
-                      'chunk_size': 20 * 1024,
+                      #: Size in bytes for read or write operations.
+                      'buffer_size': 20 * 1024,
                       #: Seconds to wait between write and read operations inside ask.
                       'ask_delay': 0.0,
+                      #: Indicates
                       'send_end': True,
                       #: floating point data value format
                       'values_format': ascii,
@@ -98,6 +99,20 @@ class MessageBasedInstrument(Resource):
         elif self.resource_class not in ("INSTR", "RAW", "SOCKET"):
             warnings.warn("given resource was not an INSTR but %s"
                           % self.resource_class, stacklevel=2)
+
+    @property
+    def io_protocol(self):
+        """I/O protocol for the current hardware interface.
+
+        Valid values: VI_PROT*
+
+        Default is VI_PROT_NORMAL meaning the default protocols for the given interface.
+        """
+        self.get_visa_attribute(VI_ATTR_IO_PROT)
+
+    @io_protocol.setter
+    def io_protocol(self, value):
+        self.set_visa_attribute(VI_ATTR_IO_PROT, value)
 
     @property
     def encoding(self):
@@ -306,8 +321,13 @@ class MessageBasedInstrument(Resource):
         """Sends a software trigger to the device.
         """
 
-        self.set_visa_attribute(VI_ATTR_TRIG_ID, VI_TRIG_SW)
-        self.visalib.assert_trigger(self.session, VI_TRIG_PROT_DEFAULT)
+        self._visalib.assert_trigger(self.session, VI_TRIG_PROT_DEFAULT)
+
+    @property
+    def stb(self):
+        """Service request status register."""
+
+        return self._visalib.read_stb(self.session)
 
     @property
     def send_end(self):
@@ -408,125 +428,4 @@ class GpibInstrument(MessageBasedInstrument):
         """Service request status register."""
 
         return self.visalib.read_stb(self.session)
-
-# The following aliases are used for the "end_input" property
-no_end_input = VI_ASRL_END_NONE
-last_bit_end_input = VI_ASRL_END_LAST_BIT
-term_chars_end_input = VI_ASRL_END_TERMCHAR
-
-# The following aliases are used for the "parity" property
-no_parity = VI_ASRL_PAR_NONE
-odd_parity = VI_ASRL_PAR_ODD
-even_parity = VI_ASRL_PAR_EVEN
-mark_parity = VI_ASRL_PAR_MARK
-space_parity = VI_ASRL_PAR_SPACE
-
-
-class SerialInstrument(MessageBasedInstrument):
-    """Class for serial (RS232 or parallel port) instruments.  Not USB!
-
-    This class extents the Instrument class with special operations and
-    properties of serial instruments.
-
-    :param resource_name: the instrument's resource name or an alias, may be
-        taken from the list from `list_resources` method from a ResourceManager.
-
-    Further keyword arguments are passed to the constructor of class
-    Instrument.
-    """
-
-    DEFAULT_KWARGS = {'baud_rate': 9600,
-                      'data_bits': 8,
-                      'stop_bits': 1,
-                      'parity': no_parity,
-                      'end_input': term_chars_end_input}
-
-    def __init__(self, resource_name, resource_manager=None, **keyw):
-        skwargs, pkwargs = split_kwargs(keyw,
-                                        SerialInstrument.DEFAULT_KWARGS.keys(),
-                                        MessageBasedInstrument.ALL_KWARGS.keys())
-
-        pkwargs.setdefault("read_termination", CR)
-        pkwargs.setdefault("write_termination", CR)
-
-        super(SerialInstrument, self).__init__(resource_name, resource_manager, **pkwargs)
-        # Now check whether the instrument is really valid
-        if self.interface_type != VI_INTF_ASRL:
-            raise ValueError("device is not a serial instrument")
-
-        for key, value in SerialInstrument.DEFAULT_KWARGS.items():
-            setattr(self, key, skwargs.get(key, value))
-
-    @property
-    def baud_rate(self):
-        """The baud rate of the serial instrument.
-        """
-        return self.get_visa_attribute(VI_ATTR_ASRL_BAUD)
-
-    @baud_rate.setter
-    def baud_rate(self, rate):
-        self.set_visa_attribute(VI_ATTR_ASRL_BAUD, rate)
-
-    @property
-    def data_bits(self):
-        """Number of data bits contained in each frame (from 5 to 8).
-        """
-
-        return self.get_visa_attribute(VI_ATTR_ASRL_DATA_BITS)
-
-    @data_bits.setter
-    def data_bits(self, bits):
-        if not 5 <= bits <= 8:
-            raise ValueError("number of data bits must be from 5 to 8")
-
-        self.set_visa_attribute(VI_ATTR_ASRL_DATA_BITS, bits)
-
-    @property
-    def stop_bits(self):
-        """Number of stop bits contained in each frame (1, 1.5, or 2).
-        """
-
-        deci_bits = self.get_visa_attribute(VI_ATTR_ASRL_STOP_BITS)
-        if deci_bits == 10:
-            return 1
-        elif deci_bits == 15:
-            return 1.5
-        elif deci_bits == 20:
-            return 2
-
-    @stop_bits.setter
-    def stop_bits(self, bits):
-        deci_bits = 10 * bits
-        if 9 < deci_bits < 11:
-            deci_bits = 10
-        elif 14 < deci_bits < 16:
-            deci_bits = 15
-        elif 19 < deci_bits < 21:
-            deci_bits = 20
-        else:
-            raise ValueError("invalid number of stop bits")
-
-        self.set_visa_attribute(VI_ATTR_ASRL_STOP_BITS, deci_bits)
-
-    @property
-    def parity(self):
-        """The parity used with every frame transmitted and received."""
-
-        return self.get_visa_attribute(VI_ATTR_ASRL_PARITY)
-
-    @parity.setter
-    def parity(self, parity):
-
-        self.set_visa_attribute(VI_ATTR_ASRL_PARITY, parity)
-
-    @property
-    def end_input(self):
-        """indicates the method used to terminate read operations"""
-
-        return self.get_visa_attribute(VI_ATTR_ASRL_END_IN)
-
-    @end_input.setter
-    def end_input(self, termination):
-        self.set_visa_attribute(VI_ATTR_ASRL_END_IN, termination)
-
 
