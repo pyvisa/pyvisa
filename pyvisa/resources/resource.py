@@ -47,57 +47,13 @@ class Resource(object):
                                'resource_name': self._resource_name,
                                'session': None}
 
+        #: Session handle.
         self.session = None
+
         self.open(kwargs.get('lock', Resource.DEFAULT_KWARGS['lock']))
 
         for key, value in Resource.DEFAULT_KWARGS.items():
             setattr(self, key, kwargs.get(key, value))
-
-    def open(self, lock=None):
-        """Opens a session to the specified resource.
-
-        :param lock: Specifies the mode by which the resource is to be accessed.
-                     Valid values: VI_NO_LOCK, VI_EXCLUSIVE_LOCK, VI_SHARED_LOCK
-        """
-        lock = self.lock if lock is None else lock
-
-        logger.debug('%s - opening ...', self._resource_name, extra=self._logging_extra)
-        with warning_context("ignore", "VI_SUCCESS_DEV_NPRESENT"):
-            self.session = self._resource_manager.open_resource(self._resource_name, lock)
-
-            if self._visalib.status == VI_SUCCESS_DEV_NPRESENT:
-                # okay, the device was not ready when we opened the session.
-                # Now it gets five seconds more to become ready.
-                # Every 0.1 seconds we probe it with viClear.
-                start_time = time.time()
-                sleep_time = 0.1
-                try_time = 5
-                while time.time() - start_time < try_time:
-                    time.sleep(sleep_time)
-                    try:
-                        self.clear()
-                        break
-                    except errors.VisaIOError as error:
-                        if error.error_code != VI_ERROR_NLISTENERS:
-                            raise
-
-        self._logging_extra['session'] = self.session
-        logger.debug('%s - is open with session %s',
-                     self._resource_name, self.session,
-                     extra=self._logging_extra)
-
-    def close(self):
-        """Closes the VISA session and marks the handle as invalid.
-        """
-        if self._resource_manager.session is None or self.session is None:
-            return
-
-        logger.debug('%s - closing', self._resource_name,
-                     extra=self._logging_extra)
-        self._visalib.close(self.session)
-        logger.debug('%s - is closed', self._resource_name,
-                     extra=self._logging_extra)
-        self.session = None
 
     def __del__(self):
         self.close()
@@ -107,15 +63,6 @@ class Resource(object):
 
     def __repr__(self):
         return "<%r(%r)>" % (self.__class__.__name__, self.resource_name)
-
-    def get_visa_attribute(self, name):
-        return self._visalib.get_attribute(self.session, name)
-
-    def set_visa_attribute(self, name, status):
-        self._visalib.set_attribute(self.session, name, status)
-
-    def clear(self):
-        self._visalib.clear(self.session)
 
     @property
     def timeout(self):
@@ -165,4 +112,121 @@ class Resource(object):
         """
         return self._visalib.parse_resource(self._resource_manager.session,
                                             self.resource_name).interface_type
+
+    @property
+    def lock_state(self):
+        """Current locking state of the resource
+        """
+        return self.get_visa_attribute(VI_ATTR_RSRC_LOCK_STATE)
+
+    def open(self, lock=None):
+        """Opens a session to the specified resource.
+
+        :param lock: Specifies the mode by which the resource is to be accessed.
+                     Valid values: VI_NO_LOCK, VI_EXCLUSIVE_LOCK, VI_SHARED_LOCK
+        """
+        lock = self.lock if lock is None else lock
+
+        logger.debug('%s - opening ...', self._resource_name, extra=self._logging_extra)
+        with warning_context("ignore", "VI_SUCCESS_DEV_NPRESENT"):
+            self.session = self._resource_manager.open_resource(self._resource_name, lock)
+
+            if self._visalib.status == VI_SUCCESS_DEV_NPRESENT:
+                # okay, the device was not ready when we opened the session.
+                # Now it gets five seconds more to become ready.
+                # Every 0.1 seconds we probe it with viClear.
+                start_time = time.time()
+                sleep_time = 0.1
+                try_time = 5
+                while time.time() - start_time < try_time:
+                    time.sleep(sleep_time)
+                    try:
+                        self.clear()
+                        break
+                    except errors.VisaIOError as error:
+                        if error.error_code != VI_ERROR_NLISTENERS:
+                            raise
+
+        self._logging_extra['session'] = self.session
+        logger.debug('%s - is open with session %s',
+                     self._resource_name, self.session,
+                     extra=self._logging_extra)
+
+    def close(self):
+        """Closes the VISA session and marks the handle as invalid.
+        """
+        if self._resource_manager.session is None or self.session is None:
+            return
+
+        logger.debug('%s - closing', self._resource_name,
+                     extra=self._logging_extra)
+        self._visalib.close(self.session)
+        logger.debug('%s - is closed', self._resource_name,
+                     extra=self._logging_extra)
+        self.session = None
+
+    def get_visa_attribute(self, name):
+        """Retrieves the state of an attribute in this resource.
+
+        :param attribute: Resource attribute for which the state query is made (see Attributes.*)
+        :return: The state of the queried attribute for a specified resource.
+        :rtype: unicode (Py2) or str (Py3), list or other type
+        """
+        return self._visalib.get_attribute(self.session, name)
+
+    def set_visa_attribute(self, name, status):
+        """Sets the state of an attribute.
+
+        :param attribute: Attribute for which the state is to be modified. (Attributes.*)
+        :param attribute_state: The state of the attribute to be set for the specified object.
+        """
+        self._visalib.set_attribute(self.session, name, status)
+
+    def clear(self):
+        """Clears this resource
+        """
+        self._visalib.clear(self.session)
+
+    def install_handler(self, event_type, handler, user_handle=None):
+        """Installs handlers for event callbacks in this resource.
+
+        :param event_type: Logical event identifier.
+        :param handler: Interpreted as a valid reference to a handler to be installed by a client application.
+        :param user_handle: A value specified by an application that can be used for identifying handlers
+                            uniquely for an event type.
+        :returns: user handle (a ctypes object)
+        """
+
+        return self._visalib.install_handler(self.session, event_type, handler, user_handle)
+
+    def uninstall_handler(self, event_type, handler, user_handle=None):
+        """Uninstalls handlers for events in this resource.
+
+        :param event_type: Logical event identifier.
+        :param handler: Interpreted as a valid reference to a handler to be uninstalled by a client application.
+        :param user_handle: A value specified by an application that can be used for identifying handlers
+                            uniquely in a session for an event.
+        """
+
+        self._visalib.uninstall_handler(self.session, event_type, handler, user_handle)
+
+    def lock(self, timeout=None, requested_key=None):
+        """Establish a shared lock to the resource.
+
+        :param timeout: Absolute time period (in milliseconds) that a resource
+                        waits to get unlocked by the locking session before
+                        returning an error. (Defaults to self.timeout)
+        :param requested_key: Access key used by another session with which you
+                              want your session to share a lock or None to generate
+                              a new shared access key.
+        :returns: A new shared access key if requested_key is None,
+                  otherwise, same value as the requested_key
+        """
+        timeout = self.timeout if timeout is None else timeout
+        return self._visalib.lock(self.session, Constants.SHARED_LOCK, timeout, requested_key)
+
+    def unlock(self):
+        """Relinquishes a lock for the specified resource.
+        """
+        self._visalib.unlock(self.session)
 
