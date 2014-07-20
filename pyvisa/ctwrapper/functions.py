@@ -292,109 +292,144 @@ def set_signature(library, function_name, argtypes, restype, errcheck):
 def assert_interrupt_signal(library, session, mode, status_id):
     """Asserts the specified interrupt or signal.
 
+    Corresponds to viAssertIntrSignal function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param mode: How to assert the interrupt. (Constants.ASSERT*)
     :param status_id: This is the status value to be presented during an interrupt acknowledge cycle.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viAssertIntrSignal(session, mode, status_id)
+    return library.viAssertIntrSignal(session, mode, status_id)
 
 
 def assert_trigger(library, session, protocol):
     """Asserts software or hardware trigger.
 
+    Corresponds to viAssertTrigger function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param protocol: Trigger protocol to use during assertion. (Constants.PROT*)
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viAssertTrigger(session, protocol)
+    return library.viAssertTrigger(session, protocol)
 
 
 def assert_utility_signal(library, session, line):
     """Asserts or deasserts the specified utility bus signal.
 
+    Corresponds to viAssertUtilSignal function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param line: specifies the utility bus signal to assert. (Constants.UTIL_ASSERT*)
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viAssertUtilSignal(session, line)
+    return library.viAssertUtilSignal(session, line)
 
 
 def buffer_read(library, session, count):
     """Reads data from device or interface through the use of a formatted I/O read buffer.
 
+    Corresponds to viBufRead function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param count: Number of bytes to be read.
-    :return: data read.
-    :rtype: bytes
+    :return: data read, return value of the library call.
+    :rtype: bytes, VISAStatus
     """
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
-    library.viBufRead(session, buffer, count, byref(return_count))
-    return buffer.raw[:return_count.value]
+    ret = library.viBufRead(session, buffer, count, byref(return_count))
+    return buffer.raw[:return_count.value], ret
 
 
 def buffer_write(library, session, data):
     """Writes data to a formatted I/O write buffer synchronously.
 
+    Corresponds to viBufWrite function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param data: data to be written.
     :type data: bytes
-    :return: number of written bytes.
+    :return: number of written bytes, return value of the library call.
+    :rtype: int, VISAStatus
     """
 
     return_count = ViUInt32()
     # [ViSession, ViBuf, ViUInt32, ViPUInt32]
-    library.viBufWrite(session, data, len(data), byref(return_count))
-    return return_count.value
+    ret = library.viBufWrite(session, data, len(data), byref(return_count))
+    return return_count.value, ret
 
 
 def clear(library, session):
     """Clears a device.
 
+    Corresponds to viClear function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viClear(session)
+    return library.viClear(session)
 
 
 def close(library, session):
     """Closes the specified session, event, or find list.
 
+    Corresponds to viClose function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session, event, or find list.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viClose(session)
+    return library.viClose(session)
 
 
 def disable_event(library, session, event_type, mechanism):
     """Disables notification of the specified event type(s) via the specified mechanism(s).
 
+    Corresponds to viDisableEvent function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param event_type: Logical event identifier.
     :param mechanism: Specifies event handling mechanisms to be disabled.
                       (Constants.QUEUE, .Handler, .SUSPEND_HNDLR, .ALL_MECH)
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viDisableEvent(session, event_type, mechanism)
+    return library.viDisableEvent(session, event_type, mechanism)
 
 
 def discard_events(library, session, event_type, mechanism):
     """Discards event occurrences for specified event types and mechanisms in a session.
 
+    Corresponds to viDiscardEvents function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param event_type: Logical event identifier.
     :param mechanism: Specifies event handling mechanisms to be disabled.
                       (Constants.QUEUE, .Handler, .SUSPEND_HNDLR, .ALL_MECH)
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viDiscardEvents(session, event_type, mechanism)
+    return library.viDiscardEvents(session, event_type, mechanism)
 
 
 def enable_event(library, session, event_type, mechanism, context=VI_NULL):
     """Enable event occurrences for specified event types and mechanisms in a session.
+
+    Corresponds to viEnableEvent function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -402,32 +437,38 @@ def enable_event(library, session, event_type, mechanism, context=VI_NULL):
     :param mechanism: Specifies event handling mechanisms to be disabled.
                       (Constants.QUEUE, .Handler, .SUSPEND_HNDLR)
     :param context:
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
-    library.viEnableEvent(session, event_type, mechanism, context)
+    return library.viEnableEvent(session, event_type, mechanism, context)
 
 
 def find_next(library, find_list):
     """Returns the next resource from the list of resources found during a previous call to find_resources().
 
+    Corresponds to viFindNext function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param find_list: Describes a find list. This parameter must be created by find_resources().
-    :return: Returns a string identifying the location of a device.
-    :rtype: unicode (Py2) or str (Py3)
+    :return: Returns a string identifying the location of a device, return value of the library call.
+    :rtype: unicode (Py2) or str (Py3), VISAStatus
     """
     instrument_description = create_string_buffer(VI_FIND_BUFLEN)
-    library.viFindNext(find_list, instrument_description)
-    return buffer_to_text(instrument_description)
+    ret = library.viFindNext(find_list, instrument_description)
+    return buffer_to_text(instrument_description), ret
 
 
 def find_resources(library, session, query):
     """Queries a VISA system to locate the resources associated with a specified interface.
 
+    Corresponds to viFindRsrc function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session (unused, just to uniform signatures).
     :param query: A regular expression followed by an optional logical expression. Use '?*' for all.
-    :return: find_list, return_counter, instrument_description
-    :rtype: ViFindList, int, unicode (Py2) or str (Py3)
+    :return: find_list, return_counter, instrument_description, return value of the library call.
+    :rtype: ViFindList, int, unicode (Py2) or str (Py3), VISAStatus
     """
     find_list = ViFindList()
     return_counter = ViUInt32()
@@ -435,91 +476,110 @@ def find_resources(library, session, query):
 
     # [ViSession, ViString, ViPFindList, ViPUInt32, ViAChar]
     # ViString converts from (str, unicode, bytes) to bytes
-    library.viFindRsrc(session, query,
-                       byref(find_list), byref(return_counter),
-                       instrument_description)
-    return find_list, return_counter.value, buffer_to_text(instrument_description)
+    ret = library.viFindRsrc(session, query,
+                             byref(find_list), byref(return_counter),
+                             instrument_description)
+    return find_list, return_counter.value, buffer_to_text(instrument_description), ret
 
 
 def flush(library, session, mask):
     """Manually flushes the specified buffers associated with formatted I/O operations and/or serial communication.
 
+    Corresponds to viFlush function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param mask: Specifies the action to be taken with flushing the buffer.
                  (Constants.READ*, .WRITE*, .IO*)
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viFlush(session, mask)
+    return library.viFlush(session, mask)
 
 
 def get_attribute(library, session, attribute):
     """Retrieves the state of an attribute.
 
+    Corresponds to viGetAttribute function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session, event, or find list.
     :param attribute: Resource attribute for which the state query is made (see Attributes.*)
-    :return: The state of the queried attribute for a specified resource.
-    :rtype: unicode (Py2) or str (Py3), list or other type
+    :return: The state of the queried attribute for a specified resource, return value of the library call.
+    :rtype: unicode (Py2) or str (Py3), list or other type, VISAStatus
     """
 
     # FixMe: How to deal with ViBuf?
     datatype = attributes[attribute]
     if datatype == ViString:
         attribute_state = create_string_buffer(256)
-        library.viGetAttribute(session, attribute, attribute_state)
-        return buffer_to_text(attribute_state)
+        ret = library.viGetAttribute(session, attribute, attribute_state)
+        return buffer_to_text(attribute_state), ret
     elif datatype == ViAUInt8:
         length = get_attribute(library, session, VI_ATTR_USB_RECV_INTR_SIZE)
         attribute_state = (ViUInt8 * length)()
-        library.viGetAttribute(session, attribute, byref(attribute_state))
-        return list(attribute_state)
+        ret = library.viGetAttribute(session, attribute, byref(attribute_state))
+        return list(attribute_state), ret
     else:
         attribute_state = datatype()
-        library.viGetAttribute(session, attribute, byref(attribute_state))
-        return attribute_state.value
+        ret = library.viGetAttribute(session, attribute, byref(attribute_state))
+        return attribute_state.value, ret
 
 
 def gpib_command(library, session, data):
     """Write GPIB command bytes on the bus.
 
+    Corresponds to viGpibCommand function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param data: data tor write.
     :type data: bytes
-    :return: Number of written bytes.
+    :return: Number of written bytes, return value of the library call.
+    :rtype: int, VISAStatus
     """
     return_count = ViUInt32()
 
     # [ViSession, ViBuf, ViUInt32, ViPUInt32]
-    library.viGpibCommand(session, data, len(data), byref(return_count))
-    return return_count.value
+    ret = library.viGpibCommand(session, data, len(data), byref(return_count))
+    return return_count.value, ret
 
 
 def gpib_control_atn(library, session, mode):
     """Specifies the state of the ATN line and the local active controller state.
 
+    Corresponds to viGpibControlATN function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param mode: Specifies the state of the ATN line and optionally the local active controller state.
                  (Constants.GPIB_ATN*)
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viGpibControlATN(session, mode)
+    return library.viGpibControlATN(session, mode)
 
 
 def gpib_control_ren(library, session, mode):
     """Controls the state of the GPIB Remote Enable (REN) interface line, and optionally the remote/local
     state of the device.
 
+    Corresponds to viGpibControlREN function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param mode: Specifies the state of the REN line and optionally the device remote/local state.
                  (Constants.GPIB_REN*)
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viGpibControlREN(session, mode)
+    return library.viGpibControlREN(session, mode)
 
 
 def gpib_pass_control(library, session, primary_address, secondary_address):
     """Tell the GPIB device at the specified address to become controller in charge (CIC).
+
+    Corresponds to viGpibPassControl function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -527,21 +587,29 @@ def gpib_pass_control(library, session, primary_address, secondary_address):
     :param secondary_address: Secondary address of the targeted GPIB device.
                               If the targeted device does not have a secondary address,
                               this parameter should contain the value Constants.NO_SEC_ADDR.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viGpibPassControl(session, primary_address, secondary_address)
+    return library.viGpibPassControl(session, primary_address, secondary_address)
 
 
 def gpib_send_ifc(library, session):
     """Pulse the interface clear line (IFC) for at least 100 microseconds.
 
+    Corresponds to viGpibSendIFC function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viGpibSendIFC(session)
+    return library.viGpibSendIFC(session)
 
 
 def read_memory(library, session, space, offset, width, extended=False):
     """Reads in an 8-bit, 16-bit, 32-bit, or 64-bit value from the specified memory space and offset.
+
+    Corresponds to viIn* functions of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -549,9 +617,8 @@ def read_memory(library, session, space, offset, width, extended=False):
     :param offset: Offset (in bytes) of the address or register from which to read.
     :param width: Number of bits to read.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from memory.
-
-    Corresponds to viIn* functions of the visa library.
+    :return: Data read from memory, return value of the library call.
+    :rtype: int, VISAStatus
     """
     if width == 8:
         return in_8(library, session, space, offset, extended)
@@ -568,77 +635,91 @@ def read_memory(library, session, space, offset, width, extended=False):
 def in_8(library, session, space, offset, extended=False):
     """Reads in an 8-bit value from the specified memory space and offset.
 
+    Corresponds to viIn8* function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from memory.
+    :return: Data read from memory, return value of the library call.
+    :rtype: int, VISAStatus
     """
     value_8 = ViUInt8()
     if extended:
-        library.viIn8Ex(session, space, offset, byref(value_8))
+        ret = library.viIn8Ex(session, space, offset, byref(value_8))
     else:
-        library.viIn8(session, space, offset, byref(value_8))
-    return value_8.value
+        ret = library.viIn8(session, space, offset, byref(value_8))
+    return value_8.value, ret
 
 
 def in_16(library, session, space, offset, extended=False):
     """Reads in an 16-bit value from the specified memory space and offset.
 
+    Corresponds to viIn16* function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from memory.
+    :return: Data read from memory, return value of the library call.
+    :rtype: int, VISAStatus
     """
     value_16 = ViUInt16()
     if extended:
-        library.viIn16Ex(session, space, offset, byref(value_16))
+        ret = library.viIn16Ex(session, space, offset, byref(value_16))
     else:
-        library.viIn16(session, space, offset, byref(value_16))
-    return value_16.value
+        ret = library.viIn16(session, space, offset, byref(value_16))
+    return value_16.value, ret
 
 
 def in_32(library, session, space, offset, extended=False):
     """Reads in an 32-bit value from the specified memory space and offset.
 
+    Corresponds to viIn32* function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from memory.
+    :return: Data read from memory, return value of the library call.
+    :rtype: int, VISAStatus
     """
     value_32 = ViUInt32()
     if extended:
-        library.viIn32Ex(session, space, offset, byref(value_32))
+        ret = library.viIn32Ex(session, space, offset, byref(value_32))
     else:
-        library.viIn32(session, space, offset, byref(value_32))
-    return value_32.value
+        ret = library.viIn32(session, space, offset, byref(value_32))
+    return value_32.value, ret
 
 
 def in_64(library, session, space, offset, extended=False):
     """Reads in an 64-bit value from the specified memory space and offset.
 
+    Corresponds to viIn64* function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from memory.
+    :return: Data read from memory, return value of the library call.
+    :rtype: int, VISAStatus
     """
     value_64 = ViUInt64()
     if extended:
-        library.viIn64Ex(session, space, offset, byref(value_64))
+        ret = library.viIn64Ex(session, space, offset, byref(value_64))
     else:
-        library.viIn64(session, space, offset, byref(value_64))
-    return value_64.value
+        ret = library.viIn64(session, space, offset, byref(value_64))
+    return value_64.value, ret
 
 
 def install_handler(library, session, event_type, handler, user_handle):
     """Installs handlers for event callbacks.
+
+    Corresponds to viInstallHandler function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -650,6 +731,8 @@ def install_handler(library, session, event_type, handler, user_handle):
              - handler (a python callable)
              - user handle (a ctypes object)
              - ctypes handler (ctypes object wrapping handler)
+             and return value of the library call.
+    :rtype: int, VISAStatus
     """
     if user_handle is None:
         converted_user_handle = None
@@ -675,16 +758,18 @@ def install_handler(library, session, event_type, handler, user_handle):
     set_user_handle_type(library, converted_user_handle)
     converted_handler = ViHndlr(handler)
     if user_handle is None:
-        library.viInstallHandler(session, event_type, converted_handler, None)
+        ret = library.viInstallHandler(session, event_type, converted_handler, None)
     else:
-        library.viInstallHandler(session, event_type, converted_handler,
-                                 byref(converted_user_handle))
+        ret = library.viInstallHandler(session, event_type, converted_handler,
+                                       byref(converted_user_handle))
 
-    return handler, converted_user_handle, converted_handler
+    return handler, converted_user_handle, converted_handler, ret
 
 
 def lock(library, session, lock_type, timeout, requested_key=None):
     """Establishes an access mode to the specified resources.
+
+    Corresponds to viLock function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -692,20 +777,23 @@ def lock(library, session, lock_type, timeout, requested_key=None):
     :param timeout: Absolute time period (in milliseconds) that a resource waits to get unlocked by the
                     locking session before returning an error.
     :param requested_key: This parameter is not used and should be set to VI_NULL when lockType is VI_EXCLUSIVE_LOCK.
-    :return: access_key that can then be passed to other sessions to share the lock.
+    :return: access_key that can then be passed to other sessions to share the lock, return value of the library call.
+    :rtype: str, VISAStatus
     """
     if lock_type == VI_EXCLUSIVE_LOCK:
         requested_key = None
         access_key = None
     else:
         access_key = create_string_buffer(256)
-    library.viLock(session, lock_type, timeout, requested_key, access_key)
-    return access_key
+    ret = library.viLock(session, lock_type, timeout, requested_key, access_key)
+    return access_key, ret
 
 
 def map_address(library, session, map_space, map_base, map_size,
                 access=VI_FALSE, suggested=VI_NULL):
     """Maps the specified memory space into the process's address space.
+
+    Corresponds to viMapAddress function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -718,61 +806,75 @@ def map_address(library, session, map_space, map_base, map_size,
                       that address. This operation may map the memory into an address region different from
                       suggested.
 
-    :return: Address in your process space where the memory was mapped.
+    :return: address in your process space where the memory was mapped, return value of the library call.
+    :rtype: address, VISAStatus
     """
     access = VI_FALSE
     address = ViAddr()
-    library.viMapAddress(session, map_space, map_base, map_size, access,
-                         suggested, byref(address))
-    return address
+    ret = library.viMapAddress(session, map_space, map_base, map_size, access,
+                               suggested, byref(address))
+    return address, ret
 
 
 def map_trigger(library, session, trigger_source, trigger_destination, mode):
     """Map the specified trigger source line to the specified destination line.
+
+    Corresponds to viMapTrigger function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param trigger_source: Source line from which to map. (Constants.TRIG*)
     :param trigger_destination: Destination line to which to map. (Constants.TRIG*)
     :param mode:
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viMapTrigger(session, trigger_source, trigger_destination, mode)
+    return library.viMapTrigger(session, trigger_source, trigger_destination, mode)
 
 
 def memory_allocation(library, session, size, extended=False):
     """Allocates memory from a resource's memory region.
 
+    Corresponds to viMemAlloc* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param size: Specifies the size of the allocation.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Returns the offset of the allocated memory.
+    :return: offset of the allocated memory, return value of the library call.
+    :rtype: offset, VISAStatus
     """
     offset = ViBusAddress()
     if extended:
-        library.viMemAllocEx(session, size, byref(offset))
+        ret = library.viMemAllocEx(session, size, byref(offset))
     else:
-        library.viMemAlloc(session, size, byref(offset))
-    return offset
+        ret = library.viMemAlloc(session, size, byref(offset))
+    return offset, ret
 
 
 def memory_free(library, session, offset, extended=False):
     """Frees memory previously allocated using the memory_allocation() operation.
 
+    Corresponds to viMemFree* function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param offset: Offset of the memory to free.
     :param extended: Use 64 bits offset independent of the platform.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     if extended:
-        library.viMemFreeEx(session, offset)
+        return library.viMemFreeEx(session, offset)
     else:
-        library.viMemFree(session, offset)
+        return library.viMemFree(session, offset)
 
 
 def move(library, session, source_space, source_offset, source_width, destination_space,
          destination_offset, destination_width, length):
     """Moves a block of data.
+
+    Corresponds to viMove function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -784,10 +886,12 @@ def move(library, session, source_space, source_offset, source_width, destinatio
     :param destination_width: Specifies the data width of the destination.
     :param length: Number of elements to transfer, where the data width of the elements to transfer
                    is identical to the source data width.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viMove(session, source_space, source_offset, source_width,
-                   destination_space, destination_offset,
-                   destination_width, length)
+    return library.viMove(session, source_space, source_offset, source_width,
+                          destination_space, destination_offset,
+                          destination_width, length)
 
 
 def move_asynchronously(library, session, source_space, source_offset, source_width,
@@ -795,6 +899,8 @@ def move_asynchronously(library, session, source_space, source_offset, source_wi
                         destination_width, length):
     """Moves a block of data asynchronously.
 
+    Corresponds to viMoveAsync function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param source_space: Specifies the address space of the source.
@@ -805,17 +911,20 @@ def move_asynchronously(library, session, source_space, source_offset, source_wi
     :param destination_width: Specifies the data width of the destination.
     :param length: Number of elements to transfer, where the data width of the elements to transfer
                    is identical to the source data width.
-    :return: Job identifier of this asynchronous move operation.
+    :return: Job identifier of this asynchronous move operation, return value of the library call.
+    :rtype: jobid, VISAStatus
     """
     job_id = ViJobId()
-    library.viMoveAsync(session, source_space, source_offset, source_width,
-                        destination_space, destination_offset,
-                        destination_width, length, byref(job_id))
-    return job_id
+    ret = library.viMoveAsync(session, source_space, source_offset, source_width,
+                              destination_space, destination_offset,
+                              destination_width, length, byref(job_id))
+    return job_id, ret
 
 
 def move_in(library, session, space, offset, length, width, extended=False):
     """Moves a block of data to local memory from the specified address space and offset.
+
+    Corresponds to viMoveIn* functions of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -825,6 +934,8 @@ def move_in(library, session, space, offset, length, width, extended=False):
                    is identical to the source data width.
     :param width: Number of bits to read per element.
     :param extended: Use 64 bits offset independent of the platform.
+    :return: Data read from the bus, return value of the library call.
+    :rtype: list, VISAStatus
     """
     if width == 8:
         return move_in_8(library, session, space, offset, length, extended)
@@ -841,6 +952,8 @@ def move_in(library, session, space, offset, length, width, extended=False):
 def move_in_8(library, session, space, offset, length, extended=False):
     """Moves an 8-bit block of data from the specified address space and offset to local memory.
 
+    Corresponds to viMoveIn8* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
@@ -848,21 +961,22 @@ def move_in_8(library, session, space, offset, length, extended=False):
     :param length: Number of elements to transfer, where the data width of the elements to transfer
                    is identical to the source data width.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from bus.
-
-    Corresponds to viMoveIn8 functions of the visa library.
+    :return: Data read from the bus, return value of the library call.
+    :rtype: list, VISAStatus
     """
     buffer_8 = (ViUInt8 * length)()
     if extended:
-        library.viMoveIn8Ex(session, space, offset, length, buffer_8)
+        ret = library.viMoveIn8Ex(session, space, offset, length, buffer_8)
     else:
-        library.viMoveIn8(session, space, offset, length, buffer_8)
-    return list(buffer_8)
+        ret = library.viMoveIn8(session, space, offset, length, buffer_8)
+    return list(buffer_8), ret
 
 
 def move_in_16(library, session, space, offset, length, extended=False):
     """Moves an 16-bit block of data from the specified address space and offset to local memory.
 
+    Corresponds to viMoveIn16* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
@@ -870,22 +984,23 @@ def move_in_16(library, session, space, offset, length, extended=False):
     :param length: Number of elements to transfer, where the data width of the elements to transfer
                    is identical to the source data width.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from bus.
-
-    Corresponds to viMoveIn16 functions of the visa library.
+    :return: Data read from the bus, return value of the library call.
+    :rtype: list, VISAStatus
     """
     buffer_16 = (ViUInt16 * length)()
     if extended:
-        library.viMoveIn16Ex(session, space, offset, length, buffer_16)
+        ret = library.viMoveIn16Ex(session, space, offset, length, buffer_16)
     else:
-        library.viMoveIn16(session, space, offset, length, buffer_16)
+        ret = library.viMoveIn16(session, space, offset, length, buffer_16)
 
-    return list(buffer_16)
+    return list(buffer_16), ret
 
 
 def move_in_32(library, session, space, offset, length, extended=False):
     """Moves an 32-bit block of data from the specified address space and offset to local memory.
 
+    Corresponds to viMoveIn32* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
@@ -893,22 +1008,23 @@ def move_in_32(library, session, space, offset, length, extended=False):
     :param length: Number of elements to transfer, where the data width of the elements to transfer
                    is identical to the source data width.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from bus.
-
-    Corresponds to viMoveIn32 functions of the visa library.
+    :return: Data read from the bus, return value of the library call.
+    :rtype: list, VISAStatus
     """
     buffer_32 = (ViUInt32 * length)()
     if extended:
-        library.viMoveIn32Ex(session, space, offset, length, buffer_32)
+        ret = library.viMoveIn32Ex(session, space, offset, length, buffer_32)
     else:
-        library.viMoveIn32(session, space, offset, length, buffer_32)
+        ret = library.viMoveIn32(session, space, offset, length, buffer_32)
 
-    return list(buffer_32)
+    return list(buffer_32), ret
 
 
 def move_in_64(library, session, space, offset, length, extended=False):
     """Moves an 64-bit block of data from the specified address space and offset to local memory.
 
+    Corresponds to viMoveIn64* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
@@ -916,21 +1032,22 @@ def move_in_64(library, session, space, offset, length, extended=False):
     :param length: Number of elements to transfer, where the data width of the elements to transfer
                    is identical to the source data width.
     :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from bus.
-
-    Corresponds to viMoveIn32 functions of the visa library.
+    :return: Data read from the bus, return value of the library call.
+    :rtype: list, VISAStatus
     """
     buffer_64 = (ViUInt64 * length)()
     if extended:
-        library.viMoveIn64Ex(session, space, offset, length, buffer_64)
+        ret = library.viMoveIn64Ex(session, space, offset, length, buffer_64)
     else:
-        library.viMoveIn64(session, space, offset, length, buffer_64)
+        ret = library.viMoveIn64(session, space, offset, length, buffer_64)
 
-    return list(buffer_64)
+    return list(buffer_64), ret
 
 
 def move_out(library, session, space, offset, length, data, width, extended=False):
     """Moves a block of data from local memory to the specified address space and offset.
+
+    Corresponds to viMoveOut* functions of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -941,6 +1058,8 @@ def move_out(library, session, space, offset, length, data, width, extended=Fals
     :param data: Data to write to bus.
     :param width: Number of bits to read per element.
     :param extended: Use 64 bits offset independent of the platform.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     if width == 8:
         return move_out_8(library, session, space, offset, length, data, extended)
@@ -957,6 +1076,8 @@ def move_out(library, session, space, offset, length, data, width, extended=Fals
 def move_out_8(library, session, space, offset, length, data, extended=False):
     """Moves an 8-bit block of data from local memory to the specified address space and offset.
 
+    Corresponds to viMoveOut8* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
@@ -965,19 +1086,23 @@ def move_out_8(library, session, space, offset, length, data, extended=False):
                    is identical to the source data width.
     :param data: Data to write to bus.
     :param extended: Use 64 bits offset independent of the platform.
+    :return: return value of the library call.
+    :rtype: VISAStatus
 
-    Corresponds to viMoveOut8 functions of the visa library.
+    Corresponds to viMoveOut8 function of the VISA library.
     """
     converted_buffer = (ViUInt8 * length)(*tuple(data))
     if extended:
-        library.viMoveOut8Ex(session, space, offset, length, converted_buffer)
+        return library.viMoveOut8Ex(session, space, offset, length, converted_buffer)
     else:
-        library.viMoveOut8(session, space, offset, length, converted_buffer)
+        return library.viMoveOut8(session, space, offset, length, converted_buffer)
 
 
 def move_out_16(library, session, space, offset, length, data, extended=False):
     """Moves an 16-bit block of data from local memory to the specified address space and offset.
 
+    Corresponds to viMoveOut16* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
@@ -986,19 +1111,21 @@ def move_out_16(library, session, space, offset, length, data, extended=False):
                    is identical to the source data width.
     :param data: Data to write to bus.
     :param extended: Use 64 bits offset independent of the platform.
-
-    Corresponds to viMoveOut16 functions of the visa library.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     converted_buffer = (ViUInt16 * length)(*tuple(data))
     if extended:
-        library.viMoveOut16Ex(session, space, offset, length, converted_buffer)
+        return library.viMoveOut16Ex(session, space, offset, length, converted_buffer)
     else:
-        library.viMoveOut16(session, space, offset, length, converted_buffer)
+        return library.viMoveOut16(session, space, offset, length, converted_buffer)
 
 
 def move_out_32(library, session, space, offset, length, data, extended=False):
     """Moves an 32-bit block of data from local memory to the specified address space and offset.
 
+    Corresponds to viMoveOut32* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
@@ -1007,19 +1134,21 @@ def move_out_32(library, session, space, offset, length, data, extended=False):
                    is identical to the source data width.
     :param data: Data to write to bus.
     :param extended: Use 64 bits offset independent of the platform.
-
-    Corresponds to viMoveOut32 functions of the visa library.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     converted_buffer = (ViUInt32 * length)(*tuple(data))
     if extended:
-        library.viMoveOut32Ex(session, space, offset, length, converted_buffer)
+        return library.viMoveOut32Ex(session, space, offset, length, converted_buffer)
     else:
-        library.viMoveOut32(session, space, offset, length, converted_buffer)
+        return library.viMoveOut32(session, space, offset, length, converted_buffer)
 
 
 def move_out_64(library, session, space, offset, length, data, extended=False):
     """Moves an 64-bit block of data from local memory to the specified address space and offset.
 
+    Corresponds to viMoveOut64* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
@@ -1028,18 +1157,20 @@ def move_out_64(library, session, space, offset, length, data, extended=False):
                    is identical to the source data width.
     :param data: Data to write to bus.
     :param extended: Use 64 bits offset independent of the platform.
-
-    Corresponds to viMoveOut64 functions of the visa library.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     converted_buffer = (ViUInt64 * length)(*tuple(data))
     if extended:
-        library.viMoveOut64Ex(session, space, offset, length, converted_buffer)
+        return library.viMoveOut64Ex(session, space, offset, length, converted_buffer)
     else:
-        library.viMoveOut64(session, space, offset, length, converted_buffer)
+        return library.viMoveOut64(session, space, offset, length, converted_buffer)
 
 
 def open(library, session, resource_name, access_mode=VI_NO_LOCK, open_timeout=VI_TMO_IMMEDIATE):
     """Opens a session to the specified resource.
+
+    Corresponds to viOpen function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Resource Manager session (should always be a session returned from open_default_resource_manager()).
@@ -1047,29 +1178,35 @@ def open(library, session, resource_name, access_mode=VI_NO_LOCK, open_timeout=V
     :param access_mode: Specifies the mode by which the resource is to be accessed. (Constants.NULL or Constants.*LOCK*)
     :param open_timeout: Specifies the maximum time period (in milliseconds) that this operation waits
                          before returning an error.
-    :return: Unique logical identifier reference to a session.
+    :return: Unique logical identifier reference to a session, return value of the library call.
+    :rtype: session, VISAStatus
     """
     out_session = ViSession()
 
     # [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession]
     # ViRsrc converts from (str, unicode, bytes) to bytes
-    library.viOpen(session, resource_name, access_mode, open_timeout, byref(out_session))
-    return out_session.value
+    ret = library.viOpen(session, resource_name, access_mode, open_timeout, byref(out_session))
+    return out_session.value, ret
 
 
 def open_default_resource_manager(library):
     """This function returns a session to the Default Resource Manager resource.
 
+    Corresponds to viOpenDefaultRM function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
-    :return: Unique logical identifier to a Default Resource Manager session.
+    :return: Unique logical identifier to a Default Resource Manager session, return value of the library call.
+    :rtype: session, VISAStatus
     """
     session = ViSession()
-    library.viOpenDefaultRM(byref(session))
-    return session.value
+    ret = library.viOpenDefaultRM(byref(session))
+    return session.value, ret
 
 
 def write_memory(library, session, space, offset, data, width, extended=False):
     """Write in an 8-bit, 16-bit, 32-bit, value to the specified memory space and offset.
+
+    Corresponds to viOut* functions of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -1078,8 +1215,8 @@ def write_memory(library, session, space, offset, data, width, extended=False):
     :param data: Data to write to bus.
     :param width: Number of bits to read.
     :param extended: Use 64 bits offset independent of the platform.
-
-    Corresponds to viOut* functions of the visa library.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     if width == 8:
         return out_8(library, session, space, offset, data, extended)
@@ -1093,103 +1230,118 @@ def write_memory(library, session, space, offset, data, width, extended=False):
 
 def out_8(library, session, space, offset, data, extended=False):
     """Write in an 8-bit value from the specified memory space and offset.
+
+    Corresponds to viOut8* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
     :param data: Data to write to bus.
     :param extended: Use 64 bits offset independent of the platform.
-
-    Corresponds to viOut8 functions of the visa library.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     if extended:
-        library.viOut8Ex(session, space, offset, data)
+        return library.viOut8Ex(session, space, offset, data)
     else:
-        library.viOut8(session, space, offset, data)
+        return library.viOut8(session, space, offset, data)
 
 
 def out_16(library, session, space, offset, data, extended=False):
     """Write in an 16-bit value from the specified memory space and offset.
+
+    Corresponds to viOut16* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
     :param data: Data to write to bus.
     :param extended: Use 64 bits offset independent of the platform.
-
-    Corresponds to viOut16 functions of the visa library.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     if extended:
-        library.viOut16Ex(session, space, offset, data, extended=False)
+        return library.viOut16Ex(session, space, offset, data, extended=False)
     else:
-        library.viOut16(session, space, offset, data, extended=False)
+        return library.viOut16(session, space, offset, data, extended=False)
 
 
 def out_32(library, session, space, offset, data, extended=False):
     """Write in an 32-bit value from the specified memory space and offset.
+
+    Corresponds to viOut32* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
     :param data: Data to write to bus.
     :param extended: Use 64 bits offset independent of the platform.
-
-    Corresponds to viOut32 functions of the visa library.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     if extended:
-        library.viOut32Ex(session, space, offset, data)
+        return library.viOut32Ex(session, space, offset, data)
     else:
-        library.viOut32(session, space, offset, data)
+        return library.viOut32(session, space, offset, data)
 
 
 def out_64(library, session, space, offset, data, extended=False):
     """Write in an 64-bit value from the specified memory space and offset.
 
+    Corresponds to viOut64* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param space: Specifies the address space. (Constants.*SPACE*)
     :param offset: Offset (in bytes) of the address or register from which to read.
     :param data: Data to write to bus.
     :param extended: Use 64 bits offset independent of the platform.
-
-    Corresponds to viOut64 functions of the visa library.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     if extended:
-        library.viOut64Ex(session, space, offset, data)
+        return library.viOut64Ex(session, space, offset, data)
     else:
-        library.viOut64(session, space, offset, data)
+        return library.viOut64(session, space, offset, data)
 
 
 def parse_resource(library, session, resource_name):
     """Parse a resource string to get the interface information.
 
+    Corresponds to viParseRsrc function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Resource Manager session (should always be the Default Resource Manager for VISA
                     returned from open_default_resource_manager()).
     :param resource_name: Unique symbolic name of a resource.
-    :return: Resource information with interface type and board number.
-    :rtype: :class:ResourceInfo
+    :return: Resource information with interface type and board number, return value of the library call.
+    :rtype: :class:ResourceInfo, VISAStatus
     """
     interface_type = ViUInt16()
     interface_board_number = ViUInt16()
 
     # [ViSession, ViRsrc, ViPUInt16, ViPUInt16]
     # ViRsrc converts from (str, unicode, bytes) to bytes
-    library.viParseRsrc(session, resource_name, byref(interface_type),
-                        byref(interface_board_number))
+    ret = library.viParseRsrc(session, resource_name, byref(interface_type),
+                              byref(interface_board_number))
     return ResourceInfo(interface_type.value, interface_board_number.value,
-                        None, None, None)
+                        None, None, None), ret
 
 
 def parse_resource_extended(library, session, resource_name):
     """Parse a resource string to get extended interface information.
 
+    Corresponds to viParseRsrcEx function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Resource Manager session (should always be the Default Resource Manager for VISA
                     returned from open_default_resource_manager()).
     :param resource_name: Unique symbolic name of a resource.
-    :return: Resource information.
-    :rtype: :class:ResourceInfo
+    :return: Resource information, return value of the library call.
+    :rtype: :class:ResourceInfo, VISAStatus
     """
     interface_type = ViUInt16()
     interface_board_number = ViUInt16()
@@ -1199,10 +1351,10 @@ def parse_resource_extended(library, session, resource_name):
 
     # [ViSession, ViRsrc, ViPUInt16, ViPUInt16, ViAChar, ViAChar, ViAChar]
     # ViRsrc converts from (str, unicode, bytes) to bytes
-    library.viParseRsrcEx(session, resource_name, byref(interface_type),
-                          byref(interface_board_number), resource_class,
-                          unaliased_expanded_resource_name,
-                          alias_if_exists)
+    ret = library.viParseRsrcEx(session, resource_name, byref(interface_type),
+                                byref(interface_board_number), resource_class,
+                                unaliased_expanded_resource_name,
+                                alias_if_exists)
 
     res = [buffer_to_text(val)
            for val in (resource_class,
@@ -1212,18 +1364,20 @@ def parse_resource_extended(library, session, resource_name):
     if res[-1] == '':
         res[-1] = None
 
-    return ResourceInfo(interface_type.value, interface_board_number.value, *res)
+    return ResourceInfo(interface_type.value, interface_board_number.value, *res), ret
 
 
 def peek(library, session, address, width):
     """Read an 8, 16 or 32-bit value from the specified address.
 
+    Corresponds to viPeek* functions of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
     :param width: Number of bits to read.
-    :return: Data read from bus.
-    :rtype: bytes
+    :return: Data read from bus, return value of the library call.
+    :rtype: bytes, VISAStatus
     """
 
     if width == 8:
@@ -1241,67 +1395,79 @@ def peek(library, session, address, width):
 def peek_8(library, session, address):
     """Read an 8-bit value from the specified address.
 
+    Corresponds to viPeek8 function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
-    :return: Data read from bus.
-    :rtype: bytes
+    :return: Data read from bus, return value of the library call.
+    :rtype: bytes, VISAStatus
     """
     value_8 = ViUInt8()
-    library.viPeek8(session, address, byref(value_8))
-    return value_8.value
+    ret = library.viPeek8(session, address, byref(value_8))
+    return value_8.value, ret
 
 
 def peek_16(library, session, address):
     """Read an 16-bit value from the specified address.
 
+    Corresponds to viPeek16 function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
-    :return: Data read from bus.
-    :rtype: bytes
+    :return: Data read from bus, return value of the library call.
+    :rtype: bytes, VISAStatus
     """
     value_16 = ViUInt16()
-    library.viPeek16(session, address, byref(value_16))
-    return value_16.value
+    ret = library.viPeek16(session, address, byref(value_16))
+    return value_16.value, ret
 
 
 def peek_32(library, session, address):
     """Read an 32-bit value from the specified address.
 
+    Corresponds to viPeek32 function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
-    :return: Data read from bus.
-    :rtype: bytes
+    :return: Data read from bus, return value of the library call.
+    :rtype: bytes, VISAStatus
     """
     value_32 = ViUInt32()
-    library.viPeek32(session, address, byref(value_32))
-    return value_32.value
+    ret = library.viPeek32(session, address, byref(value_32))
+    return value_32.value, ret
 
 
 def peek_64(library, session, address):
     """Read an 64-bit value from the specified address.
 
+    Corresponds to viPeek64 function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
-    :return: Data read from bus.
-    :rtype: bytes
+    :return: Data read from bus, return value of the library call.
+    :rtype: bytes, VISAStatus
     """
     value_64 = ViUInt64()
-    library.viPeek64(session, address, byref(value_64))
-    return value_64.value
+    ret = library.viPeek64(session, address, byref(value_64))
+    return value_64.value, ret
 
 
 def poke(library, session, address, width, data):
     """Writes an 8, 16 or 32-bit value from the specified address.
+
+    Corresponds to viPoke* functions of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
     :param width: Number of bits to read.
     :param data: Data to be written to the bus.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
 
     if width == 8:
@@ -1317,155 +1483,195 @@ def poke(library, session, address, width, data):
 def poke_8(library, session, address, data):
     """Write an 8-bit value from the specified address.
 
+    Corresponds to viPoke8 function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
     :param data: value to be written to the bus.
     :return: Data read from bus.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viPoke8(session, address, data)
+    return library.viPoke8(session, address, data)
 
 
 def poke_16(library, session, address, data):
     """Write an 16-bit value from the specified address.
 
+    Corresponds to viPoke16 function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
     :param data: value to be written to the bus.
-    :return: Data read from bus.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viPoke16(session, address, data)
+    return library.viPoke16(session, address, data)
 
 
 def poke_32(library, session, address, data):
     """Write an 32-bit value from the specified address.
 
+    Corresponds to viPoke32 function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
     :param data: value to be written to the bus.
-    :return: Data read from bus.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viPoke32(session, address, data)
+    return library.viPoke32(session, address, data)
 
 
 def poke_64(library, session, address, data):
     """Write an 64-bit value from the specified address.
 
+    Corresponds to viPoke64 function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param address: Source address to read the value.
     :param data: value to be written to the bus.
-    :return: Data read from bus.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viPoke64(session, address, data)
+    return library.viPoke64(session, address, data)
 
 
 def read(library, session, count):
     """Reads data from device or interface synchronously.
 
+    Corresponds to viRead function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param count: Number of bytes to be read.
-    :return: data read.
-    :rtype: bytes
+    :return: data read, return value of the library call.
+    :rtype: bytes, VISAStatus
     """
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
-    library.viRead(session, buffer, count, byref(return_count))
-    return buffer.raw[:return_count.value]
+    ret = library.viRead(session, buffer, count, byref(return_count))
+    return buffer.raw[:return_count.value], ret
 
 
 def read_asynchronously(library, session, count):
     """Reads data from device or interface asynchronously.
 
+    Corresponds to viReadAsync function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param count: Number of bytes to be read.
-    :return: (ctypes buffer with result, jobid)
+    :return: result, jobid, return value of the library call.
+    :rtype: ctypes buffer, jobid, VISAStatus
     """
     buffer = create_string_buffer(count)
     job_id = ViJobId()
-    library.viReadAsync(session, buffer, count, byref(job_id))
-    return buffer, job_id
+    ret = library.viReadAsync(session, buffer, count, byref(job_id))
+    return buffer, job_id, ret
 
 
 def read_stb(library, session):
     """Reads a status byte of the service request.
 
+    Corresponds to viReadSTB function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
-    :return: Service request status byte.
+    :return: Service request status byte, return value of the library call.
+    :rtype: int, VISAStatus
     """
     status = ViUInt16()
-    library.viReadSTB(session, byref(status))
-    return status.value
+    ret = library.viReadSTB(session, byref(status))
+    return status.value, ret
 
 
 def read_to_file(library, session, filename, count):
     """Read data synchronously, and store the transferred data in a file.
 
+    Corresponds to viReadToFile function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param filename: Name of file to which data will be written.
     :param count: Number of bytes to be read.
-    :return: Number of bytes actually transferred.
+    :return: Number of bytes actually transferred, return value of the library call.
+    :rtype: int, VISAStatus
     """
     return_count = ViUInt32()
-    library.viReadToFile(session, filename, count, return_count)
-    return return_count
+    ret = library.viReadToFile(session, filename, count, return_count)
+    return return_count, ret
 
 
 def set_attribute(library, session, attribute, attribute_state):
     """Sets the state of an attribute.
 
+    Corresponds to viSetAttribute function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param attribute: Attribute for which the state is to be modified. (Attributes.*)
     :param attribute_state: The state of the attribute to be set for the specified object.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viSetAttribute(session, attribute, attribute_state)
+    return library.viSetAttribute(session, attribute, attribute_state)
 
 
 def set_buffer(library, session, mask, size):
     """Sets the size for the formatted I/O and/or low-level I/O communication buffer(s).
 
+    Corresponds to viSetBuf function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param mask: Specifies the type of buffer. (Constants.READ_BUF, .WRITE_BUF, .IO_IN_BUF, .IO_OUT_BUF)
     :param size: The size to be set for the specified buffer(s).
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viSetBuf(session, mask, size)
+    return library.viSetBuf(session, mask, size)
 
 
 def status_description(library, session, status):
     """Returns a user-readable description of the status code passed to the operation.
 
+    Corresponds to viStatusDesc function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param status: Status code to interpret.
-    :return: The user-readable string interpretation of the status code passed to the operation.
-    :rtype: unicode (Py2) or str (Py3)
+    :return: The user-readable string interpretation of the status code passed to the operation, return value of the library call.
+    :rtype: unicode (Py2) or str (Py3), VISAStatus
     """
     description = create_string_buffer(256)
-    library.viStatusDesc(session, status, description)
-    return buffer_to_text(description)
+    ret = library.viStatusDesc(session, status, description)
+    return buffer_to_text(description), ret
 
 
 def terminate(library, session, degree, job_id):
     """Requests a VISA session to terminate normal execution of an operation.
 
+    Corresponds to viTerminate function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param degree: Constants.NULL
     :param job_id: Specifies an operation identifier.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viTerminate(session, degree, job_id)
+    return library.viTerminate(session, degree, job_id)
 
 
 def uninstall_handler(library, session, event_type, handler, user_handle=None):
     """Uninstalls handlers for events.
+
+    Corresponds to viUninstallHandler function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -1473,42 +1679,58 @@ def uninstall_handler(library, session, event_type, handler, user_handle=None):
     :param handler: Interpreted as a valid reference to a handler to be uninstalled by a client application.
     :param user_handle: A value specified by an application that can be used for identifying handlers
                         uniquely in a session for an event.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viUninstallHandler(session, event_type, handler, byref(user_handle))
+    return library.viUninstallHandler(session, event_type, handler, byref(user_handle))
 
 
 def unlock(library, session):
     """Relinquishes a lock for the specified resource.
 
+    Corresponds to viUnlock function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viUnlock(session)
+    return library.viUnlock(session)
 
 
 def unmap_address(library, session):
     """Unmaps memory space previously mapped by map_address().
 
+    Corresponds to viUnmapAddress function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viUnmapAddress(session)
+    return library.viUnmapAddress(session)
 
 
 def unmap_trigger(library, session, trigger_source, trigger_destination):
     """Undo a previous map from the specified trigger source line to the specified destination line.
 
+    Corresponds to viUnmapTrigger function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param trigger_source: Source line used in previous map. (Constants.TRIG*)
     :param trigger_destination: Destination line used in previous map. (Constants.TRIG*)
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
-    library.viUnmapTrigger(session, trigger_source, trigger_destination)
+    return library.viUnmapTrigger(session, trigger_source, trigger_destination)
 
 
 def usb_control_in(library, session, request_type_bitmap_field, request_id, request_value,
                    index, length=0):
     """Performs a USB control pipe transfer from the device.
+
+    Corresponds to viUsbControlIn function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -1520,20 +1742,22 @@ def usb_control_in(library, session, request_type_bitmap_field, request_id, requ
     :param length: wLength parameter of the setup stage of a USB control transfer.
                    This value also specifies the size of the data buffer to receive the data from the
                    optional data stage of the control transfer.
-    :return: The data buffer that receives the data from the optional data stage of the control transfer.
-    :rtype: bytes
+    :return: The data buffer that receives the data from the optional data stage of the control transfer, return value of the library call.
+    :rtype: bytes, VISAStatus
     """
     buffer = create_string_buffer(length)
     return_count = ViUInt16()
-    library.viUsbControlIn(session, request_type_bitmap_field, request_id,
-                           request_value, index, length, buffer,
-                           byref(return_count))
-    return buffer.raw[:return_count.value]
+    ret = library.viUsbControlIn(session, request_type_bitmap_field, request_id,
+                                 request_value, index, length, buffer,
+                                 byref(return_count))
+    return buffer.raw[:return_count.value], ret
 
 
 def usb_control_out(library, session, request_type_bitmap_field, request_id, request_value,
                     index, data=""):
     """Performs a USB control pipe transfer to the device.
+
+    Corresponds to viUsbControlOut function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
@@ -1543,81 +1767,98 @@ def usb_control_out(library, session, request_type_bitmap_field, request_id, req
     :param index: wIndex parameter of the setup stage of a USB control transfer.
                   This is usually the index of the interface or endpoint.
     :param data: The data buffer that sends the data in the optional data stage of the control transfer.
+    :return: return value of the library call.
+    :rtype: VISAStatus
     """
     length = len(data)
-    library.viUsbControlOut(session, request_type_bitmap_field, request_id,
-                            request_value, index, length, data)
+    return library.viUsbControlOut(session, request_type_bitmap_field, request_id,
+                                   request_value, index, length, data)
 
 
 def vxi_command_query(library, session, mode, command):
     """Sends the device a miscellaneous command or query and/or retrieves the response to a previous query.
 
+    Corresponds to viVxiCommandQuery function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param mode: Specifies whether to issue a command and/or retrieve a response. (Constants.VXI_CMD*, .VXI_RESP*)
     :param command: The miscellaneous command to send.
-    :return: The response retrieved from the device.
+    :return: The response retrieved from the device, return value of the library call.
+    :rtype: int, VISAStatus
     """
     response = ViUInt32()
-    library.viVxiCommandQuery(session, mode, command, byref(response))
-    return response.value
+    ret = library.viVxiCommandQuery(session, mode, command, byref(response))
+    return response.value, ret
 
 
 def wait_on_event(library, session, in_event_type, timeout):
     """Waits for an occurrence of the specified event for a given session.
+
+    Corresponds to viWaitOnEvent function of the VISA library.
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param in_event_type: Logical identifier of the event(s) to wait for.
     :param timeout: Absolute time period in time units that the resource shall wait for a specified event to
                     occur before returning the time elapsed error. The time unit is in milliseconds.
-    :return: Logical identifier of the event actually received, A handle specifying the unique occurrence of an event.
+    :return: Logical identifier of the event actually received, A handle specifying the unique occurrence of an event, return value of the library call.
+    :rtype: eventtype, event, VISAStatus
     """
     out_event_type = ViEventType()
     out_context = ViEvent()
-    library.viWaitOnEvent(session, in_event_type, timeout,
-                          byref(out_event_type), byref(out_context))
-    return out_event_type.value, out_context
+    ret = library.viWaitOnEvent(session, in_event_type, timeout,
+                                byref(out_event_type), byref(out_context))
+    return out_event_type.value, out_context, ret
 
 
 def write(library, session, data):
     """Writes data to device or interface synchronously.
 
+    Corresponds to viWrite function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param data: data to be written.
     :type data: str
-    :return: Number of bytes actually transferred.
+    :return: Number of bytes actually transferred, return value of the library call.
+    :rtype: int, VISAStatus
     """
     return_count = ViUInt32()
     # [ViSession, ViBuf, ViUInt32, ViPUInt32]
-    library.viWrite(session, data, len(data), byref(return_count))
-    return return_count.value
+    ret = library.viWrite(session, data, len(data), byref(return_count))
+    return return_count.value, ret
 
 
 def write_asynchronously(library, session, data):
     """Writes data to device or interface asynchronously.
 
+    Corresponds to viWriteAsync function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param data: data to be written.
-    :return: Job ID of this asynchronous write operation.
+    :return: Job ID of this asynchronous write operation, return value of the library call.
+    :rtype: jobid, VISAStatus
     """
     job_id = ViJobId()
     # [ViSession, ViBuf, ViUInt32, ViPJobId]
-    library.viWriteAsync(session, data, len(data), byref(job_id))
-    return job_id
+    ret = library.viWriteAsync(session, data, len(data), byref(job_id))
+    return job_id, ret
 
 
 def write_from_file(library, session, filename, count):
     """Take data from a file and write it out synchronously.
 
+    Corresponds to viWriteFromFile function of the VISA library.
+
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param filename: Name of file from which data will be read.
     :param count: Number of bytes to be written.
-    :return: Number of bytes actually transferred.
+    :return: Number of bytes actually transferred, return value of the library call.
+    :rtype: int, VISAStatus
     """
     return_count = ViUInt32()
-    library.viWriteFromFile(session, filename, count, return_count)
-    return return_count
+    ret = library.viWriteFromFile(session, filename, count, return_count)
+    return return_count, ret
