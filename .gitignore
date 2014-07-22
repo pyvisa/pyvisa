@@ -12,3 +12,4 @@ MANIFEST
 .coveragerc
 # WebDAV file system cache files
 .DAV/
+_test/
