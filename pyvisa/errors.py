@@ -339,6 +339,13 @@ completion_and_error_messages = {
     }
 
 
+default_warnings = frozenset([VI_SUCCESS_MAX_CNT, VI_SUCCESS_DEV_NPRESENT,
+                              VI_SUCCESS_SYNC, VI_WARN_QUEUE_OVERFLOW,
+                              VI_WARN_CONFIG_NLOADED, VI_WARN_NULL_OBJECT,
+                              VI_WARN_NSUP_ATTR_STATE, VI_WARN_UNKNOWN_STATUS,
+                              VI_WARN_NSUP_BUF, VI_WARN_EXT_FUNC_NIMPL])
+
+
 class Error(Exception):
     """Abstract basic exception class for this module."""
 
