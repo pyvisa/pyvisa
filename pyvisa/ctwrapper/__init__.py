@@ -11,6 +11,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
+from __future__ import division, unicode_literals, print_function, absolute_import
+
 import os
 import sys
 
@@ -26,6 +28,7 @@ from .functions import *
 
 # On Linux, find Library returns the name not the path.
 # This excerpt provides a modified find_library.
+# noinspection PyUnresolvedReferences
 if os.name == "posix" and sys.platform.startswith('linux'):
 
     # Andreas Degert's find functions, using gcc, /sbin/ldconfig, objdump

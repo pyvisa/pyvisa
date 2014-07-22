@@ -14,8 +14,9 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import collections
+import warnings
 
-from ctypes import (byref, c_void_p, c_double, c_long, POINTER, CDLL, create_string_buffer)
+from ctypes import (byref, c_void_p, c_double, c_long, POINTER, create_string_buffer)
 
 from . import FUNCTYPE
 from ..constants import *
@@ -26,7 +27,7 @@ visa_functions = [
     "assert_interrupt_signal", "assert_trigger", "assert_utility_signal",
     "buffer_read", "buffer_write", "clear", "close", "disable_event",
     "discard_events", "enable_event", "find_next", "find_resources", "flush",
-    "get_attribute", "get_default_resource_manager", "gpib_command",
+    "get_attribute", "gpib_command",
     "gpib_control_atn", "gpib_control_ren", "gpib_pass_control",
     "gpib_send_ifc", "in_16", "in_32", "in_8", "install_handler", "lock",
     "map_address", "map_trigger", "memory_allocation", "memory_free", "move",
@@ -232,8 +233,6 @@ def set_signature(library, function_name, argtypes, restype, errcheck):
     :param restype: A ctypes type to specify the result type of the foreign function.
                     Use None for void, a function not returning anything.
     :param errcheck: a callabe
-    :param maybe_missing: if False, an Attribute error will be raised if the
-                           function_name is not found.
 
     :raises: AttributeError
     """
@@ -440,7 +439,9 @@ def enable_event(library, session, event_type, mechanism, context=VI_NULL):
     :return: return value of the library call.
     :rtype: VISAStatus
     """
-    context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
+    if context != VI_NULL:
+        warnings.warn('In enable_event, context will be set VI_NULL.')
+        context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
     return library.viEnableEvent(session, event_type, mechanism, context)
 
 
@@ -809,7 +810,9 @@ def map_address(library, session, map_space, map_base, map_size,
     :return: address in your process space where the memory was mapped, return value of the library call.
     :rtype: address, VISAStatus
     """
-    access = VI_FALSE
+    if access != VI_FALSE:
+        warnings.warn('In enable_event, context will be set VI_NULL.')
+        access = VI_FALSE
     address = ViAddr()
     ret = library.viMapAddress(session, map_space, map_base, map_size, access,
                                suggested, byref(address))
