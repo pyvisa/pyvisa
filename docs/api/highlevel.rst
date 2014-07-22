@@ -9,15 +9,3 @@ Highlevel module
 
 .. autoclass:: pyvisa.highlevel.ResourceManager
     :members:
-
-
-.. autoclass:: pyvisa.highlevel.Instrument
-    :members:
-
-
-.. autoclass:: pyvisa.highlevel.SerialInstrument
-    :members:
-
-
-.. autoclass:: pyvisa.highlevel.GpibInstrument
-    :members:

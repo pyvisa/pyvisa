@@ -83,15 +83,4 @@ More information
     api/index
 
 
-Legacy Modules
---------------
-
-.. toctree::
-    :maxdepth: 1
-
-    legacy_visa
-    legacy_vpp43
-    api/legacy
-
-
 ..  LocalWords:  rst british reST ies vpp pyvisa docs pyvLab

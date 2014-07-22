@@ -10,3 +10,4 @@ API
 
     highlevel
     ctwrapper
+    resources
