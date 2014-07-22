@@ -137,7 +137,12 @@ def removefilter(action, message="", category=Warning, module="", lineno=0,
     given filter.
 
     It is the opposite to warnings.filterwarnings() and has the same parameters
-    as it."""
+    as it.
+    """
+
+    if append != 0:
+        warnings.warn('In removefilter, append parameter is not used')
+
     import re
     item = (action, re.compile(message, re.I), category, re.compile(module), lineno)
 
@@ -200,26 +205,11 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
     data = bytes_data
 
     hash_sign_position = bytes_data.find(b"#")
-    if hash_sign_position == -1 or len(data) - hash_sign_position < 3:
+    if hash_sign_position == -1:
         raise ValueError('Cound not find valid hash position')
 
-    if hash_sign_position > 0:
-        data = data[hash_sign_position:]
-
-    data_1 = data[1:2].decode('ascii')
-
-    if data_1.isdigit() and int(data_1) > 0:
-        number_of_digits = int(data_1)
-        # I store data and data_length in two separate variables in case
-        # that data is too short.  FixMe: Maybe I should raise an error if
-        # it's too long and the trailing part is not just CR/LF.
-        data_length = int(data[2:2 + number_of_digits])
-        data = data[2 + number_of_digits:2 + number_of_digits + data_length]
-    elif data_1 == "0" and data[-1:].decode('ascii') == "\n":
-        data = data[2:-1]
-        data_length = len(data)
-    else:
-        raise ValueError()
+    data = data[(hash_sign_position+1):]
+    data_length = len(data)
 
     if is_big_endian:
         endianess = ">"
@@ -228,11 +218,11 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
 
     try:
         if is_single:
-            result = list(_struct_unpack((endianess +
-                                          str(data_length // 4) + "f").encode('ascii'), data))
+            fmt = endianess + str(data_length // 4) + 'f'
         else:
-            result = list(_struct_unpack(endianess +
-                                         str(data_length // 8) + "d", data))
+            fmt = endianess + str(data_length // 8) + 'd'
+
+        result = list(_struct_unpack(fmt, data))
     except struct.error:
         raise ValueError("Binary data itself was malformed")
 
@@ -314,11 +304,11 @@ def get_debug_info():
 def pip_install(package):
     try:
         import pip
+        return pip.main(['install', package])
     except ImportError:
         print(system_details_to_str(get_system_details()))
         raise RuntimeError('Please install pip to continue.')
 
-    return pip.main(['install', package])
 
 machine_types = {
     0: 'UNKNOWN',
@@ -342,7 +332,7 @@ machine_types = {
     0x0200: 'IA64',
     0x0266: 'MIPS16',
     0x0284: 'ALPHA64',
-   #0x0284: 'AXP64', # same
+    #0x0284: 'AXP64', # same
     0x0366: 'MIPSFPU',
     0x0466: 'MIPSFPU16',
     0x0520: 'TRICORE',
