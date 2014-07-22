@@ -42,7 +42,7 @@ setup(name='PyVISA',
       url='https://github.com/hgrecco/pyvisa',
       keywords='VISA GPIB USB serial RS232 measurement acquisition',
       license='MIT License',
-      test_suite='visa.testsuite.testsuite',
+      test_suite='pyvisa.testsuite.testsuite',
       install_requires=requirements,
       classifiers=[
         'Development Status :: 5 - Production/Stable',
