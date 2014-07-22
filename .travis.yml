@@ -1,9 +1,20 @@
 language: python
+
 python:
   - "2.6"
   - "2.7"
   - "3.2"
   - "3.3"
+  - "3.4"
+
 install:
-  - pip install pytest pytest-cov
-script: py.test -v --cov=pyvisa
+  - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
+  - pip install coverage coveralls
+
+script:
+  - coverage run -p --source=pyvisa --omit="*test*","*compat*" setup.py test
+  - coverage combine
+  - coverage report -m
+
+after_script:
+  - coveralls --verbose
