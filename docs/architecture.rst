@@ -20,18 +20,23 @@ PyVISA implements convenient and Pythonic programming in three layers:
     These functions also have comprehensive and Python friendly documentation.
 
     You only need to access this layer if you want to control certain specific
-    aspects of the VISA library such as memory moving.
+    aspects of the VISA library which are not implemented by the corresponding
+    resource class.
 
  3. High-level: An object-oriented layer.
 
     It exposes all functionality using three main clases: `VisaLibrary`,
-    `ResourceManager` and `Instrument`.
+    `ResourceManager` and `Resource` (and derived classes).
 
+
+Most of the time you will only need to instantiate a `ResourceManager`. For a given resource,
+you will use the `open_resource` method to obtain the apropriate object. If needed, you will
+be able to access the `VisaLibrary` object directly using the `visalib` attribute.
 
 It is important to notice that you do not need to import functions from levels 1 and 2,
 but you can call them directly from the the `VisaLibrary` object. Indeed, all level 1
-functions are static methods of `VisaLibrary`. All level 2 functions are bound methods of
-`VisaLibrary`.
+functions are **static methods** of `VisaLibrary`. All level 2 functions are **bound methods**
+of `VisaLibrary`.
 
 Levels 1 and 2 are implemented in the same package called `ctwrapper` (which stands for
 ctypes wrapper). The higher level uses `ctwrapper` but in principle can use any package.

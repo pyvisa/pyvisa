@@ -120,9 +120,6 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
         GPIB[board]::primary address[::secondary address][::INSTR]
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource.
     """
 
     def before_close(self):
@@ -185,9 +182,6 @@ class GPIBInterface(_GPIBMixin, Resource):
         GPIB[board]::INTFC
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource (eg. "GPIB::10")
     """
 
     address_state = hlp.enum_attr('VI_ATTR_GPIB_ADDR_STATE', constants.AddressState,

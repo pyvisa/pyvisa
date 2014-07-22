@@ -62,7 +62,6 @@ class MessageBasedResource(Resource):
     send_end = hlp.boolean_attr('VI_ATTR_SEND_END_EN',
                                 'Whether or not to assert EOI (or something equivalent after each write operation.')
 
-
     @property
     def encoding(self):
         """Encoding used for read and write operations.
@@ -220,13 +219,13 @@ class MessageBasedResource(Resource):
         data = self.read_raw()
 
         try:
-            if fmt & 0x03 == single:
+            if fmt & 0x03 == self.Format.single:
                 is_single = True
-            elif fmt & 0x03 == double:
+            elif fmt & 0x03 == self.Format.double:
                 is_single = False
             else:
                 raise ValueError("unknown data values fmt requested")
-            return parse_binary(data, fmt & 0x04 == big_endian, is_single)
+            return parse_binary(data, fmt & 0x04 == self.Format.big_endian, is_single)
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
@@ -249,7 +248,7 @@ class MessageBasedResource(Resource):
             time.sleep(delay)
         return self.read()
 
-    def ask_for_values(self, message, format=None, delay=None):
+    def ask_for_values(self, message, fmt=None, delay=None):
         """A combination of write(message) and read_values()
 
         :param message: the message to send.
@@ -265,7 +264,7 @@ class MessageBasedResource(Resource):
             delay = self.ask_delay
         if delay > 0.0:
             time.sleep(delay)
-        return self.read_values(format)
+        return self.read_values(fmt)
 
     def assert_trigger(self):
         """Sends a software trigger to the device.

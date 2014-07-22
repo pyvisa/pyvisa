@@ -27,9 +27,6 @@ class VXIBackplane(Resource):
         VXI[board][::VXI logical address]::BACKPLANE
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource.
     """
 
 
@@ -41,9 +38,6 @@ class VXIInstrument(Resource):
         VXI[board]::VXI logical address[::INSTR]
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource.
     """
 
 
@@ -55,7 +49,4 @@ class VXIMemory(RegisterBasedResource):
         VXI[board]::MEMACC
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource.
     """

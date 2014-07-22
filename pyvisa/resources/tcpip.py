@@ -27,9 +27,6 @@ class TCPIPInstrument(MessageBasedResource):
         TCPIP[board]::host address[::LAN device name][::INSTR]
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource.
     """
 
 
@@ -41,7 +38,4 @@ class TCPIPSocket(MessageBasedResource):
         TCPIP[board]::host address::port::SOCKET
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource.
     """

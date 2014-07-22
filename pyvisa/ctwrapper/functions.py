@@ -1648,8 +1648,10 @@ def status_description(library, session, status):
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param status: Status code to interpret.
-    :return: The user-readable string interpretation of the status code passed to the operation, return value of the library call.
-    :rtype: unicode (Py2) or str (Py3), VISAStatus
+    :return: - The user-readable string interpretation of the status code passed to the operation,
+             - return value of the library call.
+    :rtype: - unicode (Py2) or str (Py3)
+            - VISAStatus
     """
     description = create_string_buffer(256)
     ret = library.viStatusDesc(session, status, description)
@@ -1745,8 +1747,10 @@ def usb_control_in(library, session, request_type_bitmap_field, request_id, requ
     :param length: wLength parameter of the setup stage of a USB control transfer.
                    This value also specifies the size of the data buffer to receive the data from the
                    optional data stage of the control transfer.
-    :return: The data buffer that receives the data from the optional data stage of the control transfer, return value of the library call.
-    :rtype: bytes, VISAStatus
+    :return: - The data buffer that receives the data from the optional data stage of the control transfer
+             - return value of the library call.
+    :rtype: - bytes
+            - VISAStatus
     """
     buffer = create_string_buffer(length)
     return_count = ViUInt16()
@@ -1805,8 +1809,12 @@ def wait_on_event(library, session, in_event_type, timeout):
     :param in_event_type: Logical identifier of the event(s) to wait for.
     :param timeout: Absolute time period in time units that the resource shall wait for a specified event to
                     occur before returning the time elapsed error. The time unit is in milliseconds.
-    :return: Logical identifier of the event actually received, A handle specifying the unique occurrence of an event, return value of the library call.
-    :rtype: eventtype, event, VISAStatus
+    :return: - Logical identifier of the event actually received
+             - A handle specifying the unique occurrence of an event
+             - return value of the library call.
+    :rtype: - eventtype
+            - event
+            - VISAStatus
     """
     out_event_type = ViEventType()
     out_context = ViEvent()

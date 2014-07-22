@@ -28,6 +28,7 @@ import enum
 # such by Python.
 #
 
+
 def _to_int(x):
     """Converts a completion and error code as it is listed in 32-bit notation
     in the VPP-4.3.2 specification to the actual integer value.

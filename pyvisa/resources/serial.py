@@ -23,9 +23,6 @@ class SerialInstrument(MessageBasedResource):
     """Communicates with devices of type ASRL<board>[::INSTR]
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource.
     """
 
     _d_ = 'Controls transmission when inx XON/XOFF flow control.\n\n' \

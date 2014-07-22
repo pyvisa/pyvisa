@@ -24,6 +24,7 @@ from .. import highlevel
 
 from . import helpers as hlp
 
+
 class Resource(object):
     """Base class for resources.
 
@@ -110,7 +111,7 @@ class Resource(object):
         """The interface type of the resource as a number.
         """
         return self.visalib.parse_resource(self._resource_manager.session,
-                                            self.resource_name).interface_type
+                                           self.resource_name).interface_type
 
     _d_ = 'Current locking state of the resource.\n\n' \
           'The resource can be unlocked, locked with an exclusive lock, or locked with a shared lock.'
@@ -152,7 +153,7 @@ class Resource(object):
                      self._resource_name, self.session,
                      extra=self._logging_extra)
 
-    def before_close():
+    def before_close(self):
         """Called just before closing an instrument.
         """
         pass

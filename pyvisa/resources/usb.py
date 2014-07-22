@@ -26,9 +26,6 @@ class USBInstrument(MessageBasedResource):
         USB[board]::manufacturer ID::model code::serial number[::USB interface number][::INSTR]
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource.
     """
 
     is_4882_compliant = hlp.boolean_attr('VI_ATTR_4882_COMPLIANT',
@@ -83,7 +80,7 @@ class USBInstrument(MessageBasedResource):
         :rtype: bytes
         """
         return self.visalib.usb_control_in(self.session, request_type_bitmap_field,
-                                            request_id, request_value, index, length)
+                                           request_id, request_value, index, length)
 
     def usb_control_out(self, request_type_bitmap_field, request_id, request_value, index, data=""):
         """Performs a USB control pipe transfer to the device.
@@ -106,7 +103,4 @@ class USBRaw(MessageBasedResource):
         USB[board]::manufacturer ID::model code::serial number[::USB interface number]::RAW
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
-
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource.
     """

@@ -67,12 +67,13 @@ def read_user_library_path():
 
 class LibraryPath(str):
 
+    #: Architectural information (32, ) or (64, ) or (32, 64)
+    _arch = None
+
     def __new__(cls, path, found_by='auto'):
         obj = super(LibraryPath, cls).__new__(cls, path)
         obj.path = path
         obj.found_by = found_by
-
-        obj._arch = None
 
         return obj
 

@@ -41,10 +41,11 @@ class BaseTestCase(unittest.TestCase):
         th = TestHandler()
         th.setLevel(level)
         logger.addHandler(th)
-        if self._test_handler is not None:
+        if self._test_handler is None:
+            yield th.buffer
+        else:
             l = len(self._test_handler.buffer)
-        yield th.buffer
-        if self._test_handler is not None:
+            yield th.buffer
             self._test_handler.buffer = self._test_handler.buffer[:l]
 
     def setUp(self):

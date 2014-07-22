@@ -336,7 +336,7 @@ completion_and_error_messages = {
                                   "is denied. This is due to lack of "
                                   "sufficient privileges for the current "
                                   "user or machine")
-    }
+}
 
 
 default_warnings = frozenset([VI_SUCCESS_MAX_CNT, VI_SUCCESS_DEV_NPRESENT,

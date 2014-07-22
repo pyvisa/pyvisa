@@ -237,11 +237,14 @@ class ResourceManager(object):
                          (if not given, the default for the platform will be used).
     """
 
-    #: Maps VisaLibrary instance to ResourceManager
+    #: Maps VisaLibrary instance to ResourceManager.
     _registry = dict()
 
     #: Maps (Interface Type, Resource Class) to Python class encapsulating that resource.
     resource_classes = dict()
+
+    #: Session handler for the resource manager.
+    session = None
 
     def __new__(cls, visa_library=None):
         if visa_library is None or isinstance(visa_library, str):
