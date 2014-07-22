@@ -9,15 +9,6 @@ PyVISA: Python wrapper for the VISA library
    :class: floatingflask
 
 
-.. warning:: This documentation corresponds to PyVISA 1.5. If you are still
-             using the old version, please update using following command::
-
-                 pip install -U pyvisa
-
-             Just in case you need them, the old docs are
-             here: http://pyvisa.readthedocs.org/en/1.4/
-
-
 The PyVISA package enables you to control all kinds of measurement equipment
 through various busses (GPIB, RS232, USB) with Python programs.  As an example,
 reading self-identification from a Keithley Multimeter with GPIB number 12 is
@@ -27,7 +18,7 @@ as easy as three lines of Python code::
     >>> rm = visa.ResourceManager()
     >>> rm.list_resources()
     ['ASRL1', 'ASRL2', 'GPIB::12']
-    >>> keithley = rm.get_instrument("GPIB::12")
+    >>> keithley = rm.open_resource("GPIB::12")
     >>> print(keithley.ask("*IDN?"))
 
 (That's the whole program; really!) It works on Windows, Linux and Mac;

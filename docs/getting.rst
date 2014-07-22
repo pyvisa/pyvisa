@@ -5,6 +5,9 @@ Installation
 
 PyVISA is a wrapper around the `National Instruments's VISA` library, which you need to download and install in order to use PyVISA (:ref:`getting_nivisa`).
 
+.. warning:: There are multiple VISA implementations from different vendors. PyVISA is tested only
+             against **National Instruments's VISA**.
+
 PyVISA has no additional dependencies except Python_ itself. In runs on Python 2.6+ and 3.2+.
 
 .. warning:: PyVISA works with 32- and 64- bit Python and can deal with 32- and 64-bit VISA libraries without any extra configuration. What PyVISA cannot do is open a 32-bit VISA library while running in 64-bit Python (or the other way around).

@@ -12,6 +12,11 @@ You can report any issues with the package, the documentation to the PyVISA `iss
 
     python -c "from pyvisa import util; util.get_debug_info()"
 
+It is useful that you also provide the log output. To obtain it, add the following lines to your code::
+
+    import visa
+    visa.log_to_screen()
+
 
 Contribute code
 ---------------

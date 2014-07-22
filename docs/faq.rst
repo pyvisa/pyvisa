@@ -23,6 +23,16 @@ It is currently maintained by Hernan E. Grecco <hernan.grecco@gmail.com>.
 Take a look at AUTHORS_ for more information
 
 
+I have an error in my program and I am having trouble to fix it
+---------------------------------------------------------------
+
+PyVISA provides useful logs of all operations. Add the following commands to
+your program and run it again::
+
+    import visa
+    visa.log_to_screen()
+
+
 I found a bug, how can I report it?
 -----------------------------------
 

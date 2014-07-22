@@ -14,7 +14,7 @@ Let's go *in medias res* and have a look at a simple example::
 
     >>> import visa
     >>> rm = visa.ResourceManager()
-    >>> my_instrument = rm.get_instrument('GPIB::14')
+    >>> my_instrument = rm.open_resource('GPIB::14')
     >>> my_instrument.write("*IDN?")
     >>> print(my_instrument.read())
 
@@ -74,16 +74,13 @@ There is no only RS232 device in my lab is an old Oxford ITC4 temperature
 controller, which is connected through COM2 with my computer.  The
 following code prints its self-identification on the screen::
    
-   itc4 = rm.get_instrument("COM2")
+   itc4 = rm.open_resource("COM2")
    itc4.write("V")
    print(itc4.read())
 
 Instead of separate write and read operations, you can do both with
 one `ask()` call. Thus, the above source code is equivalent to::
 
-   from visa import *
-   
-   itc4 = instrument("COM2")
    print(itc4.ask("V"))
 
 It couldn't be simpler.  See section :ref:`sec:serial-devices` for
@@ -103,7 +100,7 @@ screen.
 I'll explain the program step-by-step.  First, we have to initialise
 the instrument::
 
-   >>> keithley = rm.get_instrument("GPIB::12")
+   >>> keithley = rm.open_resource("GPIB::12")
    >>> keithley.write("*rst; status:preset; *cls")
 
 Here, we create the instrument variable *keithley*, which is used for
@@ -168,7 +165,7 @@ that's another story.)
 VISA resource names
 -------------------
 
-If you use the function :func:`get_instrument`, you must tell this
+If you use the function :func:`open_resource`, you must tell this
 function the *VISA resource name* of the instrument you want to
 connect to.  Generally, it starts with the bus type, followed by a
 double colon `"::"`, followed by the number within the bus.  For
