@@ -19,6 +19,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import enum
 
 # _to_int() is necessary because the VISA specification is flawed: It defines
 # the VISA codes, which have a value less than zero, in their internal 32-bit
@@ -171,6 +172,14 @@ VI_ATTR_ASRL_DATA_BITS       = 0x3FFF0022
 VI_ATTR_ASRL_PARITY          = 0x3FFF0023
 VI_ATTR_ASRL_STOP_BITS       = 0x3FFF0024
 VI_ATTR_ASRL_FLOW_CNTRL      = 0x3FFF0025
+
+VI_ATTR_ASRL_DISCARD_NULL    = 0x3FFF00B0
+VI_ATTR_ASRL_CONNECTED       = 0x3FFF01BB
+VI_ATTR_ASRL_BREAK_STATE     = 0x3FFF01BC
+VI_ATTR_ASRL_BREAK_LEN       = 0x3FFF01BD
+VI_ATTR_ASRL_ALLOW_TRANSMIT  = 0x3FFF01BE
+VI_ATTR_ASRL_WIRE_MODE       = 0x3FFF01BF
+
 VI_ATTR_RD_BUF_OPER_MODE     = 0x3FFF002A
 VI_ATTR_RD_BUF_SIZE          = 0x3FFF002B
 VI_ATTR_WR_BUF_OPER_MODE     = 0x3FFF002D
@@ -305,8 +314,11 @@ VI_INTF_GPIB                 = 1
 VI_INTF_VXI                  = 2
 VI_INTF_GPIB_VXI             = 3
 VI_INTF_ASRL                 = 4
+VI_INTF_PXI                  = 5
 VI_INTF_TCPIP                = 6
 VI_INTF_USB                  = 7
+VI_INTF_RIO                  = 8
+VI_INTF_FIREWIRE             = 9
 
 VI_PROT_NORMAL               = 1
 VI_PROT_FDC                  = 2
@@ -480,3 +492,102 @@ VI_ASRL_IN_BUF               = VI_IO_IN_BUF
 VI_ASRL_OUT_BUF              = VI_IO_OUT_BUF
 VI_ASRL_IN_BUF_DISCARD       = VI_IO_IN_BUF_DISCARD
 VI_ASRL_OUT_BUF_DISCARD      = VI_IO_OUT_BUF_DISCARD
+
+
+# Enums
+
+class AccessModes(enum.IntEnum):
+
+    #: Does not obtain any lock on the VISA resource.
+    no_lock = 0
+
+    #: Obtains a exclusive lock on the VISA resource.
+    exclusive_lock = 1
+
+    #: Obtains a lock on the VISA resouce which may be shared
+    #: between multiple VISA sessions.
+    shared_lock = 2
+
+
+class StopBits(enum.IntEnum):
+    """The number of stop bits that indicate the end of a frame.
+    """
+    one_ = VI_ASRL_STOP_ONE
+    one_and_a_half = VI_ASRL_STOP_ONE5
+    two = VI_ASRL_STOP_TWO
+
+
+class Parity(enum.IntEnum):
+    """The parity types to use with every frame transmitted and received on a serial session.
+    """
+    none = VI_ASRL_PAR_NONE
+    odd = VI_ASRL_PAR_ODD
+    even = VI_ASRL_PAR_EVEN
+    mark = VI_ASRL_PAR_MARK
+    space = VI_ASRL_PAR_SPACE
+
+
+class SerialTermination(enum.IntEnum):
+    """The available methods for terminating a serial transfer.
+    """
+
+    #: The transfer terminates when all requested data is transferred
+    #: or when an error occurs.
+    none = VI_ASRL_END_NONE
+
+    #: The transfer occurs with the last bit not set until the last
+    #: character is sent.
+    last_bit = VI_ASRL_END_LAST_BIT
+
+    #: The transfer terminate by searching for "/"
+    #: appending the termination character.
+    termination_char = VI_ASRL_END_TERMCHAR
+
+    #: The write transmits a break after all the characters for the
+    #: write are sent.
+    termination_break = VI_ASRL_END_BREAK
+
+
+class InterfaceType(enum.IntEnum):
+    """The hardware interface
+    """
+    gpib = VI_INTF_GPIB
+    vxi = VI_INTF_VXI
+    gpib_vxi = VI_INTF_GPIB_VXI
+    asrl = VI_INTF_ASRL
+    pxi = VI_INTF_PXI
+    tcpip = VI_INTF_TCPIP
+    usb = VI_INTF_USB
+    rio = VI_INTF_RIO
+    firewire = VI_INTF_FIREWIRE
+
+
+class AddressState(enum.IntEnum):
+
+    unaddressed =VI_GPIB_UNADDRESSED
+    talker = VI_GPIB_TALKER
+    listenr = VI_GPIB_LISTENER
+
+
+class IOProtocol(enum.IntEnum):
+
+    normal = VI_PROT_NORMAL
+
+    #: Fast data channel (FDC) protocol for VXI
+    fdc = VI_PROT_FDC
+
+    #: High speed 488 transfer for GPIB
+    hs488 = VI_PROT_HS488
+
+    #: 488 style transfer for serial
+    protocol4882_strs = VI_PROT_4882_STRS
+
+    #: Test measurement class vendor specific for USB
+    usbtmc_vendor = VI_PROT_USBTMC_VENDOR
+
+
+class LineState(enum.IntEnum):
+
+    asserted = VI_STATE_ASSERTED
+    unasserted = VI_STATE_UNASSERTED
+    unknown = VI_STATE_UNKNOWN
