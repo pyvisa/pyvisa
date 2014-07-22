@@ -11,108 +11,57 @@
     :license: MIT, see LICENSE for more details.
 """
 
+from __future__ import division, unicode_literals, print_function, absolute_import
+
+import contextlib
+import enum
 import time
 import warnings
-import contextlib
-from enum import IntEnum
 
 from .. import logger
-from ..constants import *
+from .. import constants
 from .. import errors
-from ..util import (warning_context, split_kwargs, warn_for_invalid_kwargs,
-                    parse_ascii, parse_binary)
+from ..util import warning_context, parse_ascii, parse_binary
 
+from . import helpers as hlp
 from .resource import Resource
 
-# The bits in the bitfield mean the following:
-#
-# bit number   if set / if not set
-#     0          binary/ascii
-#     1          double/single (IEEE floating point)
-#     2          big-endian/little-endian
-#
-# This leads to the following constants:
 
-ascii      = 0
-single     = 1
-double     = 3
-big_endian = 4
-
-CR = '\r'
-LF = '\n'
-
-
-class MessageBasedInstrument(Resource):
-    """Class for all kinds of Instruments.
-
-    It can be instantiated, however, if you want to use special features of a
-    certain interface system (GPIB, USB, RS232, etc), you must instantiate one
-    of its child classes.
-
-    :param resource_name: the instrument's resource name or an alias,
-                          may be taken from the list from
-                          `list_resources` method from a ResourceManager.
-    :param timeout: the VISA timeout for each low-level operation in
-                    milliseconds.
-    :param buffer_size: size of data packets in bytes that are read from the
-                       device.
-    :param lock: whether you want to have exclusive access to the device.
-                 Default: VI_NO_LOCK
-    :param ask_delay: waiting time in seconds after each write command.
-                      Default: 0.0
-    :param send_end: whether to assert end line after each write command.
-                     Default: True
-    :param values_format: floating point data value format. Default: ascii (0)
+class MessageBasedResource(Resource):
+    """Base class for resources that use message based communication.
     """
 
-    DEFAULT_KWARGS = {'read_termination': None,
-                      'write_termination': CR + LF,
-                      #: Size in bytes for read or write operations.
-                      'buffer_size': 20 * 1024,
-                      #: Seconds to wait between write and read operations inside ask.
-                      'ask_delay': 0.0,
-                      #: Indicates
-                      'send_end': True,
-                      #: floating point data value format
-                      'values_format': ascii,
-                      #: encoding of the messages
-                      'encoding': 'ascii'}
+    CR = '\r'
+    LF = '\n'
 
-    ALL_KWARGS = dict(DEFAULT_KWARGS, **Resource.DEFAULT_KWARGS)
+    class Format(enum.IntEnum):
+        """The bits in the bitfield mean the following:
 
-    def __init__(self, resource_name, resource_manager=None, **kwargs):
-        skwargs, pkwargs = split_kwargs(kwargs,
-                                        MessageBasedInstrument.DEFAULT_KWARGS.keys(),
-                                        Resource.DEFAULT_KWARGS.keys())
-
-        self._read_termination = None
-        self._write_termination = None
-
-        super(MessageBasedInstrument, self).__init__(resource_name, resource_manager, **pkwargs)
-
-        for key, value in MessageBasedInstrument.DEFAULT_KWARGS.items():
-            setattr(self, key, skwargs.get(key, value))
-
-        if not self.resource_class:
-            warnings.warn("resource class of instrument could not be determined",
-                          stacklevel=2)
-        elif self.resource_class not in ("INSTR", "RAW", "SOCKET"):
-            warnings.warn("given resource was not an INSTR but %s"
-                          % self.resource_class, stacklevel=2)
-
-    @property
-    def io_protocol(self):
-        """I/O protocol for the current hardware interface.
-
-        Valid values: VI_PROT*
-
-        Default is VI_PROT_NORMAL meaning the default protocols for the given interface.
+        bit number     if set / if not set
+        ----------     -----------------------------------
+            0          binary/ascii
+            1          double/single (IEEE floating point)
+            2          big-endian/little-endian
         """
-        self.get_visa_attribute(VI_ATTR_IO_PROT)
+        ascii = 0
+        single = 1
+        double = 3
+        big_endian = 4
 
-    @io_protocol.setter
-    def io_protocol(self, value):
-        self.set_visa_attribute(VI_ATTR_IO_PROT, value)
+    _read_termination = None
+    _write_termination = CR + LF
+    _encoding = 'ascii'
+
+    chunk_size = 20 * 1024
+    ask_delay = 0.0
+    values_format = Format.ascii
+
+    io_protocol = hlp.enum_attr('VI_ATTR_IO_PROT', constants.IOProtocol,
+                                'I/O protocol for the current hardware interface.')
+
+    send_end = hlp.boolean_attr('VI_ATTR_SEND_END_EN',
+                                'Whether or not to assert EOI (or something equivalent after each write operation.')
+
 
     @property
     def encoding(self):
@@ -144,10 +93,10 @@ class MessageBasedInstrument(Resource):
             if last_char in value[:-1]:
                 raise ValueError("ambiguous ending in termination characters")
 
-            self.set_visa_attribute(VI_ATTR_TERMCHAR, ord(last_char))
-            self.set_visa_attribute(VI_ATTR_TERMCHAR_EN, VI_TRUE)
+            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(last_char))
+            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_TRUE)
         else:
-            self.set_visa_attribute(VI_ATTR_TERMCHAR_EN, VI_FALSE)
+            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_FALSE)
 
         self._read_termination = value
 
@@ -207,12 +156,12 @@ class MessageBasedInstrument(Resource):
         ret = bytes()
         with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
             try:
-                status = VI_SUCCESS_MAX_CNT
-                while status == VI_SUCCESS_MAX_CNT:
+                status = constants.VI_SUCCESS_MAX_CNT
+                while status == constants.VI_SUCCESS_MAX_CNT:
                     logger.debug('%s - reading %d bytes (last status %r)',
                                  self._resource_name, size, status)
-                    ret += self.visalib.read(self.session, size)
-                    status = self.visalib.status
+                    chunk, status = self.visalib.read(self.session, size)
+                    ret += chunk
             except errors.VisaIOError as e:
                 logger.debug('%s - exception while reading: %s', self._resource_name, e)
                 raise
@@ -257,7 +206,7 @@ class MessageBasedInstrument(Resource):
         :param fmt: the format of the values.  If given, it overrides
             the class attribute "values_format".  Possible values are bitwise
             disjunctions of the above constants ascii, single, double, and
-            big_endian.  Default is ascii.
+            big_endian. Default is ascii.
 
         :return: the list of read values
         :rtype: list
@@ -293,8 +242,9 @@ class MessageBasedInstrument(Resource):
         """
 
         self.write(message)
-        if delay is None:
-            delay = self.ask_delay
+
+        delay = self.ask_delay if delay is None else delay
+
         if delay > 0.0:
             time.sleep(delay)
         return self.read()
@@ -317,33 +267,21 @@ class MessageBasedInstrument(Resource):
             time.sleep(delay)
         return self.read_values(format)
 
-    def trigger(self):
+    def assert_trigger(self):
         """Sends a software trigger to the device.
         """
 
-        self._visalib.assert_trigger(self.session, VI_TRIG_PROT_DEFAULT)
+        self.visalib.assert_trigger(self.session, constants.VI_TRIG_PROT_DEFAULT)
 
     @property
     def stb(self):
         """Service request status register."""
 
-        return self._visalib.read_stb(self.session)
-
-    @property
-    def send_end(self):
-        """Whether or not to assert EOI (or something equivalent after each
-        write operation.
-        """
-
-        return self.get_visa_attribute(VI_ATTR_SEND_END_EN) == VI_TRUE
-
-    @send_end.setter
-    def send_end(self, send):
-        self.set_visa_attribute(VI_ATTR_SEND_END_EN, VI_TRUE if send else VI_FALSE)
+        return self.visalib.read_stb(self.session)
 
     @contextlib.contextmanager
     def read_termination_context(self, new_termination):
-        term = self.get_visa_attribute(VI_ATTR_TERMCHAR)
-        self.set_visa_attribute(VI_ATTR_TERMCHAR, ord(new_termination[-1]))
+        term = self.get_visa_attribute(constants.VI_ATTR_TERMCHAR)
+        self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(new_termination[-1]))
         yield
-        self.set_visa_attribute(VI_ATTR_TERMCHAR, term)
+        self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, term)
