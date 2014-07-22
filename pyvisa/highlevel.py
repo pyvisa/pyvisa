@@ -11,12 +11,13 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import atexit
+from __future__ import division, unicode_literals, print_function, absolute_import
+
 import warnings
 from collections import defaultdict
 
 from . import logger
-from .constants import *
+from . import constants
 from . import ctwrapper
 from . import errors
 from .util import get_library_paths
@@ -65,6 +66,9 @@ class VisaLibrary(object):
     #: Maps library path to VisaLibrary object
     _registry = dict()
 
+    #: Maps session handle to last status
+    _last_status_in_session = dict()
+
     @classmethod
     def from_paths(cls, *paths):
         """Helper constructor that tries to instantiate VisaLibrary from an
@@ -112,11 +116,7 @@ class VisaLibrary(object):
             setattr(obj, method_name, getattr(obj.lib, method_name))
 
         #: Error codes on which to issue a warning.
-        obj.issue_warning_on = set([VI_SUCCESS_MAX_CNT, VI_SUCCESS_DEV_NPRESENT,
-                                    VI_SUCCESS_SYNC, VI_WARN_QUEUE_OVERFLOW,
-                                    VI_WARN_CONFIG_NLOADED, VI_WARN_NULL_OBJECT,
-                                    VI_WARN_NSUP_ATTR_STATE, VI_WARN_UNKNOWN_STATUS,
-                                    VI_WARN_NSUP_BUF, VI_WARN_EXT_FUNC_NIMPL])
+        obj.issue_warning_on = set(errors.default_warnings)
 
         #: Contains all installed event handlers.
         #: Its elements are tuples with three elements: The handler itself (a Python
@@ -125,7 +125,7 @@ class VisaLibrary(object):
         obj.handlers = defaultdict(list)
 
         #: Last return value of the library.
-        obj._status = 0
+        obj._last_status = 0
 
         #: Default ResourceManager instance for this library.
         obj._resource_manager = None
@@ -141,10 +141,20 @@ class VisaLibrary(object):
         return '<VisaLibrary(%r)>' % self.library_path
 
     @property
-    def status(self):
+    def last_status(self):
         """Last return value of the library.
         """
-        return self._status
+        return self._last_status
+
+    def get_last_status_in_session(self, session):
+        """Last status in session.
+
+        Helper function to be called by resources properties.
+        """
+        try:
+            return self._last_resource_status[session]
+        except KeyError:
+            raise errors.Error('The session %r does not seem to be valid as it does not have any last status' % session)
 
     @property
     def resource_manager(self):
@@ -162,7 +172,19 @@ class VisaLibrary(object):
                      func.__name__, arguments, ret_value,
                      extra=self._logging_extra)
 
-        self._status = ret_value
+        self._last_status = ret_value
+
+        # The first argument of all registered visa functions is a session.
+        # We store the error code
+        try:
+            session = arguments[0]
+        except KeyError:
+            raise Exception('Function %r does not seem to be a valid visa function' % func)
+
+        if not isinstance(session, int):
+            raise Exception('Function %r does not seem to be a valid visa function' % func)
+
+        self._last_status_in_session[session] = ret_value
 
         if ret_value < 0:
             raise errors.VisaIOError(ret_value)
@@ -218,6 +240,9 @@ class ResourceManager(object):
     #: Maps VisaLibrary instance to ResourceManager
     _registry = dict()
 
+    #: Maps (Interface Type, Resource Class) to Python class encapsulating that resource.
+    resource_classes = dict()
+
     def __new__(cls, visa_library=None):
         if visa_library is None or isinstance(visa_library, str):
             visa_library = VisaLibrary(visa_library)
@@ -241,6 +266,10 @@ class ResourceManager(object):
 
     def __del__(self):
         self.close()
+
+    @property
+    def last_status(self):
+        return self.visalib.get_last_status_in_session(self.session)
 
     def close(self):
         if self.session is not None:
@@ -285,8 +314,9 @@ class ResourceManager(object):
         """
         return self.visalib.parse_resource_extended(self.session, resource_name)
 
-    def open_resource(self, resource_name, access_mode=VI_NO_LOCK, open_timeout=VI_TMO_IMMEDIATE):
-        """Open the specified resources.
+    def open_bare_resource(self, resource_name,
+                           access_mode=constants.VI_NO_LOCK, open_timeout=constants.VI_TMO_IMMEDIATE):
+        """Open the specified resource without wrapping into a class
 
         :param resource_name: name or alias of the resource to open.
         :param access_mode: access mode.
@@ -296,76 +326,32 @@ class ResourceManager(object):
         """
         return self.visalib.open(self.session, resource_name, access_mode, open_timeout)
 
-    def get_instrument(self, resource_name, **kwargs):
+    def open_resource(self, resource_name,
+                      access_mode=constants.VI_NO_LOCK, open_timeout=constants.VI_TMO_IMMEDIATE, **kwargs):
         """Return an instrument for the resource name.
 
         :param resource_name: name or alias of the resource to open.
+        :param access_mode: access mode.
+        :param open_timeout: time out to open.
         :param kwargs: keyword arguments to be passed to the instrument constructor.
         """
-        interface_type = self.resource_info(resource_name).interface_type
+        info = self.resource_info(resource_name)
 
-        if interface_type == VI_INTF_GPIB:
-            return GpibInstrument(resource_name, resource_manager=self, **kwargs)
-        elif interface_type == VI_INTF_ASRL:
-            return SerialInstrument(resource_name, resource_manager=self, **kwargs)
-        else:
-            return Instrument(resource_name, resource_manager=self, **kwargs)
+        try:
+            cls = self.resource_classes[(info.interface_type, info.resource_class)]
+        except KeyError:
+            raise ValueError('There is no class defined for %r' % ((info.interface_type, info.resource_class),))
 
+        res = cls(self, resource_name)
+        for key in kwargs.keys():
+            if not hasattr(res, key):
+                raise ValueError('%r is not a valid attribute for type %s' % (key, res.__class__.__name__))
 
-def get_instruments_list(use_aliases=True):
-    """Get a list of all connected devices.
+        res.open(access_mode, open_timeout)
 
-    This function is kept for backwards compatibility with PyVISA < 1.5.
+        for key, value in kwargs.items():
+            setattr(res, key, value)
 
-    Use::
-
-        >>> rm = ResourceManager()
-        >>> rm.list_resources()
-
-    or::
-
-        >>> rm = ResourceManager()
-        >>> rm.list_resources_info()
-
-    in the future.
-
-    :param use_aliases: if True (default), return the device alias if it has one.
-                        Otherwise, always return the standard resource name
-                        like "GPIB::10".
-
-    :return: A list of strings with the names of all connected devices,
-             ready for being used to open each of them.
-
-    """
-
-    if use_aliases:
-        return [info.alias or resource_name
-                for resource_name, info in get_resource_manager().list_resources_info().items()]
-
-    return get_resource_manager().list_resources()
+        return res
 
 
-def instrument(resource_name, **kwargs):
-    """Factory function for instrument instances.
-
-    :param resource_name: the VISA resource name of the device.
-                          It may be an alias.
-    :param kwargs: keyword argument for the class constructor of the device instance
-                   to be generated.  See the class Instrument for further information.
-
-    :return: The generated instrument instance.
-
-    """
-
-    return get_resource_manager().get_instrument(resource_name, **kwargs)
-
-
-resource_manager = None
-
-
-def get_resource_manager():
-    global resource_manager
-    if resource_manager is None:
-        resource_manager = ResourceManager()
-        atexit.register(resource_manager.__del__)
-    return resource_manager
