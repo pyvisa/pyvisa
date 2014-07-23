@@ -176,15 +176,16 @@ class VisaLibrary(object):
 
         # The first argument of all registered visa functions is a session.
         # We store the error code
-        try:
-            session = arguments[0]
-        except KeyError:
-            raise Exception('Function %r does not seem to be a valid visa function' % func)
+        if func.__name__ not in ('viOpenDefaultRM', 'viFindNext'):
+            try:
+                session = arguments[0]
+            except KeyError:
+                raise Exception('Function %r does not seem to be a valid visa function' % func)
 
-        if not isinstance(session, int):
-            raise Exception('Function %r does not seem to be a valid visa function' % func)
+            if not isinstance(session, int):
+                raise Exception('Function %r does not seem to be a valid visa function' % func)
 
-        self._last_status_in_session[session] = ret_value
+            self._last_status_in_session[session] = ret_value
 
         if ret_value < 0:
             raise errors.VisaIOError(ret_value)
@@ -257,7 +258,7 @@ class ResourceManager(object):
 
         obj.visalib = visa_library
 
-        obj.session = obj.visalib.open_default_resource_manager()
+        obj.session, err = obj.visalib.open_default_resource_manager()
         logger.debug('Created ResourceManager with session %s',  obj.session)
         return obj
 
@@ -289,10 +290,10 @@ class ResourceManager(object):
         lib = self.visalib
 
         resources = []
-        find_list, return_counter, instrument_description = lib.find_resources(self.session, query)
+        find_list, return_counter, instrument_description, err = lib.find_resources(self.session, query)
         resources.append(instrument_description)
         for i in range(return_counter - 1):
-            resources.append(lib.find_next(find_list))
+            resources.append(lib.find_next(find_list)[0])
 
         return tuple(resource for resource in resources)
 
@@ -315,7 +316,8 @@ class ResourceManager(object):
 
         :rtype: ResourceInfo
         """
-        return self.visalib.parse_resource_extended(self.session, resource_name)
+        ret, _ = self.visalib.parse_resource_extended(self.session, resource_name)
+        return ret
 
     def open_bare_resource(self, resource_name,
                            access_mode=constants.VI_NO_LOCK, open_timeout=constants.VI_TMO_IMMEDIATE):
@@ -357,4 +359,4 @@ class ResourceManager(object):
 
         return res
 
-
+    get_instrument = open_resource

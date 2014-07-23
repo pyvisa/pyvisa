@@ -18,7 +18,7 @@ from . import helpers as hlp
 
 from .messagebased import MessageBasedResource
 
-
+@MessageBasedResource.register(constants.InterfaceType.asrl, 'INSTR')
 class SerialInstrument(MessageBasedResource):
     """Communicates with devices of type ASRL<board>[::INSTR]
 

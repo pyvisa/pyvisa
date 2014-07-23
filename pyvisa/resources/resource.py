@@ -130,7 +130,7 @@ class Resource(object):
 
         logger.debug('%s - opening ...', self._resource_name, extra=self._logging_extra)
         with util.warning_context("ignore", "VI_SUCCESS_DEV_NPRESENT"):
-            self.session, status = self._resource_manager.open_resource(self._resource_name, access_mode, open_timeout)
+            self.session, status = self._resource_manager.open_bare_resource(self._resource_name, access_mode, open_timeout)
 
             if status == constants.VI_SUCCESS_DEV_NPRESENT:
                 # The device was not ready when we opened the session.

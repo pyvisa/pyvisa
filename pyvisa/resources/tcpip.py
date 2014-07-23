@@ -30,7 +30,7 @@ class TCPIPInstrument(MessageBasedResource):
     """
 
 
-@Resource.register(constants.InterfaceType.vxi, 'SOCKET')
+@Resource.register(constants.InterfaceType.tcpip, 'SOCKET')
 class TCPIPSocket(MessageBasedResource):
     """Communicates with to devices of type TCPIP::host address::port::SOCKET
 
