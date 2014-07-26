@@ -11,7 +11,8 @@ except:
 try:
     from setuptools import setup
 except ImportError:
-    from distutils.core import setup
+    print('Please install or upgrade setuptools or pip to continue')
+    sys.exit(1)
 
 
 import codecs
