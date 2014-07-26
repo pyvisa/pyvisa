@@ -165,8 +165,8 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
                 if adjusted_timeout < 0:
                     adjusted_timeout = 0
 
-            event_type, context = lib.wait_on_event(self.session, constants.VI_EVENT_SERVICE_REQ,
-                                                    adjusted_timeout)
+            event_type, context, error = lib.wait_on_event(self.session, constants.VI_EVENT_SERVICE_REQ,
+                                                           adjusted_timeout)
             lib.close(context)
             if self.stb & 0x40:
                 break
