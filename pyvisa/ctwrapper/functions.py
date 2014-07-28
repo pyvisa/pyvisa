@@ -1184,6 +1184,10 @@ def open(library, session, resource_name, access_mode=VI_NO_LOCK, open_timeout=V
     :return: Unique logical identifier reference to a session, return value of the library call.
     :rtype: session, VISAStatus
     """
+    try:
+        open_timeout = int(open_timeout)
+    except ValueError:
+        raise ValueError('open_timeout (%r) must be an integer (or compatible type)' % open_timeout)
     out_session = ViSession()
 
     # [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession]
