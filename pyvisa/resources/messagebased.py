@@ -276,7 +276,11 @@ class MessageBasedResource(Resource):
     def stb(self):
         """Service request status register."""
 
-        return self.visalib.read_stb(self.session)
+        return self.read_stb()
+
+    def read_stb(self):
+        value, retcode = self.visalib.read_stb(self.session)
+        return value
 
     @contextlib.contextmanager
     def read_termination_context(self, new_termination):
