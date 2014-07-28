@@ -24,7 +24,7 @@ import contextlib
 import platform
 import warnings
 
-from . import __version__
+from . import __version__, logger
 
 if sys.version >= '3':
     _struct_unpack = struct.unpack
@@ -56,12 +56,18 @@ def read_user_library_path():
         from configparser import ConfigParser, NoSectionError
 
     config_parser = ConfigParser()
-    config_parser.read([os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
-                        os.path.join(os.path.expanduser("~"), ".pyvisarc")])
+    files = config_parser.read([os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
+                                os.path.join(os.path.expanduser("~"), ".pyvisarc")])
 
+    if not files:
+        logger.debug('No user defined library files')
+        return None
+
+    logger.debug('User defined library files: %s' % files)
     try:
         return config_parser.get("Paths", "visa library")
     except (KeyError, NoSectionError):
+        logger.debug('KeyError or NoSectionError while reading config file')
         return None
 
 
@@ -113,13 +119,17 @@ def get_library_paths(wrapper_module):
 
     :param wrapper_module: the python module/package that wraps the visa library.
     """
+
     user_lib = read_user_library_path()
+
     tmp = [wrapper_module.find_library(library_path)
            for library_path in ('visa', 'visa32', 'visa32.dll')]
 
     tmp = [LibraryPath(library_path)
            for library_path in tmp
            if library_path is not None]
+
+    logger.debug('Automatically found library files: %s' % tmp)
 
     if user_lib:
         user_lib = LibraryPath(user_lib, 'user')

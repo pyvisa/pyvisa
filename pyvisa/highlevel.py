@@ -23,6 +23,16 @@ from . import errors
 from .util import get_library_paths
 
 
+def _args_to_str(args):
+    out = []
+    for arg in args:
+        try:
+            out.append(str(arg._obj))
+        except Exception:
+            out.append(arg)
+    return tuple(out)
+
+
 def add_visa_methods(wrapper_module):
     """Decorator factory to add methods in `wrapper_module.visa_functions`
     iterable to a class.
@@ -152,7 +162,7 @@ class VisaLibrary(object):
         Helper function to be called by resources properties.
         """
         try:
-            return self._last_resource_status[session]
+            return self._last_status_in_session[session]
         except KeyError:
             raise errors.Error('The session %r does not seem to be valid as it does not have any last status' % session)
 
@@ -168,24 +178,32 @@ class VisaLibrary(object):
         """Check return values for errors and warnings.
         """
 
-        logger.debug('%s%s -> %s',
-                     func.__name__, arguments, ret_value,
+        logger.debug('%s%s -> %r',
+                     func.__name__, _args_to_str(arguments), ret_value,
                      extra=self._logging_extra)
 
         self._last_status = ret_value
 
-        # The first argument of all registered visa functions is a session.
-        # We store the error code
-        if func.__name__ not in ('viOpenDefaultRM', 'viFindNext'):
+        # The first argument of almost all registered visa functions is a session.
+        # We store the error code per session
+        if func.__name__ not in ('viFindNext', ):
             try:
                 session = arguments[0]
             except KeyError:
-                raise Exception('Function %r does not seem to be a valid visa function' % func)
+                raise Exception('Function %r does not seem to be a valid '
+                                'visa function (len args %d)' % (func, len(arguments)))
 
-            if not isinstance(session, int):
-                raise Exception('Function %r does not seem to be a valid visa function' % func)
+            # Functions that use the first parameter to get a session value.
+            if func.__name__ in ('viOpenDefaultRM', ):
+                session = session._obj.value
 
-            self._last_status_in_session[session] = ret_value
+            if isinstance(session, int):
+                self._last_status_in_session[session] = ret_value
+            else:
+                # Functions that might or might have a session in the first argument.
+                if func.__name__ not in ('viClose', 'viGetAttribute', 'viSetAttribute', 'viStatusDesc'):
+                    raise Exception('Function %r does not seem to be a valid '
+                                    'visa function (type args[0] %r)' % (func, type(session)))
 
         if ret_value < 0:
             raise errors.VisaIOError(ret_value)
