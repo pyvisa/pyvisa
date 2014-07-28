@@ -182,6 +182,11 @@ class VisaLibrary(object):
                      func.__name__, _args_to_str(arguments), ret_value,
                      extra=self._logging_extra)
 
+        try:
+            ret_value = constants.StatusCode(ret_value)
+        except ValueError:
+            pass
+
         self._last_status = ret_value
 
         # The first argument of almost all registered visa functions is a session.

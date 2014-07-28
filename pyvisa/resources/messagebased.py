@@ -152,11 +152,13 @@ class MessageBasedResource(Resource):
         """
         size = self.chunk_size if size is None else size
 
+        loop_status = constants.StatusCode.success_max_count_read
+
         ret = bytes()
         with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
             try:
-                status = constants.VI_SUCCESS_MAX_CNT
-                while status == constants.VI_SUCCESS_MAX_CNT:
+                status = loop_status
+                while status == loop_status:
                     logger.debug('%s - reading %d bytes (last status %r)',
                                  self._resource_name, size, status)
                     chunk, status = self.visalib.read(self.session, size)

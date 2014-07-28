@@ -592,3 +592,308 @@ class LineState(enum.IntEnum):
     asserted = VI_STATE_ASSERTED
     unasserted = VI_STATE_UNASSERTED
     unknown = VI_STATE_UNKNOWN
+
+
+class StatusCode(enum.IntEnum):
+    """Specifies the status codes that NI-VISA driver-level operations can return.
+    """
+
+    #: The operation was aborted.
+    error_abort = VI_ERROR_ABORT
+
+    #: Insufficient system resources to perform necessary memory allocation.
+    error_allocation = VI_ERROR_ALLOC
+
+    #: The specified attribute is read-only.
+    error_attribute_read_only = VI_ERROR_ATTR_READONLY
+
+    #: Bus error occurred during transfer.
+    error_bus_error = VI_ERROR_BERR
+
+    #: Unable to deallocate the previously allocated data structures corresponding to this session or object reference.
+    error_closing_failed = VI_ERROR_CLOSING_FAILED
+
+    #: The connection for the specified session has been lost.
+    error_connection_lost = VI_ERROR_CONN_LOST
+
+    #: An error occurred while trying to open the specified file. Possible causes include an invalid path or lack of access rights.
+    error_file_access = VI_ERROR_FILE_ACCESS
+
+    #: An error occurred while performing I/O on the specified file.
+    error_file_i_o = VI_ERROR_FILE_IO
+
+    #: A handler is not currently installed for the specified event.
+    error_handler_not_installed = VI_ERROR_HNDLR_NINSTALLED
+
+    #: Unable to queue the asynchronous operation because there is already an operation in progress.
+    error_in_progress = VI_ERROR_IN_PROGRESS
+
+    #: Device reported an input protocol error during transfer.
+    error_input_protocol_violation = VI_ERROR_INP_PROT_VIOL
+
+    #: The interface type is valid but the specified interface number is not configured.
+    error_interface_number_not_configured = VI_ERROR_INTF_NUM_NCONFIG
+
+    #: An interrupt is still pending from a previous call.
+    error_interrupt_pending = VI_ERROR_INTR_PENDING
+
+    #: The access key to the resource associated with this session is invalid.
+    error_invalid_access_key = VI_ERROR_INV_ACCESS_KEY
+
+    #: Invalid access mode.
+    error_invalid_access_mode = VI_ERROR_INV_ACC_MODE
+
+    #: Invalid address space specified.
+    error_invalid_address_space = VI_ERROR_INV_SPACE
+
+    #: Specified event context is invalid.
+    error_invalid_context = VI_ERROR_INV_CONTEXT
+
+    #: Specified degree is invalid.
+    error_invalid_degree = VI_ERROR_INV_DEGREE
+
+    #: Specified event type is not supported by the resource.
+    error_invalid_event = VI_ERROR_INV_EVENT
+
+    #: Invalid expression specified for search.
+    error_invalid_expression = VI_ERROR_INV_EXPR
+
+    #: A format specifier in the format string is invalid.
+    error_invalid_format = VI_ERROR_INV_FMT
+
+    #: The specified handler reference is invalid.
+    error_invalid_handler_reference = VI_ERROR_INV_HNDLR_REF
+
+    #: Specified job identifier is invalid.
+    error_invalid_job_i_d = VI_ERROR_INV_JOB_ID
+
+    #: Invalid length specified.
+    error_invalid_length = VI_ERROR_INV_LENGTH
+
+    #: The value specified by the line parameter is invalid.
+    error_invalid_line = VI_ERROR_INV_LINE
+
+    #: The specified type of lock is not supported by this resource.
+    error_invalid_lock_type = VI_ERROR_INV_LOCK_TYPE
+
+    #: Invalid buffer mask specified.
+    error_invalid_mask = VI_ERROR_INV_MASK
+
+    #: Invalid mechanism specified.
+    error_invalid_mechanism = VI_ERROR_INV_MECH
+
+    #: The specified mode is invalid.
+    error_invalid_mode = VI_ERROR_INV_MODE
+
+    #: The specified session or object reference is invalid.
+    error_invalid_object = VI_ERROR_INV_OBJECT
+
+    #: Invalid offset specified.
+    error_invalid_offset = VI_ERROR_INV_OFFSET
+
+    #: The value of an unknown parameter is invalid.
+    error_invalid_parameter = VI_ERROR_INV_PARAMETER
+
+    #: The protocol specified is invalid.
+    error_invalid_protocol = VI_ERROR_INV_PROT
+
+    #: Invalid resource reference specified. Parsing error.
+    error_invalid_resource_name = VI_ERROR_INV_RSRC_NAME
+
+    #: Unable to start operation because setup is invalid due to inconsistent state of properties.
+    error_invalid_setup = VI_ERROR_INV_SETUP
+
+    #: Invalid size of window specified.
+    error_invalid_size = VI_ERROR_INV_SIZE
+
+    #: Invalid source or destination width specified.
+    error_invalid_width = VI_ERROR_INV_WIDTH
+
+    #: Could not perform operation because of I/O error.
+    error_i_o = VI_ERROR_IO
+
+    #: A code library required by VISA could not be located or loaded.
+    error_library_not_found = VI_ERROR_LIBRARY_NFOUND
+
+    #: The specified trigger line is currently in use.
+    error_line_in_use = VI_ERROR_LINE_IN_USE
+
+    #: The remote machine does not exist or is not accepting any connections.
+    error_machine_not_available = VI_ERROR_MACHINE_NAVAIL
+
+    #: The device does not export any memory.
+    error_memory_not_shared = VI_ERROR_MEM_NSHARED
+
+    #: No listeners condition is detected (both NRFD and NDAC are deasserted).
+    error_no_listeners = VI_ERROR_NLISTENERS
+
+    #: The specified operation is unimplemented.
+    error_nonimplemented_operation = VI_ERROR_NIMPL_OPER
+
+    #: The specified attribute is not defined or supported by the referenced session, event, or find list.
+    error_nonsupported_attribute = VI_ERROR_NSUP_ATTR
+
+    #: The specified state of the attribute is not valid or is not supported as defined by the session, event, or find list.
+    error_nonsupported_attribute_state = VI_ERROR_NSUP_ATTR_STATE
+
+    #: A format specifier in the format string is not supported.
+    error_nonsupported_format = VI_ERROR_NSUP_FMT
+
+    #: The interface cannot generate an interrupt on the requested level or with the requested statusID value.
+    error_nonsupported_interrupt = VI_ERROR_NSUP_INTR
+
+    #: The specified trigger source line (trigSrc) or destination line (trigDest) is not supported by this VISA implementation, or the combination of lines is not a valid mapping.
+    error_nonsupported_line = VI_ERROR_NSUP_LINE
+
+    #: The specified mechanism is not supported for the specified event type.
+    error_nonsupported_mechanism = VI_ERROR_NSUP_MECH
+
+    #: The specified mode is not supported by this VISA implementation.
+    error_nonsupported_mode = VI_ERROR_NSUP_MODE
+
+    #: Specified offset is not accessible from this hardware.
+    error_nonsupported_offset = VI_ERROR_NSUP_OFFSET
+
+    #: The specified offset is not properly aligned for the access width of the operation.
+    error_nonsupported_offset_alignment = VI_ERROR_NSUP_OFFSET
+
+    #: The session or object reference does not support this operation.
+    error_nonsupported_operation = VI_ERROR_NSUP_OPER
+
+    #: Cannot support source and destination widths that are different.
+    error_nonsupported_varying_widths = VI_ERROR_NSUP_VAR_WIDTH
+
+    #: Specified width is not supported by this hardware.
+    error_nonsupported_width = VI_ERROR_NSUP_WIDTH
+
+    #: Access to the remote machine is denied.
+    error_no_permission = VI_ERROR_NPERMISSION
+
+    #: The interface associated with this session is not currently the Controller-in-Charge.
+    error_not_cic = VI_ERROR_NCIC
+
+    #: The session must be enabled for events of the specified type in order to receive them.
+    error_not_enabled = VI_ERROR_NENABLED
+
+    #: The interface associated with this session is not the system controller.
+    error_not_system_controller = VI_ERROR_NSYS_CNTLR
+
+    #: Device reported an output protocol error during transfer.
+    error_output_protocol_violation = VI_ERROR_OUTP_PROT_VIOL
+
+    #: Unable to queue asynchronous operation.
+    error_queue_error = VI_ERROR_QUEUE_ERROR
+
+    #: The event queue for the specified type has overflowed, usually due to not closing previous events.
+    error_queue_overflow = VI_ERROR_QUEUE_OVERFLOW
+
+    #: Violation of raw read protocol occurred during transfer.
+    error_raw_read_protocol_violation = VI_ERROR_RAW_RD_PROT_VIOL
+
+    #: Violation of raw write protocol occurred during transfer.
+    error_raw_write_protocol_violation = VI_ERROR_RAW_WR_PROT_VIOL
+
+    #: The resource is valid, but VISA cannot currently access it.
+    error_resource_busy = VI_ERROR_RSRC_BUSY
+
+    #: Specified type of lock cannot be obtained or specified operation cannot be performed because the resource is locked.
+    error_resource_locked = VI_ERROR_RSRC_LOCKED
+
+    #: Insufficient location information, or the device or resource is not present in the system.
+    error_resource_not_found = VI_ERROR_RSRC_NFOUND
+
+    #: A previous response is still pending, causing a multiple query error.
+    error_response_pending = VI_ERROR_RESP_PENDING
+
+    #: A framing error occurred during transfer.
+    error_serial_framing = VI_ERROR_ASRL_FRAMING
+
+    #: An overrun error occurred during transfer. A character was not read from the hardware before the next character arrived.
+    error_serial_overrun = VI_ERROR_ASRL_OVERRUN
+
+    #: A parity error occurred during transfer.
+    error_serial_parity = VI_ERROR_ASRL_PARITY
+
+    #: The current session did not have any lock on the resource.
+    error_session_not_locked = VI_ERROR_SESN_NLOCKED
+
+    #: Service request has not been received for the session.
+    error_srq_not_occurred = VI_ERROR_SRQ_NOCCURRED
+
+    #: Unknown system error.
+    error_system_error = VI_ERROR_SYSTEM_ERROR
+
+    #: Timeout expired before operation completed.
+    error_timeout = VI_ERROR_TMO
+
+    #: The path from the trigger source line (trigSrc) to the destination line (trigDest) is not currently mapped.
+    error_trigger_not_mapped = VI_ERROR_TRIG_NMAPPED
+
+    #: A specified user buffer is not valid or cannot be accessed for the required size.
+    error_user_buffer = VI_ERROR_USER_BUF
+
+    #: The specified session currently contains a mapped window.
+    error_window_already_mapped = VI_ERROR_WINDOW_MAPPED
+
+    #: The specified session is currently unmapped.
+    error_window_not_mapped = VI_ERROR_WINDOW_NMAPPED
+
+    #: Operation completed successfully.
+    success = VI_SUCCESS
+
+    #: Session opened successfully, but the device at the specified address is not responding.
+    success_device_not_present = VI_SUCCESS_DEV_NPRESENT
+
+    #: Specified event is already disabled for at least one of the specified mechanisms.
+    success_event_already_disabled = VI_SUCCESS_EVENT_DIS
+
+    #: Specified event is already enabled for at least one of the specified mechanisms.
+    success_event_already_enabled = VI_SUCCESS_EVENT_EN
+
+    #: The number of bytes read is equal to the input count.
+    success_max_count_read = VI_SUCCESS_MAX_CNT
+
+    #: Operation completed successfully, and this session has nested exclusive locks.
+    success_nested_exclusive = VI_SUCCESS_NESTED_EXCLUSIVE
+
+    #: Operation completed successfully, and this session has nested shared locks.
+    success_nested_shared = VI_SUCCESS_NESTED_SHARED
+
+    #: Event handled successfully. Do not invoke any other handlers on this session for this event.
+    success_no_more_handler_calls_in_chain = VI_SUCCESS_NCHAIN
+
+    #: Operation completed successfully, but the queue was already empty.
+    success_queue_already_empty = VI_SUCCESS_QUEUE_EMPTY
+
+    #: Wait terminated successfully on receipt of an event notification. There is still at least one more event occurrence of the requested type(s) available for this session.
+    success_queue_not_empty = VI_SUCCESS_QUEUE_NEMPTY
+
+    #: Asynchronous operation request was performed synchronously.
+    success_syncronous = VI_SUCCESS_SYNC
+
+    #: The specified termination character was read.
+    success_termination_character_read = VI_SUCCESS_TERM_CHAR
+
+    #: The path from the trigger source line (trigSrc) to the destination line (trigDest) is already mapped.
+    success_trigger_already_mapped = VI_SUCCESS_TRIG_MAPPED
+
+    #: The specified configuration either does not exist or could not be loaded. The VISA-specified defaults are used.
+    warning_configuration_not_loaded = VI_WARN_CONFIG_NLOADED
+
+    #: The operation succeeded, but a lower level driver did not implement the extended functionality.
+    warning_ext_function_not_implemented = VI_WARN_EXT_FUNC_NIMPL
+
+    #: Although the specified state of the attribute is valid, it is not supported by this resource implementation.
+    warning_nonsupported_attribute_state = VI_WARN_NSUP_ATTR_STATE
+
+    #: The specified buffer is not supported.
+    warning_nonsupported_buffer = VI_WARN_NSUP_BUF
+
+    #: The specified object reference is uninitialized.
+    warning_null_object = VI_WARN_NULL_OBJECT
+
+    #: VISA received more event information of the specified type than the configured queue size could hold.
+    warning_queue_overflow = VI_WARN_QUEUE_OVERFLOW
+
+    #: The status code passed to the operation could not be interpreted.
+    warning_unknown_status = VI_WARN_UNKNOWN_STATUS
