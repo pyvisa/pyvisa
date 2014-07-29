@@ -70,7 +70,7 @@ def range_attr(attribute_name, min_value, max_value, doc=None, ro=False):
                                  ':range: %s <= value <= %s\n' % (min_value, max_value))
 
     def getter(self):
-        return self.get_visa_attribute(attribute_name)
+        return int(self.get_visa_attribute(attribute_name))
 
     if ro:
         return property(fget=getter, doc=doc)

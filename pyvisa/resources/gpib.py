@@ -32,17 +32,17 @@ class _GPIBMixin(object):
                                  doc='This attribute specifies whether I/O accesses should '
                                      'use DMA (True) or Programmed I/O (False).')
 
-    primary_address = hlp.attr('VI_ATTR_GPIB_PRIMARY_ADDR',
-                               doc='Specifies the primary address of the GPIB device used by the given session.',
-                               ro=True)
+    primary_address = hlp.range_attr('VI_ATTR_GPIB_PRIMARY_ADDR', 0, 30,
+                                     doc='Specifies the primary address of the GPIB device used by the given session.',
+                                     ro=True)
 
     remote_enabled = hlp.enum_attr('VI_ATTR_GPIB_REN_STATE', constants.LineState,
                                    doc='Returns the current state of the GPIB REN (Remote ENable) interface line.',
                                    ro=True)
 
-    secondary_address = hlp.attr('VI_ATTR_GPIB_SECONDARY_ADDR',
-                                 doc='Specifies the secondary address of the GPIB device used by the given session.',
-                                 ro=True)
+    secondary_address = hlp.range_attr('VI_ATTR_GPIB_SECONDARY_ADDR', 0, 65535,
+                                       doc='Specifies the secondary address of the GPIB device used by the given session.',
+                                       ro=True)
 
     def assert_trigger(self):
         """Sends a software trigger to the device.
@@ -203,3 +203,28 @@ class GPIBInterface(_GPIBMixin, Resource):
     ndac_state = hlp.enum_attr('VI_ATTR_GPIB_NDAC_STATE', constants.LineState,
                                'Shows the current state of the GPIB NDAC (Not Data ACcepted) interface line.',
                                ro=True)
+
+    def group_execute_trigger(self, *resources):
+
+        for resource in resources:
+            if not isinstance(resource, GPIBInstrument):
+                raise ValueError('%r is not a GPIBInstrument', resource)
+
+            # TODO: check that all resources are in the same board.
+
+        if not self.is_controller_in_charge:
+            self.send_ifc()
+
+        command = [0x20+31, ] # broadcast "UNL" (don't listen) to all devices
+
+        for resource in resources:
+            resource.wait_for_get()
+            # tell device GPIB::11 to listen
+            command.append(0x20 + resource.primary_address)
+
+        # send GET ('group execute trigger')
+        command.append(0x08)
+        # broadcast "UNL" (don't listen) to all devices
+        command.append(0x20+31)
+
+        return self.send_command(bytes(command))

@@ -117,6 +117,9 @@ class Resource(object):
           'The resource can be unlocked, locked with an exclusive lock, or locked with a shared lock.'
     lock_state = hlp.enum_attr('VI_ATTR_RSRC_LOCK_STATE', constants.AccessModes, doc=_d_, ro=True)
 
+    _d_ = 'Specifies the board number for the given interface.'
+    interface_number = hlp.range_attr('VI_ATTR_INTF_NUM', 0, 65535, doc=_d_, ro=True)
+
     del _d_
 
     def open(self, access_mode=constants.AccessModes.no_lock, open_timeout=5000):
