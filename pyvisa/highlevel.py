@@ -73,6 +73,9 @@ class VisaLibrary(object):
     :param library_path: path of the VISA library.
     """
 
+    #: Default ResourceManager instance for this library.
+    _resource_manager = None
+
     #: Maps library path to VisaLibrary object
     _registry = dict()
 
@@ -136,9 +139,6 @@ class VisaLibrary(object):
 
         #: Last return value of the library.
         obj._last_status = 0
-
-        #: Default ResourceManager instance for this library.
-        obj._resource_manager = None
 
         obj._logging_extra = {'library_path': obj.library_path}
 
