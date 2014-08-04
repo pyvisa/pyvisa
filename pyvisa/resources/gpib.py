@@ -60,7 +60,7 @@ class _GPIBMixin(object):
         :return: Number of written bytes, return value of the library call.
         :rtype: int, VISAStatus
         """
-        return self.visalib.viGpibCommand(self.session, data, data)
+        return self.visalib.viGpibCommand(self.session, data)
 
     def control_atn(self, mode):
         """Specifies the state of the ATN line and the local active controller state.
@@ -218,7 +218,6 @@ class GPIBInterface(_GPIBMixin, Resource):
         command = [0x20+31, ] # broadcast "UNL" (don't listen) to all devices
 
         for resource in resources:
-            resource.wait_for_get()
             # tell device GPIB::11 to listen
             command.append(0x20 + resource.primary_address)
 
