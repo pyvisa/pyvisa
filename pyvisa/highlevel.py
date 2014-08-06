@@ -13,6 +13,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import contextlib
 import warnings
 from collections import defaultdict
 
@@ -81,6 +82,9 @@ class VisaLibrary(object):
 
     #: Maps session handle to last status
     _last_status_in_session = dict()
+
+    #: Maps session handle to warnings to ignore
+    _ignore_warning_in_session = defaultdict(set)
 
     @classmethod
     def from_paths(cls, *paths):
@@ -191,6 +195,7 @@ class VisaLibrary(object):
 
         # The first argument of almost all registered visa functions is a session.
         # We store the error code per session
+        session = None:
         if func.__name__ not in ('viFindNext', ):
             try:
                 session = arguments[0]
@@ -214,9 +219,21 @@ class VisaLibrary(object):
             raise errors.VisaIOError(ret_value)
 
         if ret_value in self.issue_warning_on:
-            warnings.warn(errors.VisaIOWarning(ret_value), stacklevel=2)
+            if session and ret_value not in self._ignore_warning_in_session[session]:
+                warnings.warn(errors.VisaIOWarning(ret_value), stacklevel=2)
 
         return ret_value
+
+    @contextlib.contextmanager
+    def ignore_warning(self, session, *warnings_constants):
+        """A session dependent context for ignoring warnings
+
+        :param session: Unique logical identifier to a session.
+        :param *warnings: constants identifying the warnings to ignore.
+        """
+        self._ignore_warning_in_session[session].update(warnings_constants)
+        yield
+        self._ignore_warning_in_session[session].difference_update(warnings_constants)
 
     def install_handler(self, session, event_type, handler, user_handle=None):
         """Installs handlers for event callbacks.

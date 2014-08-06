@@ -21,7 +21,7 @@ import warnings
 from .. import logger
 from .. import constants
 from .. import errors
-from ..util import warning_context, parse_ascii, parse_binary
+from ..util import parse_ascii, parse_binary
 
 from . import helpers as hlp
 from .resource import Resource
@@ -155,7 +155,7 @@ class MessageBasedResource(Resource):
         loop_status = constants.StatusCode.success_max_count_read
 
         ret = bytes()
-        with warning_context("ignore", "VI_SUCCESS_MAX_CNT"):
+        with self.visalib.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT):
             try:
                 status = loop_status
                 while status == loop_status:

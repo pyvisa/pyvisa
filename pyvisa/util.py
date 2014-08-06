@@ -20,7 +20,6 @@ import sys
 import struct
 import subprocess
 from .compat import check_output
-import contextlib
 import platform
 import warnings
 
@@ -142,29 +141,6 @@ def get_library_paths(wrapper_module):
     return tuple(tmp)
 
 
-def removefilter(action, message="", category=Warning, module="", lineno=0,
-                 append=0):
-    """Remove all entries from the list of warnings filters that match the
-    given filter.
-
-    It is the opposite to warnings.filterwarnings() and has the same parameters
-    as it.
-    """
-
-    if append != 0:
-        warnings.warn('In removefilter, append parameter is not used')
-
-    import re
-    item = (action, re.compile(message, re.I), category, re.compile(module), lineno)
-
-    new_filters = [fil for fil in warnings.filters if fil != item]
-
-    if len(warnings.filters) == len(new_filters):
-        warnings.warn("Warning filter not found", stacklevel=2)
-
-    warnings.filters = new_filters
-
-
 def warn_for_invalid_kwargs(keyw, allowed_keys):
     for key in keyw.keys():
         if key not in allowed_keys:
@@ -194,14 +170,6 @@ def split_kwargs(keyw, self_keys, parent_keys, warn=True):
             parent_kwargs[key] = value
 
     return self_kwargs, parent_kwargs
-
-
-@contextlib.contextmanager
-def warning_context(action, message="", category=Warning, module="", lineno=0, append=False):
-    warnings.filterwarnings(action, message, category, module, lineno, append)
-    yield
-    removefilter(action, message, category, module, lineno, append)
-
 
 _ascii_re = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)(?:[eE][-+]?\d+)?")
 
