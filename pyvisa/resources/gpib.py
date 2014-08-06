@@ -60,7 +60,7 @@ class _GPIBMixin(object):
         :return: Number of written bytes, return value of the library call.
         :rtype: int, VISAStatus
         """
-        return self.visalib.viGpibCommand(self.session, data)
+        return self.visalib.gpib_command(self.session, data)
 
     def control_atn(self, mode):
         """Specifies the state of the ATN line and the local active controller state.
@@ -72,7 +72,7 @@ class _GPIBMixin(object):
         :return: return value of the library call.
         :rtype: VISAStatus
         """
-        return self.visalib.viGpibControlATN(self.session, mode)
+        return self.visalib.gpib_control_atn(self.session, mode)
 
     def control_ren(self, mode):
         """Controls the state of the GPIB Remote Enable (REN) interface line, and optionally the remote/local
@@ -85,7 +85,7 @@ class _GPIBMixin(object):
         :return: return value of the library call.
         :rtype: VISAStatus
         """
-        return self.visalib.viGpibControlREN(self.session, mode)
+        return self.visalib.gpib_control_ren(self.session, mode)
 
     def pass_control(self, primary_address, secondary_address):
         """Tell the GPIB device at the specified address to become controller in charge (CIC).
@@ -99,7 +99,7 @@ class _GPIBMixin(object):
         :return: return value of the library call.
         :rtype: VISAStatus
         """
-        return self.visalib.viGpibPassControl(self.session, primary_address, secondary_address)
+        return self.visalib.gpib_pass_control(self.session, primary_address, secondary_address)
 
     def send_ifc(self):
         """Pulse the interface clear line (IFC) for at least 100 microseconds.
@@ -109,7 +109,7 @@ class _GPIBMixin(object):
         :return: return value of the library call.
         :rtype: VISAStatus
         """
-        return self.visalib.viGpibSendIFC(self.session)
+        return self.visalib.gpib_send_ifc(self.session)
 
 
 @Resource.register(constants.InterfaceType.gpib, 'INSTR')
