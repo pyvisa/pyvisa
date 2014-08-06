@@ -19,6 +19,8 @@ if PYTHON3:
 
     def u(x):
         return x
+
+    integer_types = (int, )
 else:
     string_types = basestring
 
@@ -27,6 +29,7 @@ else:
     def u(x):
         return codecs.unicode_escape_decode(x)[0]
 
+    integer_types = (int, long)
 
 if sys.version_info < (2, 7):
     try:

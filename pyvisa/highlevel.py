@@ -22,6 +22,7 @@ from . import constants
 from . import ctwrapper
 from . import errors
 from .util import get_library_paths
+from .compat import integer_types
 
 
 def _args_to_str(args):
@@ -195,7 +196,7 @@ class VisaLibrary(object):
 
         # The first argument of almost all registered visa functions is a session.
         # We store the error code per session
-        session = None:
+        session = None
         if func.__name__ not in ('viFindNext', ):
             try:
                 session = arguments[0]
@@ -207,7 +208,7 @@ class VisaLibrary(object):
             if func.__name__ in ('viOpenDefaultRM', ):
                 session = session._obj.value
 
-            if isinstance(session, int):
+            if isinstance(session, integer_types):
                 self._last_status_in_session[session] = ret_value
             else:
                 # Functions that might or might have a session in the first argument.
