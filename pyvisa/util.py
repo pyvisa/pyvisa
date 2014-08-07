@@ -27,10 +27,14 @@ from . import __version__, logger
 
 if sys.version >= '3':
     _struct_unpack = struct.unpack
+    _struct_unpack_from = struct.unpack_from
     _struct_pack = struct.pack
 else:
     def _struct_unpack(fmt, string):
         return struct.unpack(str(fmt), string)
+
+    def _struct_unpack_from(fmt, *args, **kwargs):
+        return struct.unpack_from(str(fmt), *args, **kwargs)
 
     def _struct_pack(fmt, *values):
         return struct.pack(str(fmt), *values)
@@ -279,7 +283,7 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     fullfmt = '%s%d%s' % (endianess, data_length, datatype)
 
     try:
-        return container(struct.unpack_from(fullfmt, block, offset))
+        return container(_struct_unpack_from(fullfmt, block, offset))
     except struct.error:
         raise ValueError("Binary data itself was malformed")
 
