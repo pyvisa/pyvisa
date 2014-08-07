@@ -27,10 +27,13 @@ from . import __version__, logger
 
 if sys.version >= '3':
     _struct_unpack = struct.unpack
+    _struct_pack = struct.pack
 else:
     def _struct_unpack(fmt, string):
         return struct.unpack(str(fmt), string)
 
+    def _struct_pack(fmt, *values):
+        return struct.pack(str(fmt), *values)
 
 def read_user_library_path():
     """Return the library path stored in one of the following configuration files:
@@ -298,9 +301,9 @@ def to_ieee_block(data, datatype='f', is_big_endian=False):
     fullfmt = '%s%d%s' % (endianess, data_length, datatype)
 
     if sys.version >= '3':
-        return bytes('#%d%d' % (len(header), data_length), 'ascii') + struct.pack(fullfmt, *data)
+        return bytes('#%d%d' % (len(header), data_length), 'ascii') + _struct_pack(fullfmt, *data)
     else:
-        return str('#%d%d' % (len(header), data_length)) + struct.pack(fullfmt, *data)
+        return str('#%d%d' % (len(header), data_length)) + _struct_pack(fullfmt, *data)
 
 
 def get_system_details(visa=True):
