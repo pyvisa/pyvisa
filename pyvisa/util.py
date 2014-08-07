@@ -174,21 +174,50 @@ def split_kwargs(keyw, self_keys, parent_keys, warn=True):
 _ascii_re = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)(?:[eE][-+]?\d+)?")
 
 
-def parse_ascii(bytes_data):
-    return [float(raw_value) for raw_value in
-            _ascii_re.findall(bytes_data.decode('ascii'))]
+def parse_ascii(bytes_data, container=list):
+    """Parse ascii data and return an iterable of numbers.
+
+    :param bytes_data: data to be parsed.
+    :type bytes_data: bytes
+    :param container: container type to use for the output data.
+    """
+    return container(float(raw_value) for raw_value in
+                     _ascii_re.findall(bytes_data.decode('ascii')))
 
 
 def parse_binary(bytes_data, is_big_endian=False, is_single=False):
+    """Parse ascii data and return an iterable of numbers.
 
+    To be deprecated in 1.7
+
+    :param bytes_data: data to be parsed.
+    :param is_big_endian: boolean indicating the endianness.
+    :param is_single: boolean indicating the type (if not is double)
+    :return:
+    """
     data = bytes_data
 
     hash_sign_position = bytes_data.find(b"#")
     if hash_sign_position == -1:
-        raise ValueError('Cound not find valid hash position')
+        raise ValueError('Could not find valid hash position')
 
-    data = data[(hash_sign_position+1):]
-    data_length = len(data)
+    if hash_sign_position > 0:
+        data = data[hash_sign_position:]
+
+    data_1 = data[1:2].decode('ascii')
+
+    if data_1.isdigit() and int(data_1) > 0:
+        number_of_digits = int(data_1)
+        # I store data and data_length in two separate variables in case
+        # that data is too short.  FixMe: Maybe I should raise an error if
+        # it's too long and the trailing part is not just CR/LF.
+        data_length = int(data[2:2 + number_of_digits])
+        data = data[2 + number_of_digits:2 + number_of_digits + data_length]
+    else:
+        data = data[2:]
+        if data[-1:].decode('ascii') == "\n":
+            data = data[:-1]
+        data_length = len(data)
 
     if is_big_endian:
         endianess = ">"
