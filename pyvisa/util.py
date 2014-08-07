@@ -237,6 +237,72 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
     return result
 
 
+def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
+    """Converts a block of block in the ieee format into an iterable of numbers.
+
+    :param block: ieee block.
+    :type block: bytes
+    :param datatype: the format string for a single element. See struct module.
+    :param is_big_endian: boolean indicating endianess.
+    """
+
+    begin = block.find(b'#')
+    if begin < 0:
+        raise ValueError("Could not find hash sign (#) indicating the start of the block.")
+
+    try:
+        header_length = int(block[begin+1:begin+2])
+    except ValueError:
+        header_length = 0
+
+    offset = begin + 2 + header_length
+
+    if header_length > 0:
+        # #3100DATA
+        # 012345
+
+        data_length = int(block[begin+2:begin+2+header_length])
+    else:
+        # Undefined length binary block. Use the length of the whole block.
+        # #0DATA
+        # 012
+        offset = begin + 2
+        data_length = len(block) - offset - 1
+        element_length = struct.calcsize(datatype)
+        data_length = int(data_length / element_length)
+
+    endianess = '>' if is_big_endian else '<'
+
+    fullfmt = '%s%d%s' % (endianess, data_length, datatype)
+
+    try:
+        return container(struct.unpack_from(fullfmt, block, offset))
+    except struct.error:
+        raise ValueError("Binary data itself was malformed")
+
+def to_ieee_block(data, datatype='f', is_big_endian=False):
+    """Converts an iterable of numbers into a block of data in the ieee format.
+
+    :param data: an iterable of numbers.
+    :param datatype: the format string for a single element. See struct module.
+    :param is_big_endian: boolean indicating endianess.
+    :param container: container type to use for the output data.
+    :rtype: bytes
+    """
+
+    data_length = len(data)
+    header = '%d' % data_length
+
+    endianess = '>' if is_big_endian else '<'
+
+    fullfmt = '%s%d%s' % (endianess, data_length, datatype)
+
+    if sys.version >= '3':
+        return bytes('#%d%d' % (len(header), data_length), 'ascii') + struct.pack(fullfmt, *data)
+    else:
+        return str('#%d%d' % (len(header), data_length)) + struct.pack(fullfmt, *data)
+
+
 def get_system_details(visa=True):
     """Return a dictionary with information about the system
     """

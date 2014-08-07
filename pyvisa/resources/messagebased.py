@@ -21,10 +21,22 @@ import warnings
 from .. import logger
 from .. import constants
 from .. import errors
-from ..util import parse_ascii, parse_binary
+from ..util import parse_ascii, parse_binary, from_ieee_block, to_ieee_block
 
 from . import helpers as hlp
 from .resource import Resource
+
+
+class ValuesFormat(object):
+    """Options for reading values.
+    """
+    __slots__ = ('is_binary', 'datatype', 'is_big_endian', 'container')
+
+    def __init__(self):
+        self.is_binary = True
+        self.datatype = 'd'
+        self.is_big_endian = False
+        self.container = list
 
 
 class MessageBasedResource(Resource):
@@ -34,33 +46,53 @@ class MessageBasedResource(Resource):
     CR = '\r'
     LF = '\n'
 
-    class Format(enum.IntEnum):
-        """The bits in the bitfield mean the following:
-
-        bit number     if set / if not set
-        ----------     -----------------------------------
-            0          binary/ascii
-            1          double/single (IEEE floating point)
-            2          big-endian/little-endian
-        """
-        ascii = 0
-        single = 1
-        double = 3
-        big_endian = 4
-
     _read_termination = None
     _write_termination = CR + LF
     _encoding = 'ascii'
 
     chunk_size = 20 * 1024
-    ask_delay = 0.0
-    values_format = Format.ascii
+    query_delay = 0.0
+
+    _values_format = None
 
     io_protocol = hlp.enum_attr('VI_ATTR_IO_PROT', constants.IOProtocol,
                                 'I/O protocol for the current hardware interface.')
 
     send_end = hlp.boolean_attr('VI_ATTR_SEND_END_EN',
                                 'Whether or not to assert EOI (or something equivalent after each write operation.')
+
+    def __init__(self, *args, **kwargs):
+        self._values_format = ValuesFormat()
+        super(MessageBasedResource, self).__init__(*args, **kwargs)
+
+    # This is done for backwards compatibility but will be removed in 1.7
+    @property
+    def values_format(self):
+        return self._values_format
+
+    @values_format.setter
+    def values_format(self, fmt):
+        self._values_format.is_binary = not (fmt & 0x01 == 0)
+        if fmt & 0x03 == 1: #single
+            self._values_format.datatype = 'f'
+        elif fmt & 0x03 == 3: #double:
+            self._values_format.datatype = 'd'
+        else:
+            raise ValueError("unknown data values fmt requested")
+
+        self._values_format.is_big_endian = fmt & 0x04
+
+    ####
+
+    @property
+    def ask_delay(self):
+        """An alias for query_delay kept for backwards compatibility.
+        """
+        return self.query_delay
+
+    @ask_delay.setter
+    def ask_delay(self, value):
+        self.query_delay = value
 
     @property
     def encoding(self):
@@ -201,37 +233,47 @@ class MessageBasedResource(Resource):
 
         return message[:-len(termination)]
 
-    def read_values(self, fmt=None):
+    def read_values(self, fmt=None, container=list):
         """Read a list of floating point values from the device.
 
         :param fmt: the format of the values.  If given, it overrides
             the class attribute "values_format".  Possible values are bitwise
             disjunctions of the above constants ascii, single, double, and
             big_endian. Default is ascii.
+        :param container: the output datatype
 
         :return: the list of read values
         :rtype: list
         """
         if not fmt:
-            fmt = self.values_format
+            vf = self.values_format
+            if not vf.is_binary:
+                return parse_ascii(self.read(), container)
+            data = self.read_raw()
+            try:
+                return parse_binary(data, vf.is_big_endian, vf.datatype=='f')
+            except ValueError as e:
+                raise errors.InvalidBinaryFormat(e.args)
 
-        if fmt & 0x01 == ascii:
+        if fmt & 0x01 == 0: # ascii
             return parse_ascii(self.read())
 
         data = self.read_raw()
 
         try:
-            if fmt & 0x03 == self.Format.single:
+            if fmt & 0x03 == 1: #single
                 is_single = True
-            elif fmt & 0x03 == self.Format.double:
+            elif fmt & 0x03 == 3: #double:
                 is_single = False
             else:
                 raise ValueError("unknown data values fmt requested")
-            return parse_binary(data, fmt & 0x04 == self.Format.big_endian, is_single)
+
+            is_big_endian = fmt & 0x04 # big endian
+            return parse_binary(data, is_big_endian, is_single)
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
-    def ask(self, message, delay=None):
+    def query(self, message, delay=None):
         """A combination of write(message) and read()
 
         :param message: the message to send.
@@ -250,20 +292,89 @@ class MessageBasedResource(Resource):
             time.sleep(delay)
         return self.read()
 
-    def ask_for_values(self, message, fmt=None, delay=None):
-        """A combination of write(message) and read_values()
+    # Kept for backwards compatibility.
+    ask = query
+
+    def query_values(self, message, delay=None):
+        """Query the device for values returning an iterable of values.
+
+        The datatype expected is obtained from `values_format`
 
         :param message: the message to send.
         :type message: str
         :param delay: delay in seconds between write and read operations.
-                      if None, defaults to self.ask_delay
+                      if None, defaults to self.query_delay
+        :returns: the answer from the device.
+        :rtype: list
+        """
+        vf = self.values_format
+
+        if vf.is_binary:
+            return self.query_binary_values(message, vf.datatype, vf.is_big_endian, vf.container, delay)
+
+        return self.query_ascii_values(message, vf.container, delay)
+
+    def query_ascii_values(self, message, container=None, delay=None):
+        """Query the device for values in ascii format returning an iterable of values.
+
+        :param message: the message to send.
+        :type message: str
+        :param delay: delay in seconds between write and read operations.
+                      if None, defaults to self.query_delay
+        :param container: container type to use for the output data.
         :returns: the answer from the device.
         :rtype: list
         """
 
         self.write(message)
         if delay is None:
-            delay = self.ask_delay
+            delay = self.query_delay
+        if delay > 0.0:
+            time.sleep(delay)
+
+        block = self.read()
+
+        return parse_ascii(block, container)
+
+    def query_binary_values(self, message, datatype=None, is_big_endian=None, container=None, delay=None):
+        """Converts an iterable of numbers into a block of data in the ieee format.
+
+        :param data: an iterable of numbers.
+        :param datatype: the format string for a single element. See struct module.
+        :param is_big_endian: boolean indicating endianess.
+        :param container: container type to use for the output data.
+        :param delay: delay in seconds between write and read operations.
+                      if None, defaults to self.query_delay
+        :rtype: bytes
+        """
+
+        self.write(message)
+        if delay is None:
+            delay = self.query_delay
+        if delay > 0.0:
+            time.sleep(delay)
+
+        block = self.read_raw()
+
+        try:
+            return from_ieeeblock(block, datatype, is_big_endian, container)
+        except ValueError as e:
+            raise errors.InvalidBinaryFormat(e.args)
+
+    def ask_for_values(self, message, fmt=None, delay=None):
+        """A combination of write(message) and read_values()
+
+        :param message: the message to send.
+        :type message: str
+        :param delay: delay in seconds between write and read operations.
+                      if None, defaults to self.query_delay
+        :returns: the answer from the device.
+        :rtype: list
+        """
+
+        self.write(message)
+        if delay is None:
+            delay = self.query_delay
         if delay > 0.0:
             time.sleep(delay)
         return self.read_values(fmt)
