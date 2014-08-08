@@ -426,6 +426,14 @@ class InvalidBinaryFormat(Error):
         super(InvalidBinaryFormat, self).__init__("Unrecognized binary data format" + description)
 
 
+class InvalidSession(Error):
+    """Exception raised when an invalid session is requested.
+    """
+
+    def __init__(self):
+        super(InvalidSession, self).__init__('Invalid session handle. The resource might be closed.')
+
+
 class LibraryError(OSError, Error):
 
     @classmethod

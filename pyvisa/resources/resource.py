@@ -51,7 +51,17 @@ class Resource(object):
                                'session': None}
 
         #: Session handle.
-        self.session = None
+        self._session = None
+
+    @property
+    def session(self):
+        if self._session is None:
+            raise errors.InvalidSession()
+        return self._session
+
+    @session.setter
+    def session(self, value):
+        self._session = value
 
     def __del__(self):
         self.close()
@@ -92,6 +102,8 @@ class Resource(object):
     @property
     def resource_class(self):
         """The resource class of the resource as a string.
+
+        :VISA Attribute: VI_ATTR_RSRC_CLASS
         """
 
         try:
@@ -101,9 +113,19 @@ class Resource(object):
                 raise
         return 'Unknown'
 
-    resource_name = hlp.attr('VI_ATTR_RSRC_NAME',
-                             'The VISA resource name of the resource as a string.',
-                             ro=True)
+    @property
+    def resource_name(self):
+        """The VISA resource name of the resource as a string.
+
+        The value is obtained from VI_ATTR_RSRC_NAME when the device is opened
+        and from the user_given adderss otherwise.
+
+        :VISA Attribute: VI_ATTR_RSRC_NAME
+        """
+        try:
+            return self.get_visa_attribute(constants.VI_ATTR_RSRC_NAME)
+        except errors.InvalidSession:
+            return self._resource_name
 
     @property
     def interface_type(self):
@@ -163,16 +185,16 @@ class Resource(object):
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
         """
-        if self._resource_manager.session is None or self.session is None:
-            return
-
-        logger.debug('%s - closing', self._resource_name,
-                     extra=self._logging_extra)
-        self.before_close()
-        self.visalib.close(self.session)
-        logger.debug('%s - is closed', self._resource_name,
-                     extra=self._logging_extra)
-        self.session = None
+        try:
+            logger.debug('%s - closing', self._resource_name,
+                         extra=self._logging_extra)
+            self.before_close()
+            self.visalib.close(self.session)
+            logger.debug('%s - is closed', self._resource_name,
+                         extra=self._logging_extra)
+            self.session = None
+        except errors.InvalidSession:
+            pass
 
     def get_visa_attribute(self, name):
         """Retrieves the state of an attribute in this resource.

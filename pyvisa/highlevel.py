@@ -286,7 +286,7 @@ class ResourceManager(object):
     resource_classes = dict()
 
     #: Session handler for the resource manager.
-    session = None
+    _session = None
 
     def __new__(cls, visa_library=None):
         if visa_library is None or isinstance(visa_library, str):
@@ -303,6 +303,16 @@ class ResourceManager(object):
         logger.debug('Created ResourceManager with session %s',  obj.session)
         return obj
 
+    @property
+    def session(self):
+        if self._session is None:
+            raise errors.InvalidSession()
+        return self._session
+
+    @session.setter
+    def session(self, value):
+        self._session = value
+
     def __str__(self):
         return 'Resource Manager of %s' % self.visalib
 
@@ -317,10 +327,12 @@ class ResourceManager(object):
         return self.visalib.get_last_status_in_session(self.session)
 
     def close(self):
-        if self.session is not None:
+        try:
             logger.debug('Closing ResourceManager (session: %s)', self.session)
             self.visalib.close(self.session)
             self.session = None
+        except errors.InvalidSession:
+            pass
 
     def list_resources(self, query='?*::INSTR'):
         """Returns a tuple of all connected devices matching query.
@@ -390,7 +402,14 @@ class ResourceManager(object):
 
         res = cls(self, resource_name)
         for key in kwargs.keys():
-            if not hasattr(res, key):
+            try:
+                getattr(res, key)
+            except AttributeError:
+                present = False
+            except errors.InvalidSession:
+                present = True
+
+            if not present:
                 raise ValueError('%r is not a valid attribute for type %s' % (key, res.__class__.__name__))
 
         res.open(access_mode, open_timeout)

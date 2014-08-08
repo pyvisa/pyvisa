@@ -109,8 +109,21 @@ ViKeyId, ViPKeyId = ViString, ViPString
 
 ViStatus, ViPStatus, ViAStatus    = _type_triplet(ViInt32)
 ViVersion, ViPVersion, ViAVersion = _type_triplet(ViUInt32)
-ViObject, ViPObject, ViAObject    = _type_triplet(ViUInt32)
-ViSession, ViPSession, ViASession = _type_triplet(ViObject)
+_ViObject, ViPObject, ViAObject    = _type_triplet(ViUInt32)
+_ViSession, ViPSession, ViASession = _type_triplet(ViUInt32)
+
+
+class ViObject(_ViObject):
+
+        @classmethod
+        def from_param(cls, obj):
+            if obj is None:
+                raise ValueError('Session cannot be None. The resource might be closed.')
+            return _ViObject.from_param(obj)
+
+
+ViSession = ViObject
+
 
 ViAttr        = ViUInt32
 ViConstString = _ctypes.POINTER(ViChar)
