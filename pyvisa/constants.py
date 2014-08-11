@@ -710,7 +710,7 @@ class StatusCode(enum.IntEnum):
     error_invalid_width = VI_ERROR_INV_WIDTH
 
     #: Could not perform operation because of I/O error.
-    error_i_o = VI_ERROR_IO
+    error_io = VI_ERROR_IO
 
     #: A code library required by VISA could not be located or loaded.
     error_library_not_found = VI_ERROR_LIBRARY_NFOUND
