@@ -215,7 +215,7 @@ class GPIBInterface(_GPIBMixin, Resource):
         if not self.is_controller_in_charge:
             self.send_ifc()
 
-        command = [0x20+31, ] # broadcast "UNL" (don't listen) to all devices
+        command = [0x40, 0x20+31, ] # broadcast TAD#0 and "UNL" (don't listen) to all devices
 
         for resource in resources:
             # tell device GPIB::11 to listen
@@ -223,7 +223,5 @@ class GPIBInterface(_GPIBMixin, Resource):
 
         # send GET ('group execute trigger')
         command.append(0x08)
-        # broadcast "UNL" (don't listen) to all devices
-        command.append(0x20+31)
 
         return self.send_command(bytes(command))
