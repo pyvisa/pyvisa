@@ -404,6 +404,7 @@ class ResourceManager(object):
         for key in kwargs.keys():
             try:
                 getattr(res, key)
+                present = True
             except AttributeError:
                 present = False
             except errors.InvalidSession:
