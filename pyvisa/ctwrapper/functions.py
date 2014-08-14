@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-    pyvisa.wrapper.functions
-    ~~~~~~~~~~~~~~~~~~~~~~~~
+    pyvisa.ctwrapper.functions
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Defines VPP 4.3.2 wrapping functions, adding signatures to the library.
+    Defines VPP 4.3.2 wrapping functions using ctypes, adding signatures to the library.
 
     This file is part of PyVISA.
 
@@ -13,13 +13,15 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import collections
 import warnings
 
 from ctypes import (byref, c_void_p, c_double, c_long, POINTER, create_string_buffer)
 
-from . import FUNCTYPE
+from ..highlevel import ResourceInfo
+from ..util import get_library_paths
 from ..constants import *
+
+from . import FUNCTYPE
 from .types import *
 from .attributes import attributes
 
@@ -46,11 +48,6 @@ visa_functions = [
 __all__ = ["visa_functions", 'set_signatures'] + visa_functions
 
 VI_SPEC_VERSION = 0x00300000
-
-#: Resource extended information
-ResourceInfo = collections.namedtuple('ResourceInfo',
-                                      'interface_type interface_board_number '
-                                      'resource_class resource_name alias')
 
 
 def set_user_handle_type(library, user_handle):
@@ -94,6 +91,7 @@ def set_signatures(library, errcheck=None):
         def _internal(function_name, argtypes, required=False):
             try:
                 set_signature(library, function_name, argtypes, restype, errcheck_)
+                # noinspection PyProtectedMember
                 library._functions.append(function_name)
             except AttributeError:
                 if required:
@@ -425,7 +423,7 @@ def discard_events(library, session, event_type, mechanism):
     return library.viDiscardEvents(session, event_type, mechanism)
 
 
-def enable_event(library, session, event_type, mechanism, context=VI_NULL):
+def enable_event(library, session, event_type, mechanism, context=None):
     """Enable event occurrences for specified event types and mechanisms in a session.
 
     Corresponds to viEnableEvent function of the VISA library.
@@ -439,7 +437,9 @@ def enable_event(library, session, event_type, mechanism, context=VI_NULL):
     :return: return value of the library call.
     :rtype: VISAStatus
     """
-    if context != VI_NULL:
+    if context is None:
+        context = VI_NULL
+    elif context != VI_NULL:
         warnings.warn('In enable_event, context will be set VI_NULL.')
         context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
     return library.viEnableEvent(session, event_type, mechanism, context)

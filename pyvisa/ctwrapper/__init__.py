@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-    pyvisa.wrapper
-    ~~~~~~~~~~~~~~
+    pyvisa.ctwrapper
+    ~~~~~~~~~~~~~~~~
 
-    ctypes wrapper for VISA library.
+    ctypes wrapper for NI-VISA library.
 
     This file is part of PyVISA.
 
@@ -23,8 +23,9 @@ else:
 
 
 from . import types
-from .functions import *
+from .highlevel import NIVisaLibrary
 
+WRAPPER_CLASS = NIVisaLibrary
 
 # On Linux, find Library returns the name not the path.
 # This excerpt provides a modified find_library.

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-    pyvisa.wrapper.types
-    ~~~~~~~~~~~~~~~~~~~~
+    pyvisa.ctwrapper.types
+    ~~~~~~~~~~~~~~~~~~~~~~
 
-    VISA VPP-4.3 data types (VPP-4.3.2 spec, section 3).
+    VISA VPP-4.3 data types (VPP-4.3.2 spec, section 3) using ctypes constants.
 
     This file is part of PyVISA.
 
