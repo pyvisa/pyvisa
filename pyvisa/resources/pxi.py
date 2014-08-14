@@ -30,7 +30,7 @@ class PXIInstrument(RegisterBasedResource):
     or:
         PXI[interface]::CHASSISchassis number::SLOTslot number[::FUNCfunction][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
 
@@ -38,5 +38,5 @@ class PXIInstrument(RegisterBasedResource):
 class PXIMemory(RegisterBasedResource):
     """Communicates with to devices of type PXI[interface]::MEMACC
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """

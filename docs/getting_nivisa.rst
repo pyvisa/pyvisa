@@ -5,11 +5,11 @@ NI-VISA Installation
 
 In every OS, the NI-VISA library bitness (i.e. 32- or 64-bit) has to match the Python bitness. So first you need to install a NI-VISA that works with your OS and then the Python version matching the installed NI-VISA bitness.
 
-PyVISA 1.5 includes a debugging command to help you troubleshoot this (and other things)::
+PyVISA includes a debugging command to help you troubleshoot this (and other things)::
 
     python -c "from pyvisa import util; util.get_debug_info()"
 
-NI VISA **5.4.1** is available for:
+According to National Instruments, NI VISA **5.4.1** is available for:
 
 Mac OS X
 --------

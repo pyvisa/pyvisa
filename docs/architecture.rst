@@ -13,6 +13,12 @@ PyVISA implements convenient and Pythonic programming in three layers:
     You will normally not need to access these functions directly. If you do,
     it probably means that we need to improve layer 2.
 
+
+    .. warning:: Notice however that low-level functions might not be present in all wrapper
+                 implementations. For broader compatibility, do no use this layer unless really
+                 needed.
+
+
  2. Middle-level: A wrapping Python function for each function of the shared visa library.
 
     These functions call the low-level functions, adding some code to deal with

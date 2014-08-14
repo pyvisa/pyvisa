@@ -25,5 +25,5 @@ class FirewireInstrument(RegisterBasedResource):
     More complex resource names can be specified with the following grammar:
         VXI[board]::VXI logical address[::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """

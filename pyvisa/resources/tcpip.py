@@ -26,7 +26,7 @@ class TCPIPInstrument(MessageBasedResource):
     More complex resource names can be specified with the following grammar:
         TCPIP[board]::host address[::LAN device name][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
 
@@ -37,5 +37,5 @@ class TCPIPSocket(MessageBasedResource):
     More complex resource names can be specified with the following grammar:
         TCPIP[board]::host address::port::SOCKET
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """

@@ -22,7 +22,7 @@ from .messagebased import MessageBasedResource
 class SerialInstrument(MessageBasedResource):
     """Communicates with devices of type ASRL<board>[::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
     _d_ = 'Controls transmission when inx XON/XOFF flow control.\n\n' \

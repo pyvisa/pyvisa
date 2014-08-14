@@ -3,17 +3,10 @@
 Migrating from PyVISA < 1.5
 ===========================
 
-You don't need to change anything in your code if you only use the `instrument`
-constructor; and attributes and methods of the resulting object.
-For example, this code will run unchanged in modern versions of PyVISA::
+.. note:: if you want PyVISA 1.4 compatibility use PyVISA 1.5 that provides
+          Python 3 support, better visa library detection heuristics,
+          Windows, Linux and OS X support, and no singleton object.
 
-    import visa
-    keithley = visa.instrument("GPIB::12")
-    print(keithley.ask("*IDN?"))
-
-This covers almost every single program that I have seen on the internet.
-However, if you use other parts of PyVISA or you are interested in the design
-decisions behind the new version you might want to read on.
 
 Some of these decisions were inspired by the `visalib` package as a part of Lantz_
 
@@ -25,6 +18,8 @@ PyVISA 1.5 has full compatibility with previous versions of PyVISA using the
 legacy module (changing some of the underlying implementation). But you are
 encouraged to do a few things differently if you want to keep up with the
 latest developments and be compatible with PyVISA > 1.5.
+
+Indeed PyVISA 1.6 breaks compatibility to bring across a few good things.
 
 **If you are doing:**
 
@@ -55,7 +50,8 @@ change it to:
 change it to:
 
     >>> import visa
-    >>> lib = visa.VisaLibrary("/path/to/my/libvisa.so.7")
+    >>> rm = visa.ResourceManager("/path/to/my/libvisa.so.7")
+    >>> lib = rm.visalib
 
 
 **If you are doing::**
@@ -65,6 +61,10 @@ change it to:
 change it to::
 
     >>> lib.lock(session)
+
+or better:
+
+    >>> resource.lock()
 
 
 **If you are doing::**
@@ -79,13 +79,13 @@ change it to::
 
 
 As you see, most of the code shown above is making a few things explict.
-It adds 1 line of code (instantiating the VisaLibrary or ResourceManager object)
+It adds 1 line of code (instantiating the ResourceManager object)
 which is not a big deal but it makes things cleaner.
 
 If you were using `printf`, `queryf`, `scanf`, `sprintf` or `sscanf` of `vpp43`,
 rewrite as pure python code (see below).
 
-If you were using `Instrument.delay`, change your code or use `Instrument.ask_delay`
+If you were using `Instrument.delay`, change your code or use `Instrument.query_delay`
 (see below).
 
 
@@ -101,7 +101,7 @@ The VISA library includes functions to search and manipulate strings such as `pr
 string handling operations. The original PyVISA implementation wrapped these functions.
 But these operations are easily expressed in pure python and therefore were rarely used.
 
-PyVISA 1.5 keeps these functions for backwards compatibility but it will be removed in 1.6.
+PyVISA 1.5 keeps these functions for backwards compatibility but they are removed in 1.6.
 
 We suggest that you replace such functions by a pure python version.
 
@@ -119,7 +119,11 @@ foreign function calls by isolating them from higher level abstractions. More im
 it also allows us to build new low level modules that can be used as drop in replacements
 for `ctwrapper` in high level modules.
 
-We have two modules planned:
+In 1.6, we made the `ResourceManager` the object exposed to the user. The type of the
+`VisaLibrary` can selected depending of the `library_path` and obtained from a plugin
+package.
+
+We have two of such packages planned:
 
 - a Mock module that allows you to test a PyVISA program even if you do not have
   VISA installed.
@@ -128,13 +132,13 @@ We have two modules planned:
   robust wrapping of foreign libraries. It might be part of Python in the future.
 
 PyVISA 1.5 keeps `vpp43` in the legacy subpackage (reimplemented on top of `ctwrapper`)
-to help with the migration but it will be removed in the future.
+to help with the migration. This module is gone in 1.6.
 
 All functions that were present in `vpp43` are now present in `ctwrapper` but they
 take an additional first parameter: the foreign library wrapper.
 
-We suggest that you replace `vpp43` by using the new `VisaLibrary` object which provides
-all foreign functions as bound methods (see below).
+We suggest that you replace `vpp43` by accessing the `VisaLibrary` object under the attribute
+visalib of the resource manager which provides all foreign functions as bound methods (see below).
 
 
 No singleton objects
@@ -147,6 +151,9 @@ and the resource manager (named `resource_manager`, and instance of the old
 could rebind to a different library using the `load_library` method. Calling this
 method however did not affect `resource_manager` and might lead to an inconsistent
 state.
+
+There were additionally a few global structures such a `status` which stored the last
+status returned by the library and the warning context to prevent unwanted warnings.
 
 In 1.5, there is a new `VisaLibrary` class and a new `ResourceManager` class (they are
 both in `pyvisa.highlevel`). The new classes are not singletons, at least not in the
@@ -180,7 +187,10 @@ You can still access the legacy classes and global objects::
     >>> from pyvisa.legacy import visa_library, resource_manager
 
 In 1.5, `visa_library` and `resource_manager`, instances of the legacy classes,
-will be instantiated on import.
+will be instantiated on import. In 1.6, they are removed with all the legacy module.
+
+In 1.6, the `status` returned by the library is stored per resource. Additionally,
+warnings can be silenced by resource as well. This makes pyvisa thread safe.
 
 
 VisaLibrary methods as way to call Visa functions
@@ -194,20 +204,23 @@ every single low level function defined in `ctwrapper` as bound methods. In code
 this means that you can do::
 
     >>> import visa
-    >>> lib = visa.VisaLibrary("/path/to/my/libvisa.so.7")
+    >>> rm = visa.ResourceManager("/path/to/my/libvisa.so.7")
+    >>> lib = rm.visalib
     >>> print(lib.read_stb(session))
+
+(But it is very likely that you do not have to do it as the resource should have the
+function you need)
 
 It also has every single VISA foreign function in the underlying library as static
 method. In code, this means that you can do::
 
-    >>> lib = visa.VisaLibrary("/path/to/my/libvisa.so.7")
     >>> status = ctypes.c_ushort()
-    >>> ret library.viReadSTB(session, ctypes.byref(status))
+    >>> ret lib.viReadSTB(session, ctypes.byref(status))
     >>> print(ret.value)
 
 
-Removal of Instrument.delay and added Instrument.ask_delay
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Removal of Instrument.delay and added Instrument.query_delay
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the original PyVISA implementation, `Instrument` takes a `delay`
 argument that adds a pause after each write operation (This also can
@@ -218,6 +231,8 @@ be added to the application code. Instead, a new attribute and argument
 `ask_delay` is available. This allows you to pause between `write` and `read`
 operations inside `ask`. Additionally, `ask` takes an optional argument
 called `delay` allowing you to change it for each method call.
+
+In PyVISA 1.6, the parameter was renamed to `query_delay`.
 
 
 Deprecated term_chars and automatic removal of CR + LF

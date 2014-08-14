@@ -25,7 +25,7 @@ class USBInstrument(MessageBasedResource):
     More complex resource names can be specified with the following grammar:
         USB[board]::manufacturer ID::model code::serial number[::USB interface number][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
     is_4882_compliant = hlp.boolean_attr('VI_ATTR_4882_COMPLIANT',
@@ -102,5 +102,5 @@ class USBRaw(MessageBasedResource):
     More complex resource names can be specified with the following grammar:
         USB[board]::manufacturer ID::model code::serial number[::USB interface number]::RAW
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """

@@ -16,22 +16,24 @@ PyVISA has no additional dependencies except Python_ itself. In runs on Python 2
 
 You can install it using pip_::
 
-    $ pip install pyvisa
+    $ pip install -U pyvisa
 
-or using easy_install_::
-
-    $ easy_install pyvisa
-
-That's all! You can check that PyVISA is correctly installed by starting up python, and importing PyVISA:
+That's all! You can check that PyVISA is correctly installed by starting up python, and creating a ResourceManager:
 
     >>> import visa
-    >>> lib = visa.VisaLibrary()
+    >>> lib = visa.ResourceManager()
 
-If you encounter any problem, take a look at the :ref:`faq`.
+If you encounter any problem, take a look at the :ref:`faq`. There you will find the
+solutions to common problem as well as useful debugging techniques. If everything fails,
+feel free to open an issue in our `issue tracker`_
 
 
 Getting the code
 ----------------
+
+You can install the latest development version (at your own risk) directly form GitHub_::
+
+    $ pip install -U https://github.com/hgrecco/pyvisa/zipball/master
 
 You can also get the code from PyPI_ or GitHub_. You can either clone the public repository::
 
@@ -62,3 +64,4 @@ Once you have a copy of the source, you can embed it in your Python package, or 
 .. _PyPI: https://pypi.python.org/pypi/PyVISA
 .. _GitHub: https://github.com/hgrecco/pyvisa
 .. _`National Instruments's VISA`: http://ni.com/visa/
+.. _`issue tracker`: https://github.com/hgrecco/pyvisa/issues

@@ -31,8 +31,14 @@ ResourceInfo = collections.namedtuple('ResourceInfo',
 class VisaLibraryBase(object):
     """Base class for VISA library wrappers.
 
+    Do not instantiate directly, but take it from a ResourceManager:
+
+        >>> import visa
+        >>> rm = visa.ResourceManager("/path/to/my/libvisa.so.7")
+        >>> lib = rm.visalib
+
     Derived classes must have a constructor that accept a single element
-    following the syntax of :open_visa_library:
+    following the syntax of :ref::open_visa_library:
     """
 
     #: Default ResourceManager instance for this library.

@@ -119,7 +119,7 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
     More complex resource names can be specified with the following grammar:
         GPIB[board]::primary address[::secondary address][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
     def before_close(self):
@@ -181,7 +181,7 @@ class GPIBInterface(_GPIBMixin, Resource):
     More complex resource names can be specified with the following grammar:
         GPIB[board]::INTFC
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
     address_state = hlp.enum_attr('VI_ATTR_GPIB_ADDR_STATE', constants.AddressState,

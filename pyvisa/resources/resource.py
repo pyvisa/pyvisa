@@ -27,7 +27,7 @@ from . import helpers as hlp
 class Resource(object):
     """Base class for resources.
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open`.
+    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
 
     :param resource_manager: A resource manager instance.
     :param resource_name: the VISA name for the resource (eg. "GPIB::10")

@@ -94,7 +94,7 @@ class LibraryPath(str):
         if self._arch is None:
             try:
                 self._arch = get_arch(self.path)
-            except Exception:
+            except:
                 self._arch = tuple()
 
         return self._arch
@@ -151,15 +151,15 @@ def split_kwargs(keyw, self_keys, parent_keys, warn=True):
 _ascii_re = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)(?:[eE][-+]?\d+)?")
 
 
-def parse_ascii(bytes_data, container=list):
+def parse_ascii(ascii_data, container=list):
     """Parse ascii data and return an iterable of numbers.
 
-    :param bytes_data: data to be parsed.
-    :type bytes_data: bytes
+    :param ascii_data: data to be parsed.
+    :type ascii_data: str
     :param container: container type to use for the output data.
     """
     return container(float(raw_value) for raw_value in
-                     _ascii_re.findall(bytes_data.decode('ascii')))
+                     _ascii_re.findall(ascii_data))
 
 
 def parse_binary(bytes_data, is_big_endian=False, is_single=False):

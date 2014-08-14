@@ -40,17 +40,31 @@ Every instrument is represented in the source by an object instance.
 In this case, I have a GPIB instrument with instrument number 14, so I
 create the instance (i.e. variable) called *my_instrument*
 accordingly with `"GPIB::14"` is the instrument's *resource name*.
+See section :ref:`sec:visa-resource-names` for a short explanation of that.
+
 Notice that eventhough you have requeste an instrument, due to the
-resource name, `get_instrument` has given you an instance of `GpibInstrument`
-class (a subclass of the more generic instrument).
+resource name, `open_resource` has given you an instance of `GPIBInstrument`
+class (a subclass of the more generic `Resource`).
 
     >>> print(my_instrument)
-    <GpibInstrument('GPIB::14')>
+    <GPIBInstrument('GPIB::14')>
 
-See section :ref:`sec:visa-resource-names` for a short explanation of that.
+There many `Resource` classes representing the different types of resources, but
+you do not have to worry as the `ResourceManager` will provide you with the appropiate
+class. You can check the methods and attributes of each class in the :ref:`_api_resources`
+
 Then, I send the message `"\*IDN?"` to the device, which is the standard GPIB
 message for "what are you?" or -- in some cases -- "what's on your
-display at the moment?".
+display at the moment?". This is followed by a `read` call to get the message.
+A `write` followed by a `read` is a very common operation and therefore there is a
+shorter version called `query`. So instead of writing this::
+
+    >>> my_instrument.write("*IDN?")
+    >>> print(my_instrument.read())
+
+you could write::
+
+    >>> my_instrument.query("*IDN?")
 
 
 Listing connected instruments
@@ -59,7 +73,7 @@ Listing connected instruments
 The resource manager object allows you to list available resources::
 
     >>> rm.list_resources()
-    ['ASRL1', 'ASRL2']
+    ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::14::INSTR)
 
 
 or the most comprehensive `list_resources_info` which return a dict mapping
@@ -79,7 +93,7 @@ following code prints its self-identification on the screen::
    print(itc4.read())
 
 Instead of separate write and read operations, you can do both with
-one `ask()` call. Thus, the above source code is equivalent to::
+one `query()` call. Thus, the above source code is equivalent to::
 
    print(itc4.ask("V"))
 
@@ -134,7 +148,7 @@ it, and wait until it sends a "service request"::
 With sending the service request, the instrument tells us that the
 measurement has been finished and that the results are ready for
 transmission.  We could read them with `keithley.ask("trace:data?")`
-however, then we'd get
+however, then we'd get:
 
 .. code-block:: none
 
@@ -145,7 +159,7 @@ however, then we'd get
 which we would have to convert to a Python list of numbers.
 Fortunately, the `ask_for_values()` method does this work for us::
 
-   >>> voltages = keithley.ask_for_values("trace:data?")
+   >>> voltages = keithley.query_values("trace:data?")
    >>> print("Average voltage: ", sum(voltages) / len(voltages))
 
 Finally, we should reset the instrument's data buffer and SRQ status
@@ -155,7 +169,7 @@ in detail in the instrument's manual::
    >>> keithley.ask("status:measurement?")
    >>> keithley.write("trace:clear; feed:control next")
 
-That's it.  18 lines of lucid code.  (Well, SCPI is awkward, but
+That's it. 18 lines of lucid code.  (Well, SCPI is awkward, but
 that's another story.)
 
 

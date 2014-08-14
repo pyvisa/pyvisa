@@ -17,9 +17,9 @@ as easy as three lines of Python code::
     >>> import visa
     >>> rm = visa.ResourceManager()
     >>> rm.list_resources()
-    ['ASRL1', 'ASRL2', 'GPIB::12']
-    >>> keithley = rm.open_resource("GPIB::12")
-    >>> print(keithley.ask("*IDN?"))
+    ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::12::INSTR')
+    >>> osci = rm.open_resource('GPIB0::12::INSTR')
+    >>> print(osci.ask("*IDN?"))
 
 (That's the whole program; really!) It works on Windows, Linux and Mac;
 with arbitrary adapters (e.g. National Instruments, Agilent, Tektronix,
@@ -56,10 +56,10 @@ User guide
     :maxdepth: 1
 
     getting
-    tutorial
     configuring
+    tutorial
     advanced
-    instruments
+    resources
     architecture
 
 More information

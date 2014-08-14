@@ -6,11 +6,7 @@ Configuring PyVISA
 
 In most cases PyVISA will be able to find the location of the shared visa library.
 If this does not work or you want to use another one, you need to provide the library
-path to the `VisaLibrary` or `ResourceManager` constructor::
-
-    >>> visalib = VisaLibrary('/path/to/library')
-
-or::
+path to the `ResourceManager` constructor::
 
     >>> rm = ResourceManager('Path to library')
 
@@ -52,5 +48,9 @@ You can define a site-wide configuration file at
 :file:`/usr/local/...` depending on the location of your Python).
 Under Windows, this file is usually placed at
 :file:`c:\\Python27\\share\\pyvisa\\.pyvisarc`.
+
+If you encounter any problem, take a look at the :ref:`faq`. There you will find the
+solutions to common problem as well as useful debugging techniques. If everything fails,
+feel free to open an issue in our `issue tracker`_
 
 .. _`home directory`: http://en.wikipedia.org/wiki/Home_directory
