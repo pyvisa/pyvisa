@@ -33,6 +33,7 @@ else:
 
 if sys.version_info < (2, 7):
     try:
+        # noinspection PyPackageRequirements
         import unittest2 as unittest
     except ImportError:
         raise Exception("Testing PyVISA in Python 2.6 requires package 'unittest2'")
