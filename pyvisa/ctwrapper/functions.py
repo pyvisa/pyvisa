@@ -18,7 +18,6 @@ import warnings
 from ctypes import (byref, c_void_p, c_double, c_long, POINTER, create_string_buffer)
 
 from ..highlevel import ResourceInfo
-from ..util import get_library_paths
 from ..constants import *
 
 from . import FUNCTYPE
@@ -1170,6 +1169,7 @@ def move_out_64(library, session, space, offset, length, data, extended=False):
         return library.viMoveOut64(session, space, offset, length, converted_buffer)
 
 
+# noinspection PyShadowingBuiltins
 def open(library, session, resource_name, access_mode=VI_NO_LOCK, open_timeout=VI_TMO_IMMEDIATE):
     """Opens a session to the specified resource.
 

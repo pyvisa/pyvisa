@@ -31,4 +31,5 @@ class NullHandler(logging.Handler):
         pass
 
     def createLock(self):
+        # noinspection PyAttributeOutsideInit
         self.lock = None

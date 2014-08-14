@@ -21,9 +21,10 @@ if os.name == 'nt':
 else:
     from ctypes import CFUNCTYPE as FUNCTYPE, CDLL as Library
 
-
 from . import types
 from .highlevel import NIVisaLibrary
+
+from .. import logger
 
 WRAPPER_CLASS = NIVisaLibrary
 
@@ -80,3 +81,29 @@ if os.name == "posix" and sys.platform.startswith('linux'):
 
 else:
     from ctypes.util import find_library
+
+
+def get_library_paths(library_class, user_lib=None):
+    """Return a tuple of possible library paths.
+
+    :rtype: tuple
+    """
+
+    tmp = [find_library(library_path)
+           for library_path in ('visa', 'visa32', 'visa32.dll')]
+
+    tmp = [library_class(library_path)
+           for library_path in tmp
+           if library_path is not None]
+
+    logger.debug('Automatically found library files: %s' % tmp)
+
+    if user_lib:
+        user_lib = library_class(user_lib, 'user')
+        try:
+            tmp.remove(user_lib)
+        except ValueError:
+            pass
+        tmp.insert(0, user_lib)
+
+    return tuple(tmp)

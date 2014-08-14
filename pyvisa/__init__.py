@@ -13,10 +13,8 @@
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import
-import os
-import logging
-import subprocess
 
+import logging
 import pkg_resources
 
 from . import compat

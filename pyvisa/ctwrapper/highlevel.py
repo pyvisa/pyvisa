@@ -13,6 +13,8 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import warnings
+
 from .. import constants, errors, highlevel, logger
 from ..compat import integer_types
 
@@ -31,7 +33,7 @@ def _args_to_str(args):
         try:
             # noinspection PyProtectedMember
             out.append(str(arg._obj))
-        except Exception:
+        except AttributeError:
             out.append(arg)
     return tuple(out)
 

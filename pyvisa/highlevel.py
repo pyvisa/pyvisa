@@ -13,11 +13,9 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import abc
 import contextlib
 import collections
 import pkgutil
-import warnings
 from collections import defaultdict
 
 from . import logger
@@ -624,7 +622,7 @@ class VisaLibraryBase(object):
         :return: access_key that can then be passed to other sessions to share the lock, return value of the library call.
         :rtype: str, VISAStatus
         """
-
+        raise NotImplementedError
 
     def map_address(self, session, map_space, map_base, map_size,
                     access=False, suggested=None):
@@ -789,24 +787,6 @@ class VisaLibraryBase(object):
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from the bus, return value of the library call.
         :rtype: list, VISAStatus
-        """
-        raise NotImplementedError
-
-    def move_out(self, session, space, offset, length, data, width, extended=False):
-        """Moves a block of data from local memory to the specified address space and offset.
-
-        Corresponds to viMoveOut* functions of the VISA library.
-
-        :param session: Unique logical identifier to a session.
-        :param space: Specifies the address space. (Constants.*SPACE*)
-        :param offset: Offset (in bytes) of the address or register from which to read.
-        :param length: Number of elements to transfer, where the data width of the elements to transfer
-                       is identical to the source data width.
-        :param data: Data to write to bus.
-        :param width: Number of bits to read per element.
-        :param extended: Use 64 bits offset independent of the platform.
-        :return: return value of the library call.
-        :rtype: VISAStatus
         """
         raise NotImplementedError
 
@@ -1282,6 +1262,7 @@ class VisaLibraryBase(object):
         :return: return value of the library call.
         :rtype: VISAStatus
         """
+        raise NotImplementedError
 
     def vxi_command_query(self, session, mode, command):
         """Sends the device a miscellaneous command or query and/or retrieves the response to a previous query.
@@ -1352,9 +1333,11 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
+
 def list_wrappers():
-    return [name for (loader, name, ispkg) in pkgutil.iter_modules()
-            if name.startswith('pyvisa-')]
+    return ['ni'] + [name for (loader, name, ispkg) in pkgutil.iter_modules()
+                     if name.startswith('pyvisa-')]
+
 
 _WRAPPERS = {}
 def get_wrapper(wrapper_name):
@@ -1384,7 +1367,7 @@ def open_visa_library(*paths):
     The function takes
     """
     if not paths:
-        return open_visa_library(*util.get_library_paths())
+        return open_visa_library(*util.get_default_library_paths())
 
     errs = []
     for path in paths:
@@ -1393,8 +1376,8 @@ def open_visa_library(*paths):
         except ValueError:
             wrapper = 'ni'
 
-            if not path:
-                return open_visa_library(*util.get_library_paths())
+        if wrapper == 'ni' and not path:
+            return open_visa_library()
 
         cls = get_wrapper(wrapper)
         try:
@@ -1411,7 +1394,7 @@ def open_visa_library(*paths):
 class ResourceManager(object):
     """VISA Resource Manager
 
-    :param visa_library: VisaLibrary Instance or path of the VISA library
+    :param visa_library: VisaLibrary Instance, path of the VISA library or VisaLibrary spec string.
                          (if not given, the default for the platform will be used).
     """
 
@@ -1426,7 +1409,7 @@ class ResourceManager(object):
 
     def __new__(cls, visa_library=()):
         if isinstance(visa_library, str):
-            visa_library = open_visa_library(*(visa_library,))
+            visa_library = open_visa_library(visa_library)
         elif visa_library is None:
             visa_library = open_visa_library()
         else:

@@ -14,7 +14,6 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import contextlib
-import enum
 import time
 import warnings
 
@@ -339,7 +338,7 @@ class MessageBasedResource(Resource):
     def query_binary_values(self, message, datatype=None, is_big_endian=None, container=None, delay=None):
         """Converts an iterable of numbers into a block of data in the ieee format.
 
-        :param data: an iterable of numbers.
+        :param message: the message to send to the instrument.
         :param datatype: the format string for a single element. See struct module.
         :param is_big_endian: boolean indicating endianess.
         :param container: container type to use for the output data.
@@ -357,7 +356,7 @@ class MessageBasedResource(Resource):
         block = self.read_raw()
 
         try:
-            return from_ieeeblock(block, datatype, is_big_endian, container)
+            return from_ieee_block(block, datatype, is_big_endian, container)
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 

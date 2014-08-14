@@ -15,14 +15,14 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import io
 import os
+import platform
 import re
 import sys
 import struct
 import subprocess
-from .compat import check_output
-import platform
 import warnings
 
+from .compat import check_output
 from . import __version__, logger
 
 if sys.version >= '3':
@@ -116,39 +116,6 @@ class LibraryPath(str):
         if not self.arch:
             return 'n/a'
         return ', '.join(str(a) for a in self.arch)
-
-
-def get_library_paths(wrapper_module=None):
-    """Return a tuple of possible library paths.
-
-    These paths are tried when `VisaLibrary` is instantiated without arguments.
-
-    :param wrapper_module: the python module/package that wraps the visa library.
-    """
-
-    if wrapper_module is None:
-        from . import ctwrapper as wrapper_module
-
-    user_lib = read_user_library_path()
-
-    tmp = [wrapper_module.find_library(library_path)
-           for library_path in ('visa', 'visa32', 'visa32.dll')]
-
-    tmp = [LibraryPath(library_path)
-           for library_path in tmp
-           if library_path is not None]
-
-    logger.debug('Automatically found library files: %s' % tmp)
-
-    if user_lib:
-        user_lib = LibraryPath(user_lib, 'user')
-        try:
-            tmp.remove(user_lib)
-        except ValueError:
-            pass
-        tmp.insert(0, user_lib)
-
-    return tuple(tmp)
 
 
 def warn_for_invalid_kwargs(keyw, allowed_keys):
@@ -296,7 +263,6 @@ def to_ieee_block(data, datatype='f', is_big_endian=False):
     :param data: an iterable of numbers.
     :param datatype: the format string for a single element. See struct module.
     :param is_big_endian: boolean indicating endianess.
-    :param container: container type to use for the output data.
     :rtype: bytes
     """
 
@@ -341,8 +307,14 @@ def get_system_details(visa=True):
     }
 
     if visa:
-        d['visa'] = get_library_paths()
+        d['visa'] = get_default_library_paths()
+
     return d
+
+
+def get_default_library_paths():
+    from . import ctwrapper
+    return ctwrapper.get_library_paths(LibraryPath, read_user_library_path())
 
 
 def system_details_to_str(d, indent=''):
@@ -386,7 +358,7 @@ def get_debug_info():
 
 def pip_install(package):
     try:
-        # noinspection PyPackageRequirements
+        # noinspection PyPackageRequirements,PyUnresolvedReferences
         import pip
         return pip.main(['install', package])
     except ImportError:
