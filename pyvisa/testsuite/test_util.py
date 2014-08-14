@@ -7,6 +7,7 @@ from pyvisa.testsuite import BaseTestCase
 from pyvisa import util
 
 try:
+    # noinspection PyPackageRequirements
     import numpy as np
 except ImportError:
     np = None
