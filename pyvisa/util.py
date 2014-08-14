@@ -118,13 +118,16 @@ class LibraryPath(str):
         return ', '.join(str(a) for a in self.arch)
 
 
-def get_library_paths(wrapper_module):
+def get_library_paths(wrapper_module=None):
     """Return a tuple of possible library paths.
 
     These paths are tried when `VisaLibrary` is instantiated without arguments.
 
     :param wrapper_module: the python module/package that wraps the visa library.
     """
+
+    if wrapper_module is None:
+        from . import ctwrapper as wrapper_module
 
     user_lib = read_user_library_path()
 
@@ -338,8 +341,7 @@ def get_system_details(visa=True):
     }
 
     if visa:
-        from . import ctwrapper
-        d['visa'] = get_library_paths(ctwrapper)
+        d['visa'] = get_library_paths()
     return d
 
 
@@ -384,6 +386,7 @@ def get_debug_info():
 
 def pip_install(package):
     try:
+        # noinspection PyPackageRequirements
         import pip
         return pip.main(['install', package])
     except ImportError:
