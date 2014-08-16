@@ -15,14 +15,13 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import warnings
 
-from ctypes import (byref, c_void_p, c_double, c_long, POINTER, create_string_buffer)
-
 from ..highlevel import ResourceInfo
 from ..constants import *
 
-from . import FUNCTYPE
 from .types import *
 from .attributes import attributes
+
+from ._ct import byref, c_void_p, c_double, c_long, POINTER, create_string_buffer
 
 visa_functions = [
     "assert_interrupt_signal", "assert_trigger", "assert_utility_signal",

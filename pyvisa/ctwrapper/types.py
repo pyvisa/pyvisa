@@ -18,11 +18,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-# ctypes and os shouldn't be re-exported.
-import ctypes as _ctypes
-import os as _os
-import sys as _sys
-
+from ._ct import _ctypes, PYTHON3, FUNCTYPE
 
 # Part One: Type Assignments for VISA and Instrument Drivers, see spec table
 # 3.1.1.
@@ -54,7 +50,7 @@ ViReal32, ViPReal32, ViAReal32    = _type_triplet(_ctypes.c_float)
 ViReal64, ViPReal64, ViAReal64    = _type_triplet(_ctypes.c_double)
 
 
-if _sys.version_info >= (3, 0):
+if PYTHON3:
     class ViString(object):
 
         @classmethod
@@ -156,9 +152,4 @@ ViEvent, ViPEvent           = _type_pair(ViObject)
 ViJobId, ViPJobId           = _type_pair(ViUInt32)
 
 # Class of callback functions for event handling, first type is result type
-if _os.name == 'nt':
-    ViHndlr = _ctypes.WINFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
-                                  ViAddr)
-else:
-    ViHndlr = _ctypes.CFUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent,
-                                ViAddr)
+ViHndlr = FUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent, ViAddr)

@@ -18,8 +18,9 @@ import warnings
 from .. import constants, errors, highlevel, logger
 from ..compat import integer_types
 
-from . import Library
+from ._ct import Library
 from . import functions
+
 
 def add_visa_methods(aclass):
     for method in functions.visa_functions:
