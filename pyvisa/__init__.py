@@ -42,5 +42,10 @@ except:             # pragma: no cover
     pass  # we seem to have a local copy without any repository control or installed without setuptools
           # so the reported version will be __unknown__
 
-from . import ctwrapper
-from .errors import *
+
+from .highlevel import ResourceManager
+from .errors import (Error, VisaIOError, VisaIOWarning, VisaTypeError,
+                     UnknownHandler, OSNotSupported, InvalidBinaryFormat,
+                     InvalidSession, LibraryError)
+# This is needed to registry all resources.
+from .resources import Resource
