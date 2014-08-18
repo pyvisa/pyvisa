@@ -21,7 +21,6 @@ from collections import defaultdict
 from . import logger
 from . import constants
 from . import errors
-from . import util
 
 #: Resource extended information
 ResourceInfo = collections.namedtuple('ResourceInfo',
@@ -1361,40 +1360,29 @@ def get_wrapper(wrapper_name):
             _WRAPPERS[wrapper_name] = cls = pkg.WRAPPER_CLASS
             return cls
     else:
-        raise ValueError('No package named pyvisa-%s' % wrapper_name)
+        raise ValueError('Wrapper not found: No package named pyvisa-%s' % wrapper_name)
 
 
-def open_visa_library(*paths):
+def open_visa_library(specification):
     """Helper function to create a VISA library wrapper.
 
     In general, you should not use the function directly. The VISA library
     wrapper will be created automatically when you create a ResourceManager object.
-
-    The function takes
     """
-    if not paths:
-        return open_visa_library(*util.get_default_library_paths())
 
-    errs = []
-    for path in paths:
-        try:
-            path, wrapper = path.split('@')
-        except ValueError:
-            wrapper = 'ni'
+    try:
+        argument, wrapper = specification.split('@')
+    except ValueError:
+        argument = specification
+        wrapper = 'ni'
 
-        if wrapper == 'ni' and not path:
-            return open_visa_library()
+    cls = get_wrapper(wrapper)
 
-        cls = get_wrapper(wrapper)
-        try:
-            return cls(path)
-        except OSError as e:
-            logger.debug('Could not open VISA library %s: %s', path, str(e))
-            errs.append(str(e))
-        except Exception as e:
-            errs.append(str(e))
-    else:
-        raise OSError('Could not open VISA library:\n' + '\n'.join(errs))
+    try:
+        return cls(argument)
+    except Exception as e:
+        logger.debug('Could not open VISA wrapper %s: %s\n%s', cls, str(argument), e)
+        raise e
 
 
 class ResourceManager(object):
@@ -1413,16 +1401,12 @@ class ResourceManager(object):
     #: Session handler for the resource manager.
     _session = None
 
-    def __new__(cls, visa_library=()):
-        if isinstance(visa_library, str):
-            visa_library = open_visa_library(visa_library)
-        elif visa_library is None:
-            visa_library = open_visa_library()
-        else:
-            visa_library = open_visa_library(*visa_library)
-
+    def __new__(cls, visa_library=''):
         if visa_library in cls._registry:
             return cls._registry[visa_library]
+
+        if not isinstance(visa_library, VisaLibraryBase):
+            visa_library = open_visa_library(visa_library)
 
         cls._registry[visa_library] = obj = super(ResourceManager, cls).__new__(cls)
 

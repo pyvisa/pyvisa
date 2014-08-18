@@ -307,14 +307,10 @@ def get_system_details(visa=True):
     }
 
     if visa:
-        d['visa'] = get_default_library_paths()
+        from . import ctwrapper
+        d['visa'] = ctwrapper.WRAPPER_CLASS.get_library_paths(LibraryPath, read_user_library_path())
 
     return d
-
-
-def get_default_library_paths():
-    from . import ctwrapper
-    return ctwrapper.get_library_paths(LibraryPath, read_user_library_path())
 
 
 def system_details_to_str(d, indent=''):

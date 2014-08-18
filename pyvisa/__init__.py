@@ -14,7 +14,6 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import os
 import logging
 import pkg_resources
 
@@ -49,3 +48,4 @@ from .errors import (Error, VisaIOError, VisaIOWarning, VisaTypeError,
                      InvalidSession, LibraryError)
 # This is needed to registry all resources.
 from .resources import Resource
+from . import ctwrapper

@@ -18,7 +18,9 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from ._ct import _ctypes, PYTHON3, FUNCTYPE
+import ctypes as _ctypes
+
+from .cthelper import PYTHON3, FUNCTYPE
 
 # Part One: Type Assignments for VISA and Instrument Drivers, see spec table
 # 3.1.1.

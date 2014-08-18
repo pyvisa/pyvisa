@@ -18,7 +18,6 @@ import os as _os
 import sys as _sys
 
 import ctypes as _ctypes
-from ctypes import byref, c_void_p, c_double, c_long, POINTER, create_string_buffer
 
 PYTHON3 = _sys.version_info >= (3, 0)
 
@@ -41,17 +40,17 @@ if _os.name == "posix" and _sys.platform.startswith('linux'):
         def _findlib_gcc(name):
             expr = r'[^\(\)\s]*lib%s\.[^\(\)\s]*' % re.escape(name)
             fdout, ccout = tempfile.mkstemp()
-            os.close(fdout)
+            _os.close(fdout)
             cmd = 'if type gcc >/dev/null 2>&1; then CC=gcc; else CC=cc; fi;' \
                   '$CC -Wl,-t -o ' + ccout + ' 2>&1 -l' + name
             trace = ''
             try:
-                f = os.popen(cmd)
+                f = _os.popen(cmd)
                 trace = f.read()
                 f.close()
             finally:
                 try:
-                    os.unlink(ccout)
+                    _os.unlink(ccout)
                 except OSError as e:
                     if e.errno != errno.ENOENT:
                         raise
@@ -64,22 +63,22 @@ if _os.name == "posix" and _sys.platform.startswith('linux'):
             # XXX assuming GLIBC's ldconfig (with option -p)
             expr = r'/[^\(\)\s]*lib%s\.[^\(\)\s]*' % re.escape(name)
             res = re.search(expr,
-                            os.popen('/sbin/ldconfig -p 2>/dev/null').read())
+                            _os.popen('/sbin/ldconfig -p 2>/dev/null').read())
             if not res:
                 # Hm, this works only for libs needed by the python executable.
-                cmd = 'ldd %s 2>/dev/null' % sys.executable
-                res = re.search(expr, os.popen(cmd).read())
+                cmd = 'ldd %s 2>/dev/null' % _sys.executable
+                res = re.search(expr, _os.popen(cmd).read())
                 if not res:
                     return None
             return res.group(0)
 
-        def find_library(name):
+        def _find_library(name):
             path = _findlib_ldconfig(name) or _findlib_gcc(name)
             if path:
                 return _os.path.realpath(path)
             return path
 
-        return find_library
+        return _find_library
 
     find_library = define_find_libary()
 else:

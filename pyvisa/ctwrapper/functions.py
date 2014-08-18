@@ -16,12 +16,12 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import warnings
 
 from ..highlevel import ResourceInfo
-from ..constants import *
+from .. import constants
 
 from .types import *
 from .attributes import attributes
 
-from ._ct import byref, c_void_p, c_double, c_long, POINTER, create_string_buffer
+from ctypes import byref, c_void_p, c_double, c_long, POINTER, create_string_buffer
 
 visa_functions = [
     "assert_interrupt_signal", "assert_trigger", "assert_utility_signal",
@@ -436,10 +436,10 @@ def enable_event(library, session, event_type, mechanism, context=None):
     :rtype: VISAStatus
     """
     if context is None:
-        context = VI_NULL
-    elif context != VI_NULL:
+        context = constants.VI_NULL
+    elif context != constants.VI_NULL:
         warnings.warn('In enable_event, context will be set VI_NULL.')
-        context = VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
+        context = constants.VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
     return library.viEnableEvent(session, event_type, mechanism, context)
 
 
@@ -453,7 +453,7 @@ def find_next(library, find_list):
     :return: Returns a string identifying the location of a device, return value of the library call.
     :rtype: unicode (Py2) or str (Py3), VISAStatus
     """
-    instrument_description = create_string_buffer(VI_FIND_BUFLEN)
+    instrument_description = create_string_buffer(constants.VI_FIND_BUFLEN)
     ret = library.viFindNext(find_list, instrument_description)
     return buffer_to_text(instrument_description), ret
 
@@ -471,7 +471,7 @@ def find_resources(library, session, query):
     """
     find_list = ViFindList()
     return_counter = ViUInt32()
-    instrument_description = create_string_buffer(VI_FIND_BUFLEN)
+    instrument_description = create_string_buffer(constants.VI_FIND_BUFLEN)
 
     # [ViSession, ViString, ViPFindList, ViPUInt32, ViAChar]
     # ViString converts from (str, unicode, bytes) to bytes
@@ -509,13 +509,14 @@ def get_attribute(library, session, attribute):
     """
 
     # FixMe: How to deal with ViBuf?
+
     datatype = attributes[attribute]
     if datatype == ViString:
         attribute_state = create_string_buffer(256)
         ret = library.viGetAttribute(session, attribute, attribute_state)
         return buffer_to_text(attribute_state), ret
     elif datatype == ViAUInt8:
-        length = get_attribute(library, session, VI_ATTR_USB_RECV_INTR_SIZE)
+        length = get_attribute(library, session, constants.VI_ATTR_USB_RECV_INTR_SIZE)
         attribute_state = (ViUInt8 * length)()
         ret = library.viGetAttribute(session, attribute, byref(attribute_state))
         return list(attribute_state), ret
@@ -772,14 +773,15 @@ def lock(library, session, lock_type, timeout, requested_key=None):
 
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
-    :param lock_type: Specifies the type of lock requested, either Constants.EXCLUSIVE_LOCK or Constants.SHARED_LOCK.
+    :param lock_type: Specifies the type of lock requested, either constants.AccessModes.exclusive_lock
+                      or constants.AccessModes.shared_lock.
     :param timeout: Absolute time period (in milliseconds) that a resource waits to get unlocked by the
                     locking session before returning an error.
     :param requested_key: This parameter is not used and should be set to VI_NULL when lockType is VI_EXCLUSIVE_LOCK.
     :return: access_key that can then be passed to other sessions to share the lock, return value of the library call.
     :rtype: str, VISAStatus
     """
-    if lock_type == VI_EXCLUSIVE_LOCK:
+    if lock_type == constants.AccessModes.exclusive_lock:
         requested_key = None
         access_key = None
     else:
@@ -789,7 +791,7 @@ def lock(library, session, lock_type, timeout, requested_key=None):
 
 
 def map_address(library, session, map_space, map_base, map_size,
-                access=VI_FALSE, suggested=VI_NULL):
+                access=False, suggested=None):
     """Maps the specified memory space into the process's address space.
 
     Corresponds to viMapAddress function of the VISA library.
@@ -808,9 +810,11 @@ def map_address(library, session, map_space, map_base, map_size,
     :return: address in your process space where the memory was mapped, return value of the library call.
     :rtype: address, VISAStatus
     """
-    if access != VI_FALSE:
+    if access is False:
+        access = constants.VI_FALSE
+    elif access != constants.VI_FALSE:
         warnings.warn('In enable_event, context will be set VI_NULL.')
-        access = VI_FALSE
+        access = constants.VI_FALSE
     address = ViAddr()
     ret = library.viMapAddress(session, map_space, map_base, map_size, access,
                                suggested, byref(address))
@@ -1169,7 +1173,8 @@ def move_out_64(library, session, space, offset, length, data, extended=False):
 
 
 # noinspection PyShadowingBuiltins
-def open(library, session, resource_name, access_mode=VI_NO_LOCK, open_timeout=VI_TMO_IMMEDIATE):
+def open(library, session, resource_name,
+         access_mode=constants.AccessModes.no_lock, open_timeout=constants.VI_TMO_IMMEDIATE):
     """Opens a session to the specified resource.
 
     Corresponds to viOpen function of the VISA library.
@@ -1177,7 +1182,7 @@ def open(library, session, resource_name, access_mode=VI_NO_LOCK, open_timeout=V
     :param library: the visa library wrapped by ctypes.
     :param session: Resource Manager session (should always be a session returned from open_default_resource_manager()).
     :param resource_name: Unique symbolic name of a resource.
-    :param access_mode: Specifies the mode by which the resource is to be accessed. (Constants.NULL or Constants.*LOCK*)
+    :param access_mode: Specifies the mode by which the resource is to be accessed. (constants.AccessModes)
     :param open_timeout: Specifies the maximum time period (in milliseconds) that this operation waits
                          before returning an error.
     :return: Unique logical identifier reference to a session, return value of the library call.
@@ -1351,9 +1356,9 @@ def parse_resource_extended(library, session, resource_name):
     """
     interface_type = ViUInt16()
     interface_board_number = ViUInt16()
-    resource_class = create_string_buffer(VI_FIND_BUFLEN)
-    unaliased_expanded_resource_name = create_string_buffer(VI_FIND_BUFLEN)
-    alias_if_exists = create_string_buffer(VI_FIND_BUFLEN)
+    resource_class = create_string_buffer(constants.VI_FIND_BUFLEN)
+    unaliased_expanded_resource_name = create_string_buffer(constants.VI_FIND_BUFLEN)
+    alias_if_exists = create_string_buffer(constants.VI_FIND_BUFLEN)
 
     # [ViSession, ViRsrc, ViPUInt16, ViPUInt16, ViAChar, ViAChar, ViAChar]
     # ViRsrc converts from (str, unicode, bytes) to bytes

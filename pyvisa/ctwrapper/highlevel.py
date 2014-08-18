@@ -18,7 +18,7 @@ import warnings
 from .. import constants, errors, highlevel, logger
 from ..compat import integer_types
 
-from ._ct import Library
+from .cthelper import Library, find_library
 from . import functions
 
 
@@ -57,7 +57,54 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
     :param library_path: path of the VISA library.
     """
 
-    def __new__(cls, library_path):
+    @staticmethod
+    def get_library_paths(library_class, user_lib=None):
+        """Return a tuple of possible library paths.
+
+        :rtype: tuple
+        """
+
+        tmp = [find_library(library_path)
+               for library_path in ('visa', 'visa32', 'visa32.dll')]
+
+        tmp = [library_class(library_path)
+               for library_path in tmp
+               if library_path is not None]
+
+        logger.debug('Automatically found library files: %s' % tmp)
+
+        if user_lib:
+            user_lib = library_class(user_lib, 'user')
+            try:
+                tmp.remove(user_lib)
+            except ValueError:
+                pass
+            tmp.insert(0, user_lib)
+
+        return tuple(tmp)
+
+    @classmethod
+    def from_paths(cls, *paths):
+        if not paths:
+            from ..util import LibraryPath, read_user_library_path
+            return cls.from_paths(*cls.get_library_paths(LibraryPath, read_user_library_path()))
+
+        errs = []
+        for path in paths:
+            try:
+                return cls(path)
+            except OSError as e:
+                logger.debug('Could not open VISA library %s: %s', path, str(e))
+                errs.append(str(e))
+            except Exception as e:
+                errs.append(str(e))
+        else:
+            raise OSError('Could not open VISA library:\n' + '\n'.join(errs))
+
+    def __new__(cls, library_path=None):
+        if not library_path:
+            return cls.from_paths()
+
         if library_path in cls._registry:
             return cls._registry[library_path]
 
@@ -126,3 +173,5 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
                 warnings.warn(errors.VisaIOWarning(ret_value), stacklevel=2)
 
         return ret_value
+
+
