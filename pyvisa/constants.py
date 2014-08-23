@@ -513,7 +513,7 @@ class AccessModes(enum.IntEnum):
 class StopBits(enum.IntEnum):
     """The number of stop bits that indicate the end of a frame.
     """
-    one_ = VI_ASRL_STOP_ONE
+    one = VI_ASRL_STOP_ONE
     one_and_a_half = VI_ASRL_STOP_ONE5
     two = VI_ASRL_STOP_TWO
 
