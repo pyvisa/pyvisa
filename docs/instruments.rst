@@ -254,6 +254,8 @@ with the generation of the object,
 
 .. code-block:: python
 
+   from pyvisa.highlevel import ascii, single, double
+   
    my_instrument = instrument("GPIB::12", values_format = single)
 
 or later by setting the property directly::
