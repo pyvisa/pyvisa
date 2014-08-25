@@ -215,12 +215,24 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
 
 
 def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
-    """Converts a block of block in the ieee format into an iterable of numbers.
+    """Convert a block in the IEEE format into an iterable of numbers.
 
-    :param block: ieee block.
+    Definite Length Arbitrary Block:
+    #<header_length><data_length><data>
+
+    The header_length specifies the size of the data_length field.
+    And the data_length field specifies the size of the data.
+
+    Indefinite Length Arbitrary Block:
+    #0<data>
+
+    :param block: IEEE block.
     :type block: bytes
     :param datatype: the format string for a single element. See struct module.
     :param is_big_endian: boolean indicating endianess.
+    :param container: container type to use for the output data.
+    :return: items
+    :rtype: type(container)
     """
 
     begin = block.find(b'#')
@@ -228,7 +240,7 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
         raise ValueError("Could not find hash sign (#) indicating the start of the block.")
 
     try:
-        header_length = int(block[begin+1:begin+2])
+        header_length = int(block[begin+1])
     except ValueError:
         header_length = 0
 
@@ -237,46 +249,48 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     if header_length > 0:
         # #3100DATA
         # 012345
-
-        data_length = int(block[begin+2:begin+2+header_length])
+        data_length = int(block[begin+2:offset])
     else:
-        # Undefined length binary block. Use the length of the whole block.
         # #0DATA
         # 012
-        offset = begin + 2
         data_length = len(block) - offset - 1
-        element_length = struct.calcsize(datatype)
-        data_length = int(data_length / element_length)
+
+    element_length = struct.calcsize(datatype)
+    array_length = int(data_length / element_length)
 
     endianess = '>' if is_big_endian else '<'
 
-    fullfmt = '%s%d%s' % (endianess, data_length, datatype)
+    fullfmt = '%s%d%s' % (endianess, array_length, datatype)
 
     try:
         return container(_struct_unpack_from(fullfmt, block, offset))
     except struct.error:
-        raise ValueError("Binary data itself was malformed")
+        raise ValueError("Binary data was malformed")
 
-def to_ieee_block(data, datatype='f', is_big_endian=False):
-    """Converts an iterable of numbers into a block of data in the ieee format.
 
-    :param data: an iterable of numbers.
+def to_ieee_block(iterable, datatype='f', is_big_endian=False):
+    """Convert an iterable of numbers into a block of data in the IEEE format.
+
+    :param iterable: an iterable of numbers.
     :param datatype: the format string for a single element. See struct module.
     :param is_big_endian: boolean indicating endianess.
+    :return: IEEE block.
     :rtype: bytes
     """
 
-    data_length = len(data)
-    header = '%d' % data_length
+    array_length = len(iterable)
+    header = '%d' % array_length
 
     endianess = '>' if is_big_endian else '<'
 
-    fullfmt = '%s%d%s' % (endianess, data_length, datatype)
+    element_length = struct.calcsize(datatype)
+    data_length = array_length * element_length
+    fullfmt = '%s%d%s' % (endianess, array_length, datatype)
 
     if sys.version >= '3':
-        return bytes('#%d%d' % (len(header), data_length), 'ascii') + _struct_pack(fullfmt, *data)
+        return bytes('#%d%d' % (len(header), data_length), 'ascii') + _struct_pack(fullfmt, *iterable)
     else:
-        return str('#%d%d' % (len(header), data_length)) + _struct_pack(fullfmt, *data)
+        return str('#%d%d' % (len(header), data_length)) + _struct_pack(fullfmt, *iterable)
 
 
 def get_system_details(visa=True):
