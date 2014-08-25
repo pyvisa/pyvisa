@@ -240,7 +240,8 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
         raise ValueError("Could not find hash sign (#) indicating the start of the block.")
 
     try:
-        header_length = int(block[begin+1])
+        # int(block[begin+1]) != int(block[begin+1:begin+2]) in Python 3
+        header_length = int(block[begin+1:begin+2])
     except ValueError:
         header_length = 0
 
