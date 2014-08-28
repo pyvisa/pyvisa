@@ -113,7 +113,7 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
         except OSError as exc:
             raise errors.LibraryError.from_exception(exc, library_path)
 
-        obj = super(highlevel.VisaLibraryBase, cls).__new__(cls, library_path)
+        obj = super(NIVisaLibrary, cls).__new__(cls, library_path)
         obj.lib = lib
 
         # Set the argtypes, restype and errcheck for each function
