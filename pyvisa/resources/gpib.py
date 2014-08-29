@@ -25,9 +25,6 @@ class _GPIBMixin(object):
     """Common attributes and methods of GPIB Instr and Interface.
     """
 
-    visalib = None
-    session = None
-
     allow_dma = hlp.boolean_attr('VI_ATTR_DMA_ALLOW_EN',
                                  doc='This attribute specifies whether I/O accesses should '
                                      'use DMA (True) or Programmed I/O (False).')
