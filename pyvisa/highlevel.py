@@ -52,6 +52,9 @@ class VisaLibraryBase(object):
     #: Maps session handle to warnings to ignore
     _ignore_warning_in_session = defaultdict(set)
 
+    def __new__(cls, *args):
+        return super(VisaLibraryBase, cls).__new__(cls)
+
     def __init__(self, library_path):
         super(VisaLibraryBase, self).__init__()
 
