@@ -41,42 +41,76 @@ class VisaLibraryBase(object):
     """
 
     #: Default ResourceManager instance for this library.
-    _resource_manager = None
+    resource_manager = None
 
     #: Maps library path to VisaLibrary object
     _registry = dict()
 
-    #: Maps session handle to last status
-    _last_status_in_session = dict()
+    #: Last return value of the library.
+    _last_status = 0
 
-    #: Maps session handle to warnings to ignore
-    _ignore_warning_in_session = defaultdict(set)
+    #: Maps session handle to last status. dict()
+    _last_status_in_session = None
 
-    def __new__(cls, *args):
-        return super(VisaLibraryBase, cls).__new__(cls)
+    #: Maps session handle to warnings to ignore. defaultdict(set)
+    _ignore_warning_in_session = None
 
-    def __init__(self, library_path):
-        super(VisaLibraryBase, self).__init__()
+    #: Contains all installed event handlers.
+    #: Its elements are tuples with three elements: The handler itself (a Python
+    #: callable), the user handle (as a ct object) and the handler again, this
+    #: time as a ct object created with CFUNCTYPE.
+    handlers = None
 
-        self.library_path = library_path
+    #: Set error codes on which to issue a warning. set
+    issue_warning_on = None
 
-        self._registry[library_path] = self
+    def __new__(cls, library_path=''):
+        if library_path == '':
+            errs = []
+            for path in cls.get_library_paths():
+                try:
+                    return cls(path)
+                except OSError as e:
+                    logger.debug('Could not open VISA library %s: %s', path, str(e))
+                    errs.append(str(e))
+                except Exception as e:
+                    errs.append(str(e))
+            else:
+                raise OSError('Could not open VISA library:\n' + '\n'.join(errs))
+
+        if (cls, library_path) in cls._registry:
+            return cls._registry[(cls, library_path)]
+
+        cls._registry[(cls, library_path)] = obj = super(VisaLibraryBase, cls).__new__(cls)
+
+        obj.library_path = library_path
+
+        obj._logging_extra = {'library_path': obj.library_path}
+
+        obj._init()
+
+        # Create instance specific registries.
+        #: Error codes on which to issue a warning.
+        obj.issue_warning_on = set(errors.default_warnings)
+        obj._last_status_in_session = dict()
+        obj._ignore_warning_in_session = defaultdict(set)
+        obj.handlers = defaultdict(list)
 
         logger.debug('Created library wrapper for %s', library_path)
 
-        #: Error codes on which to issue a warning.
-        self.issue_warning_on = set(errors.default_warnings)
+        return obj
 
-        #: Contains all installed event handlers.
-        #: Its elements are tuples with three elements: The handler itself (a Python
-        #: callable), the user handle (as a ct object) and the handler again, this
-        #: time as a ct object created with CFUNCTYPE.
-        self.handlers = defaultdict(list)
+    @staticmethod
+    def get_library_paths():
+        """Override this method to return an iterable of possible library_paths
+        to try in case that no argument is given.
+        """
+        return tuple('unset',)
 
-        #: Last return value of the library.
-        self._last_status = 0
-
-        self._logging_extra = {'library_path': self.library_path}
+    def _init(self):
+        """Override this method to customize VisaLibrary initialization.
+        """
+        pass
 
     def __str__(self):
         return 'Visa Library at %s' % self.library_path
@@ -99,14 +133,6 @@ class VisaLibraryBase(object):
             return self._last_status_in_session[session]
         except KeyError:
             raise errors.Error('The session %r does not seem to be valid as it does not have any last status' % session)
-
-    @property
-    def resource_manager(self):
-        """Default resource manager object for this library.
-        """
-        if self._resource_manager is None:
-            self._resource_manager = ResourceManager(self)
-        return self._resource_manager
 
     @contextlib.contextmanager
     def ignore_warning(self, session, *warnings_constants):
@@ -1395,9 +1421,6 @@ class ResourceManager(object):
                          (if not given, the default for the platform will be used).
     """
 
-    #: Maps VisaLibrary instance to ResourceManager.
-    _registry = dict()
-
     #: Maps (Interface Type, Resource Class) to Python class encapsulating that resource.
     resource_classes = dict()
 
@@ -1405,17 +1428,21 @@ class ResourceManager(object):
     _session = None
 
     def __new__(cls, visa_library=''):
-        if visa_library in cls._registry:
-            return cls._registry[visa_library]
-
         if not isinstance(visa_library, VisaLibraryBase):
             visa_library = open_visa_library(visa_library)
 
-        cls._registry[visa_library] = obj = super(ResourceManager, cls).__new__(cls)
+        if visa_library.resource_manager is not None:
+            obj = visa_library.resource_manager
+            logger.debug('Reusing ResourceManager with session %s',  obj.session)
+            return obj
+
+        obj = super(ResourceManager, cls).__new__(cls)
+
+        obj.session, err = visa_library.open_default_resource_manager()
 
         obj.visalib = visa_library
+        obj.visalib.resource_manager = obj
 
-        obj.session, err = obj.visalib.open_default_resource_manager()
         logger.debug('Created ResourceManager with session %s',  obj.session)
         return obj
 
@@ -1447,7 +1474,7 @@ class ResourceManager(object):
             logger.debug('Closing ResourceManager (session: %s)', self.session)
             self.visalib.close(self.session)
             self.session = None
-            del self._registry[self.visalib]
+            self.visalib.resource_manager = None
         except errors.InvalidSession:
             pass
 

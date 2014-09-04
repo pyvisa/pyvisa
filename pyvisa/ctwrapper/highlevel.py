@@ -58,23 +58,26 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
     """
 
     @staticmethod
-    def get_library_paths(library_class, user_lib=None):
+    def get_library_paths():
         """Return a tuple of possible library paths.
 
         :rtype: tuple
         """
 
+        from ..util import LibraryPath, read_user_library_path
+
+        user_lib = read_user_library_path()
         tmp = [find_library(library_path)
                for library_path in ('visa', 'visa32', 'visa32.dll')]
 
-        tmp = [library_class(library_path)
+        tmp = [LibraryPath(library_path)
                for library_path in tmp
                if library_path is not None]
 
         logger.debug('Automatically found library files: %s' % tmp)
 
         if user_lib:
-            user_lib = library_class(user_lib, 'user')
+            user_lib = LibraryPath(user_lib, 'user')
             try:
                 tmp.remove(user_lib)
             except ValueError:
@@ -83,49 +86,22 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
 
         return tuple(tmp)
 
-    @classmethod
-    def from_paths(cls, *paths):
-        if not paths:
-            from ..util import LibraryPath, read_user_library_path
-            return cls.from_paths(*cls.get_library_paths(LibraryPath, read_user_library_path()))
-
-        errs = []
-        for path in paths:
-            try:
-                return cls(path)
-            except OSError as e:
-                logger.debug('Could not open VISA library %s: %s', path, str(e))
-                errs.append(str(e))
-            except Exception as e:
-                errs.append(str(e))
-        else:
-            raise OSError('Could not open VISA library:\n' + '\n'.join(errs))
-
-    def __new__(cls, library_path=None):
-        if not library_path:
-            return cls.from_paths()
-
-        if library_path in cls._registry:
-            return cls._registry[library_path]
-
+    def _init(self):
         try:
-            lib = Library(library_path)
+            lib = Library(self.library_path)
         except OSError as exc:
-            raise errors.LibraryError.from_exception(exc, library_path)
+            raise errors.LibraryError.from_exception(exc, self.library_path)
 
-        obj = super(NIVisaLibrary, cls).__new__(cls, library_path)
-        obj.lib = lib
+        self.lib = lib
 
         # Set the argtypes, restype and errcheck for each function
         # of the visa library. Additionally store in `_functions` the
         # name of the functions.
-        functions.set_signatures(obj.lib, errcheck=obj._return_handler)
+        functions.set_signatures(self.lib, errcheck=self._return_handler)
 
         # Set the library functions as attributes of the object.
-        for method_name in getattr(obj.lib, '_functions', []):
-            setattr(obj, method_name, getattr(obj.lib, method_name))
-
-        return obj
+        for method_name in getattr(self.lib, '_functions', []):
+            setattr(self, method_name, getattr(self.lib, method_name))
 
     def _return_handler(self, ret_value, func, arguments):
         """Check return values for errors and warnings.

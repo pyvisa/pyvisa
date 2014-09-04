@@ -323,7 +323,7 @@ def get_system_details(visa=True):
 
     if visa:
         from . import ctwrapper
-        d['visa'] = ctwrapper.WRAPPER_CLASS.get_library_paths(LibraryPath, read_user_library_path())
+        d['visa'] = ctwrapper.WRAPPER_CLASS.get_library_paths()
 
     return d
 
