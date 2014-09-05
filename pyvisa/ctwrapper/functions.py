@@ -15,9 +15,8 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import warnings
 
-from ..highlevel import ResourceInfo
-from .. import constants
-from .. import attributes
+from pyvisa.highlevel import ResourceInfo
+from pyvisa import attributes, constants
 
 from . import types
 from .types import *
@@ -509,7 +508,7 @@ def get_attribute(library, session, attribute):
     """
 
     # FixMe: How to deal with ViBuf?
-    attr = AttributesByID[attribute]
+    attr = attributes.AttributesByID[attribute]
     datatype = getattr(types, attr.visa_type)
     if datatype == ViString:
         attribute_state = create_string_buffer(256)

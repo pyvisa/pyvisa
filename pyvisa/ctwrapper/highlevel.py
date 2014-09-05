@@ -15,8 +15,8 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import warnings
 
-from .. import constants, errors, highlevel, logger
-from ..compat import integer_types
+from pyvisa import constants, errors, highlevel, logger
+from pyvisa.compat import integer_types
 
 from .cthelper import Library, find_library
 from . import functions
