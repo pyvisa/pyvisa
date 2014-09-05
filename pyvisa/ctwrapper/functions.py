@@ -17,10 +17,10 @@ import warnings
 
 from ..highlevel import ResourceInfo
 from .. import constants
+from .. import attributes
 
+from . import types
 from .types import *
-from .attributes import attributes
-
 from ctypes import byref, c_void_p, c_double, c_long, POINTER, create_string_buffer
 
 visa_functions = [
@@ -509,8 +509,8 @@ def get_attribute(library, session, attribute):
     """
 
     # FixMe: How to deal with ViBuf?
-
-    datatype = attributes[attribute]
+    attr = AttributesByID[attribute]
+    datatype = getattr(types, attr.visa_type)
     if datatype == ViString:
         attribute_state = create_string_buffer(256)
         ret = library.viGetAttribute(session, attribute, attribute_state)
