@@ -22,7 +22,7 @@ from . import constants
 NotAvailable = object()
 
 #: Attribute for all session types.
-AllSesionTypes = object()
+AllSessionTypes = object()
 
 
 #: Map resource to attribute
@@ -43,8 +43,8 @@ class AttributeType(type):
         print(name)
         cls.attribute_id = getattr(constants, cls.visa_name)
         cls.redoc()
-        if cls.resources is AllSesionTypes:
-            AttributesPerResource[AllSesionTypes].add(cls)
+        if cls.resources is AllSessionTypes:
+            AttributesPerResource[AllSessionTypes].add(cls)
         else:
             for res in cls.resources:
                 AttributesPerResource[res].add(cls)
@@ -85,6 +85,9 @@ class Attribute(with_metaclass(AttributeType)):
         return value
 
     def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        
         if not self.read:
             raise AttributeError("can't read attribute")
 
@@ -1213,7 +1216,7 @@ class AttrVI_ATTR_INTF_INST_NAME(Attribute):
     """VI_ATTR_INTF_INST_NAME specifies human-readable text that describes
     the given interface.
     """
-    resources = AllSesionTypes
+    resources = AllSessionTypes
 
     py_name = ''
 
@@ -1232,7 +1235,7 @@ class AttrVI_ATTR_INTF_INST_NAME(Attribute):
 class AttrVI_ATTR_INTF_NUM(RangeAttribute):
     """VI_ATTR_INTF_NUM specifies the board number for the given interface.
     """
-    resources = AllSesionTypes
+    resources = AllSessionTypes
 
     py_name = 'interface_number'
 
@@ -1251,7 +1254,7 @@ class AttrVI_ATTR_INTF_NUM(RangeAttribute):
 class AttrVI_ATTR_INTF_TYPE(RangeAttribute):
     """VI_ATTR_INTF_TYPE specifies the interface type of the given session.
     """
-    resources = AllSesionTypes
+    resources = AllSessionTypes
 
     py_name = ''
 
@@ -1371,7 +1374,7 @@ class AttrVI_ATTR_MAX_QUEUE_LENGTH(RangeAttribute):
     can be queued at any time on the given session. Events that occur
     after the queue has become full will be discarded.
     """
-    resources = AllSesionTypes
+    resources = AllSessionTypes
 
     py_name = ''
 
@@ -1986,11 +1989,27 @@ class AttrVI_ATTR_RD_BUF_SIZE(RangeAttribute):
     min_value, max_value, values = 0, 4294967295, []
 
 
-# Could not generate class for VI_ATTR_RM_SESSION.html
-# Exception:
-"""
-Unknown type: ViSession. Range: [u'N/A']
-"""
+# noinspection PyPep8Naming
+class AttrVI_ATTR_RM_SESSION(RangeAttribute):
+    """This is the current size of the formatted I/O input buffer for this
+    session. The user can modify this value by calling viSetBuf().
+
+    Not implemented as resource property, use .resource_manager.session
+    """
+    resources = AllSessionTypes
+
+    # See docstring
+    py_name = ''
+
+    visa_name = 'VI_ATTR_RM_SESSION'
+
+    visa_type = 'ViUInt32'
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 0, 4294967295, []
 
 
 # noinspection PyPep8Naming
@@ -1998,9 +2017,9 @@ class AttrVI_ATTR_RSRC_CLASS(Attribute):
     """VI_ATTR_RSRC_CLASS specifies the resource class (for example, "INSTR")
     as defined by the canonical resource name.
     """
-    resources = AllSesionTypes
+    resources = AllSessionTypes
 
-    py_name = ''
+    py_name = 'resource_class'
 
     visa_name = 'VI_ATTR_RSRC_CLASS'
 
@@ -2013,11 +2032,28 @@ class AttrVI_ATTR_RSRC_CLASS(Attribute):
     # [u'N/A']
 
 
-# Could not generate class for VI_ATTR_RSRC_IMPL_VERSION.html
-# Exception:
-"""
-Unknown type: ViVersion. Range: [u'0h to FFFFFFFFh']
-"""
+# noinspection PyPep8Naming
+class AttrVI_ATTR_RSRC_IMPL_VERSION(RangeAttribute):
+    """VI_ATTR_RSRC_IMPL_VERSION is the resource version that uniquely identifies
+    each of the different revisions or implementations of a resource. This
+    attribute value is defined by the individual manufacturer and increments
+    with each new revision. The format of the value has the upper 12 bits as
+    the major number of the version, the next lower 12 bits as the minor number
+    of the version, and the lowest 8 bits as the sub-minor number of the version.
+    """
+    resources = AllSessionTypes
+
+    py_name = 'implementation_version'
+
+    visa_name = 'VI_ATTR_RSRC_IMPL_VERSION'
+
+    visa_type = 'ViVersion'
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 0, 4294967295, []
 
 
 # noinspection PyPep8Naming
@@ -2026,7 +2062,7 @@ class AttrVI_ATTR_RSRC_LOCK_STATE(EnumAttribute):
     resource. The resource can be unlocked, locked with an exclusive
     lock, or locked with a shared lock.
     """
-    resources = AllSesionTypes
+    resources = AllSessionTypes
 
     py_name = 'lock_state'
 
@@ -2041,32 +2077,95 @@ class AttrVI_ATTR_RSRC_LOCK_STATE(EnumAttribute):
     enum_type = constants.AccessModes
 
 
-# Could not generate class for VI_ATTR_RSRC_MANF_ID.html
-# Exception:
-"""
-too many values to unpack
-"""
+# noinspection PyPep8Naming
+class AttrVI_ATTR_RSRC_MANF_ID(RangeAttribute):
+    """VI_ATTR_RSRC_MANF_ID is a value that corresponds to the VXI manufacturer
+    ID of the vendor that implemented the VISA library. This attribute is not
+    related to the device manufacturer attributes.
+    """
+    resources = AllSessionTypes
+
+    py_name = ''
+
+    visa_name = 'VI_ATTR_RSRC_MANF_ID'
+
+    visa_type = 'ViUInt16'
+
+    default = NotAvailable
+
+    read, write, local = True, False, False
+
+    min_value, max_value, values = 0, 0x3FFF, []
 
 
-# Could not generate class for VI_ATTR_RSRC_MANF_NAME.html
-# Exception:
-"""
-too many values to unpack
-"""
+# noinspection PyPep8Naming
+class AttrVI_ATTR_RSRC_MANF_NAME(Attribute):
+    """VI_ATTR_RSRC_MANF_NAME is a string that corresponds to the manufacturer
+    name of the vendor that implemented the VISA library. This attribute is not
+    related to the device manufacturer attributes.
+
+    Note  The value of this attribute is for display purposes only and not for
+    programmatic decisions, as the value can differ between VISA implementations
+    and/or revisions.
+    """
+    resources = AllSessionTypes
+
+    py_name = 'resource_manufacturer_name'
+
+    visa_name = 'VI_ATTR_RSRC_MANF_NAME'
+
+    visa_type = 'ViString'
+
+    default = NotAvailable
+
+    read, write, local = True, False, False
 
 
-# Could not generate class for VI_ATTR_RSRC_NAME.html
-# Exception:
-"""
-Unknown type: ViRsrc. Range: [u'N/A']
-"""
+# noinspection PyPep8Naming
+class AttrVI_ATTR_RSRC_NAME(Attribute):
+    """VI_ATTR_RSRC_MANF_NAME is a string that corresponds to the manufacturer
+    name of the vendor that implemented the VISA library. This attribute is not
+    related to the device manufacturer attributes.
+
+    Note  The value of this attribute is for display purposes only and not for
+    programmatic decisions, as the value can differ between VISA implementations
+    and/or revisions.
+    """
+    resources = AllSessionTypes
+
+    py_name = 'resource_name'
+
+    visa_name = 'VI_ATTR_RSRC_NAME'
+
+    visa_type = 'ViRsrc'
+
+    default = NotAvailable
+
+    read, write, local = True, False, False
 
 
-# Could not generate class for VI_ATTR_RSRC_SPEC_VERSION.html
-# Exception:
-"""
-Unknown type: ViVersion. Range: [u'0h to FFFFFFFFh']
-"""
+# noinspection PyPep8Naming
+class AttrVI_ATTR_RSRC_SPEC_VERSION(RangeAttribute):
+    """VI_ATTR_RSRC_SPEC_VERSION is the resource version that uniquely identifies
+    the version of the VISA specification to which the implementation is compliant.
+    The format of the value has the upper 12 bits as the major number of the version,
+    the next lower 12 bits as the minor number of the version, and the lowest 8 bits
+    as the sub-minor number of the version. The current VISA specification defines
+    the value to be 00300000h.
+    """
+    resources = AllSessionTypes
+
+    py_name = 'spec_version'
+
+    visa_name = 'VI_ATTR_RSRC_SPEC_VERSION'
+
+    visa_type = 'ViVersion'
+
+    default = 0x00300000
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 0, 4294967295, []
 
 
 # noinspection PyPep8Naming
@@ -2399,7 +2498,7 @@ class AttrVI_ATTR_TMO_VALUE(RangeAttribute):
     should never wait for the device to respond. A timeout value of
     VI_TMO_INFINITE disables the timeout mechanism.
     """
-    resources = AllSesionTypes
+    resources = AllSessionTypes
 
     py_name = ''
 
