@@ -40,7 +40,6 @@ class AttributeType(type):
         super(AttributeType, cls).__init__(name, bases, dct)
         if not name.startswith('AttrVI_'):
             return
-        print(name)
         cls.attribute_id = getattr(constants, cls.visa_name)
         cls.redoc()
         if cls.resources is AllSessionTypes:
@@ -76,7 +75,7 @@ class Attribute(with_metaclass(AttributeType)):
 
     @classmethod
     def redoc(cls):
-        cls.__doc__ += '\n:VISA Attribute: %s (%d)' % (cls.visa_name, cls.attribute_id)
+        cls.__doc__ += '\n:VISA Attribute: %s (%s)' % (cls.visa_name, cls.attribute_id)
 
     def post_get(self, value):
         return value
@@ -87,7 +86,7 @@ class Attribute(with_metaclass(AttributeType)):
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        
+
         if not self.read:
             raise AttributeError("can't read attribute")
 
@@ -109,6 +108,7 @@ class EnumAttribute(Attribute):
 
     @classmethod
     def redoc(cls):
+        super(EnumAttribute, cls).redoc()
         cls.__doc__ += '\n:type: :class:%s.%s' % (cls.enum_type.__module__, cls.enum_type.__name__)
 
     def post_get(self, value):
@@ -127,6 +127,7 @@ class IntAttribute(Attribute):
 
     @classmethod
     def redoc(cls):
+        super(IntAttribute, cls).redoc()
         cls.__doc__ += '\n:type: int'
 
     def post_get(self, value):
@@ -142,6 +143,7 @@ class RangeAttribute(IntAttribute):
 
     @classmethod
     def redoc(cls):
+        super(RangeAttribute, cls).redoc()
         cls.__doc__ += '\n:range: %s <= value <= %s' % (cls.min_value, cls.max_value)
         if cls.values:
             cls.__doc__ += ' or in %s' % cls.values
@@ -166,6 +168,7 @@ class ValuesAttribute(Attribute):
 
     @classmethod
     def redoc(cls):
+        super(ValuesAttribute, cls).redoc()
         cls.__doc__ += '\n:values: %s' % cls.values
 
     def pre_set(self, value):
@@ -181,6 +184,7 @@ class BooleanAttribute(Attribute):
 
     @classmethod
     def redoc(cls):
+        super(BooleanAttribute, cls).redoc()
         cls.__doc__ += '\n:type: bool'
 
     def post_get(self, value):
@@ -196,6 +200,7 @@ class CharAttribute(Attribute):
 
     @classmethod
     def redoc(cls):
+        super(CharAttribute, cls).redoc()
         cls.__doc__ += '\n:range: 0 <= x <= 255\n:type: int'
 
     def post_get(self, value):

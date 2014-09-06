@@ -18,28 +18,11 @@ import time
 from .. import constants
 from .resource import Resource
 from .messagebased import MessageBasedResource
-from . import helpers as hlp
 
 
 class _GPIBMixin(object):
     """Common attributes and methods of GPIB Instr and Interface.
     """
-
-    allow_dma = hlp.boolean_attr('VI_ATTR_DMA_ALLOW_EN',
-                                 doc='This attribute specifies whether I/O accesses should '
-                                     'use DMA (True) or Programmed I/O (False).')
-
-    primary_address = hlp.range_attr('VI_ATTR_GPIB_PRIMARY_ADDR', 0, 30,
-                                     doc='Specifies the primary address of the GPIB device used by the given session.',
-                                     ro=True)
-
-    remote_enabled = hlp.enum_attr('VI_ATTR_GPIB_REN_STATE', constants.LineState,
-                                   doc='Returns the current state of the GPIB REN (Remote ENable) interface line.',
-                                   ro=True)
-
-    secondary_address = hlp.range_attr('VI_ATTR_GPIB_SECONDARY_ADDR', 0, 65535,
-                                       doc='Specifies the secondary address of the GPIB device used by the given session.',
-                                       ro=True)
 
     def assert_trigger(self):
         """Sends a software trigger to the device.
@@ -127,14 +110,6 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
         self.visalib.disable_event(self.session, constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
         self.visalib.discard_events(self.session, constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
 
-    enable_repeat_addressing = hlp.boolean_attr('VI_ATTR_GPIB_READDR_EN',
-                                                doc='Specifies whether to use repeat addressing '
-                                                    'before each read or write operation.')
-
-    enable_unaddressing = hlp.boolean_attr('VI_ATTR_GPIB_UNADDR_EN',
-                                           doc='Specifies whether to unaddress the device (UNT and UNL) '
-                                               'after each read or write operation.')
-
     def wait_for_srq(self, timeout=25000):
         """Wait for a serial request (SRQ) coming from the instrument.
 
@@ -180,26 +155,6 @@ class GPIBInterface(_GPIBMixin, Resource):
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
-
-    address_state = hlp.enum_attr('VI_ATTR_GPIB_ADDR_STATE', constants.AddressState,
-                                  'Shows whether the specified GPIB interface is currently addressed to talk or listen, or is not addressed.',
-                                  ro=True)
-
-    atn_state = hlp.enum_attr('VI_ATTR_GPIB_ATN_STATE', constants.LineState,
-                              'Shows the current state of the GPIB ATN (ATtentioN) interface line.',
-                              ro=True)
-
-    is_controller_in_charge = hlp.boolean_attr('VI_ATTR_GPIB_CIC_STATE',
-                                               'Shows whether the specified GPIB interface is currently CIC (Controller In Charge).',
-                                               ro=True)
-
-    is_system_controller = hlp.boolean_attr('VI_ATTR_GPIB_SYS_CNTRL_STATE',
-                                            'Shows whether the specified GPIB interface is currently the system controller.\n\n'
-                                            'In some implementations, this attribute may be modified only through a configuration utility.',
-                                            ro=True)
-    ndac_state = hlp.enum_attr('VI_ATTR_GPIB_NDAC_STATE', constants.LineState,
-                               'Shows the current state of the GPIB NDAC (Not Data ACcepted) interface line.',
-                               ro=True)
 
     def group_execute_trigger(self, *resources):
 

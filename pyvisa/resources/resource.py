@@ -20,8 +20,7 @@ from .. import constants
 from .. import errors
 from .. import logger
 from .. import highlevel
-
-from . import helpers as hlp
+from .. import attributes
 
 
 class Resource(object):
@@ -36,7 +35,13 @@ class Resource(object):
     @classmethod
     def register(cls, interface_type, resource_class):
         def _internal(python_class):
-            highlevel.ResourceManager.resource_classes[(interface_type, resource_class)] = python_class
+            highlevel.ResourceManager._resource_classes[(interface_type, resource_class)] = python_class
+            for attr in attributes.AttributesPerResource[(interface_type, resource_class)]:
+                if not hasattr(python_class, attr.py_name):
+                    setattr(python_class, attr.py_name, attr())
+            for attr in attributes.AttributesPerResource[attributes.AllSessionTypes]:
+                if not hasattr(python_class, attr.py_name):
+                    setattr(python_class, attr.py_name, attr())
             return python_class
         return _internal
 
@@ -100,48 +105,11 @@ class Resource(object):
         return self.visalib.parse_resource_extended(self._resource_manager.session, self.resource_name)
 
     @property
-    def resource_class(self):
-        """The resource class of the resource as a string.
-
-        :VISA Attribute: VI_ATTR_RSRC_CLASS
-        """
-
-        try:
-            return self.get_visa_attribute(constants.VI_ATTR_RSRC_CLASS).upper()
-        except errors.VisaIOError as error:
-            if error.error_code != constants.VI_ERROR_NSUP_ATTR:
-                raise
-        return 'Unknown'
-
-    @property
-    def resource_name(self):
-        """The VISA resource name of the resource as a string.
-
-        The value is obtained from VI_ATTR_RSRC_NAME when the device is opened
-        and from the user_given adderss otherwise.
-
-        :VISA Attribute: VI_ATTR_RSRC_NAME
-        """
-        try:
-            return self.get_visa_attribute(constants.VI_ATTR_RSRC_NAME)
-        except errors.InvalidSession:
-            return self._resource_name
-
-    @property
     def interface_type(self):
         """The interface type of the resource as a number.
         """
         return self.visalib.parse_resource(self._resource_manager.session,
                                            self.resource_name).interface_type
-
-    _d_ = 'Current locking state of the resource.\n\n' \
-          'The resource can be unlocked, locked with an exclusive lock, or locked with a shared lock.'
-    lock_state = hlp.enum_attr('VI_ATTR_RSRC_LOCK_STATE', constants.AccessModes, doc=_d_, ro=True)
-
-    _d_ = 'Specifies the board number for the given interface.'
-    interface_number = hlp.range_attr('VI_ATTR_INTF_NUM', 0, 65535, doc=_d_, ro=True)
-
-    del _d_
 
     def open(self, access_mode=constants.AccessModes.no_lock, open_timeout=5000):
         """Opens a session to the specified resource.

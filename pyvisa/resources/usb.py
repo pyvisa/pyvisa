@@ -15,7 +15,6 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 from .. import constants
 from .messagebased import MessageBasedResource
-from . import helpers as hlp
 
 
 @MessageBasedResource.register(constants.InterfaceType.usb, 'INSTR')
@@ -27,43 +26,6 @@ class USBInstrument(MessageBasedResource):
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
-
-    is_4882_compliant = hlp.boolean_attr('VI_ATTR_4882_COMPLIANT',
-                                         doc='Specifies whether the device is 488.2 compliant.',
-                                         ro=True)
-
-    manufacturer_id = hlp.attr('VI_ATTR_MANF_ID',
-                               doc='Return the Vendor ID',
-                               ro=True)
-
-    manufacturer_name = hlp.attr('VI_ATTR_MANF_NAME',
-                                 doc='Return the Vendor Name',
-                                 ro=True)
-
-    _d_ = 'Specifies the maximum size of data that will be stored by any given USB interrupt\n\n' \
-          'If a USB interrupt contains more data than this size, the data in excess of this size ' \
-          'will be lost.'
-    maximum_interrupt_size = hlp.range_attr('VI_ATTR_USB_MAX_INTR_SIZE', 0, 256, _d_)
-
-    del _d_
-
-    model_code = hlp.attr('VI_ATTR_MODEL_CODE',
-                          doc='Return the Product ID')
-
-    model_name = hlp.attr('VI_ATTR_MODEL_NAME',
-                          doc='Return the Product Name')
-
-    interface_number = hlp.attr('VI_ATTR_USB_INTFC_NUM',
-                                doc='Specifies the USB interface number used by the given session.',
-                                ro=True)
-
-    usb_protocol = hlp.attr('VI_ATTR_USB_PROTOCOL',
-                            doc='Specifies the USB protocol used by this USB interface.',
-                            ro=True)
-
-    serial_number = hlp.attr('VI_ATTR_USB_SERIAL_NUM',
-                             doc='Specifies the USB serial number of this device.',
-                             ro=True)
 
     def control_in(self, request_type_bitmap_field, request_id, request_value, index, length=0):
         """Performs a USB control pipe transfer from the device.

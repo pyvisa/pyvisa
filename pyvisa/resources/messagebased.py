@@ -22,7 +22,6 @@ from .. import constants
 from .. import errors
 from ..util import parse_ascii, parse_binary, from_ieee_block, to_ieee_block
 
-from . import helpers as hlp
 from .resource import Resource
 
 
@@ -53,12 +52,6 @@ class MessageBasedResource(Resource):
     query_delay = 0.0
 
     _values_format = None
-
-    io_protocol = hlp.enum_attr('VI_ATTR_IO_PROT', constants.IOProtocol,
-                                'I/O protocol for the current hardware interface.')
-
-    send_end = hlp.boolean_attr('VI_ATTR_SEND_END_EN',
-                                'Whether or not to assert EOI (or something equivalent after each write operation.')
 
     def __init__(self, *args, **kwargs):
         self._values_format = ValuesFormat()

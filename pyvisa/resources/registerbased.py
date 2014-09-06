@@ -13,26 +13,12 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from . import helpers as hlp
 from .resource import Resource
 
 
 class RegisterBasedResource(Resource):
     """Base class for resources that use register based communication.
     """
-
-    _d_ = 'Specifies whether I/O accesses should use DMA (True) or Programmed I/O (False).'
-    allow_dma = hlp.boolean_attr('VI_ATTR_DMA_ALLOW_EN', doc=_d_)
-
-    _d_ = 'Specify by how many elements the destination offset is to be incremented after ' \
-          'every transfer in viMoveOutXX operations.\n\nDefault is 1'
-    destination_increment = hlp.range_attr('VI_ATTR_DEST_INCREMENT', 0, 1, doc=_d_)
-
-    _d_ = 'Specify by how many elements the source offset is to be incremented after ' \
-          'every transfer in viMoveOutXX operations.\n\nDefault is 1'
-    source_increment = hlp.range_attr('VI_ATTR_SRC_INCREMENT', 0, 1, doc=_d_)
-
-    del _d_
 
     def read_memory(self, space, offset, width, extended=False):
         """Reads in an 8-bit, 16-bit, 32-bit, or 64-bit value from the specified memory space and offset.
