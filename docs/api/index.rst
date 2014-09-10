@@ -8,6 +8,6 @@ API
 .. toctree::
     :maxdepth: 1
 
-    highlevel
-    resources
+    visalibrarybase
+    resourcemanager
     constants
