@@ -14,16 +14,18 @@ Let's go *in medias res* and have a look at a simple example::
 
     >>> import visa
     >>> rm = visa.ResourceManager()
-    >>> my_instrument = rm.open_resource('GPIB::14')
-    >>> my_instrument.write("*IDN?")
-    >>> print(my_instrument.read())
+    >>> rm.list_resources()
+    ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::14::INSTR')
+    >>> my_instrument = rm.open_resource('GPIB0::14::INSTR')
+    >>> print(my_instrument.query('*IDN?'))
 
 This example already shows the two main design goals of PyVISA: preferring
 simplicity over generality, and doing it the object-oriented way.
 
-Afer importing `visa`, we create a `ResourceManager` object. If called without
-arguments, PyVISA will try to find the VISA shared for you. You can check, the
-location of the shared library used simply by:
+After importing `visa`, we create a `ResourceManager` object. If called without
+arguments, PyVISA will use the default backend (NI) which tries to find the
+VISA shared library for you. You can check, the location of the shared library
+used simply by:
 
     >>> print(rm)
     <ResourceManager('/path/to/visa.so')>
@@ -35,58 +37,46 @@ location of the shared library used simply by:
           in :ref:`configuring`.
 
 
-Once that you havea `ResourceManager`, you can access any instrument.
-Every instrument is represented in the source by an object instance.
-In this case, I have a GPIB instrument with instrument number 14, so I
-create the instance (i.e. variable) called *my_instrument*
-accordingly with `"GPIB::14"` is the instrument's *resource name*.
-See section :ref:`sec:visa-resource-names` for a short explanation of that.
+Once that you have a `ResourceManager`, you can list the available resources
+using the `list_resources` method. The output is a tuple listing the
+:ref:`sec:visa-resource-names`. See section :ref:`sec:visa-resource-names`
+for a short explanation of that.
 
-Notice that eventhough you have requeste an instrument, due to the
-resource name, `open_resource` has given you an instance of `GPIBInstrument`
-class (a subclass of the more generic `Resource`).
+In this case, there is a GPIB instrument with instrument number 14, so you ask
+the `ResourceManager` to open `"'GPIB0::14::INSTR'" and assign the returned
+object to the *my_instrument*.
+
+Notice `open_resource` has given you an instance of `GPIBInstrument` class
+(a subclass of the more generic `Resource`).
 
     >>> print(my_instrument)
     <GPIBInstrument('GPIB::14')>
 
-There many `Resource` classes representing the different types of resources, but
+There many `Resource` subclasses representing the different types of resources, but
 you do not have to worry as the `ResourceManager` will provide you with the appropiate
 class. You can check the methods and attributes of each class in the :ref:`_api_resources`
 
-Then, I send the message `"\*IDN?"` to the device, which is the standard GPIB
-message for "what are you?" or -- in some cases -- "what's on your
-display at the moment?". This is followed by a `read` call to get the message.
-A `write` followed by a `read` is a very common operation and therefore there is a
-shorter version called `query`. So instead of writing this::
+Then, you query the device with the following message: `'\*IDN?'`.
+Which is the standard GPIB message for "what are you?" or -- in some cases --
+"what's on your display at the moment?". `query` is a short form for a `write`
+operation to send a message, followed by a `read`.
 
-    >>> my_instrument.write("*IDN?")
-    >>> print(my_instrument.read())
-
-you could write::
+So::
 
     >>> my_instrument.query("*IDN?")
 
+is the same as::
 
-Listing connected instruments
------------------------------
-
-The resource manager object allows you to list available resources::
-
-    >>> rm.list_resources()
-    ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::14::INSTR)
-
-
-or the most comprehensive `list_resources_info` which return a dict mapping
-resource name to a namedtuple containing information such as the interface type
-and the resource class.
+    >>> my_instrument.write('*IDN?')
+    >>> print(my_instrument.read())
 
 
 Example for serial (RS232) device
 ---------------------------------
 
-There is no only RS232 device in my lab is an old Oxford ITC4 temperature
-controller, which is connected through COM2 with my computer.  The
-following code prints its self-identification on the screen::
+Consider an Oxford ITC4 temperature controller, which is connected
+through COM2 with my computer.  The following code prints its
+self-identification on the screen::
    
    itc4 = rm.open_resource("COM2")
    itc4.write("V")
@@ -95,9 +85,9 @@ following code prints its self-identification on the screen::
 Instead of separate write and read operations, you can do both with
 one `query()` call. Thus, the above source code is equivalent to::
 
-   print(itc4.ask("V"))
+   print(itc4.query("V"))
 
-It couldn't be simpler.  See section :ref:`sec:serial-devices` for
+It couldn't be simpler. See section :ref:`sec:serial-devices` for
 further information about serial devices.
 
 
@@ -171,47 +161,4 @@ in detail in the instrument's manual::
 
 That's it. 18 lines of lucid code.  (Well, SCPI is awkward, but
 that's another story.)
-
-
-.. _sec:visa-resource-names:
-
-
-VISA resource names
--------------------
-
-If you use the function :func:`open_resource`, you must tell this
-function the *VISA resource name* of the instrument you want to
-connect to.  Generally, it starts with the bus type, followed by a
-double colon `"::"`, followed by the number within the bus.  For
-example,
-
-.. code-block:: none
-
-   GPIB::10
-
-denotes the GPIB instrument with the number 10.  If you have two GPIB
-boards and the instrument is connected to board number 1, you must
-write
-
-.. code-block:: none
-
-   GPIB1::10
-
-As for the bus, things like `"GPIB"`, `"USB"`, `"ASRL"` (for
-serial/parallel interface) are possible.  So for connecting to an
-instrument at COM2, the resource name is
-
-.. code-block:: none
-
-   ASRL2
-
-(Since only one instrument can be connected with one serial interface,
-there is no double colon parameter.)  However, most VISA systems allow
-aliases such as `"COM2"` or `"LPT1"`.  You may also add your own
-aliases.
-
-The resource name is case-insensitive.  It doesn't matter whether you
-say `"ASRL2"` or `"asrl2"`.  For further information, I have to refer
-you to a comprehensive VISA description like
-`<http://www.ni.com/pdf/manuals/370423a.pdf>`_.
 
