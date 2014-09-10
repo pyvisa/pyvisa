@@ -22,7 +22,7 @@ import struct
 import subprocess
 import warnings
 
-from .compat import check_output
+from .compat import check_output, string_types
 from . import __version__, logger
 
 if sys.version >= '3':
@@ -151,15 +151,27 @@ def split_kwargs(keyw, self_keys, parent_keys, warn=True):
 _ascii_re = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)(?:[eE][-+]?\d+)?")
 
 
-def parse_ascii(ascii_data, container=list):
+def parse_ascii(ascii_data, converter=float, separator=None, container=list):
     """Parse ascii data and return an iterable of numbers.
 
     :param ascii_data: data to be parsed.
     :type ascii_data: str
+    :param converter: function used to convert the
+                      Defaults to float
+    :type converter: callable
+    :param separator: a callable that split the str into individual elements.
+                      If a str is given, data.split(separator) is used.
+    :type: separator: (str) -> collections.Iterable[int] | str
     :param container: container type to use for the output data.
     """
-    return container(float(raw_value) for raw_value in
-                     _ascii_re.findall(ascii_data))
+    if separator is None:
+        data = _ascii_re.findall(ascii_data)
+    elif isinstance(separator, string_types):
+        data = ascii_data.split(separator)
+    else:
+        data = separator(ascii_data)
+
+    return container(converter(raw_value) for raw_value in data)
 
 
 def parse_binary(bytes_data, is_big_endian=False, is_single=False):

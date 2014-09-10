@@ -28,7 +28,9 @@ from .resource import Resource
 class ValuesFormat(object):
     """Options for reading values.
     """
-    __slots__ = ('is_binary', 'datatype', 'is_big_endian', 'container')
+    __slots__ = ('is_binary', 'container',
+                 'datatype', 'is_big_endian',
+                 'converter', 'separator')
 
     def __init__(self):
         self.is_binary = True
@@ -36,7 +38,16 @@ class ValuesFormat(object):
         self.is_big_endian = False
         self.container = list
 
-    def define_binary(self, datatype, is_big_endian, container):
+        self.converter = float
+        self.separator = None
+
+    def use_ascii(self, converter, separator, container=list):
+        self.converter = converter
+        self.separator = separator
+        self.container = container
+        self.is_binary = False
+
+    def use_binary(self, datatype, is_big_endian, container=list):
         self.datatype = datatype
         self.is_big_endian = is_big_endian
         self.container = container
@@ -310,15 +321,21 @@ class MessageBasedResource(Resource):
         if vf.is_binary:
             return self.query_binary_values(message, vf.datatype, vf.is_big_endian, vf.container, delay)
 
-        return self.query_ascii_values(message, vf.container, delay)
+        return self.query_ascii_values(message, vf.converter, vf.separator, vf.container, delay)
 
-    def query_ascii_values(self, message, container=list, delay=None):
+    def query_ascii_values(self, message, converter=float, separator=None, container=list, delay=None):
         """Query the device for values in ascii format returning an iterable of values.
 
         :param message: the message to send.
         :type message: str
         :param delay: delay in seconds between write and read operations.
                       if None, defaults to self.query_delay
+        :param converter: function used to convert each element.
+                          Defaults to float
+        :type converter: callable
+        :param separator: a callable that split the str into individual elements.
+                          If a str is given, data.split(separator) is used.
+        :type: separator: (str) -> collections.Iterable[int] | str
         :param container: container type to use for the output data.
         :returns: the answer from the device.
         :rtype: list
@@ -332,7 +349,7 @@ class MessageBasedResource(Resource):
 
         block = self.read()
 
-        return parse_ascii(block, container)
+        return parse_ascii(block, converter, separator, container)
 
     def query_binary_values(self, message, datatype, is_big_endian=False, container=list, delay=None):
         """Converts an iterable of numbers into a block of data in the ieee format.
@@ -340,6 +357,7 @@ class MessageBasedResource(Resource):
         :param message: the message to send to the instrument.
         :param datatype: the format string for a single element. See struct module.
         :param is_big_endian: boolean indicating endianess.
+                              Defaults to False.
         :param container: container type to use for the output data.
         :param delay: delay in seconds between write and read operations.
                       if None, defaults to self.query_delay
