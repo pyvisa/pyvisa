@@ -23,9 +23,17 @@ from . import constants
 from . import errors
 
 #: Resource extended information
+#:
+#: :interface_type: Interface type of the given resource string. :class:`pyvisa.constants.InterfaceType`
+#: :interface_board_number: Board number of the interface of the given resource string.
+#: :resource_class: Specifies the resource class (for example, "INSTR") of the given resource string.
+#: :resource_name: This is the expanded version of the given resource string.
+#:                       The format should be similar to the VISA-defined canonical resource name.
+#: :alias: Specifies the user-defined alias for the given resource string.
 ResourceInfo = collections.namedtuple('ResourceInfo',
                                       'interface_type interface_board_number '
                                       'resource_class resource_name alias')
+
 
 class VisaLibraryBase(object):
     """Base class for VISA library wrappers.
@@ -191,7 +199,7 @@ class VisaLibraryBase(object):
         :param width: Number of bits to read.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from memory, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         if width == 8:
             return self.in_8(session, space, offset, extended)
@@ -216,7 +224,7 @@ class VisaLibraryBase(object):
         :param width: Number of bits to read.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         if width == 8:
             return self.out_8(session, space, offset, data, extended)
@@ -240,7 +248,7 @@ class VisaLibraryBase(object):
         :param width: Number of bits to read per element.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from the bus, return value of the library call.
-        :rtype: list, VISAStatus
+        :rtype: list, :class:`pyvisa.constants.StatusCode`
         """
         if width == 8:
             return self.move_in_8(session, space, offset, length, extended)
@@ -267,7 +275,7 @@ class VisaLibraryBase(object):
         :param width: Number of bits to read per element.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         if width == 8:
             return self.move_out_8(session, space, offset, length, data, extended)
@@ -289,7 +297,7 @@ class VisaLibraryBase(object):
         :param address: Source address to read the value.
         :param width: Number of bits to read.
         :return: Data read from bus, return value of the library call.
-        :rtype: bytes, VISAStatus
+        :rtype: bytes, :class:`pyvisa.constants.StatusCode`
         """
 
         if width == 8:
@@ -313,7 +321,7 @@ class VisaLibraryBase(object):
         :param width: Number of bits to read.
         :param data: Data to be written to the bus.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
 
         if width == 8:
@@ -336,7 +344,7 @@ class VisaLibraryBase(object):
         :param mode: How to assert the interrupt. (Constants.ASSERT*)
         :param status_id: This is the status value to be presented during an interrupt acknowledge cycle.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -348,7 +356,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param protocol: Trigger protocol to use during assertion. (Constants.PROT*)
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -360,7 +368,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param line: specifies the utility bus signal to assert. (Constants.UTIL_ASSERT*)
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -372,7 +380,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param count: Number of bytes to be read.
         :return: data read, return value of the library call.
-        :rtype: bytes, VISAStatus
+        :rtype: bytes, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -385,7 +393,7 @@ class VisaLibraryBase(object):
         :param data: data to be written.
         :type data: bytes
         :return: number of written bytes, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -396,7 +404,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -407,7 +415,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session, event, or find list.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -421,7 +429,7 @@ class VisaLibraryBase(object):
         :param mechanism: Specifies event handling mechanisms to be disabled.
                           (Constants.QUEUE, .Handler, .SUSPEND_HNDLR, .ALL_MECH)
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -435,7 +443,7 @@ class VisaLibraryBase(object):
         :param mechanism: Specifies event handling mechanisms to be disabled.
                           (Constants.QUEUE, .Handler, .SUSPEND_HNDLR, .ALL_MECH)
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -450,7 +458,7 @@ class VisaLibraryBase(object):
                           (Constants.QUEUE, .Handler, .SUSPEND_HNDLR)
         :param context:
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -461,7 +469,7 @@ class VisaLibraryBase(object):
 
         :param find_list: Describes a find list. This parameter must be created by find_resources().
         :return: Returns a string identifying the location of a device, return value of the library call.
-        :rtype: unicode (Py2) or str (Py3), VISAStatus
+        :rtype: unicode (Py2) or str (Py3), :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -473,7 +481,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session (unused, just to uniform signatures).
         :param query: A regular expression followed by an optional logical expression. Use '?*' for all.
         :return: find_list, return_counter, instrument_description, return value of the library call.
-        :rtype: ViFindList, int, unicode (Py2) or str (Py3), VISAStatus
+        :rtype: ViFindList, int, unicode (Py2) or str (Py3), :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -486,7 +494,7 @@ class VisaLibraryBase(object):
         :param mask: Specifies the action to be taken with flushing the buffer.
                      (Constants.READ*, .WRITE*, .IO*)
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -498,7 +506,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session, event, or find list.
         :param attribute: Resource attribute for which the state query is made (see Attributes.*)
         :return: The state of the queried attribute for a specified resource, return value of the library call.
-        :rtype: unicode (Py2) or str (Py3), list or other type, VISAStatus
+        :rtype: unicode (Py2) or str (Py3), list or other type, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -511,7 +519,7 @@ class VisaLibraryBase(object):
         :param data: data tor write.
         :type data: bytes
         :return: Number of written bytes, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -524,7 +532,7 @@ class VisaLibraryBase(object):
         :param mode: Specifies the state of the ATN line and optionally the local active controller state.
                      (Constants.GPIB_ATN*)
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -538,7 +546,7 @@ class VisaLibraryBase(object):
         :param mode: Specifies the state of the REN line and optionally the device remote/local state.
                      (Constants.GPIB_REN*)
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -553,7 +561,7 @@ class VisaLibraryBase(object):
                                   If the targeted device does not have a secondary address,
                                   this parameter should contain the value Constants.NO_SEC_ADDR.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -564,7 +572,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -578,7 +586,7 @@ class VisaLibraryBase(object):
         :param offset: Offset (in bytes) of the address or register from which to read.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from memory, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -592,7 +600,7 @@ class VisaLibraryBase(object):
         :param offset: Offset (in bytes) of the address or register from which to read.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from memory, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -606,7 +614,7 @@ class VisaLibraryBase(object):
         :param offset: Offset (in bytes) of the address or register from which to read.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from memory, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -620,7 +628,7 @@ class VisaLibraryBase(object):
         :param offset: Offset (in bytes) of the address or register from which to read.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from memory, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -639,7 +647,7 @@ class VisaLibraryBase(object):
                  - user handle (a ctypes object)
                  - ctypes handler (ctypes object wrapping handler)
                  and return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -654,7 +662,7 @@ class VisaLibraryBase(object):
                         locking session before returning an error.
         :param requested_key: This parameter is not used and should be set to VI_NULL when lockType is VI_EXCLUSIVE_LOCK.
         :return: access_key that can then be passed to other sessions to share the lock, return value of the library call.
-        :rtype: str, VISAStatus
+        :rtype: str, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -675,7 +683,7 @@ class VisaLibraryBase(object):
                           suggested.
 
         :return: address in your process space where the memory was mapped, return value of the library call.
-        :rtype: address, VISAStatus
+        :rtype: address, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -689,7 +697,7 @@ class VisaLibraryBase(object):
         :param trigger_destination: Destination line to which to map. (Constants.TRIG*)
         :param mode:
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -702,7 +710,7 @@ class VisaLibraryBase(object):
         :param size: Specifies the size of the allocation.
         :param extended: Use 64 bits offset independent of the platform.
         :return: offset of the allocated memory, return value of the library call.
-        :rtype: offset, VISAStatus
+        :rtype: offset, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -715,7 +723,7 @@ class VisaLibraryBase(object):
         :param offset: Offset of the memory to free.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -735,7 +743,7 @@ class VisaLibraryBase(object):
         :param length: Number of elements to transfer, where the data width of the elements to transfer
                        is identical to the source data width.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -756,7 +764,7 @@ class VisaLibraryBase(object):
         :param length: Number of elements to transfer, where the data width of the elements to transfer
                        is identical to the source data width.
         :return: Job identifier of this asynchronous move operation, return value of the library call.
-        :rtype: jobid, VISAStatus
+        :rtype: jobid, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -772,7 +780,7 @@ class VisaLibraryBase(object):
                        is identical to the source data width.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from the bus, return value of the library call.
-        :rtype: list, VISAStatus
+        :rtype: list, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -788,7 +796,7 @@ class VisaLibraryBase(object):
                        is identical to the source data width.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from the bus, return value of the library call.
-        :rtype: list, VISAStatus
+        :rtype: list, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -804,7 +812,7 @@ class VisaLibraryBase(object):
                        is identical to the source data width.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from the bus, return value of the library call.
-        :rtype: list, VISAStatus
+        :rtype: list, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -820,7 +828,7 @@ class VisaLibraryBase(object):
                        is identical to the source data width.
         :param extended: Use 64 bits offset independent of the platform.
         :return: Data read from the bus, return value of the library call.
-        :rtype: list, VISAStatus
+        :rtype: list, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -837,7 +845,7 @@ class VisaLibraryBase(object):
         :param data: Data to write to bus.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
 
         Corresponds to viMoveOut8 function of the VISA library.
         """
@@ -856,7 +864,7 @@ class VisaLibraryBase(object):
         :param data: Data to write to bus.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -873,7 +881,7 @@ class VisaLibraryBase(object):
         :param data: Data to write to bus.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -890,7 +898,7 @@ class VisaLibraryBase(object):
         :param data: Data to write to bus.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -902,11 +910,12 @@ class VisaLibraryBase(object):
 
         :param session: Resource Manager session (should always be a session returned from open_default_resource_manager()).
         :param resource_name: Unique symbolic name of a resource.
-        :param access_mode: Specifies the mode by which the resource is to be accessed. (Constants.NULL or Constants.*LOCK*)
+        :param access_mode: Specifies the mode by which the resource is to be accessed.
+        :type access_mode: :class:`pyvisa.constants.AccessModes`
         :param open_timeout: Specifies the maximum time period (in milliseconds) that this operation waits
                              before returning an error.
         :return: Unique logical identifier reference to a session, return value of the library call.
-        :rtype: session, VISAStatus
+        :rtype: session, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -916,7 +925,7 @@ class VisaLibraryBase(object):
         Corresponds to viOpenDefaultRM function of the VISA library.
 
         :return: Unique logical identifier to a Default Resource Manager session, return value of the library call.
-        :rtype: session, VISAStatus
+        :rtype: session, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -931,7 +940,7 @@ class VisaLibraryBase(object):
         :param data: Data to write to bus.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -946,7 +955,7 @@ class VisaLibraryBase(object):
         :param data: Data to write to bus.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -961,7 +970,7 @@ class VisaLibraryBase(object):
         :param data: Data to write to bus.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -976,7 +985,7 @@ class VisaLibraryBase(object):
         :param data: Data to write to bus.
         :param extended: Use 64 bits offset independent of the platform.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -989,7 +998,7 @@ class VisaLibraryBase(object):
                         returned from open_default_resource_manager()).
         :param resource_name: Unique symbolic name of a resource.
         :return: Resource information with interface type and board number, return value of the library call.
-        :rtype: :class:ResourceInfo, VISAStatus
+        :rtype: :class:`pyvisa.highlevel.ResourceInfo`, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1002,7 +1011,7 @@ class VisaLibraryBase(object):
                         returned from open_default_resource_manager()).
         :param resource_name: Unique symbolic name of a resource.
         :return: Resource information, return value of the library call.
-        :rtype: :class:ResourceInfo, VISAStatus
+        :rtype: :class:`pyvisa.highlevel.ResourceInfo`, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1014,7 +1023,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param address: Source address to read the value.
         :return: Data read from bus, return value of the library call.
-        :rtype: bytes, VISAStatus
+        :rtype: bytes, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1026,7 +1035,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param address: Source address to read the value.
         :return: Data read from bus, return value of the library call.
-        :rtype: bytes, VISAStatus
+        :rtype: bytes, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1038,7 +1047,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param address: Source address to read the value.
         :return: Data read from bus, return value of the library call.
-        :rtype: bytes, VISAStatus
+        :rtype: bytes, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1050,7 +1059,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param address: Source address to read the value.
         :return: Data read from bus, return value of the library call.
-        :rtype: bytes, VISAStatus
+        :rtype: bytes, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1064,7 +1073,7 @@ class VisaLibraryBase(object):
         :param data: value to be written to the bus.
         :return: Data read from bus.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1077,7 +1086,7 @@ class VisaLibraryBase(object):
         :param address: Source address to read the value.
         :param data: value to be written to the bus.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1090,7 +1099,7 @@ class VisaLibraryBase(object):
         :param address: Source address to read the value.
         :param data: value to be written to the bus.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1103,7 +1112,7 @@ class VisaLibraryBase(object):
         :param address: Source address to read the value.
         :param data: value to be written to the bus.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1115,7 +1124,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param count: Number of bytes to be read.
         :return: data read, return value of the library call.
-        :rtype: bytes, VISAStatus
+        :rtype: bytes, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1127,7 +1136,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param count: Number of bytes to be read.
         :return: result, jobid, return value of the library call.
-        :rtype: ctypes buffer, jobid, VISAStatus
+        :rtype: ctypes buffer, jobid, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1138,7 +1147,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :return: Service request status byte, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1151,7 +1160,7 @@ class VisaLibraryBase(object):
         :param filename: Name of file to which data will be written.
         :param count: Number of bytes to be read.
         :return: Number of bytes actually transferred, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1164,7 +1173,7 @@ class VisaLibraryBase(object):
         :param attribute: Attribute for which the state is to be modified. (Attributes.*)
         :param attribute_state: The state of the attribute to be set for the specified object.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1177,7 +1186,7 @@ class VisaLibraryBase(object):
         :param mask: Specifies the type of buffer. (Constants.READ_BUF, .WRITE_BUF, .IO_IN_BUF, .IO_OUT_BUF)
         :param size: The size to be set for the specified buffer(s).
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1191,7 +1200,7 @@ class VisaLibraryBase(object):
         :return: - The user-readable string interpretation of the status code passed to the operation,
                  - return value of the library call.
         :rtype: - unicode (Py2) or str (Py3)
-                - VISAStatus
+                - :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1204,7 +1213,7 @@ class VisaLibraryBase(object):
         :param degree: Constants.NULL
         :param job_id: Specifies an operation identifier.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1219,7 +1228,7 @@ class VisaLibraryBase(object):
         :param user_handle: A value specified by an application that can be used for identifying handlers
                             uniquely in a session for an event.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1230,7 +1239,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1241,7 +1250,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1254,7 +1263,7 @@ class VisaLibraryBase(object):
         :param trigger_source: Source line used in previous map. (Constants.TRIG*)
         :param trigger_destination: Destination line used in previous map. (Constants.TRIG*)
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1276,7 +1285,7 @@ class VisaLibraryBase(object):
         :return: - The data buffer that receives the data from the optional data stage of the control transfer
                  - return value of the library call.
         :rtype: - bytes
-                - VISAStatus
+                - :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1294,7 +1303,7 @@ class VisaLibraryBase(object):
                       This is usually the index of the interface or endpoint.
         :param data: The data buffer that sends the data in the optional data stage of the control transfer.
         :return: return value of the library call.
-        :rtype: VISAStatus
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1307,7 +1316,7 @@ class VisaLibraryBase(object):
         :param mode: Specifies whether to issue a command and/or retrieve a response. (Constants.VXI_CMD*, .VXI_RESP*)
         :param command: The miscellaneous command to send.
         :return: The response retrieved from the device, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1325,7 +1334,7 @@ class VisaLibraryBase(object):
                  - return value of the library call.
         :rtype: - eventtype
                 - event
-                - VISAStatus
+                - :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1338,7 +1347,7 @@ class VisaLibraryBase(object):
         :param data: data to be written.
         :type data: str
         :return: Number of bytes actually transferred, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1350,7 +1359,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param data: data to be written.
         :return: Job ID of this asynchronous write operation, return value of the library call.
-        :rtype: jobid, VISAStatus
+        :rtype: jobid, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1363,7 +1372,7 @@ class VisaLibraryBase(object):
         :param filename: Name of file from which data will be read.
         :param count: Number of bytes to be written.
         :return: Number of bytes actually transferred, return value of the library call.
-        :rtype: int, VISAStatus
+        :rtype: int, :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1422,10 +1431,17 @@ class ResourceManager(object):
     """
 
     #: Maps (Interface Type, Resource Class) to Python class encapsulating that resource.
-    resource_classes = dict()
+    _resource_classes = dict()
 
     #: Session handler for the resource manager.
     _session = None
+
+    @classmethod
+    def register_resource_class(cls, interface_type, resource_class, python_class):
+        if (interface_type, resource_class) in cls._resource_classes:
+            logger.warning('%s is already registered in the ResourceManager. '
+                           'Overwriting with %s' % ((interface_type, resource_class), python_class))
+        cls._resource_classes[(interface_type, resource_class)] = python_class
 
     def __new__(cls, visa_library=''):
         if not isinstance(visa_library, VisaLibraryBase):
@@ -1448,6 +1464,10 @@ class ResourceManager(object):
 
     @property
     def session(self):
+        """Resource Manager session.
+
+        :raises: :class:`pyvisa.errors.InvalidSession` if session is closed.
+        """
         if self._session is None:
             raise errors.InvalidSession()
         return self._session
@@ -1467,9 +1487,15 @@ class ResourceManager(object):
 
     @property
     def last_status(self):
+        """Last status code returned for an operation with this Resource Manager
+
+        :rtype: :class:`pyvisa.constants.StatusCode`
+        """
         return self.visalib.get_last_status_in_session(self.session)
 
     def close(self):
+        """Close the resource manager session.
+        """
         try:
             logger.debug('Closing ResourceManager (session: %s)', self.session)
             self.visalib.close(self.session)
@@ -1511,17 +1537,19 @@ class ResourceManager(object):
 
         :param resource_name: Unique symbolic name of a resource.
 
-        :rtype: ResourceInfo
+        :rtype: :class:`pyvisa.highlevel.ResourceInfo`
         """
         ret, _ = self.visalib.parse_resource_extended(self.session, resource_name)
         return ret
 
     def open_bare_resource(self, resource_name,
-                           access_mode=constants.VI_NO_LOCK, open_timeout=constants.VI_TMO_IMMEDIATE):
+                          access_mode=constants.AccessModes.no_lock,
+                          open_timeout=constants.VI_TMO_IMMEDIATE):
         """Open the specified resource without wrapping into a class
 
         :param resource_name: name or alias of the resource to open.
         :param access_mode: access mode.
+        :type access_mode: :class:`pyvisa.constants.AccessModes`
         :param open_timeout: time out to open.
 
         :return: Unique logical identifier reference to a session.
@@ -1529,18 +1557,21 @@ class ResourceManager(object):
         return self.visalib.open(self.session, resource_name, access_mode, open_timeout)
 
     def open_resource(self, resource_name,
-                      access_mode=constants.VI_NO_LOCK, open_timeout=constants.VI_TMO_IMMEDIATE, **kwargs):
+                      access_mode=constants.AccessModes.no_lock,
+                      open_timeout=constants.VI_TMO_IMMEDIATE, **kwargs):
         """Return an instrument for the resource name.
 
         :param resource_name: name or alias of the resource to open.
         :param access_mode: access mode.
+        :type access_mode: :class:`pyvisa.constants.AccessModes`
         :param open_timeout: time out to open.
-        :param kwargs: keyword arguments to be passed to the instrument constructor.
+        :param kwargs: keyword arguments to be used to change instrument attributes
+                       after construction.
         """
         info = self.resource_info(resource_name)
 
         try:
-            cls = self.resource_classes[(info.interface_type, info.resource_class)]
+            cls = self._resource_classes[(info.interface_type, info.resource_class)]
         except KeyError:
             raise ValueError('There is no class defined for %r' % ((info.interface_type, info.resource_class),))
 
@@ -1564,4 +1595,5 @@ class ResourceManager(object):
 
         return res
 
+    #: For backwards compatibility
     get_instrument = open_resource

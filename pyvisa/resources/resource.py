@@ -35,7 +35,7 @@ class Resource(object):
     @classmethod
     def register(cls, interface_type, resource_class):
         def _internal(python_class):
-            highlevel.ResourceManager._resource_classes[(interface_type, resource_class)] = python_class
+            highlevel.ResourceManager.register_resource_class(interface_type, resource_class, python_class)
             for attr in attributes.AttributesPerResource[(interface_type, resource_class)]:
                 if not hasattr(python_class, attr.py_name):
                     setattr(python_class, attr.py_name, attr())
@@ -115,7 +115,7 @@ class Resource(object):
         """Opens a session to the specified resource.
 
         :param access_mode: Specifies the mode by which the resource is to be accessed.
-        :type access_mode: :class:`pyvisa.constants.AccessMode.NoLock`
+        :type access_mode: :class:`pyvisa.constants.AccessModes`
         :param open_timeout: Milliseconds before the open operation times out.
         :type open_timeout: int
         """
