@@ -36,6 +36,12 @@ class ValuesFormat(object):
         self.is_big_endian = False
         self.container = list
 
+    def define_binary(self, datatype, is_big_endian, container):
+        self.datatype = datatype
+        self.is_big_endian = is_big_endian
+        self.container = container
+        self.is_binary = True
+
 
 class MessageBasedResource(Resource):
     """Base class for resources that use message based communication.
@@ -306,7 +312,7 @@ class MessageBasedResource(Resource):
 
         return self.query_ascii_values(message, vf.container, delay)
 
-    def query_ascii_values(self, message, container=None, delay=None):
+    def query_ascii_values(self, message, container=list, delay=None):
         """Query the device for values in ascii format returning an iterable of values.
 
         :param message: the message to send.
@@ -328,7 +334,7 @@ class MessageBasedResource(Resource):
 
         return parse_ascii(block, container)
 
-    def query_binary_values(self, message, datatype=None, is_big_endian=None, container=None, delay=None):
+    def query_binary_values(self, message, datatype, is_big_endian=False, container=list, delay=None):
         """Converts an iterable of numbers into a block of data in the ieee format.
 
         :param message: the message to send to the instrument.
