@@ -13,10 +13,10 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import functools
 import io
 import os
 import platform
-import re
 import sys
 import struct
 import subprocess
@@ -148,30 +148,74 @@ def split_kwargs(keyw, self_keys, parent_keys, warn=True):
 
     return self_kwargs, parent_kwargs
 
-_ascii_re = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\d*\.\d+)(?:[eE][-+]?\d+)?")
+
+_converters = {
+    's': str,
+    'b': functools.partial(int, base=2),
+    'c': chr,
+    'd': int,
+    'o': functools.partial(int, base=8),
+    'x': functools.partial(int, base=16),
+    'X': functools.partial(int, base=16),
+    'e': float,
+    'E': float,
+    'f': float,
+    'F': float,
+    'g': float,
+    'G': float,
+}
 
 
-def parse_ascii(ascii_data, converter=float, separator=None, container=list):
+def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
     """Parse ascii data and return an iterable of numbers.
 
     :param ascii_data: data to be parsed.
     :type ascii_data: str
-    :param converter: function used to convert the
+    :param converter: function used to convert each value.
                       Defaults to float
     :type converter: callable
     :param separator: a callable that split the str into individual elements.
                       If a str is given, data.split(separator) is used.
-    :type: separator: (str) -> collections.Iterable[int] | str
+    :type: separator: (str) -> collections.Iterable[T] | str
     :param container: container type to use for the output data.
     """
-    if separator is None:
-        data = _ascii_re.findall(ascii_data)
-    elif isinstance(separator, string_types):
+
+    if isinstance(converter, string_types):
+        try:
+            converter = _converters[converter]
+        except KeyError:
+            raise ValueError('Invalid code for converter: %s not in %s' % (converter, str(tuple(_converters.keys()))))
+
+    if isinstance(separator, string_types):
         data = ascii_data.split(separator)
     else:
         data = separator(ascii_data)
 
     return container(converter(raw_value) for raw_value in data)
+
+
+def to_ascii_block(iterable, converter='f', separator=','):
+    """Parse ascii data and return an iterable of numbers.
+
+    :param iterable: data to be parsed.
+    :type iterable: collections.Iterable[T]
+    :param converter: function used to convert each value.
+                      String formatting codes are also accepted.
+                      Defaults to str.
+    :type converter: callable | str
+    :param separator: a callable that split the str into individual elements.
+                      If a str is given, data.split(separator) is used.
+    :type: separator: (collections.Iterable[T]) -> str | str
+    """
+
+    if isinstance(separator, string_types):
+        separator = separator.join
+
+    if isinstance(converter, str):
+        converter = '%' + converter
+        return separator(converter % val for val in iterable)
+    else:
+        return separator(converter(val) for val in iterable)
 
 
 def parse_binary(bytes_data, is_big_endian=False, is_single=False):

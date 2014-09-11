@@ -20,7 +20,7 @@ import warnings
 from .. import logger
 from .. import constants
 from .. import errors
-from ..util import parse_ascii, parse_binary, from_ieee_block, to_ieee_block
+from ..util import from_ascii_block, parse_binary, from_ieee_block, to_ieee_block, to_ascii_block
 
 from .resource import Resource
 
@@ -34,12 +34,11 @@ class ValuesFormat(object):
 
     def __init__(self):
         self.is_binary = True
-        self.datatype = 'd'
+        self.datatype = 'f'
         self.is_big_endian = False
         self.container = list
-
-        self.converter = float
-        self.separator = None
+        self.converter = 'f'
+        self.separator = ','
 
     def use_ascii(self, converter, separator, container=list):
         self.converter = converter
@@ -184,6 +183,83 @@ class MessageBasedResource(Resource):
 
         return count
 
+    def write_ascii_values(self, message, values, converter='f', separator=',', termination=None, encoding=None):
+        """Write a string message to the device followed by values in ascii format.
+
+        The write_termination is always appended to it.
+
+        :param message: the message to be sent.
+        :type message: unicode (Py2) or str (Py3)
+        :param values: data to be writen to the device.
+        :param converter: function used to convert each value.
+                          String formatting codes are also accepted.
+                          Defaults to str.
+        :type converter: callable | str
+        :param separator: a callable that split the str into individual elements.
+                          If a str is given, data.split(separator) is used.
+        :type: separator: (collections.Iterable[T]) -> str | str
+        :return: number of bytes written.
+        :rtype: int
+        """
+
+        term = self._write_termination if termination is None else termination
+        enco = self._encoding if encoding is None else encoding
+
+        if term and message.endswith(term):
+                warnings.warn("write message already ends with "
+                              "termination characters", stacklevel=2)
+
+        block = to_ascii_block(values, converter, separator)
+
+        message = message.encode(enco) + block
+
+        if term:
+            message += term.encode(enco)
+
+        count = self.write_raw(message)
+
+        return count
+
+    def write_binary_values(self, message, values, datatype='f', is_big_endian=False, termination=None, encoding=None):
+        """Write a string message to the device followed by values in binary format.
+
+        The write_termination is always appended to it.
+
+        :param message: the message to be sent.
+        :type message: unicode (Py2) or str (Py3)
+        :param values: data to be writen to the device.
+        :param datatype: the format string for a single element. See struct module.
+        :param is_big_endian: boolean indicating endianess.
+        :return: number of bytes written.
+        :rtype: int
+        """
+        term = self._write_termination if termination is None else termination
+        enco = self._encoding if encoding is None else encoding
+
+        if term and message.endswith(term):
+                warnings.warn("write message already ends with "
+                              "termination characters", stacklevel=2)
+
+        block = to_ieee_block(values, datatype, is_big_endian)
+
+        message = message.encode(enco) + block
+
+        if term:
+            message += term.encode(enco)
+
+        count = self.write_raw(message)
+
+        return count
+
+    def write_values(self, message, values, termination=None, encoding=None):
+
+        vf = self.values_format
+
+        if vf.is_binary:
+            return self.write_binary_values(message, values, vf.datatype, vf.is_big_endian, termination, encoding)
+
+        return self.write_ascii_values(message, values, vf.converter, vf.separator, termination, encoding)
+
     def read_raw(self, size=None):
         """Read the unmodified string sent from the instrument to the computer.
 
@@ -257,7 +333,7 @@ class MessageBasedResource(Resource):
         if not fmt:
             vf = self.values_format
             if not vf.is_binary:
-                return parse_ascii(self.read(), container)
+                return from_ascii_block(self.read(), container)
             data = self.read_raw()
             try:
                 return parse_binary(data, vf.is_big_endian, vf.datatype=='f')
@@ -265,7 +341,7 @@ class MessageBasedResource(Resource):
                 raise errors.InvalidBinaryFormat(e.args)
 
         if fmt & 0x01 == 0: # ascii
-            return parse_ascii(self.read())
+            return from_ascii_block(self.read())
 
         data = self.read_raw()
 
@@ -321,9 +397,9 @@ class MessageBasedResource(Resource):
         if vf.is_binary:
             return self.query_binary_values(message, vf.datatype, vf.is_big_endian, vf.container, delay)
 
-        return self.query_ascii_values(message, vf.converter, vf.separator, vf.container, delay)
+        return self.query_ascii_values(message, vf.from_ascii, vf.separator, vf.container, delay)
 
-    def query_ascii_values(self, message, converter=float, separator=None, container=list, delay=None):
+    def query_ascii_values(self, message, converter='f', separator=',', container=list, delay=None):
         """Query the device for values in ascii format returning an iterable of values.
 
         :param message: the message to send.
@@ -349,9 +425,9 @@ class MessageBasedResource(Resource):
 
         block = self.read()
 
-        return parse_ascii(block, converter, separator, container)
+        return from_ascii_block(block, converter, separator, container)
 
-    def query_binary_values(self, message, datatype, is_big_endian=False, container=list, delay=None):
+    def query_binary_values(self, message, datatype='f', is_big_endian=False, container=list, delay=None):
         """Converts an iterable of numbers into a block of data in the ieee format.
 
         :param message: the message to send to the instrument.
