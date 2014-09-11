@@ -43,18 +43,19 @@ Some devices transfer data in ASCII but not as decimal numbers but rather hex
 or oct. Or you might want to receive an array of strings. In that case you can specify
 a `converter`. For example, if you expect to receive integers as hex:
 
-    >>> values = inst.query_ascii_values('CURV?', converter=lambda x: int(x, 16))
+    >>> values = inst.query_ascii_values('CURV?', converter='x')
 
-`converter` needs to be a callable that takes a single argument. The default converter
-is `float`.
+`converter` can be one of the Python :ref:`string formatting codes <python:formatspec>`.
+But you can also specify a callable that takes a single argument if needed.
+The default converter is `'f'`.
 
-Finally, some devices might return the values separated in an uncommon way. You
-can provide a function to takes a string and returns an iterable. You can also
-provide a str, which will be interpreted as a separator value. For example if
-the returned values are separated by a `'$'` you can do the following call:
+Finally, some devices might return the values separated in an uncommon way. For example
+if the returned values are separated by a `'$'` you can do the following call:
 
     >>> values = inst.query_ascii_values('CURV?', separator='$')
 
+You can provide a function to takes a string and returns an iterable.
+Default value for the separator is `','`
 
 .. _sec:reading-binary-data:
 
@@ -74,76 +75,47 @@ If you have doubles `d` in big endian the call will be::
 
 You can also specify the output container type, just as was shown before.
 
-.. _sec:more-complex-example:
 
-A more complex example
-----------------------
+Writing ASCII values
+--------------------
 
-The following example shows how to use SCPI commands with a Keithley
-2000 multimeter in order to measure 10 voltages. After having read
-them, the program calculates the average voltage and prints it on the
-screen.
+To upload a function shape to arbitrary wave generator, the command might be
+`WLISt:WAVeform:DATA <waveform name>,<function data>` where `<waveform name>`
+tells the device under which name to store the data.
 
-I'll explain the program step-by-step.  First, we have to initialise
-the instrument::
+    >>> values = list(range(100))
+    >>> inst.write_ascii_values('WLISt:WAVeform:DATA somename,', values)
 
-   >>> keithley = rm.open_resource("GPIB::12")
-   >>> keithley.write("*rst; status:preset; *cls")
+Again, you can specify the converter code.
 
-Here, we create the instrument variable *keithley*, which is used for
-all further operations on the instrument.  Immediately after it, we
-send the initialisation and reset message to the instrument.
+    >>> inst.write_ascii_values('WLISt:WAVeform:DATA somename,', values, converter='x')
 
-The next step is to write all the measurement parameters, in
-particular the interval time (500ms) and the number of readings (10)
-to the instrument.  I won't explain it in detail.  Have a look at an
-SCPI and/or Keithley 2000 manual.
+`converter` can be one of the Python :ref:`string formatting codes <python:formatspec>`.
+But you can also specify a callable that takes a single argument if needed.
+The default converter is `'f'`.
 
-.. code-block:: python
+The separator can also be specified just like in `query_ascii_values`.
 
-   >>> interval_in_ms = 500
-   >>> number_of_readings = 10
-   >>> keithley.write("status:measurement:enable 512; *sre 1")
-   >>> keithley.write("sample:count %d" % number_of_readings)
-   >>> keithley.write("trigger:source bus")
-   >>> keithley.write("trigger:delay %f" % (interval_in_ms / 1000.0))
-   >>> keithley.write("trace:points %d" % number_of_readings)
-   >>> keithley.write("trace:feed sense1; feed:control next")
+    >>> inst.write_ascii_values('WLISt:WAVeform:DATA somename,', values, converter='x', separator='$')
 
-Okay, now the instrument is prepared to do the measurement.  The next
-three lines make the instrument waiting for a trigger pulse, trigger
-it, and wait until it sends a "service request"::
+You can provide a function to takes a iterable and returns an string.
+Default value for the separator is `','`
 
-   >>> keithley.write("initiate")
-   >>> keithley.assert_trigger()
-   >>> keithley.wait_for_srq()
 
-With sending the service request, the instrument tells us that the
-measurement has been finished and that the results are ready for
-transmission.  We could read them with `keithley.query("trace:data?")`
-however, then we'd get:
+Writing binary values
+---------------------
 
-.. code-block:: none
+To upload a function shape to arbitrary wave generator, the command might be
+`WLISt:WAVeform:DATA <waveform name>,<function data>` where `<waveform name>`
+tells the device under which name to store the data.
 
-   NDCV-000.0004E+0,NDCV-000.0005E+0,NDCV-000.0004E+0,NDCV-000.0007E+0,
-   NDCV-000.0000E+0,NDCV-000.0007E+0,NDCV-000.0008E+0,NDCV-000.0004E+0,
-   NDCV-000.0002E+0,NDCV-000.0005E+0
+    >>> values = list(range(100))
+    >>> inst.write_binary_values('WLISt:WAVeform:DATA somename,', values)
 
-which we would have to convert to a Python list of numbers.
-Fortunately, the `query_ascii_values()` method does this work for us::
+Again you can specify the `datatype` and `endianness`.
 
-   >>> voltages = keithley.query_ascii_values("trace:data?")
-   >>> print("Average voltage: ", sum(voltages) / len(voltages))
+    >>> inst.write_binary_values('WLISt:WAVeform:DATA somename,', values, datatype='d', is_big_endian=False)
 
-Finally, we should reset the instrument's data buffer and SRQ status
-register, so that it's ready for a new run.  Again, this is explained
-in detail in the instrument's manual::
-
-   >>> keithley.query("status:measurement?")
-   >>> keithley.write("trace:clear; feed:control next")
-
-That's it. 18 lines of lucid code.  (Well, SCPI is awkward, but
-that's another story.)
 
 
 Preconfiguring the transfer format
@@ -154,10 +126,10 @@ And making the call so detailed everytime can be annoying. For this purpose,
 PyVISA provides a way to preconfigure the default. Each Message Based
 Resources exposes an attribute named `values_format` which is an object with the following
 properties: `is_binary`, `datatype`, `is_big_endian`, `container`. For example to set
-e.g. little-endian floats and a numpy array::
+e.g. little-endian doubles and a numpy array::
 
     >>> inst.values_format.is_binary = True
-    >>> inst.values_format.datatype = 'f'
+    >>> inst.values_format.datatype = 'd'
     >>> inst.values_format.is_big_endian = False
     >>> inst.values_format.container = numpy.array
 
@@ -171,16 +143,19 @@ After doing this, you can simply call::
 
 which will dispatch to the appropriate function and arguments.
 
-If you want to default to ASCII transfer, hex, with `'$'` as separator:
+If you want to default to ASCII transfer, preconfiguring is a little bit more
+cumbersome as you need to specify the converters for both ways.
+
+For example with hex, with `'$'` as separator:
 
     >>> inst.values_format.is_binary = False
-    >>> inst.values_format.converter = lambda x: int(x, 16)
+    >>> inst.values_format.converter = 'x'
     >>> inst.values_format.separator = '$'
     >>> inst.values_format.container = numpy.array
 
 or shorter:
 
-    >>> inst.values_format.use_ascii(lambda x: int('x', 16), '$', numpy.array)
+    >>> inst.values_format.use_ascii('x', '$', numpy.array)
 
 
 
@@ -197,6 +172,6 @@ In those cases, you need to get the data::
         >>> inst.write('CURV?')
         >>> data = inst.read_raw()
 
-and then you need to implement the logic to parse it. 
+and then you need to implement the logic to parse it.
 
 

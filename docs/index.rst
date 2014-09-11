@@ -62,6 +62,7 @@ User guide
     configuring
     tutorial
     rvalues
+    example
     advanced
     resources
     architecture
