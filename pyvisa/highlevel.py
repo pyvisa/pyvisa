@@ -1487,7 +1487,7 @@ class ResourceManager(object):
 
     @property
     def session(self):
-        """Resource Manager session.
+        """Resource Manager session handle.
 
         :raises: :class:`pyvisa.errors.InvalidSession` if session is closed.
         """

@@ -60,6 +60,10 @@ class Resource(object):
 
     @property
     def session(self):
+        """Resource session handle.
+
+        :raises: :class:`pyvisa.errors.InvalidSession` if session is closed.
+        """
         if self._session is None:
             raise errors.InvalidSession()
         return self._session
@@ -79,6 +83,10 @@ class Resource(object):
 
     @property
     def last_status(self):
+        """Last status code for this session.
+
+        :rtype: :class:`pyvisa.constants.StatusCode`
+        """
         return self.visalib.get_last_status_in_session(self.session)
 
     @property
@@ -108,6 +116,12 @@ class Resource(object):
 
     @property
     def resource_info(self):
+        """Get the extended information of this resource.
+
+        :param resource_name: Unique symbolic name of a resource.
+
+        :rtype: :class:`pyvisa.highlevel.ResourceInfo`
+        """
         return self.visalib.parse_resource_extended(self._resource_manager.session, self.resource_name)
 
     @property

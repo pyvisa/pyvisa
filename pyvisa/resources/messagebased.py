@@ -484,6 +484,8 @@ class MessageBasedResource(Resource):
         return self.read_stb()
 
     def read_stb(self):
+        """Service request status register.
+        """
         value, retcode = self.visalib.read_stb(self.session)
         return value
 

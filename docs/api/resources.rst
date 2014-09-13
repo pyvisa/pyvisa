@@ -26,51 +26,79 @@ depending on the resource type.
 .. autoclass:: pyvisa.resources.SerialInstrument
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
+
 
 .. autoclass:: pyvisa.resources.TCPIPInstrument
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.TCPIPSocket
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.USBInstrument
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.USBRaw
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.GPIBInstrument
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.GPIBInterface
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.FirewireInstrument
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.PXIInstrument
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.PXIMemory
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.VXIInstrument
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.VXIMemory
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
 
 .. autoclass:: pyvisa.resources.VXIBackplane
     :members:
     :inherited-members:
+    :exclude-members: ask_delay, ask_for_values, ask
+    :undoc-members:
+
