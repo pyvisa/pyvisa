@@ -23,6 +23,12 @@ It is currently maintained by Hernan E. Grecco <hernan.grecco@gmail.com>.
 Take a look at AUTHORS_ for more information
 
 
+Is PyVISA thread-safe?
+----------------------
+
+Yes, PyVISA is thread safe starting from version 1.6.
+
+
 I have an error in my program and I am having trouble to fix it
 ---------------------------------------------------------------
 
