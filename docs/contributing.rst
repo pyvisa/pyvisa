@@ -45,6 +45,25 @@ Once you have a copy of the source, you can embed it in your Python package, or 
    Continuum Analytics that includes many scientific packages.
 
 
+Contributing to an existing backend
+-----------------------------------
+
+Backends are the central piece of PyVISA as they provide the low level communication
+over the different interfaces. There a couple of backends in the wild which can use
+your help. Look them up in PyPI_ (try `pyvisa` in the search box) and see where you
+can help.
+
+
+Contributing a new backend
+--------------------------
+
+If you think there is a new way that low level communication can be achieved, go for
+it. You can use any of the existing backends as a template or start a thread in the
+`issue tracker`_ and we will be happy to help you.
+
+
+
+
 .. _easy_install: http://pypi.python.org/pypi/setuptools
 .. _Python: http://www.python.org/
 .. _pip: http://www.pip-installer.org/

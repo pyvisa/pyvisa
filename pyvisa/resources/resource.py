@@ -92,13 +92,19 @@ class Resource(object):
 
     @timeout.setter
     def timeout(self, timeout):
-        if timeout < 0 or math.isnan(timeout):
+        if timeout is None:
             timeout = constants.VI_TMO_INFINITE
-        elif not (0 <= timeout <= 4294967294):
+        elif timeout < 1 or math.isnan(timeout):
+            timeout = constants.VI_TMO_INFINITE
+        elif not (1 <= timeout <= 4294967294):
             raise ValueError("timeout value is invalid")
         else:
             timeout = int(timeout)
         self.set_visa_attribute(constants.VI_ATTR_TMO_VALUE, timeout)
+
+    @timeout.deleter
+    def timeout(self):
+        self.set_visa_attribute(constants.VI_ATTR_TMO_VALUE, constants.VI_TMO_INFINITE)
 
     @property
     def resource_info(self):

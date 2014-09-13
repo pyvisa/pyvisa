@@ -4,7 +4,6 @@
 Visa Library
 ------------
 
-
 .. autoclass:: pyvisa.highlevel.VisaLibraryBase
     :members:
 

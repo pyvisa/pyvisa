@@ -39,11 +39,10 @@ used simply by:
 
 Once that you have a `ResourceManager`, you can list the available resources
 using the `list_resources` method. The output is a tuple listing the
-:ref:`sec:visa-resource-names`. See section :ref:`sec:visa-resource-names`
-for a short explanation of that.
+:ref:`resource_names`.
 
 In this case, there is a GPIB instrument with instrument number 14, so you ask
-the `ResourceManager` to open `"'GPIB0::14::INSTR'" and assign the returned
+the `ResourceManager` to open "'GPIB0::14::INSTR'" and assign the returned
 object to the *my_instrument*.
 
 Notice `open_resource` has given you an instance of `GPIBInstrument` class
@@ -54,7 +53,7 @@ Notice `open_resource` has given you an instance of `GPIBInstrument` class
 
 There many `Resource` subclasses representing the different types of resources, but
 you do not have to worry as the `ResourceManager` will provide you with the appropiate
-class. You can check the methods and attributes of each class in the :ref:`_api_resources`
+class. You can check the methods and attributes of each class in the :ref:`api_resources`
 
 Then, you query the device with the following message: `'\*IDN?'`.
 Which is the standard GPIB message for "what are you?" or -- in some cases --
@@ -87,7 +86,6 @@ one `query()` call. Thus, the above source code is equivalent to::
 
    print(itc4.query("V"))
 
-It couldn't be simpler. See section :ref:`sec:serial-devices` for
-further information about serial devices.
+It couldn't be simpler.
 
 

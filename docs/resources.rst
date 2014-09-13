@@ -39,11 +39,11 @@ If the resource is closed, an exception will be raised:
 
 
 timeout
-~~~~~~~~
+~~~~~~~
 
 Very most VISA I/O operations may be performed with a timeout. If a timeout is
 set, every operation that takes longer than the timeout is aborted and an
-exception is raised.  Timeouts are given per instrument in milliseconds.
+exception is raised.  Timeouts are given per instrument in **milliseconds**.
 
 For all PyVISA objects, a timeout is set with
 
@@ -52,9 +52,7 @@ For all PyVISA objects, a timeout is set with
    my_device.timeout = 25000
 
 Here, `my_device` may be a device, an interface or whatever, and its timeout is
-set to 25 seconds.  Floating-point values are allowed.  If you set  it to zero,
-all operations must succeed instantaneously.  You must not set it  to `None`.
-Instead, if you want to remove the timeout, just say
+set to 25 seconds. To set an infinite timeout, set it to None or:
 
 .. code-block:: python
 
@@ -117,16 +115,16 @@ You may set termination characters for each instrument, e.g.
 
 .. code-block:: python
 
-   my_instrument.read_termination = CR
+   my_instrument.read_termination = '\r'
 
-(CR is an alias for '\r', you can just put '\r' if you want)
+('\r' is carriage return, usually appearing in the manuals as CR)
 
 Alternatively you can give it when creating your instrument object::
 
-   my_instrument = rm.open_resource("GPIB::10", read_termination=CR)
+   my_instrument = rm.open_resource("GPIB::10", read_termination='\r')
 
 The default value depends on the bus system.  Generally, the sequence is empty,
-in particular for GPIB. For RS232 it's `CR`.
+in particular for GPIB. For RS232 it's `\r`.
 
 You can specify the character to add to each outgoing message using the
 `write_termination` attribute.

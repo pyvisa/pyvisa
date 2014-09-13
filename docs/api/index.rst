@@ -10,4 +10,5 @@ API
 
     visalibrarybase
     resourcemanager
+    resources
     constants

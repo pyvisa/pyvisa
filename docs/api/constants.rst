@@ -5,6 +5,9 @@
 Constants module
 ----------------
 
+Provides user-friendly naming to values used in different functions.
+
+
 .. autoclass:: AccessModes
     :members:
     :undoc-members:

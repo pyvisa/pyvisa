@@ -1,8 +1,8 @@
 :orphan:
 
 
-PyVISA: Control your VISA instruments with Python
-=================================================
+PyVISA: Control your instruments with Python
+============================================
 
 .. image:: _static/logo-full.jpg
    :alt: PyVISA
@@ -63,8 +63,8 @@ User guide
     tutorial
     rvalues
     example
-    advanced
     resources
+    backends
     architecture
 
 More information
@@ -73,10 +73,11 @@ More information
 .. toctree::
     :maxdepth: 1
 
+    names
     migrating
     contributing
     faq
-    names
+    getting_nivisa
     api/index
 
 

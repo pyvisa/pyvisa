@@ -24,6 +24,8 @@ from . import errors
 
 #: Resource extended information
 #:
+#: Named tuple with information about a resource. Returned by some :class:`ResourceManager` methods.
+#:
 #: :interface_type: Interface type of the given resource string. :class:`pyvisa.constants.InterfaceType`
 #: :interface_board_number: Board number of the interface of the given resource string.
 #: :resource_class: Specifies the resource class (for example, "INSTR") of the given resource string.
@@ -36,16 +38,22 @@ ResourceInfo = collections.namedtuple('ResourceInfo',
 
 
 class VisaLibraryBase(object):
-    """Base class for VISA library wrappers.
+    """Base for VISA library classes.
 
-    Do not instantiate directly, but take it from a ResourceManager:
+    A class derived from `VisaLibraryBase` library provides the low-level communication
+    to the underlying devices providing Pythonic wrappers to VISA functions. But not all
+    derived class must/will implement all methods.
+
+    The default VisaLibrary class is :class:`pyvisa.ctwrapper.highlevel.NIVisaLibrary`,
+    which implements a ctypes wrapper around the NI-VISA library.
+
+    In general, you should not instantiate it directly. The object exposed to the user
+    is the :class:`pyvisa.highlevel.ResourceManager`. If needed, you can access the
+    VISA library from it::
 
         >>> import visa
         >>> rm = visa.ResourceManager("/path/to/my/libvisa.so.7")
         >>> lib = rm.visalib
-
-    Derived classes must have a constructor that accept a single element
-    following the syntax of :ref::open_visa_library:
     """
 
     #: Default ResourceManager instance for this library.
@@ -147,7 +155,7 @@ class VisaLibraryBase(object):
         """A session dependent context for ignoring warnings
 
         :param session: Unique logical identifier to a session.
-        :param *warnings: constants identifying the warnings to ignore.
+        :param warnings_constants: constants identifying the warnings to ignore.
         """
         self._ignore_warning_in_session[session].update(warnings_constants)
         yield
@@ -366,7 +374,7 @@ class VisaLibraryBase(object):
         Corresponds to viAssertUtilSignal function of the VISA library.
 
         :param session: Unique logical identifier to a session.
-        :param line: specifies the utility bus signal to assert. (Constants.UTIL_ASSERT*)
+        :param line: specifies the utility bus signal to assert. (Constants.VI_UTIL_ASSERT*)
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -427,7 +435,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param event_type: Logical event identifier.
         :param mechanism: Specifies event handling mechanisms to be disabled.
-                          (Constants.QUEUE, .Handler, .SUSPEND_HNDLR, .ALL_MECH)
+                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -441,7 +449,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param event_type: Logical event identifier.
         :param mechanism: Specifies event handling mechanisms to be disabled.
-                          (Constants.QUEUE, .Handler, .SUSPEND_HNDLR, .ALL_MECH)
+                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_SUSPEND_HNDLR)
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -455,7 +463,7 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param event_type: Logical event identifier.
         :param mechanism: Specifies event handling mechanisms to be disabled.
-                          (Constants.QUEUE, .Handler, .SUSPEND_HNDLR)
+                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR)
         :param context:
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
@@ -530,7 +538,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :param mode: Specifies the state of the ATN line and optionally the local active controller state.
-                     (Constants.GPIB_ATN*)
+                     (Constants.VI_GPIB_ATN*)
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -544,7 +552,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :param mode: Specifies the state of the REN line and optionally the device remote/local state.
-                     (Constants.GPIB_REN*)
+                     (Constants.VI_GPIB_REN*)
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -559,7 +567,7 @@ class VisaLibraryBase(object):
         :param primary_address: Primary address of the GPIB device to which you want to pass control.
         :param secondary_address: Secondary address of the targeted GPIB device.
                                   If the targeted device does not have a secondary address,
-                                  this parameter should contain the value Constants.NO_SEC_ADDR.
+                                  this parameter should contain the value Constants.VI_NO_SEC_ADDR.
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -677,7 +685,7 @@ class VisaLibraryBase(object):
         :param map_base: Offset (in bytes) of the memory to be mapped.
         :param map_size: Amount of memory to map (in bytes).
         :param access:
-        :param suggested: If not Constants.NULL (0), the operating system attempts to map the memory to the address
+        :param suggested: If not Constants.VI_NULL (0), the operating system attempts to map the memory to the address
                           specified in suggested. There is no guarantee, however, that the memory will be mapped to
                           that address. This operation may map the memory into an address region different from
                           suggested.
@@ -693,8 +701,8 @@ class VisaLibraryBase(object):
         Corresponds to viMapTrigger function of the VISA library.
 
         :param session: Unique logical identifier to a session.
-        :param trigger_source: Source line from which to map. (Constants.TRIG*)
-        :param trigger_destination: Destination line to which to map. (Constants.TRIG*)
+        :param trigger_source: Source line from which to map. (Constants.VI_TRIG*)
+        :param trigger_destination: Destination line to which to map. (Constants.VI_TRIG*)
         :param mode:
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
@@ -1183,7 +1191,7 @@ class VisaLibraryBase(object):
         Corresponds to viSetBuf function of the VISA library.
 
         :param session: Unique logical identifier to a session.
-        :param mask: Specifies the type of buffer. (Constants.READ_BUF, .WRITE_BUF, .IO_IN_BUF, .IO_OUT_BUF)
+        :param mask: Specifies the type of buffer. (Constants.VI_READ_BUF, .VI_WRITE_BUF, .VI_IO_IN_BUF, .VI_IO_OUT_BUF)
         :param size: The size to be set for the specified buffer(s).
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
@@ -1260,8 +1268,8 @@ class VisaLibraryBase(object):
         Corresponds to viUnmapTrigger function of the VISA library.
 
         :param session: Unique logical identifier to a session.
-        :param trigger_source: Source line used in previous map. (Constants.TRIG*)
-        :param trigger_destination: Destination line used in previous map. (Constants.TRIG*)
+        :param trigger_source: Source line used in previous map. (Constants.VI_TRIG*)
+        :param trigger_destination: Destination line used in previous map. (Constants.VI_TRIG*)
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -1313,7 +1321,7 @@ class VisaLibraryBase(object):
         Corresponds to viVxiCommandQuery function of the VISA library.
 
         :param session: Unique logical identifier to a session.
-        :param mode: Specifies whether to issue a command and/or retrieve a response. (Constants.VXI_CMD*, .VXI_RESP*)
+        :param mode: Specifies whether to issue a command and/or retrieve a response. (Constants.VI_VXI_CMD*, .VI_VXI_RESP*)
         :param command: The miscellaneous command to send.
         :return: The response retrieved from the device, return value of the library call.
         :rtype: int, :class:`pyvisa.constants.StatusCode`
@@ -1377,28 +1385,43 @@ class VisaLibraryBase(object):
         raise NotImplementedError
 
 
-def list_wrappers():
+def list_backends():
+    """Return installed backends.
+
+    Backends are installed python packages named pyvisa-<something> where <something>
+    is the name of the backend.
+
+    :rtype: list
+    """
     return ['ni'] + [name for (loader, name, ispkg) in pkgutil.iter_modules()
                      if name.startswith('pyvisa-')]
 
 
+#: Maps backend name to VisaLibraryBase derived class
+#: dict[str, :class:`pyvisa.highlevel.VisaLibraryBase`]
 _WRAPPERS = {}
-def get_wrapper(wrapper_name):
+
+
+def get_wrapper_class(backend_name):
+    """Return the WRAPPER_CLASS for a given backend.
+
+    :rtype: pyvisa.highlevel.VisaLibraryBase
+    """
     try:
-        return _WRAPPERS[wrapper_name]
+        return _WRAPPERS[backend_name]
     except KeyError:
-        if wrapper_name == 'ni':
+        if backend_name == 'ni':
             from .ctwrapper import NIVisaLibrary
             _WRAPPERS['ni'] = NIVisaLibrary
             return NIVisaLibrary
 
-    for pkgname in list_wrappers():
-        if pkgname.endswith('-' + wrapper_name):
+    for pkgname in list_backends():
+        if pkgname.endswith('-' + backend_name):
             pkg = __import__(pkgname)
-            _WRAPPERS[wrapper_name] = cls = pkg.WRAPPER_CLASS
+            _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
             return cls
     else:
-        raise ValueError('Wrapper not found: No package named pyvisa-%s' % wrapper_name)
+        raise ValueError('Wrapper not found: No package named pyvisa-%s' % backend_name)
 
 
 def open_visa_library(specification):
@@ -1414,7 +1437,7 @@ def open_visa_library(specification):
         argument = specification
         wrapper = 'ni'
 
-    cls = get_wrapper(wrapper)
+    cls = get_wrapper_class(wrapper)
 
     try:
         return cls(argument)
@@ -1526,7 +1549,7 @@ class ResourceManager(object):
 
         :param query: regular expression used to match devices.
         :return: Mapping of resource name to ResourceInfo
-        :rtype: dict
+        :rtype: dict[str, :class:`pyvisa.highlevel.ResourceInfo`]
         """
 
         return dict((resource, self.resource_info(resource))
@@ -1567,6 +1590,8 @@ class ResourceManager(object):
         :param open_timeout: time out to open.
         :param kwargs: keyword arguments to be used to change instrument attributes
                        after construction.
+
+        :rtype: :class:`pyvisa.resources.Resource`
         """
         info = self.resource_info(resource_name)
 

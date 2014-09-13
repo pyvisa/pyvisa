@@ -1,6 +1,6 @@
 .. _rvalues:
 
-Writing and reading values
+Reading and Writing values
 ==========================
 
 Some instruments allow to transfer to and from the computer larger datasets
@@ -55,7 +55,7 @@ if the returned values are separated by a `'$'` you can do the following call:
     >>> values = inst.query_ascii_values('CURV?', separator='$')
 
 You can provide a function to takes a string and returns an iterable.
-Default value for the separator is `','`
+Default value for the separator is `','` (comma)
 
 .. _sec:reading-binary-data:
 
@@ -73,7 +73,7 @@ If you have doubles `d` in big endian the call will be::
 
     >>> values = inst.query_binary_values('CURV?', datatype='d', is_big_endian=True)
 
-You can also specify the output container type, just as was shown before.
+You can also specify the output container type, just as it was shown before.
 
 
 Writing ASCII values
@@ -99,7 +99,7 @@ The separator can also be specified just like in `query_ascii_values`.
     >>> inst.write_ascii_values('WLISt:WAVeform:DATA somename,', values, converter='x', separator='$')
 
 You can provide a function to takes a iterable and returns an string.
-Default value for the separator is `','`
+Default value for the separator is `','` (comma)
 
 
 Writing binary values
@@ -119,7 +119,7 @@ Again you can specify the `datatype` and `endianness`.
 
 
 Preconfiguring the transfer format
-==================================
+----------------------------------
 
 Most of the cases, each device will transfer data in the same format every time.
 And making the call so detailed everytime can be annoying. For this purpose,
@@ -135,7 +135,7 @@ e.g. little-endian doubles and a numpy array::
 
 or shorter:
 
-    >>> inst.values_format.use_binary('f', False, numpy.array)
+    >>> inst.values_format.use_binary('d', False, numpy.array)
 
 After doing this, you can simply call::
 
@@ -158,13 +158,15 @@ or shorter:
     >>> inst.values_format.use_ascii('x', '$', numpy.array)
 
 
+This works for both query and write operations.
+
 
 When things are not what they should be
-=======================================
+---------------------------------------
 
 PyVISA provides an easy way to transfer data from and to the device. The methods
 described above work fine for 99% of the cases but there is always a particular
-device that do not follow any of th standard protocol and is so different that
+device that do not follow any of the standard protocols and is so different that
 cannot be adapted with the arguments provided above.
 
 In those cases, you need to get the data::

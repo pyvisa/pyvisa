@@ -3,7 +3,7 @@
 Installation
 ============
 
-PyVISA is a frontend to the VISA library which runs on Python 2.6+ and 3.2+.
+PyVISA is a frontend to the VISA library. It runs on Python 2.6+ and 3.2+.
 
 You can install it using pip_::
 
@@ -15,7 +15,7 @@ NI Backend
 
 In order for PyVISA to work, you need to have a suitable backend. PyVISA includes
 a backend that wraps the `National Instruments's VISA`_ library. However, you need to download
-and install the library yourself. (:ref:`getting_nivisa`). There are multiple
+and install the library yourself (See :ref:`getting_nivisa`). There are multiple
 VISA implementations from different vendors. PyVISA is tested only against
 `National Instruments's VISA`_.
 

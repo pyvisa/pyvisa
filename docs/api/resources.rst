@@ -1,10 +1,76 @@
 .. _api_resources:
 
-.. py:module:: pyvisa.resources
+Resource classes
+----------------
 
-Resources
----------
+Resources are high level abstractions to managing specific sessions. An instance
+of one of these classes is returned by the :meth:`~pyvisa.highlevel.ResourceManager.open_resource`
+depending on the resource type.
 
-.. automodule:: pyvisa.resources
-   :members:
-   :undoc-members:
+    - :class:`~pyvisa.resources.SerialInstrument`
+    - :class:`~pyvisa.resources.TCPIPInstrument`
+    - :class:`~pyvisa.resources.TCPIPSocket`
+    - :class:`~pyvisa.resources.USBInstrument`
+    - :class:`~pyvisa.resources.USBRaw`
+    - :class:`~pyvisa.resources.GPIBInstrument`
+    - :class:`~pyvisa.resources.GPIBInterface`
+    - :class:`~pyvisa.resources.FirewireInstrument`
+    - :class:`~pyvisa.resources.PXIInstrument`
+    - :class:`~pyvisa.resources.PXIInstrument`
+    - :class:`~pyvisa.resources.VXIInstrument`
+    - :class:`~pyvisa.resources.VXIMemory`
+    - :class:`~pyvisa.resources.VXIBackplane`
+
+.. currentmodule::`pyvisa.resources`
+
+.. autoclass:: pyvisa.resources.SerialInstrument
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.TCPIPInstrument
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.TCPIPSocket
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.USBInstrument
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.USBRaw
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.GPIBInstrument
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.GPIBInterface
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.FirewireInstrument
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.PXIInstrument
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.PXIMemory
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.VXIInstrument
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.VXIMemory
+    :members:
+    :inherited-members:
+
+.. autoclass:: pyvisa.resources.VXIBackplane
+    :members:
+    :inherited-members:

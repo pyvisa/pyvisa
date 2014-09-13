@@ -1,6 +1,8 @@
 
+.. _resource_names:
+
 VISA resource names
--------------------
+===================
 
 If you use the function :func:`open_resource`, you must tell this
 function the *VISA resource name* of the instrument you want to

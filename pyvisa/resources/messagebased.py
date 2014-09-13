@@ -364,14 +364,14 @@ class MessageBasedResource(Resource):
         :param message: the message to send.
         :type message: str
         :param delay: delay in seconds between write and read operations.
-                      if None, defaults to self.ask_delay
+                      if None, defaults to self.query_delay
         :returns: the answer from the device.
         :rtype: str
         """
 
         self.write(message)
 
-        delay = self.ask_delay if delay is None else delay
+        delay = self.query_delay if delay is None else delay
 
         if delay > 0.0:
             time.sleep(delay)
