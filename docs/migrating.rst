@@ -32,7 +32,7 @@ change it to:
 
     >>> import visa
     >>> rm = visa.ResourceManager()
-    >>> keithley = rm.get_instrument("GPIB::12")
+    >>> keithley = rm.open_resource("GPIB::12")
     >>> print(keithley.query("*IDN?"))
 
 **If you are doing:**
@@ -77,6 +77,18 @@ change it to::
     >>> inst.read_termination = '\r'
     >>> inst.write_termination = '\r'
 
+**If you are doing::**
+
+    >>> print(lib.status)
+
+change it to::
+
+    >>> print(lib.last_status)
+
+or even better, do it per resource::
+
+    >>> print(rm.last_status) # for the resource manager
+    >>> print(inst.last_status) # for a specific instrument
 
 
 As you see, most of the code shown above is making a few things explict.
@@ -88,6 +100,13 @@ rewrite as pure Python code (see below).
 
 If you were using `Instrument.delay`, change your code or use `Instrument.query_delay`
 (see below).
+
+
+A few alias has been created to ease the transition:
+
+ - ask -> query
+ - ask_delay -> query_delay
+ - get_instrument -> open_resource
 
 
 A more detailed description
@@ -113,11 +132,10 @@ Isolated low-level wrapping module
 In the original PyVISA implementation, the low level implementation (`vpp43`) was
 mixed with higher level constructs. The VISA library was wrapped using ctypes.
 
-In 1.5, we refactored it as `ctwrapper`, also a ctypes wrapper module but it only
-depends on the constants definitions (`constants.py`). This allows us to test the
-foreign function calls by isolating them from higher level abstractions. More importantly,
-it also allows us to build new low level modules that can be used as drop in replacements
-for `ctwrapper` in high level modules.
+In 1.5, we refactored it as `ctwrapper`. This allows us to test the
+foreign function calls by isolating them from higher level abstractions.
+More importantly, it also allows us to build new low level modules that
+can be used as drop in replacements for `ctwrapper` in high level modules.
 
 In 1.6, we made the `ResourceManager` the object exposed to the user. The type of the
 `VisaLibrary` can selected depending of the `library_path` and obtained from a plugin
@@ -181,8 +199,9 @@ or equivalently:
 .. note:: If the path for the library is not given, the path is obtained from
           the user settings file (if exists) or guessed from the OS.
 
-In 1.6, the `status` returned by the library is stored per resource. Additionally,
-warnings can be silenced by resource as well.
+In 1.6, the state returned by the library is stored per resource. Additionally,
+warnings can be silenced by resource as well. You can access with the `last_status`
+property.
 
 All together, these changes makes PyVISA thread safe.
 
@@ -213,6 +232,18 @@ method. In code, this means that you can do::
     >>> print(ret.value)
 
 
+Ask vs. query
+~~~~~~~~~~~~~
+
+Historically, the method `ask` has been used in PyVISA to do a `write` followed
+by a `read`. But in many other programs this operation is called `query`. Thereby
+we have decided to switch the name, keeping an alias to help with the transition.
+
+However, `ask_for_values` has not been aliased to `query_values` because the API
+is different. `ask_for_values` still uses the old formatting API which is limited
+and broken. We suggest that you migrate everything to `query_values`
+
+
 Removal of Instrument.delay and added Instrument.query_delay
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -238,6 +269,8 @@ not expected for incoming messages (although removed if present).
 In PyVISA 1.6, `term_chars` is replaced by `read_termination` and
 `write_termination`. In this way, you can set independently the termination
 for each operation. Automatic removal of `CR + LF` is also gone in 1.6.
+
+
 
 
 .. _Lantz: https://lantz.readthedocs.org/
