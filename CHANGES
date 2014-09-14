@@ -5,7 +5,29 @@ PyVISA Changelog
 1.6 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- 13 Resource Classes covering all resource types.
+- Attributes classes provided introspection to VISA attributes.
+- Many VISA attributes added to Resource Classes.
+- Use of IntEnum for common constants.
+- Better documentation.
+- Implementation of discoverable backends.
+- New functions to encode and decode of IEEE blocks.
+- New functions to encode and decode of ASCII blocks.
+- New API to transfer values from the instrument.
+- Renamed ask/ask_delay/ask_for_values to ask/query_delay/query_values.
+  Old names still available for backwards compatibility.
+- Implemented Group Execute Trigger for GPIBInterface.
+  (Issue #67)
+- Make setuptools a requirement.
+  (Issue #64 and 68)
+- Simplified testing.
+- Removed legacy subpackage.
+- Removed string handling wrappers.
+- Removed Instrument class in favour of Resource.
+- Removed status and implemented thread-safe, per instrument, last_status.
+- Refactored warning ignoring mechanisms to a thread-safe one.
+- Added enum34 requirement for Python < 3.4.
+- Removed deprecated term_chars.
 
 
 1.5 (2014-06-24)

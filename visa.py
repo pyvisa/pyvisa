@@ -5,8 +5,6 @@
 
     Module to provide an import shortcut for the most common VISA operations.
 
-    This is a legacy module for backwards compatibility with PyVISA < 1.5
-
     This file is part of PyVISA.
 
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
