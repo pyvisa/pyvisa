@@ -52,11 +52,13 @@ For all PyVISA objects, a timeout is set with
    my_device.timeout = 25000
 
 Here, `my_device` may be a device, an interface or whatever, and its timeout is
-set to 25 seconds. To set an infinite timeout, set it to None or:
+set to 25 seconds. To set an infinite timeout, set it to None or float('+inf'):
 
 .. code-block:: python
 
    del my_device.timeout
+
+To set it to immediate, set it to `0` or a negative value.
 
 Now every operation of the resource takes as long as it takes, even
 indefinitely if necessary.
