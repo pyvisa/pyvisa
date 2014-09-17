@@ -19,7 +19,7 @@ from .resource import Resource
 from .registerbased import RegisterBasedResource
 
 
-@Resource.register(constants.InterfaceType.vxi, 'INSTR')
+@Resource.register(constants.InterfaceType.pxi, 'INSTR')
 class PXIInstrument(RegisterBasedResource):
     """Communicates with to devices of type PXI::<device>[::INSTR]
 
@@ -34,7 +34,7 @@ class PXIInstrument(RegisterBasedResource):
     """
 
 
-@Resource.register(constants.InterfaceType.vxi, 'MEMACC')
+@Resource.register(constants.InterfaceType.pxi, 'MEMACC')
 class PXIMemory(RegisterBasedResource):
     """Communicates with to devices of type PXI[interface]::MEMACC
 
