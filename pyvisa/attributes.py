@@ -98,6 +98,19 @@ class Attribute(with_metaclass(AttributeType)):
 
         instance.set_visa_attribute(self.attribute_id, self.pre_set(value))
 
+    @classmethod
+    def in_resource(self, session_type):
+        """Returns True if the attribute is part of a given session type.
+
+        The session_type is a tuple with the interface type and resource_class
+
+        :type session_type: (constants.InterfaceType, str)
+        :rtype: bool
+        """
+        if self.resources is AllSessionTypes:
+            return True
+        return session_type in self.resources
+
 
 class EnumAttribute(Attribute):
     """Class for attributes with values that map to a PyVISA Enum.
