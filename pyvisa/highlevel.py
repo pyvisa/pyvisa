@@ -121,7 +121,7 @@ class VisaLibraryBase(object):
         """Override this method to return an iterable of possible library_paths
         to try in case that no argument is given.
         """
-        return tuple('unset',)
+        return ('unset', )
 
     def _init(self):
         """Override this method to customize VisaLibrary initialization.
@@ -1562,8 +1562,10 @@ class ResourceManager(object):
 
         :rtype: :class:`pyvisa.highlevel.ResourceInfo`
         """
-        ret, _ = self.visalib.parse_resource_extended(self.session, resource_name)
-        return ret
+        ret, err = self.visalib.parse_resource_extended(self.session, resource_name)
+        if err == constants.StatusCode.success:
+            return ret
+        raise ValueError('Could not parse resource: %s' % resource_name)
 
     def open_bare_resource(self, resource_name,
                           access_mode=constants.AccessModes.no_lock,
