@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    pint.compat.check_output
-    ~~~~~~~~~~~~~~~~~~~~~~~~
+    pyvisa.compat.check_output
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Taken from the Python 2.7 source code.
 

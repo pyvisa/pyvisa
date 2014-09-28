@@ -64,7 +64,7 @@ class BaseTestCase(unittest.TestCase):
 
 
 def testsuite():
-    """A testsuite that has all the pint tests.
+    """A testsuite that has all the pyvisa tests.
     """
     return unittest.TestLoader().discover(os.path.dirname(__file__))
 

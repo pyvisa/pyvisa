@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    pint.compat
-    ~~~~~~~~~~~
+    pyvisa.compat
+    ~~~~~~~~~~~~~
 
     Compatibility layer.
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    pint.compat.nullhandler
-    ~~~~~~~~~~~~~~~~~~~~~~~
+    pyvisa.compat.nullhandler
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Taken from the Python 2.7 source code.
 
