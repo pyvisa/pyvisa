@@ -338,7 +338,11 @@ class MessageBasedResource(Resource):
             try:
                 return parse_binary(data, vf.is_big_endian, vf.datatype=='f')
             except ValueError as e:
-                raise errors.InvalidBinaryFormat(e.args)
+                try:
+                    msg = e.args[0]
+                except IndexError:
+                    msg = ''
+                raise errors.InvalidBinaryFormat(msg)
 
         if fmt & 0x01 == 0: # ascii
             return from_ascii_block(self.read())
