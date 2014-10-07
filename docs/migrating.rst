@@ -90,6 +90,14 @@ or even better, do it per resource::
     >>> print(rm.last_status) # for the resource manager
     >>> print(inst.last_status) # for a specific instrument
 
+**If you are doing::**
+
+    >>> inst.timeout = 1  # Seconds
+
+change it to::
+
+    >>> inst.timeout = 1000  # Milliseconds
+
 
 As you see, most of the code shown above is making a few things explict.
 It adds 1 line of code (instantiating the ResourceManager object)
@@ -242,6 +250,16 @@ we have decided to switch the name, keeping an alias to help with the transition
 However, `ask_for_values` has not been aliased to `query_values` because the API
 is different. `ask_for_values` still uses the old formatting API which is limited
 and broken. We suggest that you migrate everything to `query_values`
+
+
+Seconds to milliseconds
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The timeout is now in milliseconds (not in seconds as it was before). The reason
+behind this change is to make it coherent with all other VISA implementations out
+there. The C-API, LabVIEW, .NET: all use milliseconds. Using the same units not
+only makes it easy to migrate to PyVISA but also allows to profit from all other
+VISA docs out there without extra cognitive effort.
 
 
 Removal of Instrument.delay and added Instrument.query_delay
