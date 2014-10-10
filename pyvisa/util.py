@@ -312,6 +312,26 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
         # 012
         data_length = len(block) - offset - 1
 
+    return from_binary_block(block, offset, data_length, datatype, is_big_endian, container)
+
+
+def from_binary_block(block, offset=0, data_length=None, datatype='f', is_big_endian=False, container=list):
+    """Convert a binary block into an iterable of numbers.
+
+    :param block: binary block.
+    :type block: bytes
+    :param offset: offset at which the data block starts (default=0)
+    :param data_length: size in bytes of the data block (default=len(block) - offset)
+    :param datatype: the format string for a single element. See struct module.
+    :param is_big_endian: boolean indicating endianess.
+    :param container: container type to use for the output data.
+    :return: items
+    :rtype: type(container)
+    """
+
+    if data_length is None:
+        data_length = len(block) - offset
+
     element_length = struct.calcsize(datatype)
     array_length = int(data_length / element_length)
 

@@ -20,7 +20,7 @@ import warnings
 from .. import logger
 from .. import constants
 from .. import errors
-from ..util import from_ascii_block, parse_binary, from_ieee_block, to_ieee_block, to_ascii_block
+from ..util import from_ascii_block, parse_binary, from_ieee_block, to_ieee_block, to_ascii_block, from_binary_block
 
 from .resource import Resource
 
@@ -30,7 +30,7 @@ class ValuesFormat(object):
     """
     __slots__ = ('is_binary', 'container',
                  'datatype', 'is_big_endian',
-                 'converter', 'separator')
+                 'converter', 'separator', 'header_fmt')
 
     def __init__(self):
         self.is_binary = True
@@ -39,6 +39,7 @@ class ValuesFormat(object):
         self.container = list
         self.converter = 'f'
         self.separator = ','
+        self.header_fmt = 'ieee'
 
     def use_ascii(self, converter, separator, container=list):
         self.converter = converter
@@ -46,11 +47,12 @@ class ValuesFormat(object):
         self.container = container
         self.is_binary = False
 
-    def use_binary(self, datatype, is_big_endian, container=list):
+    def use_binary(self, datatype, is_big_endian, container=list, header_fmt='ieee'):
         self.datatype = datatype
         self.is_big_endian = is_big_endian
         self.container = container
         self.is_binary = True
+        self.header_fmt = header_fmt
 
 
 class MessageBasedResource(Resource):
@@ -399,9 +401,9 @@ class MessageBasedResource(Resource):
         vf = self.values_format
 
         if vf.is_binary:
-            return self.query_binary_values(message, vf.datatype, vf.is_big_endian, vf.container, delay)
+            return self.query_binary_values(message, vf.datatype, vf.is_big_endian, vf.container, delay, vf.header_fmt)
 
-        return self.query_ascii_values(message, vf.from_ascii, vf.separator, vf.container, delay)
+        return self.query_ascii_values(message, vf.converter, vf.separator, vf.container, delay)
 
     def query_ascii_values(self, message, converter='f', separator=',', container=list, delay=None):
         """Query the device for values in ascii format returning an iterable of values.
@@ -431,7 +433,7 @@ class MessageBasedResource(Resource):
 
         return from_ascii_block(block, converter, separator, container)
 
-    def query_binary_values(self, message, datatype='f', is_big_endian=False, container=list, delay=None):
+    def query_binary_values(self, message, datatype='f', is_big_endian=False, container=list, delay=None, header_fmt='ieee'):
         """Converts an iterable of numbers into a block of data in the ieee format.
 
         :param message: the message to send to the instrument.
@@ -444,6 +446,9 @@ class MessageBasedResource(Resource):
         :rtype: bytes
         """
 
+        if header_fmt not in ('ieee', 'empty', 'hp'):
+            raise ValueError("Invalid header format. Valid options are 'ieee', 'empty', 'hp'")
+
         self.write(message)
         if delay is None:
             delay = self.query_delay
@@ -453,7 +458,12 @@ class MessageBasedResource(Resource):
         block = self.read_raw()
 
         try:
-            return from_ieee_block(block, datatype, is_big_endian, container)
+            if header_fmt == 'ieee':
+                return from_ieee_block(block, datatype, is_big_endian, container)
+            elif header_fmt == 'empty':
+                return from_binary_block(block, 0, None, datatype, is_big_endian, container)
+            elif header_fmt == 'hp':
+                return from_binary_block(block, 4, None, datatype, is_big_endian, container)
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
