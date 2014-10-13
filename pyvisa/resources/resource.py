@@ -138,6 +138,13 @@ class Resource(object):
         return self.visalib.parse_resource(self._resource_manager.session,
                                            self.resource_name).interface_type
 
+    def ignore_warning(self, *warnings_constants):
+        """Ignoring warnings context manager for the current resource.
+
+        :param warnings_constants: constants identifying the warnings to ignore.
+        """
+        return self.visalib.ignore_warning(self.session, *warnings_constants)
+
     def open(self, access_mode=constants.AccessModes.no_lock, open_timeout=5000):
         """Opens a session to the specified resource.
 
@@ -148,7 +155,7 @@ class Resource(object):
         """
 
         logger.debug('%s - opening ...', self._resource_name, extra=self._logging_extra)
-        with self.visalib.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT):
+        with self._resource_manager.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT):
             self.session, status = self._resource_manager.open_bare_resource(self._resource_name, access_mode, open_timeout)
 
             if status == constants.VI_SUCCESS_DEV_NPRESENT:

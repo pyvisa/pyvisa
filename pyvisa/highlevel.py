@@ -1508,6 +1508,13 @@ class ResourceManager(object):
     def __del__(self):
         self.close()
 
+    def ignore_warning(self, *warnings_constants):
+        """Ignoring warnings context manager for the current resource.
+
+        :param warnings_constants: constants identifying the warnings to ignore.
+        """
+        return self.visalib.ignore_warning(self.session, *warnings_constants)
+
     @property
     def last_status(self):
         """Last status code returned for an operation with this Resource Manager
