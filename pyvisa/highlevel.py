@@ -121,7 +121,7 @@ class VisaLibraryBase(object):
         """Override this method to return an iterable of possible library_paths
         to try in case that no argument is given.
         """
-        return ('unset', )
+        return tuple('unset', )
 
     def _init(self):
         """Override this method to customize VisaLibrary initialization.

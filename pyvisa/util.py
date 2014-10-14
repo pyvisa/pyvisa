@@ -211,7 +211,7 @@ def to_ascii_block(iterable, converter='f', separator=','):
     if isinstance(separator, string_types):
         separator = separator.join
 
-    if isinstance(converter, str):
+    if isinstance(converter, string_types):
         converter = '%' + converter
         return separator(converter % val for val in iterable)
     else:

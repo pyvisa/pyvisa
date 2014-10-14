@@ -5,7 +5,11 @@ PyVISA Changelog
 1.6.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add ignore_warning methods to Resource and ResourceManager.
+- Added more formats to binary values.
+  (Issue #92)
+- Fixed exception raising in legacy read_values.
+  (Issue #91)
 
 
 1.6 (2014-09-28)
