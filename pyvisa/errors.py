@@ -458,7 +458,7 @@ class LibraryError(OSError, Error):
     @classmethod
     def from_wrong_arch(cls, filename):
         s = ''
-        details = util.get_system_details(visa=False)
+        details = util.get_system_details(backends=False)
         visalib = util.LibraryPath(filename, 'user' if filename == util.read_user_library_path() else 'auto')
         s += 'No matching architecture.\n'
         s += '    Current Python interpreter is %s bits\n' % details['bits']

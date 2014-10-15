@@ -16,7 +16,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import warnings
 
 from pyvisa import constants, errors, highlevel, logger
-from pyvisa.compat import integer_types
+from pyvisa.compat import integer_types, OrderedDict
 
 from .cthelper import Library, find_library
 from . import functions
@@ -85,6 +85,25 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
             tmp.insert(0, user_lib)
 
         return tuple(tmp)
+
+    @staticmethod
+    def get_debug_info():
+        """Return a list of lines with backend info.
+        """
+        from pyvisa import __version__
+        d = OrderedDict()
+        d['Version'] = '%s (bundled with PyVISA)' % __version__
+
+        paths = NIVisaLibrary.get_library_paths()
+
+        for ndx, visalib in enumerate(paths, 1):
+            d['#%d: %s' % (ndx, visalib)] = ['found by: %s' % visalib.found_by,
+                                             'bitness: %s' % visalib.bitness]
+
+        if not paths:
+            d['Binary library'] = 'Not found'
+
+        return d
 
     def _init(self):
         try:

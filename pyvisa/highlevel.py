@@ -123,6 +123,12 @@ class VisaLibraryBase(object):
         """
         return tuple('unset', )
 
+    @staticmethod
+    def get_debug_info():
+        """Override this method to return an iterable of lines with the backend debug details.
+        """
+        return {}
+
     def _init(self):
         """Override this method to customize VisaLibrary initialization.
         """

@@ -58,4 +58,5 @@ What does a minimum backend looks like? Quite simple::
 
     WRAPPER_CLASS = MyLibrary
 
-
+Additionally you can provide a staticmethod named get_debug_info that should return a
+dictionary of debug information.

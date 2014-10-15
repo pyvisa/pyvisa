@@ -39,6 +39,7 @@ else:
     def _struct_pack(fmt, *values):
         return struct.pack(str(fmt), *values)
 
+
 def read_user_library_path():
     """Return the library path stored in one of the following configuration files:
 
@@ -370,7 +371,7 @@ def to_ieee_block(iterable, datatype='f', is_big_endian=False):
         return str('#%d%d' % (len(header), data_length)) + _struct_pack(fullfmt, *iterable)
 
 
-def get_system_details(visa=True):
+def get_system_details(backends=True):
     """Return a dictionary with information about the system
     """
     buildno, builddate = platform.python_build()
@@ -394,12 +395,17 @@ def get_system_details(visa=True):
         'builddate': builddate,
         'unicode': unitype,
         'bits': bits,
-        'pyvisa': __version__
+        'pyvisa': __version__,
+        'backends': {}
     }
 
-    if visa:
-        from . import ctwrapper
-        d['visa'] = ctwrapper.WRAPPER_CLASS.get_library_paths()
+    if backends:
+        from . import highlevel
+        for backend in highlevel.list_backends():
+            try:
+                d['backends'][backend] = highlevel.get_wrapper_class(backend).get_debug_info()
+            except Exception:
+                d['backends'][backend] = ['Does not provide debug info']
 
     return d
 
@@ -422,18 +428,41 @@ def system_details_to_str(d, indent=''):
                                           d.get('buildno', 'n/a')),
          '   Unicode:        %s' % d.get('unicode', 'n/a'),
          '',
-         'VISA:',
-         '   PyVISA Version: %s' % d.get('pyvisa', 'n/a'),
+         'PyVISA Version: %s' % d.get('pyvisa', 'n/a'),
          '',
          ]
 
-    for ndx, visalib in enumerate(d.get('visa', ()), 1):
-        l.append('   #%d: %s' % (ndx, visalib))
-        l.append('      found by: %s' % visalib.found_by)
-        l.append('      bitness: %s' % visalib.bitness)
+    def _to_list(key, value, indent_level=0):
+        sp = ' ' * indent_level * 3
 
-    if not d.get('visa', ()):
-        l.append('   Not found.')
+        if isinstance(value, string_types):
+            if key:
+                return ['%s%s: %s' % (sp, key, value)]
+            else:
+                return ['%s%s' % (sp, value)]
+
+        elif isinstance(value, dict):
+            if key:
+                al = ['%s%s:' % (sp, key)]
+            else:
+                al = []
+
+            for k, v in value.items():
+                al.extend(_to_list(k, v, indent_level+1))
+            return al
+
+        elif isinstance(value, (tuple, list)):
+            if key:
+                al = ['%s%s:' % (sp, key)]
+            else:
+                al = []
+
+            for v in value:
+                al.extend(_to_list(None, v, indent_level+1))
+
+            return al
+
+    l.extend(_to_list('Backends', d['backends']))
 
     joiner = '\n' + indent
     print(indent + joiner.join(l) + '\n')
