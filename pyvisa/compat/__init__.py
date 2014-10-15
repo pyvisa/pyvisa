@@ -40,6 +40,10 @@ if sys.version_info < (2, 7):
 else:
     import unittest
 
+try:
+    from collections import OrderedDict
+except ImportError:
+    from .ordereddict import OrderedDict
 
 try:
     from logging import NullHandler
