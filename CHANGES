@@ -10,6 +10,7 @@ PyVISA Changelog
   (Issue #92)
 - Fixed exception raising in legacy read_values.
   (Issue #91)
+- Provide a backend hook to display debug info.
 
 
 1.6 (2014-09-28)
