@@ -127,7 +127,7 @@ class VisaLibraryBase(object):
     def get_debug_info():
         """Override this method to return an iterable of lines with the backend debug details.
         """
-        return {}
+        return ['Does not provide debug info']
 
     def _init(self):
         """Override this method to customize VisaLibrary initialization.

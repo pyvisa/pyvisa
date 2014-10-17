@@ -402,10 +402,21 @@ def get_system_details(backends=True):
     if backends:
         from . import highlevel
         for backend in highlevel.list_backends():
+            if backend.startswith('pyvisa-'):
+                backend = backend[7:]
+
             try:
-                d['backends'][backend] = highlevel.get_wrapper_class(backend).get_debug_info()
-            except Exception:
-                d['backends'][backend] = ['Does not provide debug info']
+                cls = highlevel.get_wrapper_class(backend)
+            except Exception as e:
+                d['backends'][backend] = ['Could not instantiate backend',
+                                          '-> %s' % str(e)]
+                continue
+
+            try:
+                d['backends'][backend] = cls.get_debug_info()
+            except Exception as e:
+                d['backends'][backend] = ['Could not obtain debug info',
+                                          '-> %s' % str(e)]
 
     return d
 
