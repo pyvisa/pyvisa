@@ -129,8 +129,10 @@ class EnumAttribute(Attribute):
 
     def pre_set(self, value):
         if value not in self.enum_type:
-            raise ValueError('%r is an invalid value for attribute %s, should be a %r',
-                             value, self.visa_name, self.enum_type)
+            raise ValueError('%r is an invalid value for attribute %s, '
+                             'should be a %r' % (value,
+                                                 self.visa_name,
+                                                 self.enum_type))
         return value
 
 
