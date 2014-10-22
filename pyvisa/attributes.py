@@ -75,7 +75,8 @@ class Attribute(with_metaclass(AttributeType)):
 
     @classmethod
     def redoc(cls):
-        cls.__doc__ += '\n:VISA Attribute: %s (%s)' % (cls.visa_name, cls.attribute_id)
+        cls.__doc__ += '\n:VISA Attribute: %s (%s)' % (cls.visa_name,
+                                                       cls.attribute_id)
 
     def post_get(self, value):
         return value
@@ -122,7 +123,8 @@ class EnumAttribute(Attribute):
     @classmethod
     def redoc(cls):
         super(EnumAttribute, cls).redoc()
-        cls.__doc__ += '\n:type: :class:%s.%s' % (cls.enum_type.__module__, cls.enum_type.__name__)
+        cls.__doc__ += '\n:type: :class:%s.%s' % (cls.enum_type.__module__,
+                                                  cls.enum_type.__name__)
 
     def post_get(self, value):
         return self.enum_type(value)
@@ -159,18 +161,28 @@ class RangeAttribute(IntAttribute):
     @classmethod
     def redoc(cls):
         super(RangeAttribute, cls).redoc()
-        cls.__doc__ += '\n:range: %s <= value <= %s' % (cls.min_value, cls.max_value)
+        cls.__doc__ += '\n:range: %s <= value <= %s' % (cls.min_value,
+                                                        cls.max_value)
         if cls.values:
             cls.__doc__ += ' or in %s' % cls.values
 
     def pre_set(self, value):
         if not self.min_value <= value <= self.max_value:
             if not self.values:
-                raise ValueError('%r is an invalid value for attribute %s, should be between %r and %r',
-                                 value, self.visa_name, self.min_value, self.max_value)
+                raise ValueError('%r is an invalid value for attribute %s, '
+                                 'should be between %r and %r' % (
+                                                            value, 
+                                                            self.visa_name,
+                                                            self.min_value,
+                                                            self.max_value))
             elif value not in self.values:
-                raise ValueError('%r is an invalid value for attribute %s, should be between %r and %r or %r',
-                                 value, self.visa_name, self.min_value, self.max_value, self.values)
+                raise ValueError('%r is an invalid value for attribute %s, '
+                                 'should be between %r and %r or %r' % (
+                                                            value,
+                                                            self.visa_name,
+                                                            self.min_value, 
+                                                            self.max_value,
+                                                            self.values))
         return value
 
 
@@ -188,8 +200,10 @@ class ValuesAttribute(Attribute):
 
     def pre_set(self, value):
         if value not in self.values:
-            raise ValueError('%r is an invalid value for attribute %s, should be in %s',
-                             value, self.visa_name, self.values)
+            raise ValueError('%r is an invalid value for attribute %s, '
+                             'should be in %s' % (value,
+                                                  self.visa_name,
+                                                  self.values))
         return value
 
 
