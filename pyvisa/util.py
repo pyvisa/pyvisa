@@ -22,7 +22,7 @@ import struct
 import subprocess
 import warnings
 
-from .compat import check_output, string_types
+from .compat import check_output, string_types, OrderedDict
 from . import __version__, logger
 
 if sys.version >= '3':
@@ -396,7 +396,7 @@ def get_system_details(backends=True):
         'unicode': unitype,
         'bits': bits,
         'pyvisa': __version__,
-        'backends': {}
+        'backends': OrderedDict()
     }
 
     if backends:
