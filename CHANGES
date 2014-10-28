@@ -2,7 +2,7 @@ PyVISA Changelog
 ================
 
 
-1.6.1 (unreleased)
+1.6.1 (2014-10-28)
 ------------------
 
 - Add ignore_warning methods to Resource and ResourceManager.
