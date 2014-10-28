@@ -97,8 +97,25 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
         paths = NIVisaLibrary.get_library_paths()
 
         for ndx, visalib in enumerate(paths, 1):
-            d['#%d: %s' % (ndx, visalib)] = ['found by: %s' % visalib.found_by,
-                                             'bitness: %s' % visalib.bitness]
+            nfo = OrderedDict()
+            nfo['found by'] = visalib.found_by
+            nfo['bitness'] = visalib.bitness
+            try:
+                lib = NIVisaLibrary(visalib)
+                sess, _ = lib.open_default_resource_manager()
+                print(sess)
+                nfo['Vendor'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_MANF_NAME)[0])
+                nfo['Impl. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_IMPL_VERSION)[0])
+                nfo['Spec. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_SPEC_VERSION)[0])
+                lib.close(sess)
+            except Exception as e:
+                e = str(e)
+                if 'No matching architecture' in e:
+                    nfo['Could not get more info'] = 'Interpreter and library have different bitness.'
+                else:
+                    nfo['Could not get more info'] = str(e).split('\n')
+
+            d['#%d: %s' % (ndx, visalib)] = nfo
 
         if not paths:
             d['Binary library'] = 'Not found'
