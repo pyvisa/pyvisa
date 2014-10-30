@@ -476,11 +476,14 @@ def system_details_to_str(d, indent=''):
     l.extend(_to_list('Backends', d['backends']))
 
     joiner = '\n' + indent
-    print(indent + joiner.join(l) + '\n')
+    return indent + joiner.join(l) + '\n'
 
 
-def get_debug_info():
-    return system_details_to_str(get_system_details())
+def get_debug_info(to_screen=True):
+    out = system_details_to_str(get_system_details())
+    if not to_screen:
+        return out
+    print(out)
 
 
 def pip_install(package):
