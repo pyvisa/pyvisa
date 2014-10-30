@@ -108,29 +108,26 @@ class VisaShell(PatchedCmd):
         self.current = None
 
         #: list[str]
-        self.py_attr = None
+        self.py_attr = []
         #: list[str]
-        self.vi_attr = None
-
-    def complete_open(self, text, line, begidx, endidx):
-        if not self.resources:
-            self.do_list('do not print')
-        return [item[0] for item in self.resources if item[0].startswith(text)] + \
-               [item[1] for item in self.resources if item[1] and item[1].startswith(text)]
+        self.vi_attr = []
 
     def do_list(self, args):
         """List all connected resources."""
 
-        resources = self.resource_manager.list_resources_info()
+        try:
+            resources = self.resource_manager.list_resources_info()
+        except Exception as e:
+            print(e)
+        else:
+            self.resources = []
+            for ndx, (resource_name, value) in enumerate(resources.items()):
+                if not args:
+                    print('({:2d}) {}'.format(ndx, resource_name))
+                    if value.alias:
+                        print('     alias: {}'.format(value.alias))
 
-        self.resources = []
-        for ndx, (resource_name, value) in enumerate(resources.items()):
-            if not args:
-                print('({:2d}) {}'.format(ndx, resource_name))
-                if value.alias:
-                    print('     alias: {}'.format(value.alias))
-
-            self.resources.append((resource_name, value.alias or None))
+                self.resources.append((resource_name, value.alias or None))
 
     def do_open(self, args):
         """Open resource by number, resource name or alias: open 3"""
@@ -166,6 +163,12 @@ class VisaShell(PatchedCmd):
         except Exception as e:
             print(e)
 
+    def complete_open(self, text, line, begidx, endidx):
+        if not self.resources:
+            self.do_list('do not print')
+        return [item[0] for item in self.resources if item[0].startswith(text)] + \
+               [item[1] for item in self.resources if item[1] and item[1].startswith(text)]
+
     def do_close(self, args):
         """Close resource in use."""
 
@@ -173,10 +176,14 @@ class VisaShell(PatchedCmd):
             print('There are no resources in use. Use the command "open".')
             return
 
-        self.current.finalize()
-        print('The resource has been closed.')
-        self.current = None
-        self.prompt = self.default_prompt
+        try:
+            self.current.close()
+        except Exception as e:
+            print(e)
+        else:
+            print('The resource has been closed.')
+            self.current = None
+            self.prompt = self.default_prompt
 
     def do_query(self, args):
         """Query resource in use: query *IDN? """
@@ -230,19 +237,22 @@ class VisaShell(PatchedCmd):
 
         if len(args) > 2:
             print('Invalid syntax, use `attr <name>` to get; or `attr <name> <value>` to set')
-            return
-
-        if len(args) == 1:
+        elif len(args) == 1:
             # Get
-            print(getattr(self.current, args[0]))
-            return
+            try:
+                print(getattr(self.current, args[0]))
+            except Exception as e:
+                print(e)
         else:
             # Set
             print('Set not implemented yet.')
             return
-            setattr(self.current, args[0], args[1])
-            print('Done')
-            return
+            try:
+                setattr(self.current, args[0], args[1])
+            except Exception as e:
+                print(e)
+            else:
+                print('Done')
 
     def complete_attr(self, text, line, begidx, endidx):
         return [item for item in self.py_attr if item.startswith(text)] + \
