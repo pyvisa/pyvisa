@@ -16,8 +16,8 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import cmd
 
-from . import ResourceManager, attributes
-
+from . import ResourceManager, constants, VisaIOError
+from .thirdparty import prettytable
 
 class PatchedCmd(cmd.Cmd):
 
@@ -156,7 +156,8 @@ class VisaShell(PatchedCmd):
             self.py_attr = []
             self.vi_attr = []
             for attr in getattr(self.current, 'visa_attributes_classes', ()):
-                self.py_attr.append(attr.py_name)
+                if attr.py_name:
+                    self.py_attr.append(attr.py_name)
                 self.vi_attr.append(attr.visa_name)
 
             self.prompt = '(open) '
@@ -221,6 +222,22 @@ class VisaShell(PatchedCmd):
         except Exception as e:
             print(e)
 
+    def do_info(self, args):
+        p = prettytable.PrettyTable(('VISA name', 'Constant', 'Python name', 'val'))
+        for attr in getattr(self.current, 'visa_attributes_classes', ()):
+            try:
+                val = self.current.get_visa_attribute(attr.attribute_id)
+            except VisaIOError as e:
+                val = e.abbreviation
+            except Exception as e:
+                val = str(e)
+                if len(val) > 10:
+                    val = val[:10] + '...'
+            p.add_row((attr.visa_name, attr.attribute_id, attr.py_name, val))
+
+        print(p.get_string(sortby='VISA name'))
+
+
     def do_attr(self, args):
 
         if not self.current:
@@ -239,10 +256,17 @@ class VisaShell(PatchedCmd):
             print('Invalid syntax, use `attr <name>` to get; or `attr <name> <value>` to set')
         elif len(args) == 1:
             # Get
-            try:
-                print(getattr(self.current, args[0]))
-            except Exception as e:
-                print(e)
+            attr_name = args[0]
+            if attr_name.startswith('VI_'):
+                try:
+                    print(self.current.get_visa_attribute(getattr(constants, attr_name)))
+                except Exception as e:
+                    print(e)
+            else:
+                try:
+                    print(getattr(self.current, attr_name))
+                except Exception as e:
+                    print(e)
         else:
             # Set
             print('Set not implemented yet.')
