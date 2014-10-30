@@ -103,7 +103,6 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
             try:
                 lib = NIVisaLibrary(visalib)
                 sess, _ = lib.open_default_resource_manager()
-                print(sess)
                 nfo['Vendor'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_MANF_NAME)[0])
                 nfo['Impl. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_IMPL_VERSION)[0])
                 nfo['Spec. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_SPEC_VERSION)[0])
