@@ -222,7 +222,7 @@ class VisaShell(PatchedCmd):
         except Exception as e:
             print(e)
 
-    def do_info(self, args):
+    def print_attribute_list(self):
         p = prettytable.PrettyTable(('VISA name', 'Constant', 'Python name', 'val'))
         for attr in getattr(self.current, 'visa_attributes_classes', ()):
             try:
@@ -237,7 +237,6 @@ class VisaShell(PatchedCmd):
 
         print(p.get_string(sortby='VISA name'))
 
-
     def do_attr(self, args):
 
         if not self.current:
@@ -247,7 +246,7 @@ class VisaShell(PatchedCmd):
         args = args.strip()
 
         if not args:
-            print('Invalid syntax, use `attr <name>` to get; or `attr <name> <value>` to set')
+            self.print_attribute_list()
             return
 
         args = args.split(' ')
