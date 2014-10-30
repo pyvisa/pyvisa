@@ -79,9 +79,19 @@ class Attribute(with_metaclass(AttributeType)):
                                                        cls.attribute_id)
 
     def post_get(self, value):
+        """Override this method to check or modify the value returned by the VISA function.
+
+        :param value: the value returned by the VISA library.
+        :return: the equivalent python value.
+        """
         return value
 
     def pre_set(self, value):
+        """Override this method to check or modify the value to be passed to the VISA function.
+
+        :param value: the python value to be passed to VISA library.
+        :return: the equivalent value.
+        """
         return value
 
     def __get__(self, instance, owner):
