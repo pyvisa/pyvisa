@@ -35,4 +35,5 @@ if __name__ == '__main__':
         from pyvisa import util
         util.get_debug_info()
     elif args.command == 'shell':
-        print('TBD')
+        from pyvisa import shell
+        shell.main()
