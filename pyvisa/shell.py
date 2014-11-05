@@ -15,86 +15,91 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import cmd
+import sys
 
 from . import ResourceManager, constants, VisaIOError
 from .thirdparty import prettytable
 
-class PatchedCmd(cmd.Cmd):
+if sys.platform == 'darwin':
 
-    use_rawinput = True
+    class Cmd(cmd.Cmd):
 
-    # This has been patched to enable autocompletion on Mac OSX
-    def cmdloop(self, intro=None):
-        """Repeatedly issue a prompt, accept input, parse an initial prefix
-        off the received input, and dispatch to action methods, passing them
-        the remainder of the line as argument.
-        """
+        # This has been patched to enable autocompletion on Mac OSX
+        def cmdloop(self, intro=None):
+            """Repeatedly issue a prompt, accept input, parse an initial prefix
+            off the received input, and dispatch to action methods, passing them
+            the remainder of the line as argument.
+            """
 
-        self.preloop()
-        if self.use_rawinput and self.completekey:
-            try:
-                import readline
-                self.old_completer = readline.get_completer()
-                readline.set_completer(self.complete)
-
-                if 'libedit' in readline.__doc__:
-                    # readline linked to BSD libedit
-                    if self.completekey == 'tab':
-                        key = '^I'
-                    else:
-                        key = self.completekey
-                    readline.parse_and_bind('bind %s rl_complete' % (key,))
-                else:
-                    # readline linked to the real readline
-                    readline.parse_and_bind(self.completekey + ': complete')
-
-            except ImportError:
-                pass
-        try:
-            if intro is not None:
-                self.intro = intro
-            if self.intro:
-                self.stdout.write(str(self.intro)+"\n")
-            stop = None
-            while not stop:
-                if self.cmdqueue:
-                    line = self.cmdqueue.pop(0)
-                else:
-                    if self.use_rawinput:
-                        try:
-                            line = input(self.prompt)
-                        except EOFError:
-                            line = 'EOF'
-                    else:
-                        self.stdout.write(self.prompt)
-                        self.stdout.flush()
-                        line = self.stdin.readline()
-                        if not len(line):
-                            line = 'EOF'
-                        else:
-                            line = line.rstrip('\r\n')
-                line = self.precmd(line)
-                stop = self.onecmd(line)
-                stop = self.postcmd(stop, line)
-            self.postloop()
-        finally:
+            self.preloop()
             if self.use_rawinput and self.completekey:
                 try:
                     import readline
-                    readline.set_completer(self.old_completer)
+                    self.old_completer = readline.get_completer()
+                    readline.set_completer(self.complete)
+
+                    if 'libedit' in readline.__doc__:
+                        # readline linked to BSD libedit
+                        if self.completekey == 'tab':
+                            key = '^I'
+                        else:
+                            key = self.completekey
+                        readline.parse_and_bind('bind %s rl_complete' % (key,))
+                    else:
+                        # readline linked to the real readline
+                        readline.parse_and_bind(self.completekey + ': complete')
+
                 except ImportError:
                     pass
+            try:
+                if intro is not None:
+                    self.intro = intro
+                if self.intro:
+                    self.stdout.write(str(self.intro)+"\n")
+                stop = None
+                while not stop:
+                    if self.cmdqueue:
+                        line = self.cmdqueue.pop(0)
+                    else:
+                        if self.use_rawinput:
+                            try:
+                                line = input(self.prompt)
+                            except EOFError:
+                                line = 'EOF'
+                        else:
+                            self.stdout.write(self.prompt)
+                            self.stdout.flush()
+                            line = self.stdin.readline()
+                            if not len(line):
+                                line = 'EOF'
+                            else:
+                                line = line.rstrip('\r\n')
+                    line = self.precmd(line)
+                    stop = self.onecmd(line)
+                    stop = self.postcmd(stop, line)
+                self.postloop()
+            finally:
+                if self.use_rawinput and self.completekey:
+                    try:
+                        import readline
+                        readline.set_completer(self.old_completer)
+                    except ImportError:
+                        pass
+else:
+    Cmd = cmd.Cmd
 
 
-class VisaShell(PatchedCmd):
+class VisaShell(Cmd):
     """Shell for interactive testing.
     """
 
     intro = '\nWelcome to the VISA shell. Type help or ? to list commands.\n'
     prompt = '(visa) '
 
+    use_rawinput = True
+
     def __init__(self, library_path=''):
-        super(PatchedCmd, self).__init__()
+        super(VisaShell, self).__init__()
         self.resource_manager = ResourceManager(library_path)
         self.default_prompt = self.prompt
 
