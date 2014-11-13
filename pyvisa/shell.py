@@ -109,7 +109,7 @@ class VisaShell(Cmd):
         self.resources = []
 
         #: Resource in use
-        #: visa.Resource
+        #: pyvisa.resources.Resource
         self.current = None
 
         #: list[str]
@@ -272,15 +272,21 @@ class VisaShell(Cmd):
                 except Exception as e:
                     print(e)
         else:
-            # Set
-            print('Set not implemented yet.')
-            return
-            try:
-                setattr(self.current, args[0], args[1])
-            except Exception as e:
-                print(e)
+            attr_name, attr_state = args[0], args[1]
+            if attr_name.startswith('VI_'):
+                try:
+                    self.current.set_visa_attribute(getattr(constants, attr_name), attr_state)
+                    print('Done')
+                except Exception as e:
+                    print(e)
             else:
-                print('Done')
+                print('Setting Resource Attributes by python name is not yet supported.')
+                return
+                try:
+                    print(getattr(self.current, attr_name))
+                    print('Done')
+                except Exception as e:
+                    print(e)
 
     def complete_attr(self, text, line, begidx, endidx):
         return [item for item in self.py_attr if item.startswith(text)] + \
