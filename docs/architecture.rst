@@ -47,9 +47,9 @@ be able to access the `VisaLibrary` object directly using the `visalib` attribut
 
 The `VisaLibrary` does the low-level calls. In the default NI Backend, levels 1 and 2 are
 implemented in the same package called `ctwrapper` (which stands for ctypes wrapper).
-This package is included in PyVISA
+This package is included in PyVISA.
 
-But other backends can be used just by passing the name of the backend to `ResourceManager`
+Other backends can be used just by passing the name of the backend to `ResourceManager`
 after the `@` symbol. See more information in :ref:`backends`.
 
 
@@ -61,9 +61,9 @@ After you have instantiated the `ResourceManager`::
     >>> import visa
     >>> rm = visa.ResourceManager()
 
-you can access corresponding the `VisaLibrary` instance under the `visalib` attribute.
+you can access the corresponding `VisaLibrary` instance under the `visalib` attribute.
 
-You can recognize low an middle-level functions by their names. Low-level functions
+You can recognize low and middle-level functions by their names. Low-level functions
 carry the same name as in the shared library, and they are prefixed by `vi`.
 Middle-level functions have a friendlier, more pythonic but still recognizable name.
 
@@ -71,19 +71,19 @@ Middle-level functions have a friendlier, more pythonic but still recognizable n
 Middle-level
 ~~~~~~~~~~~~
 
-The `VisaLibrary` object exposes as bound methods the middle-level functions which are
-one-to-one mapped from the foreing library.
+The `VisaLibrary` object exposes the middle-level functions which are
+one-to-one mapped from the foreign library as bound methods.
 
-Tipically, cameCase names where stripped from the leading `bi` and changed to underscore
+Typically, camelCase names where stripped from the leading `vi` and changed to underscore
 separated lower case names. For example the VISA function `viMapAddress` appears
-in the middle-level layer as `map_address`. The docs about these methods is
+in the middle-level layer as `map_address`. The docs about these methods is located
 here :ref:`api`.
 
 
 Low-level
 ~~~~~~~~~
 
-You can also access the low-level functions as directly exposed as static methods,
+You can also access the low-level functions directly exposed as static methods,
 for example::
 
     >>> rm.visalib.viMapAddress(<here goes the arguments>)
