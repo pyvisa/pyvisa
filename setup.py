@@ -32,6 +32,9 @@ requirements = []
 if sys.version_info < (3, 4):
     requirements.append('enum34')
 
+if sys.version_info < (2, 7):
+    requirements.append('unittest2')
+
 setup(name='PyVISA',
       description='Python VISA bindings for GPIB, RS232, and USB instruments',
       version='1.6.2.dev0',
