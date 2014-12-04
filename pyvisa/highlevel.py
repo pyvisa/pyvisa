@@ -1549,7 +1549,14 @@ class ResourceManager(object):
         lib = self.visalib
 
         resources = []
-        find_list, return_counter, instrument_description, err = lib.find_resources(self.session, query)
+
+        try:
+            find_list, return_counter, instrument_description, err = lib.find_resources(self.session, query)
+        except errors.VisaIOError as e:
+            if e.error_code == constants.StatusCode.error_resource_not_found:
+                return tuple()
+            raise e
+
         resources.append(instrument_description)
         for i in range(return_counter - 1):
             resources.append(lib.find_next(find_list)[0])
