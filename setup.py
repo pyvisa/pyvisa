@@ -47,7 +47,6 @@ setup(name='PyVISA',
       test_suite='pyvisa.testsuite.testsuite',
       keywords='VISA GPIB USB serial RS232 measurement acquisition',
       license='MIT License',
-      test_suite='pyvisa.testsuite.testsuite',
       install_requires=requirements,
       classifiers=[
         'Development Status :: 5 - Production/Stable',
