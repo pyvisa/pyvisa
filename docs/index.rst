@@ -65,6 +65,7 @@ User guide
     example
     resources
     backends
+    shell
     architecture
 
 More information
