@@ -5,7 +5,14 @@ PyVISA Changelog
 1.6.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Proper handling of VI_ERROR_RSRC_NFOUND.
+- Added conditional dependency for unittest2 in Python2.6
+  (Issue #107)
+- Fixed Shell on Windows.
+  (Issue #101)
+- Moved Lantz Shell to PyVISA.
+- Easier way to get debug information.
+- Better debug info for backends.
 
 
 1.6.1 (2014-10-28)
