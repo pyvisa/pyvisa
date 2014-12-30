@@ -21,6 +21,8 @@ if PYTHON3:
         return x
 
     integer_types = (int, )
+
+    input = input
 else:
     string_types = basestring
 
@@ -30,6 +32,8 @@ else:
         return codecs.unicode_escape_decode(x)[0]
 
     integer_types = (int, long)
+
+    input = raw_input
 
 if sys.version_info < (2, 7):
     try:

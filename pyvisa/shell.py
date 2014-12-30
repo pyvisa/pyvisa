@@ -17,6 +17,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import cmd
 import sys
 
+from .compat import input
 from . import ResourceManager, constants, VisaIOError
 from .thirdparty import prettytable
 
@@ -99,7 +100,7 @@ class VisaShell(Cmd):
     use_rawinput = True
 
     def __init__(self, library_path=''):
-        super(VisaShell, self).__init__()
+        Cmd.__init__(self)
         self.resource_manager = ResourceManager(library_path)
         self.default_prompt = self.prompt
 
@@ -243,6 +244,20 @@ class VisaShell(Cmd):
         print(p.get_string(sortby='VISA name'))
 
     def do_attr(self, args):
+        """Get or set the state for a visa attribute.
+
+        List all attributes:
+
+            attr
+
+        Get an attribute state:
+
+            attr <name>
+
+        Set an attribute state:
+
+            attr <name> <state>
+        """
 
         if not self.current:
             print('There are no resources in use. Use the command "open".')
