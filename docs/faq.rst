@@ -46,7 +46,7 @@ Please report it on the `Issue Tracker`_, including operating system, python
 version and library version. In addition you might add supporting information
 by pasting the output of this command::
 
-    python -c "from pyvisa import util; util.get_debug_info()"
+    python -m visa info
 
 
 Error: Image not found
@@ -96,7 +96,7 @@ architecture.
 
 First, determine the details of your installation with the help of the following debug command::
 
-    python -c "from pyvisa import util; util.get_debug_info()"
+    python -m visa info
 
 You will see the 'bitness' of the Python interpreter and at the end you will see the list of VISA
 libraries that PyVISA was able to find.

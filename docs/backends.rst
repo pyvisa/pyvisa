@@ -45,9 +45,9 @@ installed in your system. This is a loosly coupled configuration free method.
 PyVISA does not need to know about any backend out there until you actually
 try to use it.
 
-You can list the installed backends by running the following code in the command line:
+You can list the installed backends by running the following code in the command line::
 
-    python -c "from pyvisa import highlevel; print(highlevel.list_backends())"
+    python -m visa info
 
 What does a minimum backend looks like? Quite simple::
 

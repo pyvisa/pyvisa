@@ -7,7 +7,7 @@ In every OS, the NI-VISA library bitness (i.e. 32- or 64-bit) has to match the P
 
 PyVISA includes a debugging command to help you troubleshoot this (and other things)::
 
-    python -c "from pyvisa import util; util.get_debug_info()"
+    python -m visa info
 
 According to National Instruments, NI VISA **5.4.1** is available for:
 
