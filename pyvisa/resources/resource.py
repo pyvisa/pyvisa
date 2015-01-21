@@ -142,7 +142,7 @@ class Resource(object):
         """The interface type of the resource as a number.
         """
         return self.visalib.parse_resource(self._resource_manager.session,
-                                           self.resource_name).interface_type
+                                           self.resource_name)[0].interface_type
 
     def ignore_warning(self, *warnings_constants):
         """Ignoring warnings context manager for the current resource.
