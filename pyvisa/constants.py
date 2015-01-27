@@ -670,6 +670,9 @@ class InterfaceType(enum.IntEnum):
     #: Firewire device.
     firewire = VI_INTF_FIREWIRE
 
+    #: Rohde and Schwarz Device via Passport
+    rsnrp = 33024
+
 
 class AddressState(enum.IntEnum):
 

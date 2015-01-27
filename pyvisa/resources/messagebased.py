@@ -509,3 +509,7 @@ class MessageBasedResource(Resource):
         self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(new_termination[-1]))
         yield
         self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, term)
+
+
+# Rohde and Schwarz Device via Passport. Not sure which Resource should be.
+MessageBasedResource.register(constants.InterfaceType.rsnrp, 'INSTR')(MessageBasedResource)
