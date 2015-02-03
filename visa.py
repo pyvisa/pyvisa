@@ -13,7 +13,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from pyvisa import logger, __version__, log_to_screen
+from pyvisa import logger, __version__, log_to_screen, constants
 from pyvisa.highlevel import ResourceManager
 from pyvisa.errors import (Error, VisaIOError, VisaIOWarning, VisaTypeError,
                            UnknownHandler, OSNotSupported, InvalidBinaryFormat,
