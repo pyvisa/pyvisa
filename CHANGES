@@ -5,7 +5,12 @@ PyVISA Changelog
 1.6.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added support to Rhode and Schwartz Passport driver.
+  (See #115)
+- Fixed access to the interface_type property.
+  (See #114, thanks mordoror)
+- Imported constants module in visa module.
+  (See #72)
 
 
 1.6.2 (2014-12-29)
