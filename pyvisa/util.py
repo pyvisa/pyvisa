@@ -271,6 +271,47 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
     return result
 
 
+def parse_ieee_block_header(block):
+    """Parse the header of a IEEE block.
+
+    Definite Length Arbitrary Block:
+    #<header_length><data_length><data>
+
+    The header_length specifies the size of the data_length field.
+    And the data_length field specifies the size of the data.
+
+    Indefinite Length Arbitrary Block:
+    #0<data>
+
+    :param block: IEEE block.
+    :type block: bytes
+    :return: (offset, data_length)
+    :rtype: (int, int)
+    """
+    begin = block.find(b'#')
+    if begin < 0:
+        raise ValueError("Could not find hash sign (#) indicating the start of the block.")
+
+    try:
+        # int(block[begin+1]) != int(block[begin+1:begin+2]) in Python 3
+        header_length = int(block[begin+1:begin+2])
+    except ValueError:
+        header_length = 0
+
+    offset = begin + 2 + header_length
+
+    if header_length > 0:
+        # #3100DATA
+        # 012345
+        data_length = int(block[begin+2:offset])
+    else:
+        # #0DATA
+        # 012
+        data_length = len(block) - offset - 1
+
+    return offset, data_length
+
+
 def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     """Convert a block in the IEEE format into an iterable of numbers.
 
@@ -292,26 +333,11 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     :rtype: type(container)
     """
 
-    begin = block.find(b'#')
-    if begin < 0:
-        raise ValueError("Could not find hash sign (#) indicating the start of the block.")
+    offset, data_length = parse_ieee_block_header(block)
 
-    try:
-        # int(block[begin+1]) != int(block[begin+1:begin+2]) in Python 3
-        header_length = int(block[begin+1:begin+2])
-    except ValueError:
-        header_length = 0
-
-    offset = begin + 2 + header_length
-
-    if header_length > 0:
-        # #3100DATA
-        # 012345
-        data_length = int(block[begin+2:offset])
-    else:
-        # #0DATA
-        # 012
-        data_length = len(block) - offset - 1
+    if len(block) < offset + data_length:
+        raise ValueError("Binary data is incomplete. The header states %d data bytes, "
+                         "but %d where received." % (data_length, len(block) - offset))
 
     return from_binary_block(block, offset, data_length, datatype, is_big_endian, container)
 
