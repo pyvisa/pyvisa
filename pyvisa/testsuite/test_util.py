@@ -36,7 +36,8 @@ class TestParser(BaseTestCase):
                     conv = cont(values)
                     block = util.to_ieee_block(conv, fmt, endi)
                     parsed = util.from_ieee_block(block, fmt, endi, cont)
-                    self.assertEqual(conv, parsed)
+                    msg = 'fmt=%s, endianness=%s, container=%s' % (fmt, endi, cont.__name__)
+                    self.assertEqual(conv, parsed, msg)
 
     def test_ieee_noninteger(self):
         values = [val + 0.5 for val in range(100)]
@@ -47,4 +48,5 @@ class TestParser(BaseTestCase):
                     conv = cont(values)
                     block = util.to_ieee_block(conv, fmt, endi)
                     parsed = util.from_ieee_block(block, fmt, endi, cont)
-                    self.assertEqual(conv, parsed)
+                    msg = 'fmt=%s, endianness=%s, container=%s' % (fmt, endi, cont.__name__)
+                    self.assertEqual(conv, parsed, msg)
