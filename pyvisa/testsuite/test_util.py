@@ -30,7 +30,7 @@ class TestParser(BaseTestCase):
     def test_ieee_integer(self):
         values = list(range(100))
         containers = (list, tuple) #+ ((np.asarray,) if np else ())
-        for fmt in 'iIlLfd':
+        for fmt in 'bBhHiIfd':
             for endi in (True, False):
                 for cont in containers:
                     conv = cont(values)
