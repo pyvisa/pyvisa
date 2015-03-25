@@ -24,7 +24,7 @@ The VISA specification has explicit bindings to Visual Basic, C, and G (LabVIEWâ
 language. However, you can use VISA with any language capable of calling functions in a DLL.
 Python is such a language.
 
-.. _VISA: http://www.ivifoundation.org/Downloads/Specifications.htm
+.. _VISA: http://www.ivifoundation.org/specifications/default.aspx
 
 
 VISA and Python
