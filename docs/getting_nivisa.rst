@@ -63,6 +63,6 @@ Supports:
 
 .. note:: NI-VISA runs on other linux distros but the installation is more cumbersome.
 
-.. _`NI-VISA for Mac OS X`: http://www.ni.com/download/ni-visa-5.4.1/4631/en/
+.. _`NI-VISA for Mac OS X`: http://www.ni.com/download/ni-visa-14.0.2/5075/en/
 .. _`NI-VISA for Windows`: http://www.ni.com/download/ni-visa-5.4.1/4626/en/
 .. _`NI-VISA for Linux`: http://www.ni.com/download/ni-visa-5.4.1/4629/en/
