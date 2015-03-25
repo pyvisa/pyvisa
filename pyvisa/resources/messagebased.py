@@ -274,7 +274,7 @@ class MessageBasedResource(Resource):
         loop_status = constants.StatusCode.success_max_count_read
 
         ret = bytes()
-        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT):
+        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT, constants.VI_SUCCESS_MAX_CNT):
             try:
                 status = loop_status
                 while status == loop_status:
