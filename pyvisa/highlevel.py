@@ -1585,7 +1585,7 @@ class ResourceManager(object):
         ret, err = self.visalib.parse_resource_extended(self.session, resource_name)
         if err == constants.StatusCode.success:
             return ret
-        raise ValueError('Could not parse resource: %s' % resource_name)
+        raise ValueError('Could not parse resource: %s (error code %s)' % (resource_name, ret))
 
     def open_bare_resource(self, resource_name,
                           access_mode=constants.AccessModes.no_lock,
