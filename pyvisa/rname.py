@@ -52,7 +52,8 @@ class InvalidResourceName(ValueError):
         return cls(msg)
 
     @classmethod
-    def subclass_notfound(cls, interface_type_resource_class, resource_name=None):
+    def subclass_notfound(cls, interface_type_resource_class,
+                          resource_name=None):
         """Exception used when the subclass for a given interface type / resource class pair
         cannot be found.
         """
@@ -160,13 +161,15 @@ class ResourceName(object):
                 try:
                     resource_class = _DEFAULT_RC[interface_type]
                 except KeyError:
-                    raise InvalidResourceName.rc_notfound(interface_type, resource_name)
+                    raise InvalidResourceName.rc_notfound(interface_type,
+                                                          resource_name)
 
             # Look for the subclass
             try:
                 subclass = _SUBCLASSES[(interface_type, resource_class)]
             except KeyError:
-                raise InvalidResourceName.subclass_notfound((interface_type, resource_class), resource_name)
+                raise InvalidResourceName.subclass_notfound(
+                    (interface_type, resource_class), resource_name)
 
             # And create the object
             try:
@@ -174,16 +177,19 @@ class ResourceName(object):
                 rn.user = resource_name
                 return rn
             except ValueError as ex:
-                raise InvalidResourceName.bad_syntax(subclass.syntax, resource_name, ex)
+                raise InvalidResourceName.bad_syntax(subclass.syntax,
+                                                     resource_name, ex)
 
-        raise InvalidResourceName('Could not parse %s: unknown interface type' % resource_name)
+        raise InvalidResourceName('Could not parse %s: unknown interface type'
+                                  % resource_name)
 
     @classmethod
     def from_kwargs(cls, **kwargs):
         interface_type = kwargs.pop('interface_type')
 
         try:
-            resource_class = kwargs.pop('resource_class', _DEFAULT_RC[interface_type])
+            resource_class = kwargs.pop('resource_class',
+                                        _DEFAULT_RC[interface_type])
         except KeyError:
             raise InvalidResourceName.rc_notfound(interface_type)
 
@@ -191,7 +197,8 @@ class ResourceName(object):
         try:
             subclass = _SUBCLASSES[(interface_type, resource_class)]
         except KeyError:
-            raise InvalidResourceName.subclass_notfound((interface_type, resource_class))
+            raise InvalidResourceName.subclass_notfound(
+                (interface_type, resource_class))
 
         # And create the object
         try:
@@ -350,6 +357,28 @@ USBRaw = build_rn_class('USB', (('board', '0'), ('manufacturer ID', None),
                                 ('model code', None), ('serial number', None),
                                 ('USB interface number', '0')), 'RAW', False)
 
+PXIBackplane = build_rn_class('PXI', (('interface', '0'),
+                                      ('chassis number', None)), 'BACKPLANE',
+                              False)
+
+PXIMemacc = build_rn_class('PXI', (('interface', '0'), ), 'MEMACC', False)
+
+VXIBackplane = build_rn_class('VXI', (('board', '0'),
+                                      ('VXI logical address', '0')),
+                              'BACKPLANE', False)
+
+VXIInstr = build_rn_class('VXI', (('board', '0'),
+                                  ('VXI logical address', None)), 'INSTR',
+                          True)
+
+VXIMemacc = build_rn_class('VXI', (('board', '0'), ), 'MEMACC', False)
+
+VXIServant = build_rn_class('VXI', (('board', '0'), ), 'SERVANT', False)
+
+# TODO 3 types of PXI INSTR
+# TODO ENET-Serial INSTR
+# TODO Remote NI-VISA
+
 
 def assemble_canonical_name(**kwargs):
     return str(ResourceName.from_kwargs(**kwargs))
@@ -365,4 +394,3 @@ def to_canonical_name(resource_name):
 
 
 parse_resource_name = ResourceName.from_string
-
