@@ -81,7 +81,9 @@ def set_signatures(library, errcheck=None):
                      It should be take three areguments (result, func, arguments).
                      See errcheck in ctypes.
     """
-    if not hasattr(library, '_functions'):
+
+    # Somehow hasattr(library, '_functions') segfaults in cygwin (See #131)
+    if '_functions' not in dir(library):
         library._functions = []
 
     def _applier(restype, errcheck_):
