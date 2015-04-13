@@ -216,11 +216,14 @@ def build_rn_class(interface_type, resource_parts, resource_class,
 
     It also registers the class.
 
+    The field names are changed to lower case and the spaces replaced
+    by underscores ('_').
+
     :param interface_type: the interface type
     :type: interface_type: str
     :param resource_parts: each of the parts of the resource name indicating
-                           name and default value. Use None for mandatory
-                           fields.
+                           name and default value.
+                           Use None for mandatory fields.
     :type resource_parts: tuple[(str, str)]
     :param resource_class: the resource class
     :type resource_class: str
@@ -381,6 +384,9 @@ VXIServant = build_rn_class('VXI', (('board', '0'), ), 'SERVANT', False)
 
 
 def assemble_canonical_name(**kwargs):
+    """Given a set of keyword arguments defining a resource name,
+    return the canonical resource name.
+    """
     return str(ResourceName.from_kwargs(**kwargs))
 
 
