@@ -185,7 +185,7 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
 
         return ret_value
 
-    def list_resources(self, query='?*::INSTR'):
+    def list_resources(self, session, query='?*::INSTR'):
         """Returns a tuple of all connected devices matching query.
 
         :param query: regular expression used to match devices.
@@ -196,7 +196,7 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
         resources = []
 
         try:
-            find_list, return_counter, instrument_description, err = lib.find_resources(self.session, query)
+            find_list, return_counter, instrument_description, err = lib.find_resources(session, query)
         except errors.VisaIOError as e:
             if e.error_code == constants.StatusCode.error_resource_not_found:
                 return tuple()

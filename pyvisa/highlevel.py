@@ -665,7 +665,7 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def list_resources(self, query='?*::INSTR'):
+    def list_resources(self, session, query='?*::INSTR'):
         """Returns a tuple of all connected devices matching query.
 
         :param query: regular expression used to match devices.
@@ -1553,7 +1553,7 @@ class ResourceManager(object):
         :param query: regular expression used to match devices.
         """
 
-        return self.visalib.list_resources(query)
+        return self.visalib.list_resources(self.session, query)
 
     def list_resources_info(self, query='?*::INSTR'):
         """Returns a dictionary mapping resource names to resource extended
