@@ -191,12 +191,10 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
         :param query: regular expression used to match devices.
         """
 
-        lib = self.lib
-
         resources = []
 
         try:
-            find_list, return_counter, instrument_description, err = lib.find_resources(session, query)
+            find_list, return_counter, instrument_description, err = self.find_resources(session, query)
         except errors.VisaIOError as e:
             if e.error_code == constants.StatusCode.error_resource_not_found:
                 return tuple()
@@ -204,9 +202,9 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
 
         resources.append(instrument_description)
         for i in range(return_counter - 1):
-            resources.append(lib.find_next(find_list)[0])
+            resources.append(self.find_next(find_list)[0])
 
-        lib.close(find_list)
+        self.close(find_list)
 
         return tuple(resource for resource in resources)
 
