@@ -665,6 +665,13 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
+    def list_resources(self, query='?*::INSTR'):
+        """Returns a tuple of all connected devices matching query.
+
+        :param query: regular expression used to match devices.
+        """
+        raise NotImplementedError
+
     def lock(self, session, lock_type, timeout, requested_key=None):
         """Establishes an access mode to the specified resources.
 
@@ -1546,22 +1553,7 @@ class ResourceManager(object):
         :param query: regular expression used to match devices.
         """
 
-        lib = self.visalib
-
-        resources = []
-
-        try:
-            find_list, return_counter, instrument_description, err = lib.find_resources(self.session, query)
-        except errors.VisaIOError as e:
-            if e.error_code == constants.StatusCode.error_resource_not_found:
-                return tuple()
-            raise e
-
-        resources.append(instrument_description)
-        for i in range(return_counter - 1):
-            resources.append(lib.find_next(find_list)[0])
-
-        return tuple(resource for resource in resources)
+        return self.visalib.list_resources(query)
 
     def list_resources_info(self, query='?*::INSTR'):
         """Returns a dictionary mapping resource names to resource extended
