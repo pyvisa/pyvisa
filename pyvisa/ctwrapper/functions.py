@@ -399,7 +399,7 @@ def disable_event(library, session, event_type, mechanism):
     :param session: Unique logical identifier to a session.
     :param event_type: Logical event identifier.
     :param mechanism: Specifies event handling mechanisms to be disabled.
-                      (Constants.QUEUE, .Handler, .SUSPEND_HNDLR, .ALL_MECH)
+                      (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
     :return: return value of the library call.
     :rtype: :class:`pyvisa.constants.StatusCode`
     """
@@ -414,8 +414,8 @@ def discard_events(library, session, event_type, mechanism):
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param event_type: Logical event identifier.
-    :param mechanism: Specifies event handling mechanisms to be disabled.
-                      (Constants.QUEUE, .Handler, .SUSPEND_HNDLR, .ALL_MECH)
+    :param mechanism: Specifies event handling mechanisms to be dicarded.
+                      (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
     :return: return value of the library call.
     :rtype: :class:`pyvisa.constants.StatusCode`
     """
@@ -430,8 +430,8 @@ def enable_event(library, session, event_type, mechanism, context=None):
     :param library: the visa library wrapped by ctypes.
     :param session: Unique logical identifier to a session.
     :param event_type: Logical event identifier.
-    :param mechanism: Specifies event handling mechanisms to be disabled.
-                      (Constants.QUEUE, .Handler, .SUSPEND_HNDLR)
+    :param mechanism: Specifies event handling mechanisms to be enabled.
+                      (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR)
     :param context:
     :return: return value of the library call.
     :rtype: :class:`pyvisa.constants.StatusCode`

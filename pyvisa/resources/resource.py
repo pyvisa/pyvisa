@@ -236,18 +236,45 @@ class Resource(object):
         :returns: user handle (a ctypes object)
         """
 
-        return self.visalib.install_handler(self.session, event_type, handler, user_handle)[:-1]
+        return self.visalib.install_visa_handler(self.session, event_type, handler, user_handle)
 
     def uninstall_handler(self, event_type, handler, user_handle=None):
         """Uninstalls handlers for events in this resource.
 
         :param event_type: Logical event identifier.
         :param handler: Interpreted as a valid reference to a handler to be uninstalled by a client application.
-        :param user_handle: A value specified by an application that can be used for identifying handlers
-                            uniquely in a session for an event.
+        :param user_handle: The user handle (ctypes object or None) returned by install_handler.
         """
 
-        self.visalib.uninstall_handler(self.session, event_type, handler, user_handle)
+        self.visalib.uninstall_visa_handler(self.session, event_type, handler, user_handle)
+
+    def disable_event(self, event_type, mechanism):
+        """Disables notification of the specified event type(s) via the specified mechanism(s).
+
+        :param event_type: Logical event identifier.
+        :param mechanism: Specifies event handling mechanisms to be disabled.
+                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
+        """
+        self.visalib.disable_event(self.session, event_type, mechanism)
+
+    def discard_events(self, event_type, mechanism):
+        """Discards event occurrences for specified event types and mechanisms in this resource.
+
+        :param event_type: Logical event identifier.
+        :param mechanism: Specifies event handling mechanisms to be dicarded.
+                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
+        """
+        self.visalib.discard_events(self.session, event_type, mechanism)
+
+    def enable_event(self, event_type, mechanism, context=None):
+        """Enable event occurrences for specified event types and mechanisms in this resource.
+
+        :param event_type: Logical event identifier.
+        :param mechanism: Specifies event handling mechanisms to be enabled.
+                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR)
+        :param context:  Not currently used, leave as None.
+        """
+        self.visalib.enable_event(self.session, event_type, mechanism, context)
 
     def lock(self, timeout=None, requested_key=None):
         """Establish a shared lock to the resource.

@@ -453,8 +453,8 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :param event_type: Logical event identifier.
-        :param mechanism: Specifies event handling mechanisms to be disabled.
-                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_SUSPEND_HNDLR)
+        :param mechanism: Specifies event handling mechanisms to be discarded.
+                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -467,7 +467,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :param event_type: Logical event identifier.
-        :param mechanism: Specifies event handling mechanisms to be disabled.
+        :param mechanism: Specifies event handling mechanisms to be enabled.
                           (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR)
         :param context:
         :return: return value of the library call.
