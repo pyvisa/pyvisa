@@ -727,7 +727,8 @@ def install_handler(library, session, event_type, handler, user_handle):
     :param event_type: Logical event identifier.
     :param handler: Interpreted as a valid reference to a handler to be installed by a client application.
     :param user_handle: A value specified by an application that can be used for identifying handlers
-                        uniquely for an event type.
+                        uniquely for an event type. Can be a regular python object (int, float, str, list
+                        of floats or ints) or a ctypes object.
     :returns: a handler descriptor which consists of three elements:
              - handler (a python callable)
              - user handle (a ctypes object)
@@ -754,7 +755,12 @@ def install_handler(library, session, event_type, handler, user_handle):
                 converted_user_handle = \
                     (c_long * len(user_handle))(*tuple(user_handle))
         else:
-            raise TypeError("Type not allowed as user handle: %s" % type(user_handle))
+            try:
+                # check if it is already a ctypes
+                byref(user_handle)
+                converted_user_handle = user_handle
+            except TypeError:
+                raise TypeError("Type not allowed as user handle: %s" % type(user_handle))
 
     set_user_handle_type(library, converted_user_handle)
     converted_handler = ViHndlr(handler)
