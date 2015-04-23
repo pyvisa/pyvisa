@@ -21,6 +21,14 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import enum
 
+from .compat import PYTHON3
+
+if PYTHON3:
+    LongEnum = enum.IntEnum
+else:
+    class LongEnum(long, enum.Enum):
+        pass
+
 # _to_int() is necessary because the VISA specification is flawed: It defines
 # the VISA codes, which have a value less than zero, in their internal 32-bit
 # signed integer representation.  However, this is positive.  ctypes doesn't
@@ -299,6 +307,7 @@ VI_EVENT_VXI_VME_SYSFAIL     = 0x3FFF201D
 VI_EVENT_VXI_VME_SYSRESET    = 0x3FFF201E
 VI_EVENT_VXI_SIGP            = 0x3FFF2020
 VI_EVENT_VXI_VME_INTR        = 0xBFFF2021
+VI_EVENT_PXI_INTR            = 0x3FFF2022
 VI_EVENT_TCPIP_CONNECT       = 0x3FFF2036
 VI_EVENT_USB_INTR            = 0x3FFF2037
 
@@ -703,6 +712,44 @@ class LineState(enum.IntEnum):
     asserted = VI_STATE_ASSERTED
     unasserted = VI_STATE_UNASSERTED
     unknown = VI_STATE_UNKNOWN
+
+
+class EventMechanism(enum.IntEnum):
+    """The available event mechanisms for event handling.
+    """
+
+    queue = VI_QUEUE
+    handler = VI_HNDLR
+
+    #: events queued but handler not called
+    suspend_handler = VI_SUSPEND_HNDLR
+
+    all = VI_ALL_MECH
+
+
+# Note that enum.IntEnum fails here for python2:
+#  OverflowError: Python int too large to convert to C long
+# so use LongEnum instead (some values are too large, and ViEventType is unsigned)
+class EventType(LongEnum):
+    """The available event types for event handling.
+    """
+
+    io_completion = VI_EVENT_IO_COMPLETION
+    trig = VI_EVENT_TRIG
+    service_request = VI_EVENT_SERVICE_REQ
+    clear = VI_EVENT_CLEAR
+    exception = VI_EVENT_EXCEPTION
+    gpib_controller_in_charge = VI_EVENT_GPIB_CIC
+    gpib_talk = VI_EVENT_GPIB_TALK
+    gpib_listen = VI_EVENT_GPIB_LISTEN
+    vxi_vme_sysfail = VI_EVENT_VXI_VME_SYSFAIL
+    vxi_vme_sysreset = VI_EVENT_VXI_VME_SYSRESET
+    vxi_signal_interrupt = VI_EVENT_VXI_SIGP
+    vxi_vme_interrupt = VI_EVENT_VXI_VME_INTR
+    pxi_interrupt = VI_EVENT_PXI_INTR
+    tcpip_connect = VI_EVENT_TCPIP_CONNECT
+    usb_interrupt = VI_EVENT_USB_INTR
+    all_enabled = VI_ALL_ENABLED_EVENTS
 
 
 class StatusCode(enum.IntEnum):
