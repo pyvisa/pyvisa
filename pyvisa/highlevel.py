@@ -182,7 +182,7 @@ class VisaLibraryBase(object):
         except TypeError as e:
             raise errors.VisaTypeError(str(e))
 
-        self.handlers[session].append(new_handler)
+        self.handlers[session].append(new_handler + (event_type,))
         return new_handler[1]
 
     def uninstall_visa_handler(self, session, event_type, handler, user_handle=None):
@@ -194,7 +194,7 @@ class VisaLibraryBase(object):
         :param user_handle: The user handle (ctypes object or None) returned by install_visa_handler.
         """
         for ndx, element in enumerate(self.handlers[session]):
-            if element[0] is handler and element[1] is user_handle:
+            if element[0] is handler and element[1] is user_handle and element[4] == event_type:
                 del self.handlers[session][ndx]
                 break
         else:
