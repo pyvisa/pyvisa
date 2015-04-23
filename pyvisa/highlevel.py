@@ -182,7 +182,7 @@ class VisaLibraryBase(object):
         except TypeError as e:
             raise errors.VisaTypeError(str(e))
 
-        self.handlers[session].append(new_handler)
+        self.handlers[session].append(new_handler + (event_type,))
         return new_handler[1]
 
     def uninstall_visa_handler(self, session, event_type, handler, user_handle=None):
@@ -191,16 +191,15 @@ class VisaLibraryBase(object):
         :param session: Unique logical identifier to a session.
         :param event_type: Logical event identifier.
         :param handler: Interpreted as a valid reference to a handler to be uninstalled by a client application.
-        :param user_handle: A value specified by an application that can be used for identifying handlers
-                            uniquely in a session for an event.
+        :param user_handle: The user handle (ctypes object or None) returned by install_visa_handler.
         """
         for ndx, element in enumerate(self.handlers[session]):
-            if element[0] is handler and element[1] is user_handle:
+            if element[0] is handler and element[1] is user_handle and element[4] == event_type:
                 del self.handlers[session][ndx]
                 break
         else:
             raise errors.UnknownHandler(event_type, handler, user_handle)
-        self.uninstall_handler(session, event_type, handler, user_handle)
+        self.uninstall_handler(session, event_type,  element[2], user_handle)
 
     def read_memory(self, session, space, offset, width, extended=False):
         """Reads in an 8-bit, 16-bit, 32-bit, or 64-bit value from the specified memory space and offset.
@@ -454,8 +453,8 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :param event_type: Logical event identifier.
-        :param mechanism: Specifies event handling mechanisms to be disabled.
-                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_SUSPEND_HNDLR)
+        :param mechanism: Specifies event handling mechanisms to be discarded.
+                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -468,7 +467,7 @@ class VisaLibraryBase(object):
 
         :param session: Unique logical identifier to a session.
         :param event_type: Logical event identifier.
-        :param mechanism: Specifies event handling mechanisms to be disabled.
+        :param mechanism: Specifies event handling mechanisms to be enabled.
                           (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR)
         :param context:
         :return: return value of the library call.
