@@ -1696,12 +1696,14 @@ def uninstall_handler(library, session, event_type, handler, user_handle=None):
     :param session: Unique logical identifier to a session.
     :param event_type: Logical event identifier.
     :param handler: Interpreted as a valid reference to a handler to be uninstalled by a client application.
-    :param user_handle: A value specified by an application that can be used for identifying handlers
-                        uniquely in a session for an event.
+    :param user_handle: The user_handle (a ctypes object) in the returned value from install_handler.
     :return: return value of the library call.
     :rtype: :class:`pyvisa.constants.StatusCode`
     """
-    return library.viUninstallHandler(session, event_type, handler, byref(user_handle))
+    set_user_handle_type(library, user_handle)
+    if user_handle != None:
+         user_handle = byref(user_handle)
+    return library.viUninstallHandler(session, event_type, handler, user_handle)
 
 
 def unlock(library, session):
