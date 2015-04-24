@@ -24,12 +24,6 @@ class _GPIBMixin(object):
     """Common attributes and methods of GPIB Instr and Interface.
     """
 
-    def assert_trigger(self):
-        """Sends a software trigger to the device.
-        """
-
-        self.visalib.assert_trigger(self.session, constants.VI_TRIG_PROT_DEFAULT)
-
     def send_command(self, data):
         """Write GPIB command bytes on the bus.
 
@@ -117,12 +111,10 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
         SRQ, only *this* instrument.
 
         :param timeout: the maximum waiting time in milliseconds.
-                        Defaul: 25000 (seconds).
+                        Defaul: 25000 (milliseconds).
                         None means waiting forever if necessary.
         """
-        lib = self.visalib
-
-        lib.enable_event(self.session, constants.VI_EVENT_SERVICE_REQ, constants.VI_QUEUE)
+        self.enable_event(constants.VI_EVENT_SERVICE_REQ, constants.VI_QUEUE)
 
         if timeout and not(0 <= timeout <= 4294967295):
             raise ValueError("timeout value is invalid")
@@ -133,17 +125,15 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
             if timeout is None:
                 adjusted_timeout = constants.VI_TMO_INFINITE
             else:
-                adjusted_timeout = int((starting_time + timeout - time.clock()))
+                adjusted_timeout = int((starting_time + timeout/1e3 - time.clock())*1e3)
                 if adjusted_timeout < 0:
                     adjusted_timeout = 0
 
-            event_type, context, error = lib.wait_on_event(self.session, constants.VI_EVENT_SERVICE_REQ,
-                                                           adjusted_timeout)
-            lib.close(context)
+            self.wait_on_event(constants.VI_EVENT_SERVICE_REQ, adjusted_timeout)
             if self.stb & 0x40:
                 break
 
-        lib.discard_events(self.session, constants.VI_EVENT_SERVICE_REQ, constants.VI_QUEUE)
+        self.discard_events(constants.VI_EVENT_SERVICE_REQ, constants.VI_QUEUE)
 
 
 @Resource.register(constants.InterfaceType.gpib, 'INTFC')
