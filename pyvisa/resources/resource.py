@@ -95,6 +95,21 @@ class Resource(object):
         """
         return self.visalib.get_last_status_in_session(self.session)
 
+    def _cleanup_timeout(self, timeout):
+        if timeout is None or math.isinf(timeout):
+            timeout = constants.VI_TMO_INFINITE
+
+        elif timeout < 1:
+            timeout = constants.VI_TMO_IMMEDIATE
+
+        elif not (1 <= timeout <= 4294967294):
+            raise ValueError("timeout value is invalid")
+
+        else:
+            timeout = int(timeout)
+
+        return timeout
+
     @property
     def timeout(self):
         """The timeout in milliseconds for all resource I/O operations.
@@ -109,18 +124,7 @@ class Resource(object):
 
     @timeout.setter
     def timeout(self, timeout):
-        if timeout is None or math.isinf(timeout):
-            timeout = constants.VI_TMO_INFINITE
-
-        elif timeout < 1:
-            timeout = constants.VI_TMO_IMMEDIATE
-
-        elif not (1 <= timeout <= 4294967294):
-            raise ValueError("timeout value is invalid")
-
-        else:
-            timeout = int(timeout)
-
+        timeout = self._cleanup_timeout(timeout)
         self.set_visa_attribute(constants.VI_ATTR_TMO_VALUE, timeout)
 
     @timeout.deleter
@@ -276,7 +280,7 @@ class Resource(object):
         """
         self.visalib.enable_event(self.session, event_type, mechanism, context)
 
-    def lock(self, timeout=None, requested_key=None):
+    def lock(self, timeout='default', requested_key=None):
         """Establish a shared lock to the resource.
 
         :param timeout: Absolute time period (in milliseconds) that a resource
@@ -288,8 +292,20 @@ class Resource(object):
         :returns: A new shared access key if requested_key is None,
                   otherwise, same value as the requested_key
         """
-        timeout = self.timeout if timeout is None else timeout
+        timeout = self.timeout if timeout == 'default' else timeout
+        timeout = self._cleanup_timeout(timeout)
         return self.visalib.lock(self.session, constants.AccessModes.shared_lock, timeout, requested_key)[0]
+
+    def lock_excl(self, timeout='default'):
+        """Establish an exclusive lock to the resource.
+
+        :param timeout: Absolute time period (in milliseconds) that a resource
+                        waits to get unlocked by the locking session before
+                        returning an error. (Defaults to self.timeout)
+        """
+        timeout = self.timeout if timeout == 'default' else timeout
+        timeout = self._cleanup_timeout(timeout)
+        self.visalib.lock(self.session, constants.AccessModes.exclusive_lock, timeout, None)
 
     def unlock(self):
         """Relinquishes a lock for the specified resource.
