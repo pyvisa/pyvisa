@@ -794,7 +794,7 @@ def lock(library, session, lock_type, timeout, requested_key=None):
     else:
         access_key = create_string_buffer(256)
     ret = library.viLock(session, lock_type, timeout, requested_key, access_key)
-    return access_key, ret
+    return access_key.value, ret
 
 
 def map_address(library, session, map_space, map_base, map_size,
