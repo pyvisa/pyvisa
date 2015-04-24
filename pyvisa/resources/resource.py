@@ -13,6 +13,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import contextlib
 import math
 import time
 
@@ -311,3 +312,26 @@ class Resource(object):
         """Relinquishes a lock for the specified resource.
         """
         self.visalib.unlock(self.session)
+
+    @contextlib.contextmanager
+    def lock_context(self, timeout='default', requested_key='exclusive'):
+        """A context that locks
+
+        :param timeout: Absolute time period (in milliseconds) that a resource
+                        waits to get unlocked by the locking session before
+                        returning an error. (Defaults to self.timeout)
+        :param requested_key: When using default of 'exclusive' the lock
+                              is an exclusive lock.
+                              Otherwise it is the access key for the shared lock or
+                              None to generate a new shared access key.
+        The returned context is the access_key if applicable.
+        """
+        if requested_key == 'exclusive':
+            self.lock_excl(timeout)
+            access_key = None
+        else:
+            access_key = self.lock(timeout, requested_key)
+        try:
+            yield access_key
+        finally:
+            self.unlock()
