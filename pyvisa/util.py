@@ -18,26 +18,11 @@ import io
 import os
 import platform
 import sys
-import struct
 import subprocess
 import warnings
 
-from .compat import check_output, string_types, OrderedDict
+from .compat import check_output, string_types, OrderedDict, struct
 from . import __version__, logger
-
-if sys.version >= '3':
-    _struct_unpack = struct.unpack
-    _struct_unpack_from = struct.unpack_from
-    _struct_pack = struct.pack
-else:
-    def _struct_unpack(fmt, string):
-        return struct.unpack(str(fmt), string)
-
-    def _struct_unpack_from(fmt, *args, **kwargs):
-        return struct.unpack_from(str(fmt), *args, **kwargs)
-
-    def _struct_pack(fmt, *values):
-        return struct.pack(str(fmt), *values)
 
 
 def read_user_library_path():
@@ -264,7 +249,7 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
         else:
             fmt = endianess + str(data_length // 8) + 'd'
 
-        result = list(_struct_unpack(fmt, data))
+        result = list(struct.unpack(fmt, data))
     except struct.error:
         raise ValueError("Binary data itself was malformed")
 
@@ -367,7 +352,7 @@ def from_binary_block(block, offset=0, data_length=None, datatype='f', is_big_en
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)
 
     try:
-        return container(_struct_unpack_from(fullfmt, block, offset))
+        return container(struct.unpack_from(fullfmt, block, offset))
     except struct.error:
         raise ValueError("Binary data was malformed")
 
@@ -392,9 +377,9 @@ def to_ieee_block(iterable, datatype='f', is_big_endian=False):
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)
 
     if sys.version >= '3':
-        return bytes('#%d%d' % (len(header), data_length), 'ascii') + _struct_pack(fullfmt, *iterable)
+        return bytes('#%d%d' % (len(header), data_length), 'ascii') + struct.pack(fullfmt, *iterable)
     else:
-        return str('#%d%d' % (len(header), data_length)) + _struct_pack(fullfmt, *iterable)
+        return str('#%d%d' % (len(header), data_length)) + struct.pack(fullfmt, *iterable)
 
 
 def get_system_details(backends=True):
@@ -561,7 +546,7 @@ def get_shared_library_arch(filename):
         dos_headers = fp.read(64)
         _ = fp.read(4)
 
-        magic, skip, offset = _struct_unpack(str('2s58sl'), dos_headers)
+        magic, skip, offset = struct.unpack(str('2s58sl'), dos_headers)
 
         if magic != b'MZ':
             raise Exception('Not an executable')
@@ -569,7 +554,7 @@ def get_shared_library_arch(filename):
         fp.seek(offset, io.SEEK_SET)
         pe_header = fp.read(6)
 
-        sig, skip, machine = _struct_unpack(str('2s2sH'), pe_header)
+        sig, skip, machine = struct.unpack(str('2s2sH'), pe_header)
 
         if sig != b'PE':
             raise Exception('Not a PE executable')
