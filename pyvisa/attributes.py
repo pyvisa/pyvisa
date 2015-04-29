@@ -571,7 +571,7 @@ class AttrVI_ATTR_ASRL_FLOW_CNTRL(RangeAttribute):
     """
     resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    py_name = 'flow_control'
 
     visa_name = 'VI_ATTR_ASRL_FLOW_CNTRL'
 
