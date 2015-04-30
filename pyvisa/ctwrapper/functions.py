@@ -85,6 +85,7 @@ def set_signatures(library, errcheck=None):
     # Somehow hasattr(library, '_functions') segfaults in cygwin (See #131)
     if '_functions' not in dir(library):
         library._functions = []
+        library._functions_failed = []
 
     def _applier(restype, errcheck_):
         def _internal(function_name, argtypes, required=False):
@@ -93,6 +94,7 @@ def set_signatures(library, errcheck=None):
                 # noinspection PyProtectedMember
                 library._functions.append(function_name)
             except AttributeError:
+                library._functions_failed.append(function_name)
                 if required:
                     raise
         return _internal
