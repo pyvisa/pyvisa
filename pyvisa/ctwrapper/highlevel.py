@@ -13,6 +13,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import logging
 import warnings
 
 from pyvisa import constants, errors, highlevel, logger
@@ -20,6 +21,9 @@ from pyvisa.compat import integer_types, OrderedDict
 
 from .cthelper import Library, find_library
 from . import functions
+
+
+logger = logging.LoggerAdapter(logger, {'backend': 'ni'})
 
 
 def add_visa_methods(aclass):
@@ -133,6 +137,10 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
         # of the visa library. Additionally store in `_functions` the
         # name of the functions.
         functions.set_signatures(self.lib, errcheck=self._return_handler)
+
+        logger.debug('Library signatures: %d ok, %d failed',
+                     len(getattr(self.lib, '_functions', [])),
+                     len(getattr(self.lib, '_functions_failed', [])))
 
         # Set the library functions as attributes of the object.
         for method_name in getattr(self.lib, '_functions', []):
