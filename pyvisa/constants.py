@@ -652,6 +652,9 @@ class InterfaceType(enum.IntEnum):
     """The hardware interface
     """
 
+    # Used for unknown interface type strings.
+    unknown = -1
+
     #: GPIB Interface.
     gpib = VI_INTF_GPIB
 
