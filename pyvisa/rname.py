@@ -126,6 +126,13 @@ class ResourceName(object):
     # Resource name provided by the user (not empty only when parsing)
     user = ''
 
+    @property
+    def interface_type_const(self):
+        try:
+            return getattr(constants.InterfaceType, self.interface_type.lower())
+        except:
+            return constants.InterfaceType.unknown
+
     @classmethod
     def from_string(cls, resource_name):
         """Parse a resource name and return a ResourceName
