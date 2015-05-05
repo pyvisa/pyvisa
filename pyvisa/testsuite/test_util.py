@@ -28,7 +28,7 @@ class TestParser(BaseTestCase):
             self.assertAlmostEqual(a, b)
 
     def test_ieee_integer(self):
-        values = list(range(100))
+        values = list(range(99))
         containers = (list, tuple) #+ ((np.asarray,) if np else ())
         for fmt in 'bBhHiIfd':
             for endi in (True, False):
@@ -44,7 +44,7 @@ class TestParser(BaseTestCase):
                     self.assertEqual(conv, parsed, msg)
 
     def test_ieee_noninteger(self):
-        values = [val + 0.5 for val in range(100)]
+        values = [val + 0.5 for val in range(99)]
         containers = (list, tuple) #+ ((np.asarray,) if np else ())
         for fmt in 'fd':
             for endi in (True, False):
