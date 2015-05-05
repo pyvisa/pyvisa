@@ -368,18 +368,19 @@ def to_ieee_block(iterable, datatype='f', is_big_endian=False):
     """
 
     array_length = len(iterable)
-    header = '%d' % array_length
-
-    endianess = '>' if is_big_endian else '<'
-
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
+
+    header = '%d' % data_length
+    header = '#%d%s'%(len(header),header)
+
+    endianess = '>' if is_big_endian else '<'
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)
 
     if sys.version >= '3':
-        return bytes('#%d%d' % (len(header), data_length), 'ascii') + struct.pack(fullfmt, *iterable)
+        return bytes(header, 'ascii') + struct.pack(fullfmt, *iterable)
     else:
-        return str('#%d%d' % (len(header), data_length)) + struct.pack(fullfmt, *iterable)
+        return str(header) + struct.pack(fullfmt, *iterable)
 
 
 def get_system_details(backends=True):
