@@ -97,7 +97,7 @@ class VisaLibraryBase(object):
         if (cls, library_path) in cls._registry:
             return cls._registry[(cls, library_path)]
 
-        cls._registry[(cls, library_path)] = obj = super(VisaLibraryBase, cls).__new__(cls)
+        obj = super(VisaLibraryBase, cls).__new__(cls)
 
         obj.library_path = library_path
 
@@ -113,6 +113,8 @@ class VisaLibraryBase(object):
         obj.handlers = defaultdict(list)
 
         logger.debug('Created library wrapper for %s', library_path)
+
+        cls._registry[(cls, library_path)] = obj
 
         return obj
 
@@ -1455,7 +1457,7 @@ def open_visa_library(specification):
         return cls(argument)
     except Exception as e:
         logger.debug('Could not open VISA wrapper %s: %s\n%s', cls, str(argument), e)
-        raise e
+        raise
 
 
 class ResourceManager(object):

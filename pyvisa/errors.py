@@ -11,7 +11,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import division, print_function, absolute_import
 
 from . import util
 from .constants import *
