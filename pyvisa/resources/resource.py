@@ -41,11 +41,11 @@ class Resource(object):
             attrs = []
             for attr in attributes.AttributesPerResource[(interface_type, resource_class)]:
                 attrs.append(attr)
-                if not hasattr(python_class, attr.py_name):
+                if not hasattr(python_class, attr.py_name) and attr.py_name != '':
                     setattr(python_class, attr.py_name, attr())
             for attr in attributes.AttributesPerResource[attributes.AllSessionTypes]:
                 attrs.append(attr)
-                if not hasattr(python_class, attr.py_name):
+                if not hasattr(python_class, attr.py_name) and attr.py_name != '':
                     setattr(python_class, attr.py_name, attr())
 
             setattr(python_class, 'visa_attributes_classes', attrs)
