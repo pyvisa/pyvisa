@@ -137,6 +137,9 @@ class MessageBasedResource(Resource):
             self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(last_char))
             self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_TRUE)
         else:
+            # The termchar is also used in VI_ATTR_ASRL_END_IN (for serial termination)
+            # so return it to its default.
+            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(self.LF))
             self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_FALSE)
 
         self._read_termination = value
