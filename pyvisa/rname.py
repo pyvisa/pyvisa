@@ -184,7 +184,7 @@ class ResourceName(object):
                 rn.user = resource_name
                 return rn
             except ValueError as ex:
-                raise InvalidResourceName.bad_syntax(subclass.syntax,
+                raise InvalidResourceName.bad_syntax(subclass._visa_syntax,
                                                      resource_name, ex)
 
         raise InvalidResourceName('Could not parse %s: unknown interface type'
