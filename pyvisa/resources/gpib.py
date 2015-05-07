@@ -96,14 +96,6 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
-    def before_close(self):
-        self.__switch_events_off()
-        super(GPIBInstrument, self).before_close()
-
-    def __switch_events_off(self):
-        self.visalib.disable_event(self.session, constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
-        self.visalib.discard_events(self.session, constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
-
     def wait_for_srq(self, timeout=25000):
         """Wait for a serial request (SRQ) coming from the instrument.
 

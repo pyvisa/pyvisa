@@ -207,7 +207,7 @@ class Resource(object):
     def before_close(self):
         """Called just before closing an instrument.
         """
-        pass
+        self.__switch_events_off()
 
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
@@ -222,6 +222,10 @@ class Resource(object):
             self.session = None
         except errors.InvalidSession:
             pass
+
+    def __switch_events_off(self):
+        self.disable_event(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
+        self.discard_events(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
 
     def get_visa_attribute(self, name):
         """Retrieves the state of an attribute in this resource.
