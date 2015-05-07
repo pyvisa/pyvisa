@@ -203,6 +203,23 @@ class VisaLibraryBase(object):
             raise errors.UnknownHandler(event_type, handler, user_handle)
         self.uninstall_handler(session, event_type,  element[2], user_handle)
 
+    def __uninstall_all_handlers_helper(self, session):
+        for element in self.handlers[session]:
+            self.uninstall_handler(session, element[4],  element[2], element[1])
+        del self.handlers[session]
+
+    def uninstall_all_visa_handlers(self, session):
+        """Uninstalls all previously installed handlers for a particular session.
+
+        :param session: Unique logical identifier to a session. If None, operates on all sessions.
+        """
+
+        if session is not None:
+            self.__uninstall_all_handlers_helper(session)
+        else:
+            for session in list(self.handlers):
+                self.__uninstall_all_handlers_helper(session)
+
     def read_memory(self, session, space, offset, width, extended=False):
         """Reads in an 8-bit, 16-bit, 32-bit, or 64-bit value from the specified memory space and offset.
 

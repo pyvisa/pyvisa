@@ -226,6 +226,7 @@ class Resource(object):
     def __switch_events_off(self):
         self.disable_event(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
         self.discard_events(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
+        self.visalib.uninstall_all_visa_handlers(self.session)
 
     def get_visa_attribute(self, name):
         """Retrieves the state of an attribute in this resource.
