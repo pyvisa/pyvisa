@@ -14,11 +14,11 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 from .. import constants
-from .messagebased import MessageBasedResource
+from .messagebased import MessageBasedResource, ControlRenMixin
 
 
 @MessageBasedResource.register(constants.InterfaceType.usb, 'INSTR')
-class USBInstrument(MessageBasedResource):
+class USBInstrument(ControlRenMixin, MessageBasedResource):
     """Communicates with devices of type USB::manufacturer ID::model code::serial number
 
     More complex resource names can be specified with the following grammar:

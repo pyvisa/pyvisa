@@ -17,10 +17,10 @@ import time
 
 from .. import constants
 from .resource import Resource
-from .messagebased import MessageBasedResource
+from .messagebased import MessageBasedResource, ControlRenMixin
 
 
-class _GPIBMixin(object):
+class _GPIBMixin(ControlRenMixin):
     """Common attributes and methods of GPIB Instr and Interface.
     """
 
@@ -47,19 +47,6 @@ class _GPIBMixin(object):
         :rtype: VISAStatus
         """
         return self.visalib.gpib_control_atn(self.session, mode)
-
-    def control_ren(self, mode):
-        """Controls the state of the GPIB Remote Enable (REN) interface line, and optionally the remote/local
-        state of the device.
-
-        Corresponds to viGpibControlREN function of the VISA library.
-
-        :param mode: Specifies the state of the REN line and optionally the device remote/local state.
-                     (Constants.GPIB_REN*)
-        :return: return value of the library call.
-        :rtype: VISAStatus
-        """
-        return self.visalib.gpib_control_ren(self.session, mode)
 
     def pass_control(self, primary_address, secondary_address):
         """Tell the GPIB device at the specified address to become controller in charge (CIC).
