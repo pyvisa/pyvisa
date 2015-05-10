@@ -24,6 +24,20 @@ from .. import highlevel
 from .. import attributes
 
 
+class WaitResponse(object):
+    """Class used in return of wait_on_event. It properly closes the context upon delete.
+    """
+    def __init__(self, event_type, context, ret, visalib, timed_out=False):
+        self.event_type = constants.EventType(event_type)
+        self.context = context
+        self.ret = ret
+        self._visalib = visalib
+        self.timed_out = timed_out
+    def __del__(self):
+        if self.context != None:
+            self._visalib.close(self.context)
+
+
 class Resource(object):
     """Base class for resources.
 
@@ -193,7 +207,7 @@ class Resource(object):
     def before_close(self):
         """Called just before closing an instrument.
         """
-        pass
+        self.__switch_events_off()
 
     def close(self):
         """Closes the VISA session and marks the handle as invalid.
@@ -208,6 +222,11 @@ class Resource(object):
             self.session = None
         except errors.InvalidSession:
             pass
+
+    def __switch_events_off(self):
+        self.disable_event(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
+        self.discard_events(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
+        self.visalib.uninstall_all_visa_handlers(self.session)
 
     def get_visa_attribute(self, name):
         """Retrieves the state of an attribute in this resource.
@@ -280,6 +299,25 @@ class Resource(object):
         :param context:  Not currently used, leave as None.
         """
         self.visalib.enable_event(self.session, event_type, mechanism, context)
+
+    def wait_on_event(self, in_event_type, timeout, capture_timeout=False):
+        """Waits for an occurrence of the specified event in this resource.
+
+        :param in_event_type: Logical identifier of the event(s) to wait for.
+        :param timeout: Absolute time period in time units that the resource shall wait for a specified event to
+                        occur before returning the time elapsed error. The time unit is in milliseconds.
+                        None means waiting forever if necessary.
+        :param capture_timeout: When True will not produce a VisaIOError(VI_ERROR_TMO) but
+                                instead return a WaitResponse with timed_out=True
+        :return: A WaitResponse object that contains event_type, context and ret value.
+        """
+        try:
+            event_type, context, ret = self.visalib.wait_on_event(self.session, in_event_type, timeout)
+        except errors.VisaIOError as exc:
+            if capture_timeout and exc.error_code == constants.StatusCode.error_timeout:
+                return WaitResponse(0, None, exc.error_code, self.visalib, timed_out=True)
+            raise
+        return WaitResponse(event_type, context, ret, self.visalib)
 
     def lock(self, timeout='default', requested_key=None):
         """Establish a shared lock to the resource.
