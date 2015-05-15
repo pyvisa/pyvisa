@@ -21,6 +21,7 @@ from collections import defaultdict
 from . import logger
 from . import constants
 from . import errors
+from . import rname
 
 #: Resource extended information
 #:
@@ -491,29 +492,6 @@ class VisaLibraryBase(object):
         :param context:
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
-        """
-        raise NotImplementedError
-
-    def find_next(self, find_list):
-        """Returns the next resource from the list of resources found during a previous call to find_resources().
-
-        Corresponds to viFindNext function of the VISA library.
-
-        :param find_list: Describes a find list. This parameter must be created by find_resources().
-        :return: Returns a string identifying the location of a device, return value of the library call.
-        :rtype: unicode (Py2) or str (Py3), :class:`pyvisa.constants.StatusCode`
-        """
-        raise NotImplementedError
-
-    def find_resources(self, session, query):
-        """Queries a VISA system to locate the resources associated with a specified interface.
-
-        Corresponds to viFindRsrc function of the VISA library.
-
-        :param session: Unique logical identifier to a session (unused, just to uniform signatures).
-        :param query: A regular expression followed by an optional logical expression. Use '?*' for all.
-        :return: find_list, return_counter, instrument_description, return value of the library call.
-        :rtype: ViFindList, int, unicode (Py2) or str (Py3), :class:`pyvisa.constants.StatusCode`
         """
         raise NotImplementedError
 
@@ -1039,7 +1017,7 @@ class VisaLibraryBase(object):
         :return: Resource information with interface type and board number, return value of the library call.
         :rtype: :class:`pyvisa.highlevel.ResourceInfo`, :class:`pyvisa.constants.StatusCode`
         """
-        raise NotImplementedError
+        return self.parse_resource_extended(session, resource_name)
 
     def parse_resource_extended(self, session, resource_name):
         """Parse a resource string to get extended interface information.
@@ -1052,7 +1030,15 @@ class VisaLibraryBase(object):
         :return: Resource information, return value of the library call.
         :rtype: :class:`pyvisa.highlevel.ResourceInfo`, :class:`pyvisa.constants.StatusCode`
         """
-        raise NotImplementedError
+        try:
+            parsed = rname.parse_resource_name(resource_name)
+
+            return (ResourceInfo(parsed.interface_type_const,
+                                 parsed.board,
+                                 parsed.resource_class, None, None),
+                    constants.StatusCode.success)
+        except ValueError:
+            return 0, constants.StatusCode.error_invalid_resource_name
 
     def peek_8(self, session, address):
         """Read an 8-bit value from the specified address.
