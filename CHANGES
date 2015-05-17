@@ -2,8 +2,8 @@ PyVISA Changelog
 ================
 
 
-1.6.4 (unreleased)
-------------------
+1.7 (2015-05-16)
+----------------
 
 - Removed find_next and find_resources from VisaLibraryBase.
   (Issue also #135, thanks)
