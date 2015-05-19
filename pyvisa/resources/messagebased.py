@@ -55,6 +55,26 @@ class ValuesFormat(object):
         self.header_fmt = header_fmt
 
 
+class ControlRenMixin(object):
+    """Common controlt_ren method of some messaged based resources.
+    """
+    # It should work for GPIB, USB and some TCPIP
+    # For TCPIP I found some (all?) NI's VISA library do not handle control_ren, but
+    # it works for Agilent's VISA library (at least some of them)
+    def control_ren(self, mode):
+        """Controls the state of the GPIB Remote Enable (REN) interface line, and optionally the remote/local
+        state of the device.
+
+        Corresponds to viGpibControlREN function of the VISA library.
+
+        :param mode: Specifies the state of the REN line and optionally the device remote/local state.
+                     (Constants.GPIB_REN*)
+        :return: return value of the library call.
+        :rtype: VISAStatus
+        """
+        return self.visalib.gpib_control_ren(self.session, mode)
+
+
 class MessageBasedResource(Resource):
     """Base class for resources that use message based communication.
     """
