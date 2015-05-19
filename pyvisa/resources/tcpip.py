@@ -16,11 +16,11 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 from .. import constants
 
 from .resource import Resource
-from .messagebased import MessageBasedResource
+from .messagebased import MessageBasedResource, ControlRenMixin
 
 
 @Resource.register(constants.InterfaceType.tcpip, 'INSTR')
-class TCPIPInstrument(MessageBasedResource):
+class TCPIPInstrument(ControlRenMixin, MessageBasedResource):
     """Communicates with to devices of type TCPIP::host address[::INSTR]
 
     More complex resource names can be specified with the following grammar:
