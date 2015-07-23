@@ -11,6 +11,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import re
 from collections import namedtuple, defaultdict
 
 from pyvisa import constants
@@ -407,3 +408,20 @@ def to_canonical_name(resource_name):
 
 
 parse_resource_name = ResourceName.from_string
+
+
+def filter(resources, query):
+    """Filter a list of resources according to a query expression.
+
+    The search criteria specified in the query parameter has two parts:
+      1. a VISA regular expression over a resource string.
+      2. optional logical expression over attribute values (not implemented).
+
+    :param resources: iterable of resources.
+    :param query: query expression.
+    """
+
+    query = query.replace('?*', '.*')
+    matcher = re.compile(query, re.IGNORECASE)
+
+    return tuple(res for res in resources if matcher.match(res))

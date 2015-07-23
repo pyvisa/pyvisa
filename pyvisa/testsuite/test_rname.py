@@ -227,3 +227,18 @@ class TestParsers(BaseTestCase):
                          board='2',
                          usb_interface_number='3',
                          canonical_resource_name='USB2::0x1234::125::A22-5::3::RAW')
+
+    def test_filter(self):
+        run_list = (
+            'GPIB0::8::65535::INSTR',
+            'TCPIP0::localhost:1111::inst0::INSTR',
+            'ASRL1::INSTR',
+            'USB0::0x1111::0x2222::0x4445::0::RAW',
+            'USB0::0x1111::0x2222::0x1234::0::INSTR',
+            'TCPIP0::localhost::10001::SOCKET',
+            )
+        self.assertEqual(rname.filter(run_list, '?*::INSTR'),
+                         ('GPIB0::8::65535::INSTR',
+                          'TCPIP0::localhost:1111::inst0::INSTR',
+                          'ASRL1::INSTR',
+                          'USB0::0x1111::0x2222::0x1234::0::INSTR'))
