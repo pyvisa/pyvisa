@@ -1571,17 +1571,20 @@ class ResourceManager(object):
         return dict((resource, self.resource_info(resource))
                     for resource in self.list_resources(query))
 
-    def resource_info(self, resource_name):
-        """Get the extended information of a particular resource
+    def resource_info(self, resource_name, extended=True):
+        """Get the (extended) information of a particular resource.
 
         :param resource_name: Unique symbolic name of a resource.
 
         :rtype: :class:`pyvisa.highlevel.ResourceInfo`
         """
-        ret, err = self.visalib.parse_resource_extended(self.session, resource_name)
-        if err == constants.StatusCode.success:
-            return ret
-        raise ValueError('Could not parse resource: %s (error code %s)' % (resource_name, ret))
+
+        if extended:
+            ret, err = self.visalib.parse_resource_extended(self.session, resource_name)
+        else:
+            ret, err = self.visalib.parse_resource(self.session, resource_name)
+
+        return ret
 
     def open_bare_resource(self, resource_name,
                           access_mode=constants.AccessModes.no_lock,
@@ -1611,7 +1614,7 @@ class ResourceManager(object):
 
         :rtype: :class:`pyvisa.resources.Resource`
         """
-        info = self.resource_info(resource_name)
+        info = self.resource_info(resource_name, extended=False)
 
         try:
             cls = self._resource_classes[(info.interface_type, info.resource_class)]
