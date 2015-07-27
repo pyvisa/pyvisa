@@ -1380,9 +1380,6 @@ def parse_resource_extended(library, session, resource_name):
                                 unaliased_expanded_resource_name,
                                 alias_if_exists)
 
-    if ret != constants.VI_SUCCESS:
-        return None, ret
-
     res = [buffer_to_text(val)
            for val in (resource_class,
                        unaliased_expanded_resource_name,
