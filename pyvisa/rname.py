@@ -12,9 +12,10 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import re
+import contextlib
 from collections import namedtuple, defaultdict
 
-from pyvisa import constants
+from . import constants, errors, logger
 
 # :type: set[str]
 _INTERFACE_TYPES = set()
@@ -415,13 +416,158 @@ def filter(resources, query):
 
     The search criteria specified in the query parameter has two parts:
       1. a VISA regular expression over a resource string.
-      2. optional logical expression over attribute values (not implemented).
+      2. optional logical expression over attribute values
+         (not implemented in this function, see below).
+
+    .. note: The VISA regular expression syntax is not the same as the
+             Python regular expression syntax. (see below)
+
+    The regular expression is matched against the resource strings of resources
+    known to the VISA Resource Manager. If the resource string matches the
+    regular expression, the attribute values of the resource are then matched
+    against the expression over attribute values. If the match is successful,
+    the resource has met the search criteria and gets added to the list of
+    resources found.
+
+    By using the optional attribute expression, you can construct flexible
+    and powerful expressions with the use of logical ANDs (&&), ORs(||),
+    and NOTs (!). You can use equal (==) and unequal (!=) comparators to
+    compare attributes of any type, and other inequality comparators
+    (>, <, >=, <=) to compare attributes of numeric type. Use only global
+    attributes in the attribute expression. Local attributes are not allowed
+    in the logical expression part of the expr parameter.
+
+
+        Symbol      Meaning
+        ----------  ----------
+
+        ?           Matches any one character.
+
+        \           Makes the character that follows it an ordinary character
+                    instead of special character. For example, when a question
+                    mark follows a backslash (\?), it matches the ? character
+                    instead of any one character.
+
+        [list]      Matches any one character from the enclosed list. You can
+                    use a hyphen to match a range of characters.
+
+        [^list]     Matches any character not in the enclosed list. You can use
+                    a hyphen to match a range of characters.
+
+        *           Matches 0 or more occurrences of the preceding character or
+                    expression.
+
+        +           Matches 1 or more occurrences of the preceding character or
+                    expression.
+
+        Exp|exp     Matches either the preceding or following expression. The or
+                    operator | matches the entire expression that precedes or
+                    follows it and not just the character that precedes or follows
+                    it. For example, VXI|GPIB means (VXI)|(GPIB), not VX(I|G)PIB.
+
+        (exp)       Grouping characters or expressions.
+
 
     :param resources: iterable of resources.
     :param query: query expression.
     """
 
-    query = query.replace('?*', '.*')
-    matcher = re.compile(query, re.IGNORECASE)
+    if '{' in query:
+        query, _ = query.split('{')
+        logger.warning('optional part of the query expression not supported. '
+                       'See filter2')
+
+    try:
+        query = query.replace('?*', '.*')
+        matcher = re.compile(query, re.IGNORECASE)
+    except re.error:
+        raise errors.VisaIOError(constants.VI_ERROR_INV_EXPR)
 
     return tuple(res for res in resources if matcher.match(res))
+
+
+def filter2(resources, query, open_resource):
+    """Filter a list of resources according to a query expression.
+
+    It accepts the optional part of the expression.
+
+    .. warning: This function is experimental and unsafe as it uses eval,
+                It also might require to open the resource.
+
+    :param resources: iterable of resources.
+    :param query: query expression.
+    :param open_resource: function to open the resource.
+    """
+
+    if '{' in query:
+        try:
+            query, optional = query.split('{')
+            optional, _ = optional.split('}')
+        except ValueError:
+            raise errors.VisaIOError(constants.VI_ERROR_INV_EXPR)
+    else:
+        optional = None
+
+    filtered = filter(resources, query)
+
+    if not optional:
+        return filtered
+
+    optional = optional.replace('&&', 'and').replace('||', 'or').replace('!', 'not ')
+    optional = optional.replace('VI_', 'res.VI_')
+
+    class AttrGetter():
+
+        def __init__(self, resource_name):
+            self.resource_name = resource_name
+            self.parsed = parse_resource_name(resource_name)
+            self.resource = None
+
+        def __getattr__(self, item):
+            if item == 'VI_ATTR_INTF_NUM':
+                   return int(self.parsed.board)
+            elif item == 'VI_ATTR_MANF_ID':
+                   return self.parsed.manufacturer_id
+            elif item == 'VI_ATTR_MODEL_CODE':
+                   return self.parsed.model_code
+            elif item == 'VI_ATTR_USB_SERIAL_NUM':
+                   return self.parsed.serial_number
+            elif item == 'VI_ATTR_USB_INTFC_NUM':
+                   return int(self.parsed.board)
+            elif item == 'VI_ATTR_TCPIP_ADDR':
+                   return self.parsed.host_address
+            elif item == 'VI_ATTR_TCPIP_DEVICE_NAME':
+                   return self.parsed.lan_device_name
+            elif item == 'VI_ATTR_TCPIP_PORT':
+                   return int(self.parsed.port)
+            elif item == 'VI_ATTR_INTF_NUM':
+                   return int(self.parsed.board)
+            elif item == 'VI_ATTR_GPIB_PRIMARY_ADDR':
+                   return int(self.parsed.primary_address)
+            elif item == 'VI_ATTR_GPIB_SECONDARY_ADDR':
+                   return int(self.parsed.secondary_address)
+            elif item == 'VI_ATTR_PXI_CHASSIS':
+                return self.parsed.chassis_number
+            elif item == 'VI_ATTR_MAINFRAME_LA':
+                return self.parsed.vxi_logical_address
+
+            if self.resource is None:
+                self.resource = open_resource(self.resource_name)
+
+            return self.resource.get_visa_attribute(item)
+
+    @contextlib.contextmanager
+    def open_close(resource_name):
+        getter = AttrGetter(resource_name)
+        yield getter
+        if getter.resource is not None:
+            getter.resource.close()
+
+    selected = []
+    for rn in filtered:
+        with open_close(rn) as getter:
+            if eval(optional, None, dict(res=getter)):
+                selected.append(rn)
+
+
+
