@@ -228,17 +228,29 @@ class TestParsers(BaseTestCase):
                          usb_interface_number='3',
                          canonical_resource_name='USB2::0x1234::125::A22-5::3::RAW')
 
+class TestFilters(BaseTestCase):
+
+    run_list = (
+        'GPIB0::8::65535::INSTR',
+        'TCPIP0::localhost:1111::inst0::INSTR',
+        'ASRL1::INSTR',
+        'USB0::0x1111::0x2222::0x4445::0::RAW',
+        'USB0::0x1111::0x2222::0x1234::0::INSTR',
+        'TCPIP0::localhost::10001::SOCKET',
+        'GPIB9::8::65535::INSTR',
+        'ASRL11::INSTR',
+        'ASRL2::INSTR'
+        )
+
+    def _test_filter(self, expr, *correct):
+        ok = tuple(self.run_list[n] for n in correct)
+        self.assertEqual(rname.filter(self.run_list, expr), ok)
+
     def test_filter(self):
-        run_list = (
-            'GPIB0::8::65535::INSTR',
-            'TCPIP0::localhost:1111::inst0::INSTR',
-            'ASRL1::INSTR',
-            'USB0::0x1111::0x2222::0x4445::0::RAW',
-            'USB0::0x1111::0x2222::0x1234::0::INSTR',
-            'TCPIP0::localhost::10001::SOCKET',
-            )
-        self.assertEqual(rname.filter(run_list, '?*::INSTR'),
-                         ('GPIB0::8::65535::INSTR',
-                          'TCPIP0::localhost:1111::inst0::INSTR',
-                          'ASRL1::INSTR',
-                          'USB0::0x1111::0x2222::0x1234::0::INSTR'))
+        self._test_filter('?*::INSTR', 0, 1, 2, 4, 6, 7, 8)
+        self._test_filter('GPIB?*INSTR', 0, 6)
+        self._test_filter('GPIB[0-8]*::?*INSTR', 0)
+        self._test_filter('GPIB[^0]::?*INSTR', 6)
+        self._test_filter('ASRL1+::INSTR', 2, 7)
+        self._test_filter('(GPIB|VXI)?*INSTR', 0, 6)
+        self._test_filter('?*', *tuple(range(len(self.run_list))))
