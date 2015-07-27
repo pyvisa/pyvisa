@@ -1602,26 +1602,32 @@ class ResourceManager(object):
 
     def open_resource(self, resource_name,
                       access_mode=constants.AccessModes.no_lock,
-                      open_timeout=constants.VI_TMO_IMMEDIATE, **kwargs):
+                      open_timeout=constants.VI_TMO_IMMEDIATE,
+                      resource_pyclass=None,
+                      **kwargs):
         """Return an instrument for the resource name.
 
         :param resource_name: name or alias of the resource to open.
         :param access_mode: access mode.
         :type access_mode: :class:`pyvisa.constants.AccessModes`
         :param open_timeout: time out to open.
+        :param resource_pyclass: resource python class to use to instantiate the Resource.
+                                 Defaults to None: select based on the resource name.
         :param kwargs: keyword arguments to be used to change instrument attributes
                        after construction.
 
         :rtype: :class:`pyvisa.resources.Resource`
         """
-        info = self.resource_info(resource_name, extended=False)
 
-        try:
-            cls = self._resource_classes[(info.interface_type, info.resource_class)]
-        except KeyError:
-            raise ValueError('There is no class defined for %r' % ((info.interface_type, info.resource_class),))
+        if resource_pyclass is None:
+            info = self.resource_info(resource_name, extended=False)
 
-        res = cls(self, resource_name)
+            try:
+                resource_pyclass = self._resource_classes[(info.interface_type, info.resource_class)]
+            except KeyError:
+                raise ValueError('There is no class defined for %r' % ((info.interface_type, info.resource_class),))
+
+        res = resource_pyclass(self, resource_name)
         for key in kwargs.keys():
             try:
                 getattr(res, key)

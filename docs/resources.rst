@@ -12,6 +12,13 @@ You do not create this objects directly but they are returned by the
 `open_resource` method of a `ResourceManager`. In general terms, there
 are two main groups derived from `Resource`: `MessageBased` and `RegisterBased`.
 
+.. note:: The resource Python class to use is selected automatically from the
+          resource name. However, you can force
+
+          >>> from pyvisa.resources import MessageBasedResource
+          >>> inst = rm.open('ASRL1::INSTR', resource_pyclass=MessageBasedResource)
+
+
 The following sections explore the most common attributes of `Resource` and
 `MessageBased` (Serial, GPIB, etc) which are the ones you will encounte more
 often. For more information, refer to the :ref:`api`.
