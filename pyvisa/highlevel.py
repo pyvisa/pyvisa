@@ -1620,7 +1620,7 @@ class ResourceManager(object):
         """
 
         if resource_pyclass is None:
-            info = self.resource_info(resource_name, extended=False)
+            info = self.resource_info(resource_name, extended=True)
 
             try:
                 resource_pyclass = self._resource_classes[(info.interface_type, info.resource_class)]
