@@ -248,7 +248,7 @@ class TestFilters(BaseTestCase):
 
     def test_filter(self):
         self._test_filter('?*::INSTR', 0, 1, 2, 4, 6, 7, 8)
-        self._test_filter('GPIB?*INSTR', 0, 6)
+        self._test_filter('GPIB?+INSTR', 0, 6)
         self._test_filter('GPIB[0-8]*::?*INSTR', 0)
         self._test_filter('GPIB[^0]::?*INSTR', 6)
         self._test_filter('ASRL1+::INSTR', 2, 7)
