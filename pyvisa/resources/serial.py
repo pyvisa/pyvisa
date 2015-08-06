@@ -31,4 +31,4 @@ class SerialInstrument(MessageBasedResource):
         :param mask: Specifies the action to be taken with flushing the buffer.
                  (Constants.READ*, .WRITE*, .IO*)
         """
-        self.visalib.flush(mask)
+        self.visalib.flush(self.session, mask)
