@@ -478,7 +478,7 @@ def filter(resources, query):
                        'See filter2')
 
     try:
-        query = query.replace('?*', '.*')
+        query = query.replace('?', '.')
         matcher = re.compile(query, re.IGNORECASE)
     except re.error:
         raise errors.VisaIOError(constants.VI_ERROR_INV_EXPR)
