@@ -9,7 +9,7 @@ with me for a couple of lines. Originally PyVISA was a Python wrapper to the VIS
 library. More specifically, it was :py:mod:`ctypes` wrapper around the NI-VISA.
 This approach worked fine but made it difficult to develop other ways to communicate
 with instruments in platforms where NI-VISA was not available. Users had to change
-they programs to use other packages with different API.
+their programs to use other packages with different API.
 
 Since 1.6, PyVISA is a frontend to VISA. It provides a nice, Pythonic API and can
 connect to multiple backends. Each backend exposes a class derived from VisaLibraryBase
