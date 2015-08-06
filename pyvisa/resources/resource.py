@@ -26,9 +26,14 @@ from .. import attributes
 
 class WaitResponse(object):
     """Class used in return of wait_on_event. It properly closes the context upon delete.
+       A call with event_type of 0 (normally used when timed_out is True) will be
+       recorded as None, otherwise it records the proper EventType enum.
     """
     def __init__(self, event_type, context, ret, visalib, timed_out=False):
-        self.event_type = constants.EventType(event_type)
+        if event_type == 0:
+            self.event_type = None
+        else:
+            self.event_type = constants.EventType(event_type)
         self.context = context
         self.ret = ret
         self._visalib = visalib
