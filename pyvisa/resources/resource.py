@@ -14,6 +14,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import contextlib
+import copy
 import math
 import time
 
@@ -38,6 +39,7 @@ class WaitResponse(object):
         self.ret = ret
         self._visalib = visalib
         self.timed_out = timed_out
+
     def __del__(self):
         if self.context != None:
             self._visalib.close(self.context)
@@ -57,7 +59,11 @@ class Resource(object):
         def _internal(python_class):
             highlevel.ResourceManager.register_resource_class(interface_type, resource_class, python_class)
 
-            attrs = []
+            # If the class already has this attribute,
+            # it means that a parent class was registered first.
+            # We need to copy the current list and extended it.
+            attrs = copy.copy(getattr(python_class, 'visa_attributes_classes', []))
+
             for attr in attributes.AttributesPerResource[(interface_type, resource_class)]:
                 attrs.append(attr)
                 if not hasattr(python_class, attr.py_name) and attr.py_name != '':
@@ -378,3 +384,6 @@ class Resource(object):
             yield access_key
         finally:
             self.unlock()
+
+
+Resource.register(constants.InterfaceType.unknown, '')(Resource)
