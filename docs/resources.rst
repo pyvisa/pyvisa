@@ -13,7 +13,7 @@ You do not create this objects directly but they are returned by the
 are two main groups derived from `Resource`: `MessageBased` and `RegisterBased`.
 
 .. note:: The resource Python class to use is selected automatically from the
-          resource name. However, you can force
+          resource name. However, you can force a Resource Python class:
 
           >>> from pyvisa.resources import MessageBasedResource
           >>> inst = rm.open('ASRL1::INSTR', resource_pyclass=MessageBasedResource)
@@ -58,14 +58,15 @@ For all PyVISA objects, a timeout is set with
 
    my_device.timeout = 25000
 
-Here, `my_device` may be a device, an interface or whatever, and its timeout is
-set to 25 seconds. To set an infinite timeout, set it to None or float('+inf'):
+Here, ``my_device`` may be a device, an interface or whatever, and its timeout is
+set to 25 seconds. To set an **infinite** timeout, set it to ``None`` or ``float('+inf')`` or:
 
 .. code-block:: python
 
    del my_device.timeout
 
-To set it to immediate, set it to `0` or a negative value.
+To set it to **immediate**, set it to `0` or a negative value. (Actually, any value
+smaller than 1 is considered immediate)
 
 Now every operation of the resource takes as long as it takes, even
 indefinitely if necessary.

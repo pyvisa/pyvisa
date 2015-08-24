@@ -140,8 +140,16 @@ class Resource(object):
     def timeout(self):
         """The timeout in milliseconds for all resource I/O operations.
 
-        None is mapped to VI_TMO_INFINITE.
-        A value less than 1 is mapped to VI_TMO_IMMEDIATE.
+        Special values:
+        - **immediate** (``VI_TMO_IMMEDIATE``): 0
+            (for convenience, any value smaller than 1 is considered as 0)
+        - **infinite** (``VI_TMO_INFINITE``): ``float('+inf')``
+            (for convenience, None is considered as ``float('+inf')``)
+
+        To set an **infinite** timeout, you can also use:
+
+        >>> del instrument.timeout
+
         """
         timeout = self.get_visa_attribute(constants.VI_ATTR_TMO_VALUE)
         if timeout == constants.VI_TMO_INFINITE:
