@@ -439,19 +439,22 @@ class LibraryError(OSError, Error):
     @classmethod
     def from_exception(cls, exc, filename):
 
-        msg = str(exc)
+        try:
+            msg = str(exc)
 
-        if ': image not found' in msg:
-            msg = ' File not found or not readable.'
+            if ': image not found' in msg:
+                msg = ' File not found or not readable.'
 
-        elif ': no suitable image found' in msg:
-            if 'no matching architecture' in msg:
+            elif ': no suitable image found' in msg:
+                if 'no matching architecture' in msg:
+                    return LibraryError.from_wrong_arch(filename)
+                else:
+                    msg = 'Could not determine filetype.'
+
+            elif 'wrong ELF class' in msg:
                 return LibraryError.from_wrong_arch(filename)
-            else:
-                msg = 'Could not determine filetype.'
-                
-        elif 'wrong ELF class' in msg:
-            return LibraryError.from_wrong_arch(filename)
+        except UnicodeDecodeError:
+            return cls('Error while accessing %s:' % filename)
 
         return cls('Error while accessing %s: %s' % (filename, msg))
 
