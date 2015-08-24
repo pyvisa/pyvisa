@@ -63,9 +63,31 @@ After you have instantiated the `ResourceManager`::
 
 you can access the corresponding `VisaLibrary` instance under the `visalib` attribute.
 
+As an example, consider the VISA function `viMapAddress`. It appears in the low-level
+layer as the static method `viMapAddress` of `visalib` attributed and also appears
+in the middle-level layer as `map_address`.
+
 You can recognize low and middle-level functions by their names. Low-level functions
 carry the same name as in the shared library, and they are prefixed by `vi`.
 Middle-level functions have a friendlier, more pythonic but still recognizable name.
+Typically, camelCase names where stripped from the leading `vi` and changed to underscore
+separated lower case names. The docs about these methods is located here :ref:`api`.
+
+
+Low-level
+~~~~~~~~~
+
+You can access the low-level functions directly exposed as static methods,
+for example::
+
+    >>> rm.visalib.viMapAddress(<here goes the arguments>)
+
+To call this functions you need to know the function declaration and how to
+interface it to python. To help you out, the `VisaLibrary` object also contains
+middle-level functions.
+
+It is very likely that you will need to access the VISA constants using these methods.
+You can find the information about these constants here :ref:`api_constants`
 
 
 Middle-level
@@ -74,25 +96,10 @@ Middle-level
 The `VisaLibrary` object exposes the middle-level functions which are
 one-to-one mapped from the foreign library as bound methods.
 
-Typically, camelCase names where stripped from the leading `vi` and changed to underscore
-separated lower case names. For example the VISA function `viMapAddress` appears
-in the middle-level layer as `map_address`. The docs about these methods is located
-here :ref:`api`.
-
-
-Low-level
-~~~~~~~~~
-
-You can also access the low-level functions directly exposed as static methods,
-for example::
-
-    >>> rm.visalib.viMapAddress(<here goes the arguments>)
-
-To call this functions you need to know the function declaration and how to
-interface it to python. To help you out, the `VisaLibrary` object also contains
-middle-level functions. Each middle-level function wraps one low-level function.
+Each middle-level function wraps one low-level function.
 In this case::
 
     >>> rm.visalib.map_address(<here goes the arguments>)
 
 The calling convention and types are handled by the wrapper.
+
