@@ -10,7 +10,7 @@ Configuring the NI backend
 
 In most cases PyVISA will be able to find the location of the shared visa library.
 If this does not work or you want to use another one, you need to provide the library
-path to the `ResourceManager` constructor::
+path to the :class:`pyvisa.highlevel.ResourceManager` constructor::
 
     >>> rm = ResourceManager('Path to library')
 

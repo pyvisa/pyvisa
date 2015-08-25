@@ -61,7 +61,7 @@ Error: Could not found VISA library
 
 This error occurs when you have not provided a path for the VISA library and PyVISA
 is not able to find it for you. You can solve it by providing the library path to the
-`VisaLibrary` or `ResourceManager` constructor::
+``VisaLibrary`` or ``ResourceManager`` constructor::
 
     >>> visalib = VisaLibrary('/path/to/library')
 
@@ -105,7 +105,7 @@ The solution is to:
 
   1. Install and use a VISA library matching your Python 'bitness'
 
-     Download and install it from `National Instruments's VISA`. Run the debug
+     Download and install it from **National Instruments's VISA**. Run the debug
      command again to see if the new library was found by PyVISA. If not,
      create a configuration file as described in :ref:`configuring`.
 

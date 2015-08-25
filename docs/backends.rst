@@ -14,10 +14,10 @@ their programs to use other packages with different API.
 Since 1.6, PyVISA is a frontend to VISA. It provides a nice, Pythonic API and can
 connect to multiple backends. Each backend exposes a class derived from VisaLibraryBase
 that implements the low-level communication. The ctypes wrapper around NI-VISA is the
-default backend (called `ni`) and is bundled with PyVISA for simplicity.
+default backend (called **ni**) and is bundled with PyVISA for simplicity.
 
 You can specify the backend to use when you instantiate the resource manager using the
-`@` symbol. Remembering that `ni` is the default, this::
+``@`` symbol. Remembering that **ni** is the default, this::
 
     >>> import visa
     >>> rm = visa.ResourceManager()
@@ -32,7 +32,7 @@ You can still provide the path to the library if needed::
     >>> import visa
     >>> rm = visa.ResourceManager('/path/to/lib@ni')
 
-Under the hood, the `ResourceManager` looks for the requested backend and instantiate
+Under the hood, the :class:`pyvisa.highlevel.ResourceManager` looks for the requested backend and instantiate
 the VISA library that it provides.
 
 PyVISA locates backends by name. If you do:
@@ -40,7 +40,7 @@ PyVISA locates backends by name. If you do:
     >>> import visa
     >>> rm = visa.ResourceManager('@somename')
 
-PyVISA will try to import a package/module named `pyvisa-somename` which should be
+PyVISA will try to import a package/module named ``pyvisa-somename`` which should be
 installed in your system. This is a loosly coupled configuration free method.
 PyVISA does not need to know about any backend out there until you actually
 try to use it.
@@ -63,7 +63,7 @@ What does a minimum backend looks like? Quite simple::
     WRAPPER_CLASS = MyLibrary
 
 Additionally you can provide a staticmethod named get_debug_info` that should return a
-dictionary of debug information which is printed when you call `python -m visa info`
+dictionary of debug information which is printed when you call ``python -m visa info``
 
 An important aspect of developing a backend is knowing which VisaLibraryBase method to
 implement and what API to expose.
@@ -95,7 +95,7 @@ If you need to start sending bytes to MessageBased instruments you will require:
 For other usages or devices, you might need to implement other functions. Is really up to you
 and your needs.
 
-These functions should raise a `VisaIOError` or emit a `VisaIOWarning` if necessary.
+These functions should raise a :class:`pyvisa.errors.VisaIOError` or emit a :class:`pyvisa.errors.VisaIOWarning` if necessary.
 
 
 Complete list of level 2 functions to implement::

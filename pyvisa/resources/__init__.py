@@ -33,7 +33,7 @@ from .pxi import PXIMemory
 from .pxi import PXIInstrument
 from .vxi import VXIMemory
 
-__all__ = ['Resource',
+__all__ = ['Resource', 'MessageBasedResource', 'RegisterBasedResource',
            'GPIBInterface', 'VXIBackplane', 'VXIInstrument',
            'GPIBInstrument', 'TCPIPInstrument', 'TCPIPSocket', 'SerialInstrument', 'USBRaw', 'USBInstrument',
            'FirewireInstrument', 'PXIMemory', 'PXIInstrument', 'VXIMemory']

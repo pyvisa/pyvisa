@@ -13,7 +13,7 @@ PyVISA implements convenient and Pythonic programming in three layers:
     You will normally not need to access these functions directly. If you do,
     it probably means that we need to improve layer 2.
 
-    All level 1 functions are **static methods** of `VisaLibrary`.
+    All level 1 functions are **static methods** of :class:`pyvisa.highlevel.VisaLibrary`.
 
     .. warning:: Notice however that low-level functions might not be present in all backends.
                  For broader compatibility, do no use this layer. All the functionality should
@@ -30,47 +30,47 @@ PyVISA implements convenient and Pythonic programming in three layers:
     aspects of the VISA library which are not implemented by the corresponding
     resource class.
 
-    All level 2 functions are **bound methods** of `VisaLibrary`.
+    All level 2 functions are **bound methods** of :class:`pyvisa.highlevel.VisaLibrary`.
 
- 3. High-level: An object-oriented layer for `ResourceManager` and `Resource`
+ 3. High-level: An object-oriented layer for :class:`pyvisa.highlevel.ResourceManager` and :class:`pyvisa.resources.Resource`
 
-    The `ResourceManager` implements methods to inspect connected resources. You also
-    use this object to open other resources instantiating the appropriate `Resource`
+    The ``ResourceManager`` implements methods to inspect connected resources. You also
+    use this object to open other resources instantiating the appropriate ``Resource``
     derived classes.
 
-    `Resource` and the derived classes implement functions and attributes access
+    ``Resource`` and the derived classes implement functions and attributes access
     to the underlying resources in a Pythonic way.
 
-Most of the time you will only need to instantiate a `ResourceManager`. For a given resource,
-you will use the `open_resource` method to obtain the appropriate object. If needed, you will
-be able to access the `VisaLibrary` object directly using the `visalib` attribute.
+Most of the time you will only need to instantiate a ``ResourceManager``. For a given resource,
+you will use the :meth:`pyvisa.highlevel.ResourceManager.open_resource` method to obtain the appropriate object. If needed, you will
+be able to access the ``VisaLibrary`` object directly using the :attr:`pyvisa.highlevel.ResourceManager.visalib` attribute.
 
-The `VisaLibrary` does the low-level calls. In the default NI Backend, levels 1 and 2 are
-implemented in the same package called `ctwrapper` (which stands for ctypes wrapper).
+The ``VisaLibrary`` does the low-level calls. In the default NI Backend, levels 1 and 2 are
+implemented in the same package called :mod:`pyvisa.ctwrapper` (which stands for ctypes wrapper).
 This package is included in PyVISA.
 
-Other backends can be used just by passing the name of the backend to `ResourceManager`
+Other backends can be used just by passing the name of the backend to ``ResourceManager``
 after the `@` symbol. See more information in :ref:`backends`.
 
 
 Calling middle- and low-level functions
 ---------------------------------------
 
-After you have instantiated the `ResourceManager`::
+After you have instantiated the ``ResourceManager``::
 
     >>> import visa
     >>> rm = visa.ResourceManager()
 
-you can access the corresponding `VisaLibrary` instance under the `visalib` attribute.
+you can access the corresponding ``VisaLibrary`` instance under the ``visalib`` attribute.
 
-As an example, consider the VISA function `viMapAddress`. It appears in the low-level
-layer as the static method `viMapAddress` of `visalib` attributed and also appears
-in the middle-level layer as `map_address`.
+As an example, consider the VISA function ``viMapAddress``. It appears in the low-level
+layer as the static method ``viMapAddress`` of ``visalib`` attributed and also appears
+in the middle-level layer as ``map_address``.
 
 You can recognize low and middle-level functions by their names. Low-level functions
-carry the same name as in the shared library, and they are prefixed by `vi`.
+carry the same name as in the shared library, and they are prefixed by **vi**.
 Middle-level functions have a friendlier, more pythonic but still recognizable name.
-Typically, camelCase names where stripped from the leading `vi` and changed to underscore
+Typically, camelCase names where stripped from the leading **vi** and changed to underscore
 separated lower case names. The docs about these methods is located here :ref:`api`.
 
 
@@ -83,7 +83,7 @@ for example::
     >>> rm.visalib.viMapAddress(<here goes the arguments>)
 
 To call this functions you need to know the function declaration and how to
-interface it to python. To help you out, the `VisaLibrary` object also contains
+interface it to python. To help you out, the ``VisaLibrary`` object also contains
 middle-level functions.
 
 It is very likely that you will need to access the VISA constants using these methods.
@@ -93,7 +93,7 @@ You can find the information about these constants here :ref:`api_constants`
 Middle-level
 ~~~~~~~~~~~~
 
-The `VisaLibrary` object exposes the middle-level functions which are
+The ``VisaLibrary`` object exposes the middle-level functions which are
 one-to-one mapped from the foreign library as bound methods.
 
 Each middle-level function wraps one low-level function.

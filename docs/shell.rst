@@ -14,7 +14,7 @@ that will show something the following prompt::
 
     (visa)
 
-At any time, you can type `?` or `help` to get a list of valid commands::
+At any time, you can type ``?`` or ``help`` to get a list of valid commands::
 
     (visa) help
 

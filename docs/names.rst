@@ -7,7 +7,7 @@ VISA resource names
 If you use the function :func:`open_resource`, you must tell this
 function the *VISA resource name* of the instrument you want to
 connect to.  Generally, it starts with the bus type, followed by a
-double colon `"::"`, followed by the number within the bus.  For
+double colon ``"::"``, followed by the number within the bus.  For
 example,
 
 .. code-block:: none
@@ -22,7 +22,7 @@ write
 
    GPIB1::10
 
-As for the bus, things like `"GPIB"`, `"USB"`, `"ASRL"` (for
+As for the bus, things like ``"GPIB"``, ``"USB"``, ``"ASRL"`` (for
 serial/parallel interface) are possible.  So for connecting to an
 instrument at COM2, the resource name is
 
@@ -32,11 +32,11 @@ instrument at COM2, the resource name is
 
 (Since only one instrument can be connected with one serial interface,
 there is no double colon parameter.)  However, most VISA systems allow
-aliases such as `"COM2"` or `"LPT1"`.  You may also add your own
+aliases such as ``"COM2"`` or ``"LPT1"``.  You may also add your own
 aliases.
 
 The resource name is case-insensitive.  It doesn't matter whether you
-say `"ASRL2"` or `"asrl2"`.  For further information, I have to refer
+say ``"ASRL2"`` or ``"asrl2"``.  For further information, I have to refer
 you to a comprehensive VISA description like
 `<http://www.ni.com/pdf/manuals/370423a.pdf>`_.
 

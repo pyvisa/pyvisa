@@ -50,7 +50,7 @@ Contributing to an existing backend
 
 Backends are the central piece of PyVISA as they provide the low level communication
 over the different interfaces. There a couple of backends in the wild which can use
-your help. Look them up in PyPI_ (try `pyvisa` in the search box) and see where you
+your help. Look them up in PyPI_ (try `pyvisa``` in the search box) and see where you
 can help.
 
 

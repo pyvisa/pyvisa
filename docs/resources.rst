@@ -9,8 +9,8 @@ types of resources (eg. GPIB, Serial). Each contains the particular set of
 attributes an methods that are available by the underlying device.
 
 You do not create this objects directly but they are returned by the
-`open_resource` method of a `ResourceManager`. In general terms, there
-are two main groups derived from `Resource`: `MessageBased` and `RegisterBased`.
+:meth:`pyvisa.highlevel.ResourceManager.open_resource` method of a :class:`pyvisa.highlevel.ResourceManager`. In general terms, there
+are two main groups derived from :class:`pyvisa.resources.Resource`, :class:`pyvisa.resources.RegisterBasedResource` and :class:`pyvisa.resources.RegisterBasedResource`.
 
 .. note:: The resource Python class to use is selected automatically from the
           resource name. However, you can force a Resource Python class:
@@ -19,8 +19,8 @@ are two main groups derived from `Resource`: `MessageBased` and `RegisterBased`.
           >>> inst = rm.open('ASRL1::INSTR', resource_pyclass=MessageBasedResource)
 
 
-The following sections explore the most common attributes of `Resource` and
-`MessageBased` (Serial, GPIB, etc) which are the ones you will encounte more
+The following sections explore the most common attributes of ``Resource`` and
+``MessageBased`` (Serial, GPIB, etc) which are the ones you will encounte more
 often. For more information, refer to the :ref:`api`.
 
 
@@ -134,10 +134,10 @@ Alternatively you can give it when creating your instrument object::
    my_instrument = rm.open_resource("GPIB::10", read_termination='\r')
 
 The default value depends on the bus system.  Generally, the sequence is empty,
-in particular for GPIB. For RS232 it's `\r`.
+in particular for GPIB. For RS232 it's ``\r``.
 
 You can specify the character to add to each outgoing message using the
-`write_termination` attribute.
+``write_termination`` attribute.
 
 
 `query_delay` and `send_end`
@@ -148,12 +148,12 @@ You can specify the character to add to each outgoing message using the
    single: send_end
 
 There are two further options related to message termination, namely
-`send_end` and `query_delay`.  `send_end` is a boolean.  If it's  `True` (the
+``send_end`` and ``query_delay``.  ``send_end`` is a boolean.  If it's  ``True`` (the
 default), the EOI line is asserted after each write operation,  signalling the
 end of the operation.  EOI is GPIB-specific but similar action  is taken for
 other interfaces.
 
-The argument `query_delay` is the time in seconds to wait after
+The argument ``query_delay`` is the time in seconds to wait after
 each write  operation.  So you could write::
 
    my_instrument = rm.open_resource("GPIB::10", send_end=False, delay=1.2)
