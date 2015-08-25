@@ -2,7 +2,7 @@ PyVISA Changelog
 ================
 
 
-1.8 (unreleased)
+1.8 (2015-08-24)
 ----------------
 
 - Fixed error reporting with Unicode filenames.
