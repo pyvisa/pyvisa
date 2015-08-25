@@ -5,7 +5,22 @@ PyVISA Changelog
 1.8 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Fixed error reporting with Unicode filenames.
+  (Issue #136)
+- Improved documentation.
+- Clarify timeout getter and setter.
+  (Issue #167)
+- In open_resource, return a Resource object and warns if resource class not registered.
+- Register resource class for empty resource class.
+- Allow registering parent resource classes.
+- Changed types in wrapper to be platform independent (viStatus is always 32 bit).
+  (Issue #134)
+- Fix a not a invalid EventType bug.
+  (Thanks lupien)
+- Added optional resource_pyclass to open_resource.
+- Fixed bug in serial flush.
+  (Thanks bkstein)
+- Implemented resource name parsing in pure python.
 
 
 1.7 (2015-05-16)
