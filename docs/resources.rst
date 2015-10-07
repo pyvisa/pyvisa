@@ -10,7 +10,7 @@ attributes an methods that are available by the underlying device.
 
 You do not create this objects directly but they are returned by the
 :meth:`pyvisa.highlevel.ResourceManager.open_resource` method of a :class:`pyvisa.highlevel.ResourceManager`. In general terms, there
-are two main groups derived from :class:`pyvisa.resources.Resource`, :class:`pyvisa.resources.RegisterBasedResource` and :class:`pyvisa.resources.RegisterBasedResource`.
+are two main groups derived from :class:`pyvisa.resources.Resource`, :class:`pyvisa.resources.RegisterBasedResource` and :class:`pyvisa.resources.MessageBasedResource`.
 
 .. note:: The resource Python class to use is selected automatically from the
           resource name. However, you can force a Resource Python class:
