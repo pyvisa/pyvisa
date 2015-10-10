@@ -88,7 +88,6 @@ class MessageBasedResource(Resource):
 
     chunk_size = 20 * 1024
     query_delay = 0.0
-    read_delay = 0.1
 
     _values_format = None
 
@@ -300,7 +299,7 @@ class MessageBasedResource(Resource):
         ret = bytes()
 
         if self._read_termination is None:
-            time.sleep(self.read_delay)
+            time.sleep(self.query_delay)
             chunk, status = self.visalib.read(self.session, self.bytes_in_buffer)
             ret += chunk
 
