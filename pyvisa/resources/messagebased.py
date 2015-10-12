@@ -297,18 +297,24 @@ class MessageBasedResource(Resource):
         loop_status = constants.StatusCode.success_max_count_read
 
         ret = bytes()
-        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT, constants.VI_SUCCESS_MAX_CNT):
-            try:
-                status = loop_status
-                while status == loop_status:
-                    logger.debug('%s - reading %d bytes (last status %r)',
-                                 self._resource_name, size, status)
-                    chunk, status = self.visalib.read(self.session, size)
-                    ret += chunk
-            except errors.VisaIOError as e:
-                logger.debug('%s - exception while reading: %s', self._resource_name, e)
-                raise
 
+        if self._read_termination is None:
+            time.sleep(self.query_delay)
+            chunk, status = self.visalib.read(self.session, self.bytes_in_buffer)
+            ret += chunk
+
+        else:
+            with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT, constants.VI_SUCCESS_MAX_CNT):
+                try:
+                    status = loop_status
+                    while status == loop_status:
+                        logger.debug('%s - reading %d bytes (last status %r)',
+                                     self._resource_name, size, status)
+                        chunk, status = self.visalib.read(self.session, size)
+                        ret += chunk
+                except errors.VisaIOError as e:
+                    logger.debug('%s - exception while reading: %s', self._resource_name, e)
+                    raise
         return ret
 
     def read(self, termination=None, encoding=None):
