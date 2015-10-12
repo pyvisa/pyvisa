@@ -9,7 +9,8 @@ python:
 
 install:
   - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
-  - pip install coverage coveralls
+  - if [ $TRAVIS_PYTHON_VERSION == '3.2' ]; then pip install coverage==3.7.1; else pip install coverage; fi
+  - pip install coveralls
 
 script:
   - coverage run -p --source=pyvisa --omit="*test*","*compat*" setup.py test
