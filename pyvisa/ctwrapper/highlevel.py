@@ -72,10 +72,10 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
 
         user_lib = read_user_library_path()
         tmp = [find_library(library_path)
-               for library_path in ('visa', 'visa32', 'visa32.dll')]
+               for library_path in ('visa', 'visa32', 'visa32.dll', 'visa64', 'visa64.dll')]
 
         tmp = [LibraryPath(library_path)
-               for library_path in tmp
+               for library_path in set(tmp)
                if library_path is not None]
 
         logger.debug('Automatically found library files: %s' % tmp)
