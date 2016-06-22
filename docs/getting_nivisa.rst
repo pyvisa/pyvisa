@@ -11,7 +11,7 @@ PyVISA includes a debugging command to help you troubleshoot this (and other thi
 
 According to National Instruments, NI VISA **5.4.1** is available for:
 
-.. note:: NI-VISA is not available for your system, take a look at the :ref:`faq`.
+.. note:: If NI-VISA is not available for your system, take a look at the :ref:`faq`.
 
 
 Mac OS X
