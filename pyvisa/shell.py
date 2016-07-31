@@ -129,9 +129,9 @@ class VisaShell(Cmd):
             self.resources = []
             for ndx, (resource_name, value) in enumerate(resources.items()):
                 if not args:
-                    print('({:2d}) {}'.format(ndx, resource_name))
+                    print('({0:2d}) {1}'.format(ndx, resource_name))
                     if value.alias:
-                        print('     alias: {}'.format(value.alias))
+                        print('     alias: {0}'.format(value.alias))
 
                 self.resources.append((resource_name, value.alias or None))
 
@@ -155,7 +155,7 @@ class VisaShell(Cmd):
 
         try:
             self.current = self.resource_manager.open_resource(args)
-            print('{} has been opened.\n'
+            print('{0} has been opened.\n'
                   'You can talk to the device using "write", "read" or "query.\n'
                   'The default end of message is added to each message'.format(args))
 
@@ -200,7 +200,7 @@ class VisaShell(Cmd):
             return
 
         try:
-            print('Response: {}'.format(self.current.query(args)))
+            print('Response: {0}'.format(self.current.query(args)))
         except Exception as e:
             print(e)
 
