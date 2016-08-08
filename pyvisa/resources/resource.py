@@ -334,7 +334,7 @@ class Resource(object):
             event_type, context, ret = self.visalib.wait_on_event(self.session, in_event_type, timeout)
         except errors.VisaIOError as exc:
             if capture_timeout and exc.error_code == constants.StatusCode.error_timeout:
-                return WaitResponse(0, None, exc.error_code, self.visalib, timed_out=True)
+                return WaitResponse(in_event_type, None, exc.error_code, self.visalib, timed_out=True)
             raise
         return WaitResponse(event_type, context, ret, self.visalib)
 
