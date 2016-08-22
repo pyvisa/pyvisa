@@ -156,8 +156,8 @@ class VisaShell(Cmd):
         try:
             self.current = self.resource_manager.open_resource(args)
             print('{0} has been opened.\n'
-                  'You can talk to the device using "write", "read" or "query.\n'
-                  'The default end of message is added to each message'.format(args))
+                  'You can talk to the device using "write", "read" or "query".\n'
+                  'The default end of message is added to each message.'.format(args))
 
             self.py_attr = []
             self.vi_attr = []
