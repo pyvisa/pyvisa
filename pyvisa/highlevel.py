@@ -1035,7 +1035,8 @@ class VisaLibraryBase(object):
 
             return (ResourceInfo(parsed.interface_type_const,
                                  parsed.board,
-                                 parsed.resource_class, None, None),
+                                 parsed.resource_class,
+                                 str(parsed), None),
                     constants.StatusCode.success)
         except ValueError:
             return 0, constants.StatusCode.error_invalid_resource_name
