@@ -296,6 +296,29 @@ def parse_ieee_block_header(block):
 
     return offset, data_length
 
+def parse_hp_block_header(block, is_big_endian):
+    """Parse the header of a HP block.
+
+    Definite Length Arbitrary Block:
+    #A<data_length><data>
+
+    The header ia always 4 bytes long.
+    The data_length field specifies the size of the data.
+
+    :param block: HP block.
+    :type block: bytes
+    :param is_big_endian: boolean indicating endianess.
+    :return: (offset, data_length)
+    :rtype: (int, int)
+    """
+    begin  = block.find(b'#A')
+    if begin < 0:
+        raise ValueError("Could not find the standard block header (#A) indicating the start of the block.")
+    offset = begin + 4
+
+    data_length = int.from_bytes(block[begin+2:offset], byteorder='big' if is_big_endian else 'little')
+
+    return offset, data_length
 
 def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     """Convert a block in the IEEE format into an iterable of numbers.
