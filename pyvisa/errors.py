@@ -368,6 +368,9 @@ class VisaIOError(Error):
         self.error_code = error_code
         self.abbreviation = abbreviation
         self.description = description
+        
+    def __reduce__(self):
+        return (VisaIOError, (self.error_code,))
 
 
 class VisaIOWarning(Warning):
@@ -384,6 +387,9 @@ class VisaIOWarning(Warning):
         self.error_code = error_code
         self.abbreviation = abbreviation
         self.description = description
+        
+    def __reduce__(self):
+        return (VisaIOWarning, (self.error_code,))
 
 
 class VisaTypeError(Error):
@@ -410,12 +416,22 @@ class UnknownHandler(Error):
 
     def __init__(self, event_type, handler, user_handle):
         super(UnknownHandler, self).__init__('%s, %s, %s' % (event_type, handler, user_handle))
+        self.event_type = event_type
+        self.handler = handler
+        self.user_handle = user_handle
+        
+    def __reduce__(self):
+        return (UnknownHandler, (self.event_type, self.handler, self.user_handle))
 
 
 class OSNotSupported(Error):
 
     def __init__(self, os):
         super(OSNotSupported, self).__init__(os + " is not yet supported by PyVISA")
+        self.os = os
+        
+    def __reduce__(self):
+        return (OSNotSupported, (self.os,))
 
 
 class InvalidBinaryFormat(Error):
@@ -424,6 +440,10 @@ class InvalidBinaryFormat(Error):
         if description:
             description = ": " + description
         super(InvalidBinaryFormat, self).__init__("Unrecognized binary data format" + description)
+        self.description = description
+
+    def __reduce__(self):
+        return (InvalidBinaryFormat, (self.description,))        
 
 
 class InvalidSession(Error):
@@ -432,6 +452,9 @@ class InvalidSession(Error):
 
     def __init__(self):
         super(InvalidSession, self).__init__('Invalid session handle. The resource might be closed.')
+
+    def __reduce__(self):
+        return (InvalidSession, ())
 
 
 class LibraryError(OSError, Error):
