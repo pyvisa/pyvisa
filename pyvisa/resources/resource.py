@@ -113,6 +113,12 @@ class Resource(object):
     def __repr__(self):
         return "<%r(%r)>" % (self.__class__.__name__, self.resource_name)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
     @property
     def last_status(self):
         """Last status code for this session.
