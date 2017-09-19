@@ -351,6 +351,9 @@ class Error(Exception):
 
     def __init__(self, description):
         super(Error, self).__init__(description)
+        
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
 class VisaIOError(Error):
@@ -390,6 +393,9 @@ class VisaIOWarning(Warning):
         
     def __reduce__(self):
         return (VisaIOWarning, (self.error_code,))
+        
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
 class VisaTypeError(Error):
