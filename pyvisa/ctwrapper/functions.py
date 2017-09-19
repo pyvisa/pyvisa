@@ -40,7 +40,9 @@ visa_functions = [
     "terminate", "uninstall_handler", "unlock", "unmap_address",
     "unmap_trigger", "usb_control_in", "usb_control_out",
     "vxi_command_query", "wait_on_event",
-    "write", "write_asynchronously", "write_from_file"]
+    "write", "write_asynchronously", "write_from_file"
+    "in_64", "move_in_64", "out_64", "move_out_64", "poke_64",
+    "peek_64"]
 
 __all__ = ["visa_functions", 'set_signatures'] + visa_functions
 

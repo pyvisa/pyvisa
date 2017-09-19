@@ -265,8 +265,10 @@ class VisaLibraryBase(object):
             return self.out_16(session, space, offset, data, extended)
         elif width == 32:
             return self.out_32(session, space, offset, data, extended)
+        elif width == 64:
+            return self.out_64(session, space, offset, data, extended)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32, or 64' % width)
 
     def move_in(self, session, space, offset, length, width, extended=False):
         """Moves a block of data to local memory from the specified address space and offset.
@@ -363,8 +365,10 @@ class VisaLibraryBase(object):
             return self.poke_16(session, address, data)
         elif width == 32:
             return self.poke_32(session, address, data)
+        elif width == 64:
+            return self.poke_64(session, address, data)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32, or 64' % width)
 
     # Methods that VISA Library implementations must implement
 
