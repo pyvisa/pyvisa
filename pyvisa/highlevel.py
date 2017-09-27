@@ -246,7 +246,7 @@ class VisaLibraryBase(object):
         raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
 
     def write_memory(self, session, space, offset, data, width, extended=False):
-        """Write in an 8-bit, 16-bit, 32-bit, value to the specified memory space and offset.
+        """Write in an 8-bit, 16-bit, 32-bit, 64-bit value to the specified memory space and offset.
 
         Corresponds to viOut* functions of the VISA library.
 
@@ -265,8 +265,10 @@ class VisaLibraryBase(object):
             return self.out_16(session, space, offset, data, extended)
         elif width == 32:
             return self.out_32(session, space, offset, data, extended)
+        elif width == 64:
+            return self.out_64(session, space, offset, data, extended)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32, or 64' % width)
 
     def move_in(self, session, space, offset, length, width, extended=False):
         """Moves a block of data to local memory from the specified address space and offset.
@@ -322,7 +324,7 @@ class VisaLibraryBase(object):
         raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
 
     def peek(self, session, address, width):
-        """Read an 8, 16 or 32-bit value from the specified address.
+        """Read an 8, 16, 32, or 64-bit value from the specified address.
 
         Corresponds to viPeek* functions of the VISA library.
 
@@ -345,7 +347,7 @@ class VisaLibraryBase(object):
         raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
 
     def poke(self, session, address, width, data):
-        """Writes an 8, 16 or 32-bit value from the specified address.
+        """Writes an 8, 16, 32, or 64-bit value from the specified address.
 
         Corresponds to viPoke* functions of the VISA library.
 
@@ -363,8 +365,10 @@ class VisaLibraryBase(object):
             return self.poke_16(session, address, data)
         elif width == 32:
             return self.poke_32(session, address, data)
+        elif width == 64:
+            return self.poke_64(session, address, data)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32, or 64' % width)
 
     # Methods that VISA Library implementations must implement
 
