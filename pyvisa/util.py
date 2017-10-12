@@ -17,6 +17,7 @@ import functools
 import io
 import os
 import platform
+import re
 import sys
 import subprocess
 import warnings
@@ -173,7 +174,8 @@ def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
             raise ValueError('Invalid code for converter: %s not in %s' % (converter, str(tuple(_converters.keys()))))
 
     if isinstance(separator, string_types):
-        data = ascii_data.split(separator)
+        pattern = '|'.join(map(re.escape, separator))
+        data = re.split(pattern, ascii_data)
     else:
         data = separator(ascii_data)
 
