@@ -296,7 +296,7 @@ class MessageBasedResource(Resource):
 
         loop_status = constants.StatusCode.success_max_count_read
 
-        ret = bytes()
+        ret = bytearray()
         with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT, constants.VI_SUCCESS_MAX_CNT):
             try:
                 status = loop_status
@@ -304,7 +304,7 @@ class MessageBasedResource(Resource):
                     logger.debug('%s - reading %d bytes (last status %r)',
                                  self._resource_name, size, status)
                     chunk, status = self.visalib.read(self.session, size)
-                    ret += chunk
+                    ret.extend(chunk)
             except errors.VisaIOError as e:
                 logger.debug('%s - exception while reading: %s\nBuffer content: %r',
                              self._resource_name, e, ret)
@@ -486,7 +486,7 @@ class MessageBasedResource(Resource):
             expected_length = offset + data_length
 
             while len(block) < expected_length:
-                block += self.read_raw()
+                block.extend(self.read_raw())
 
         try:
             if header_fmt == 'ieee':
