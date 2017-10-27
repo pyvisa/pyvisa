@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyVISA command-line utilities')
 
     parser.add_argument('--backend', '-b', dest='backend', action='store', default=None,
-                    help='backend to be used (default: ni)')
+                        help='backend to be used (default: ni)')
 
     subparsers = parser.add_subparsers(title='command', dest='command')
 
