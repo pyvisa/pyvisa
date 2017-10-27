@@ -100,6 +100,21 @@ We can also get a list of all visa attributes::
     |     VI_ATTR_WR_BUF_SIZE     | 1073676334 |                            |                 4096                |
     +-----------------------------+------------+----------------------------+-------------------------------------+
 
+
+To simplify handling of VI_ATTR_TERMCHAR and VI_ATTR_TERMCHAR_EN, command 'termchar' can be used.
+To setup termchat to '\r' (CR or ascii code 10)::
+
+    (open) termchar CR
+    Done
+
+To read what termchar is defined::
+
+    (open) termchar
+    Termchar: CR
+
+Supported termchar values are: CR, LF, CRLF, None. None is used to disable termchar.
+
+
 Finally, you can close the device::
 
     (open) close

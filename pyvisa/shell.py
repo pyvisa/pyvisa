@@ -307,6 +307,49 @@ class VisaShell(Cmd):
         return [item for item in self.py_attr if item.startswith(text)] + \
                [item for item in self.vi_attr if item.startswith(text)]
 
+    def do_termchar(self, args):
+        """Get or set termination character for resource in use.
+        <termchar> can be one of: CR, LF, CRLF or None.
+        None is used to disable termination character
+        
+        Get termination character:
+
+            termchar
+
+        Set termination character:
+
+            termchar <termchar>
+
+        """
+
+        if not self.current:
+            print('There are no resources in use. Use the command "open".')
+            return
+
+        args = args.strip()
+
+        if not args:
+            try:
+                ch = self.current.read_termination
+                charmap = { u'\r': 'CR', u'\n':'LF', u'\r\n':'CRLF' }
+                if(charmap.has_key(ch)):
+                    ch = charmap[ch]
+                print('Termchar: {0}'.format(ch))
+            except Exception as e:
+                print(e)
+        else:        
+            args = args.split(' ')
+            charmap = { 'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'None': None }
+            if charmap.has_key(args[0]):
+                try:
+                    self.current.read_termination = charmap[args[0]]
+                    print('Done')
+                except Exception as e:
+                    print(e)
+            else:
+                print('use CR, LF or CRLF to set termchar')
+                return
+
     def do_exit(self, arg):
         """Exit the shell session."""
 
