@@ -21,7 +21,7 @@ from pyvisa.errors import (Error, VisaIOError, VisaIOWarning, VisaTypeError,
 # This is needed to registry all resources.
 from pyvisa.resources import Resource
 
-if __name__ == '__main__':
+def visa_main():
     import argparse
     parser = argparse.ArgumentParser(description='PyVISA command-line utilities')
     subparsers = parser.add_subparsers(title='command', dest='command')
@@ -37,3 +37,6 @@ if __name__ == '__main__':
     elif args.command == 'shell':
         from pyvisa import shell
         shell.main()
+
+if __name__ == '__main__':
+    visa_main()

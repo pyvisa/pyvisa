@@ -73,6 +73,8 @@ setup(name='PyVISA',
                 'pyvisa.thirdparty',
                 'pyvisa.testsuite'],
       platforms="Linux, Windows,Mac",
+      entry_points={'console_scripts':
+                    ['visa=visa:visa_main']},
       py_modules=['visa'],
       use_2to3=False,
       zip_safe=False)
