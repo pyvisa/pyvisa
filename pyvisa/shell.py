@@ -239,7 +239,7 @@ class VisaShell(Cmd):
 
         if not args:
             try:
-                print('Timeout: {0}'.format(self.current.timeout))
+                print('Timeout: {0}ms'.format(self.current.timeout))
             except Exception as e:
                 print(e)
         else:        
