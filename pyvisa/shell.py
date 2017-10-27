@@ -230,7 +230,8 @@ class VisaShell(Cmd):
 
     def do_timeout(self, args):
         """Get or set timeout (in ms) for resource in use.
-        Read timeout:
+
+        Get timeout:
 
             timeout
 
