@@ -228,6 +228,28 @@ class VisaShell(Cmd):
         except Exception as e:
             print(e)
 
+    def do_timeout(self, args):
+        """sets timeout in ms for resource in use: timeout 2000"""
+
+        if not self.current:
+            print('There are no resources in use. Use the command "open".')
+            return
+
+        args = args.strip()
+
+        if not args:
+            try:
+                print('Timeout: {0}'.format(self.current.timeout))
+            except Exception as e:
+                print(e)
+        else:        
+            args = args.split(' ')
+            try:
+                self.current.timeout = float(args[0])
+                print('Done')
+            except Exception as e:
+                print(e)
+
     def print_attribute_list(self):
         p = prettytable.PrettyTable(('VISA name', 'Constant', 'Python name', 'val'))
         for attr in getattr(self.current, 'visa_attributes_classes', ()):
