@@ -20,7 +20,7 @@ At any time, you can type ``?`` or ``help`` to get a list of valid commands::
 
     Documented commands (type help <topic>):
     ========================================
-    EOF  attr  close  exit  help  list  open  query  read  write
+    EOF  attr  close  exit  help  list  open  query  read  timeout write
 
     (visa) help list
     List all connected resources.
@@ -44,6 +44,16 @@ Let's open comport 1::
     The default end of message is added to each message
     (open) query *IDN?
     Some Instrument, Some Company.
+
+You can print timeout that is set for query/read operation::
+
+    (open) timeout
+    Timeout: 2000ms
+
+Then also to change the timeout for example to 1500ms (1.5 sec)::
+
+    (open) timeout 1500
+    Done
 
 We can also get a list of all visa attributes::
 
