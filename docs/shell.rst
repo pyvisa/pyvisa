@@ -112,7 +112,9 @@ We can also get a list of all visa attributes::
 
 
 To simplify handling of VI_ATTR_TERMCHAR and VI_ATTR_TERMCHAR_EN, command 'termchar' can be used.
-To setup termchat to '\r' (CR or ascii code 10)::
+It also sets write termination character.
+
+To setup termchar to '\r' (CR or ascii code 10)::
 
     (open) termchar CR
     Done
@@ -120,7 +122,7 @@ To setup termchat to '\r' (CR or ascii code 10)::
 To read what termchar is defined::
 
     (open) termchar
-    Termchar: CR
+    Termchar read: CR write: CR
 
 Supported termchar values are: CR ('\r'), LF ('\n'), CRLF ('\r\n') , NUL ('\0'), None. None is used to disable termchar.
 
