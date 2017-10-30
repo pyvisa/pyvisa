@@ -348,9 +348,9 @@ class VisaShell(Cmd):
 
             termchar
 
-        Set termination character:
+        Set termination character read or read+write:
 
-            termchar <termchar>
+            termchar <termchar> [<termchar>]
 
         """
 
@@ -378,7 +378,7 @@ class VisaShell(Cmd):
             if charmap.has_key(args[0]):
                 try:
                     self.current.read_termination = charmap[args[0]]
-                    self.current.write_termination = charmap[args[0]]
+                    self.current.write_termination = charmap[args[0 if len(args) == 1 else 1]]
                     print('Done')
                 except Exception as e:
                     print(e)
