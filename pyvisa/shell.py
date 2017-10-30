@@ -341,7 +341,7 @@ class VisaShell(Cmd):
 
     def do_termchar(self, args):
         """Get or set termination character for resource in use.
-        <termchar> can be one of: CR, LF, CRLF or None.
+        <termchar> can be one of: CR, LF, CRLF, NUL or None.
         None is used to disable termination character
         
         Get termination character:
@@ -363,7 +363,7 @@ class VisaShell(Cmd):
         if not args:
             try:
                 ch = self.current.read_termination
-                charmap = { u'\r': 'CR', u'\n':'LF', u'\r\n':'CRLF' }
+                charmap = { u'\r': 'CR', u'\n': 'LF', u'\r\n': 'CRLF', u'\0': 'NUL' }
                 if(charmap.has_key(ch)):
                     ch = charmap[ch]
                 print('Termchar: {0}'.format(ch))
@@ -371,7 +371,7 @@ class VisaShell(Cmd):
                 print(e)
         else:        
             args = args.split(' ')
-            charmap = { 'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'None': None }
+            charmap = { 'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0', 'None': None }
             if charmap.has_key(args[0]):
                 try:
                     self.current.read_termination = charmap[args[0]]
@@ -379,7 +379,7 @@ class VisaShell(Cmd):
                 except Exception as e:
                     print(e)
             else:
-                print('use CR, LF or CRLF to set termchar')
+                print('use CR, LF, CRLF, NUL or None to set termchar')
                 return
 
     def do_exit(self, arg):

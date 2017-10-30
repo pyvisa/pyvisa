@@ -122,7 +122,7 @@ To read what termchar is defined::
     (open) termchar
     Termchar: CR
 
-Supported termchar values are: CR, LF, CRLF, None. None is used to disable termchar.
+Supported termchar values are: CR ('\r'), LF ('\n'), CRLF ('\r\n') , NUL ('\0'), None. None is used to disable termchar.
 
 
 Finally, you can close the device::
