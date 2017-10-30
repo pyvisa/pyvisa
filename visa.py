@@ -24,6 +24,10 @@ from pyvisa.resources import Resource
 def visa_main():
     import argparse
     parser = argparse.ArgumentParser(description='PyVISA command-line utilities')
+
+    parser.add_argument('--backend', '-b', dest='backend', action='store', default=None,
+                        help='backend to be used (default: ni)')
+
     subparsers = parser.add_subparsers(title='command', dest='command')
 
     info_parser = subparsers.add_parser('info', help='print information to diagnose PyVISA')
@@ -36,7 +40,7 @@ def visa_main():
         util.get_debug_info()
     elif args.command == 'shell':
         from pyvisa import shell
-        shell.main()
+        shell.main('@' + args.backend if args.backend else '')
 
 if __name__ == '__main__':
     visa_main()

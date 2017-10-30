@@ -20,7 +20,7 @@ At any time, you can type ``?`` or ``help`` to get a list of valid commands::
 
     Documented commands (type help <topic>):
     ========================================
-    EOF  attr  close  exit  help  list  open  query  read  write
+    EOF  attr  close  exit  help  list  open  query  read  timeout write
 
     (visa) help list
     List all connected resources.
@@ -44,6 +44,16 @@ Let's open comport 1::
     The default end of message is added to each message
     (open) query *IDN?
     Some Instrument, Some Company.
+
+You can print timeout that is set for query/read operation::
+
+    (open) timeout
+    Timeout: 2000ms
+
+Then also to change the timeout for example to 1500ms (1.5 sec)::
+
+    (open) timeout 1500
+    Done
 
 We can also get a list of all visa attributes::
 
@@ -104,6 +114,56 @@ Finally, you can close the device::
 
     (open) close
 
+
+PyVisa Shell Backends
+=====================
+
+Based on available backend (see bellow for ``info`` command), it is possible to switch shell to use non-default backend via
+``-b BACKEND`` or ``--backend BACKEND``.
+
+You can invoke::
+
+    python -m visa -b sim shell
+
+to use python-sim as backend instead of ni backend. 
+This can be used for example for testing of python-sim configuration.
+
+You can invoke::
+
+    python -m visa -b py shell
+
+uses python-py as backend instead of ni backend, for situation when ni not installed.
+
+
+PyVisa Info
+===========
+
+You can invoke it from the command-line::
+
+    python -m visa info
+
+that will  print information to diagnose PyVISA, info about Machine, Python, backends, etc ::
+
+    Machine Details:
+       Platform ID:    Windows
+       Processor:      Intel64 Family 6
+       ...
+    PyVISA Version: ...
+
+    Backends:
+       ni:
+          Version: 1.8 (bundled with PyVISA)
+          ...
+       py:
+          Version: 0.2
+          ...
+      sim:
+         Version: 0.3
+         Spec version: 1.1
+
+
+Summary
+=======
 
 Cool, right? It will be great to have a GUI similar to NI-MAX, but we leave that to be developed outside PyVISA.
 Want to help? Let us know!
