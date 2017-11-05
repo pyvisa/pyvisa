@@ -111,9 +111,9 @@ We can also get a list of all visa attributes::
     +-----------------------------+------------+----------------------------+-------------------------------------+
 
 
-To simplify handling of VI_ATTR_TERMCHAR and VI_ATTR_TERMCHAR_EN, command 'termchar' can be used.
-It also sets same write termination character, if only one character provided.
-If two characters provided, it sets read and write termination character independently.
+To simplify the handling of VI_ATTR_TERMCHAR and VI_ATTR_TERMCHAR_EN, the command 'termchar' can be used.
+If only one character provided, it sets both read and write termination character to the same character.
+If two characters are provided, it sets read and write termination characters independently.
 
 To setup termchar to '\r' (CR or ascii code 10)::
 
