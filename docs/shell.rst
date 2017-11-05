@@ -110,6 +110,30 @@ We can also get a list of all visa attributes::
     |     VI_ATTR_WR_BUF_SIZE     | 1073676334 |                            |                 4096                |
     +-----------------------------+------------+----------------------------+-------------------------------------+
 
+
+To simplify the handling of VI_ATTR_TERMCHAR and VI_ATTR_TERMCHAR_EN, the command 'termchar' can be used.
+If only one character provided, it sets both read and write termination character to the same character.
+If two characters are provided, it sets read and write termination characters independently.
+
+To setup termchar to '\r' (CR or ascii code 10)::
+
+    (open) termchar CR
+    Done
+
+To read what termchar is defined::
+
+    (open) termchar
+    Termchar read: CR write: CR
+
+To setup read termchar to '\n' and write termchar to '\r\n\'::
+
+    (open) termchar LF CRLF
+    Done
+
+Supported termchar values are: CR ('\r'), LF ('\n'), CRLF ('\r\n') , NUL ('\0'), None.
+None is used to disable termchar.
+
+
 Finally, you can close the device::
 
     (open) close
