@@ -1,5 +1,14 @@
 language: python
 
+branches:
+  only:
+    # This is where pull requests from "bors r+" are built.
+    - staging
+    # This is where pull requests from "bors try" are built.
+    - trying
+    # Build master too
+    - master
+
 python:
   - "2.6"
   - "2.7"
