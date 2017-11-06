@@ -1,5 +1,17 @@
 .. _configuring:
 
+Configuring the backend
+============================
+Currently there are two backends available: The one included in pyvisa which
+uses the NI library. This is used by default and the configuration is described
+in the next chapter.
+And then there is pyvia-py a pure python implementation of the VISA libary.
+It can be selected by passing a parameter to the ResourceManager:
+
+    >>> visa.ResourceManager('@py')
+
+Alternativly it can also be selected by setting the environment variable
+PYVISA_LIBRARY. It takes the same values as the ResourceManager constructor.
 
 Configuring the NI backend
 ==========================
