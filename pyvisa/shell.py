@@ -364,10 +364,10 @@ class VisaShell(Cmd):
             try:
                 charmap = { u'\r': 'CR', u'\n': 'LF', u'\r\n': 'CRLF', u'\0': 'NUL' }
                 chr = self.current.read_termination
-                if(charmap.has_key(chr)):
+                if chr in charmap:
                     chr = charmap[chr]
                 chw = self.current.write_termination
-                if(charmap.has_key(chw)):
+                if chw in charmap:
                     chw = charmap[chw]
                 print('Termchar read: {0} write: {1}'.format(chr, chw))
             except Exception as e:
@@ -375,10 +375,12 @@ class VisaShell(Cmd):
         else:        
             args = args.split(' ')
             charmap = { 'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0', 'None': None }
-            if charmap.has_key(args[0]):
+            chr = args[0]
+            chw = args[0 if len(args) == 1 else 1]
+            if chr in charmap and chw in charmap:
                 try:
-                    self.current.read_termination = charmap[args[0]]
-                    self.current.write_termination = charmap[args[0 if len(args) == 1 else 1]]
+                    self.current.read_termination = charmap[chr]
+                    self.current.write_termination = charmap[chw]
                     print('Done')
                 except Exception as e:
                     print(e)
