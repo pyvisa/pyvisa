@@ -480,13 +480,17 @@ class MessageBasedResource(Resource):
             time.sleep(delay)
 
         block = self.read_raw()
+        expected_length = 0
 
         if header_fmt == 'ieee':
             offset, data_length = util.parse_ieee_block_header(block)
             expected_length = offset + data_length
+        elif header_fmt == 'hp':
+            offset, data_length = util.parse_hp_block_header(block, is_big_endian=is_big_endian)
+            expected_length = offset + data_length
 
-            while len(block) < expected_length:
-                block += self.read_raw()
+        while len(block) < expected_length:
+            block += self.read_raw()
 
         try:
             if header_fmt == 'ieee':
@@ -494,7 +498,7 @@ class MessageBasedResource(Resource):
             elif header_fmt == 'empty':
                 return util.from_binary_block(block, 0, None, datatype, is_big_endian, container)
             elif header_fmt == 'hp':
-                return util.from_binary_block(block, 4, None, datatype, is_big_endian, container)
+                return util.from_binary_block(block, offset, None, datatype, is_big_endian, container)
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
