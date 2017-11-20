@@ -287,35 +287,19 @@ class MessageBasedResource(Resource):
 
     def read_raw(self, size=None):
         """Read the unmodified string sent from the instrument to the computer.
+
         In contrast to read(), no termination characters are stripped.
+
         :rtype: bytes
         """
-        size = self.chunk_size if size is None else size
+        return bytes(self._read_raw(size))
 
-        loop_status = constants.StatusCode.success_max_count_read
-
-        ret = bytearray()
-        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT, constants.VI_SUCCESS_MAX_CNT):
-            try:
-                status = loop_status
-                while status == loop_status:
-                    logger.debug('%s - reading %d bytes (last status %r)',
-                                 self._resource_name, size, status)
-                    chunk, status = self.visalib.read(self.session, size)
-                    ret.extend(chunk)
-            except errors.VisaIOError as e:
-                logger.debug('%s - exception while reading: %s\nBuffer content: %r',
-                             self._resource_name, e, ret)
-                raise
-
-        return ret
-    
     def _read_raw(self, size=None):
         """Read the unmodified string sent from the instrument to the computer.
-
+        
         In contrast to read(), no termination characters are stripped.
-
-        :rtype: bytes
+        
+        :rtype: bytearray
         """
         size = self.chunk_size if size is None else size
 
