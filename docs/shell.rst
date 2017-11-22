@@ -8,6 +8,10 @@ interface to interact with instruments. You can invoke it from the command-line:
 
     python -m visa shell
 
+or
+
+    pyvisa-shell
+
 that will show something the following prompt::
 
     Welcome to the VISA shell. Type help or ? to list commands.
