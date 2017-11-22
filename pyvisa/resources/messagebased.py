@@ -292,11 +292,20 @@ class MessageBasedResource(Resource):
 
         :rtype: bytes
         """
+        return bytes(self._read_raw(size))
+
+    def _read_raw(self, size=None):
+        """Read the unmodified string sent from the instrument to the computer.
+        
+        In contrast to read(), no termination characters are stripped.
+        
+        :rtype: bytearray
+        """
         size = self.chunk_size if size is None else size
 
         loop_status = constants.StatusCode.success_max_count_read
 
-        ret = bytes()
+        ret = bytearray()
         with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT, constants.VI_SUCCESS_MAX_CNT):
             try:
                 status = loop_status
@@ -304,7 +313,7 @@ class MessageBasedResource(Resource):
                     logger.debug('%s - reading %d bytes (last status %r)',
                                  self._resource_name, size, status)
                     chunk, status = self.visalib.read(self.session, size)
-                    ret += chunk
+                    ret.extend(chunk)
             except errors.VisaIOError as e:
                 logger.debug('%s - exception while reading: %s\nBuffer content: %r',
                              self._resource_name, e, ret)
@@ -330,10 +339,10 @@ class MessageBasedResource(Resource):
 
         if termination is None:
             termination = self._read_termination
-            message = self.read_raw().decode(enco)
+            message = self._read_raw().decode(enco)
         else:
             with self.read_termination_context(termination):
-                message = self.read_raw().decode(enco)
+                message = self._read_raw().decode(enco)
 
         if not termination:
             return message
@@ -360,7 +369,7 @@ class MessageBasedResource(Resource):
             vf = self.values_format
             if not vf.is_binary:
                 return util.from_ascii_block(self.read(), container)
-            data = self.read_raw()
+            data = self._read_raw()
             try:
                 return util.parse_binary(data, vf.is_big_endian, vf.datatype=='f')
             except ValueError as e:
@@ -373,7 +382,7 @@ class MessageBasedResource(Resource):
         if fmt & 0x01 == 0: # ascii
             return util.from_ascii_block(self.read())
 
-        data = self.read_raw()
+        data = self._read_raw()
 
         try:
             if fmt & 0x03 == 1: #single
@@ -479,14 +488,14 @@ class MessageBasedResource(Resource):
         if delay > 0.0:
             time.sleep(delay)
 
-        block = self.read_raw()
+        block = self._read_raw()
 
         if header_fmt == 'ieee':
             offset, data_length = util.parse_ieee_block_header(block)
             expected_length = offset + data_length
 
             while len(block) < expected_length:
-                block += self.read_raw()
+                block.extend(self._read_raw())
 
         try:
             if header_fmt == 'ieee':
