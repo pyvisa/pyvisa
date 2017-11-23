@@ -44,7 +44,7 @@ Using the development version
 
 You can install the latest development version (at your own risk) directly form GitHub_::
 
-    $ pip install -U https://github.com/hgrecco/pyvisa/zipball/master
+    $ pip install -U https://github.com/pyvisa/pyvisa/zipball/master
 
 
 .. note:: If you have an old system installation of Python and you don't want to
@@ -57,6 +57,6 @@ You can install the latest development version (at your own risk) directly form 
 .. _pip: http://www.pip-installer.org/
 .. _`Anaconda CE`: https://store.continuum.io/cshop/anaconda
 .. _PyPI: https://pypi.python.org/pypi/PyVISA
-.. _GitHub: https://github.com/hgrecco/pyvisa
+.. _GitHub: https://github.com/pyvisa/pyvisa
 .. _`National Instruments's VISA`: http://ni.com/visa/
-.. _`issue tracker`: https://github.com/hgrecco/pyvisa/issues
+.. _`issue tracker`: https://github.com/pyvisa/pyvisa/issues

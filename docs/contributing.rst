@@ -25,15 +25,15 @@ To contribute fixes, code or documentation to PyVISA, send us a patch, or fork P
 
 You can also get the code from PyPI_ or GitHub_. You can either clone the public repository::
 
-    $ git clone git://github.com/hgrecco/pyvisa.git
+    $ git clone git://github.com/pyvisa/pyvisa.git
 
 Download the tarball::
 
-    $ curl -OL https://github.com/hgrecco/pyvisa/tarball/master
+    $ curl -OL https://github.com/pyvisa/pyvisa/tarball/master
 
 Or, download the zipball::
 
-    $ curl -OL https://github.com/hgrecco/pyvisa/zipball/master
+    $ curl -OL https://github.com/pyvisa/pyvisa/zipball/master
 
 Once you have a copy of the source, you can embed it in your Python package, or install it into your site-packages easily::
 
@@ -70,7 +70,7 @@ it. You can use any of the existing backends as a template or start a thread in 
 .. _`Anaconda CE`: https://store.continuum.io/cshop/anaconda
 .. _PyPI: https://pypi.python.org/pypi/PyVISA
 .. _`National Instruments's VISA`: http://ni.com/visa/
-.. _github: http://github.com/hgrecco/pyvisa
-.. _`issue tracker`: https://github.com/hgrecco/pyvisa/issues
+.. _github: http://github.com/pyvisa/pyvisa
+.. _`issue tracker`: https://github.com/pyvisa/pyvisa/issues
 
 

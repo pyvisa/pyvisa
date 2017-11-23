@@ -169,6 +169,6 @@ Where can I get more information about VISA?
        http://digital.ni.com/manuals.nsf/websearch/266526277DFF74F786256ADC0065C50C
 
 
-.. _`AUTHORS`: https://github.com/hgrecco/pyvisa/blob/master/AUTHORS
-.. _`Issue Tracker`: https://github.com/hgrecco/pyvisa/issues
+.. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/master/AUTHORS
+.. _`Issue Tracker`: https://github.com/pyvisa/pyvisa/issues
 .. _`virtual environment`: http://www.virtualenv.org/en/latest/
