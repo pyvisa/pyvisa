@@ -16,6 +16,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import contextlib
 import collections
 import pkgutil
+import os
 from collections import defaultdict
 
 from . import logger
@@ -1452,6 +1453,12 @@ def open_visa_library(specification):
     In general, you should not use the function directly. The VISA library
     wrapper will be created automatically when you create a ResourceManager object.
     """
+
+    if not specification:
+        try:
+            specification = os.environ['PYVISA_LIBRARY']
+        except KeyError:
+            logger.debug('No visa libaray specified and environment variable PYVISA_LIBRARY is unset. Using NI library')
 
     try:
         argument, wrapper = specification.split('@')

@@ -339,6 +339,55 @@ class VisaShell(Cmd):
         return [item for item in self.py_attr if item.startswith(text)] + \
                [item for item in self.vi_attr if item.startswith(text)]
 
+    def do_termchar(self, args):
+        """Get or set termination character for resource in use.
+        <termchar> can be one of: CR, LF, CRLF, NUL or None.
+        None is used to disable termination character
+        
+        Get termination character:
+
+            termchar
+
+        Set termination character read or read+write:
+
+            termchar <termchar> [<termchar>]
+
+        """
+
+        if not self.current:
+            print('There are no resources in use. Use the command "open".')
+            return
+
+        args = args.strip()
+
+        if not args:
+            try:
+                charmap = { u'\r': 'CR', u'\n': 'LF', u'\r\n': 'CRLF', u'\0': 'NUL' }
+                chr = self.current.read_termination
+                if chr in charmap:
+                    chr = charmap[chr]
+                chw = self.current.write_termination
+                if chw in charmap:
+                    chw = charmap[chw]
+                print('Termchar read: {0} write: {1}'.format(chr, chw))
+            except Exception as e:
+                print(e)
+        else:        
+            args = args.split(' ')
+            charmap = { 'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0', 'None': None }
+            chr = args[0]
+            chw = args[0 if len(args) == 1 else 1]
+            if chr in charmap and chw in charmap:
+                try:
+                    self.current.read_termination = charmap[chr]
+                    self.current.write_termination = charmap[chw]
+                    print('Done')
+                except Exception as e:
+                    print(e)
+            else:
+                print('use CR, LF, CRLF, NUL or None to set termchar')
+                return
+
     def do_exit(self, arg):
         """Exit the shell session."""
 
