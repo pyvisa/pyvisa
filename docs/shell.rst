@@ -8,6 +8,10 @@ interface to interact with instruments. You can invoke it from the command-line:
 
     python -m visa shell
 
+or::
+    
+    pyvisa-shell
+
 that will show something the following prompt::
 
     Welcome to the VISA shell. Type help or ? to list commands.
@@ -149,12 +153,20 @@ You can invoke::
 
     python -m visa -b sim shell
 
+or::
+
+    pyvisa-shell -b sim
+
 to use python-sim as backend instead of ni backend. 
 This can be used for example for testing of python-sim configuration.
 
 You can invoke::
 
     python -m visa -b py shell
+
+or::
+
+    pyvisa-shell -b py
 
 uses python-py as backend instead of ni backend, for situation when ni not installed.
 
@@ -165,6 +177,10 @@ PyVisa Info
 You can invoke it from the command-line::
 
     python -m visa info
+
+or::
+
+    pyvisa-info
 
 that will  print information to diagnose PyVISA, info about Machine, Python, backends, etc ::
 

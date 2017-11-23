@@ -1417,7 +1417,7 @@ def list_backends():
     :rtype: list
     """
     return ['ni'] + [name for (loader, name, ispkg) in pkgutil.iter_modules()
-                     if name.startswith('pyvisa-')]
+                     if name.startswith('pyvisa-') and not name.endswith('-script')]
 
 
 #: Maps backend name to VisaLibraryBase derived class
