@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 from pyvisa.testsuite import BaseTestCase
 
@@ -12,11 +13,13 @@ try:
 except ImportError:
     np = None
 
+
 class TestParser(BaseTestCase):
 
     def test_parse_binary(self):
-        s = b'#A@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xde\x8b<@\xde\x8b<@\xde\x8b<' \
-            b'@\xde\x8b<@\xe0\x8b<@\xe0\x8b<@\xdc\x8b<@\xde\x8b<@\xe2\x8b<@\xe0\x8b<'
+        s = (b'#A@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xde\x8b<@\xde\x8b<@'
+             b'\xde\x8b<@\xde\x8b<@\xe0\x8b<@\xe0\x8b<@\xdc\x8b<@\xde\x8b<@'
+             b'\xe2\x8b<@\xe0\x8b<')
         e = [0.01707566, 0.01707566, 0.01707566, 0.01707566, 0.01707375,
              0.01707375, 0.01707375, 0.01707375, 0.01707470, 0.01707470,
              0.01707280, 0.01707375, 0.01707566, 0.01707470]
@@ -29,7 +32,7 @@ class TestParser(BaseTestCase):
 
     def test_ieee_integer(self):
         values = list(range(99))
-        containers = (list, tuple) #+ ((np.asarray,) if np else ())
+        containers = (list, tuple) + ((np.array,) if np else ())
         for fmt in 'bBhHiIfd':
             for endi in (True, False):
                 for cont in containers:
@@ -45,7 +48,7 @@ class TestParser(BaseTestCase):
 
     def test_ieee_noninteger(self):
         values = [val + 0.5 for val in range(99)]
-        containers = (list, tuple) #+ ((np.asarray,) if np else ())
+        containers = (list, tuple) + ((np.array,) if np else ())
         for fmt in 'fd':
             for endi in (True, False):
                 for cont in containers:

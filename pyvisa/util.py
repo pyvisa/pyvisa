@@ -11,7 +11,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import functools
 import io
@@ -23,6 +24,13 @@ import warnings
 
 from .compat import check_output, string_types, OrderedDict, struct
 from . import __version__, logger
+
+
+try:
+    import numpy as np
+    OPTIMIZED_CONTAINER = np.ndarray
+except ImportError:
+    OPTIMIZED_CONTAINER = None
 
 
 def read_user_library_path():
@@ -43,13 +51,16 @@ def read_user_library_path():
 
     """
     try:
-        from ConfigParser import SafeConfigParser as ConfigParser, NoSectionError
+        from ConfigParser import (SafeConfigParser as ConfigParser,
+                                  NoSectionError)
     except ImportError:
         from configparser import ConfigParser, NoSectionError
 
     config_parser = ConfigParser()
-    files = config_parser.read([os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
-                                os.path.join(os.path.expanduser("~"), ".pyvisarc")])
+    files = config_parser.read([os.path.join(sys.prefix, "share", "pyvisa",
+                                             ".pyvisarc"),
+                                os.path.join(os.path.expanduser("~"),
+                                             ".pyvisarc")])
 
     if not files:
         logger.debug('No user defined library files')
@@ -165,12 +176,17 @@ def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
     :type: separator: (str) -> collections.Iterable[T] | str
     :param container: container type to use for the output data.
     """
+    if (OPTIMIZED_CONTAINER and issubclass(container, OPTIMIZED_CONTAINER) and
+            isinstance(converter, string_types) and
+            isinstance(separator, string_types)):
+        return np.fromstring(ascii_data, converter, separator)
 
     if isinstance(converter, string_types):
         try:
             converter = _converters[converter]
         except KeyError:
-            raise ValueError('Invalid code for converter: %s not in %s' % (converter, str(tuple(_converters.keys()))))
+            raise ValueError('Invalid code for converter: %s not in %s' %
+                             (converter, str(tuple(_converters.keys()))))
 
     if isinstance(separator, string_types):
         data = ascii_data.split(separator)
@@ -275,7 +291,8 @@ def parse_ieee_block_header(block):
     """
     begin = block.find(b'#')
     if begin < 0:
-        raise ValueError("Could not find hash sign (#) indicating the start of the block.")
+        raise ValueError("Could not find hash sign (#) indicating the start of"
+                         " the block.")
 
     try:
         # int(block[begin+1]) != int(block[begin+1:begin+2]) in Python 3
@@ -296,6 +313,7 @@ def parse_ieee_block_header(block):
 
     return offset, data_length
 
+
 def parse_hp_block_header(block, is_big_endian):
     """Parse the header of a HP block.
 
@@ -310,15 +328,20 @@ def parse_hp_block_header(block, is_big_endian):
     :param is_big_endian: boolean indicating endianess.
     :return: (offset, data_length)
     :rtype: (int, int)
+
     """
-    begin  = block.find(b'#A')
+    begin = block.find(b'#A')
     if begin < 0:
-        raise ValueError("Could not find the standard block header (#A) indicating the start of the block.")
+        raise ValueError("Could not find the standard block header (#A) "
+                         "indicating the start of the block.")
     offset = begin + 4
 
-    data_length = int.from_bytes(block[begin+2:offset], byteorder='big' if is_big_endian else 'little')
+    data_length = int.from_bytes(block[begin+2:offset],
+                                 byteorder='big' if is_big_endian else 'little'
+                                 )
 
     return offset, data_length
+
 
 def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     """Convert a block in the IEEE format into an iterable of numbers.
@@ -344,26 +367,29 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     offset, data_length = parse_ieee_block_header(block)
 
     if len(block) < offset + data_length:
-        raise ValueError("Binary data is incomplete. The header states %d data bytes, "
-                         "but %d where received." % (data_length, len(block) - offset))
+        raise ValueError("Binary data is incomplete. The header states %d data"
+                         " bytes, but %d where received." %
+                         (data_length, len(block) - offset))
 
-    return from_binary_block(block, offset, data_length, datatype, is_big_endian, container)
+    return from_binary_block(block, offset, data_length, datatype,
+                             is_big_endian, container)
 
 
-def from_binary_block(block, offset=0, data_length=None, datatype='f', is_big_endian=False, container=list):
+def from_binary_block(block, offset=0, data_length=None, datatype='f',
+                      is_big_endian=False, container=list):
     """Convert a binary block into an iterable of numbers.
 
     :param block: binary block.
     :type block: bytes
     :param offset: offset at which the data block starts (default=0)
-    :param data_length: size in bytes of the data block (default=len(block) - offset)
+    :param data_length: size in bytes of the data block
+                        (default=len(block) - offset)
     :param datatype: the format string for a single element. See struct module.
     :param is_big_endian: boolean indicating endianess.
     :param container: container type to use for the output data.
     :return: items
     :rtype: type(container)
     """
-
     if data_length is None:
         data_length = len(block) - offset
 
@@ -371,6 +397,9 @@ def from_binary_block(block, offset=0, data_length=None, datatype='f', is_big_en
     array_length = int(data_length / element_length)
 
     endianess = '>' if is_big_endian else '<'
+
+    if OPTIMIZED_CONTAINER and issubclass(container, OPTIMIZED_CONTAINER):
+        return np.fromstring(block[offset:], endianess+datatype, array_length)
 
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)
 
@@ -395,7 +424,7 @@ def to_ieee_block(iterable, datatype='f', is_big_endian=False):
     data_length = array_length * element_length
 
     header = '%d' % data_length
-    header = '#%d%s'%(len(header),header)
+    header = '#%d%s' % (len(header), header)
 
     endianess = '>' if is_big_endian else '<'
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)
@@ -553,7 +582,7 @@ machine_types = {
     0x0200: 'IA64',
     0x0266: 'MIPS16',
     0x0284: 'ALPHA64',
-    #0x0284: 'AXP64', # same
+    # 0x0284: 'AXP64', # same
     0x0366: 'MIPSFPU',
     0x0466: 'MIPSFPU16',
     0x0520: 'TRICORE',
@@ -596,7 +625,7 @@ def get_arch(filename):
             return 64,
         else:
             return ()
-    elif not this_platform in ('linux2', 'linux3', 'linux', 'darwin'):
+    elif this_platform not in ('linux2', 'linux3', 'linux', 'darwin'):
         raise OSError('')
 
     out = check_output(["file", filename], stderr=subprocess.STDOUT)
