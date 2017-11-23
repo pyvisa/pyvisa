@@ -70,4 +70,4 @@ solutions to common problem as well as useful debugging techniques. If everythin
 feel free to open an issue in our `issue tracker`_
 
 .. _`home directory`: http://en.wikipedia.org/wiki/Home_directory
-.. _`issue tracker`: https://github.com/hgrecco/pyvisa/issues
+.. _`issue tracker`: https://github.com/pyvisa/pyvisa/issues
