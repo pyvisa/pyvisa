@@ -18,7 +18,7 @@ import cmd
 import sys
 
 from .compat import input
-from . import ResourceManager, constants, VisaIOError
+from . import ResourceManager, attributes, constants, VisaIOError
 from .thirdparty import prettytable
 
 if sys.platform == 'darwin':
@@ -322,8 +322,28 @@ class VisaShell(Cmd):
             attr_name, attr_state = args[0], args[1]
             if attr_name.startswith('VI_'):
                 try:
-                    self.current.set_visa_attribute(getattr(constants, attr_name), attr_state)
-                    print('Done')
+                    attributeId = getattr(constants, attr_name)
+                    attr = attributes.AttributesByID[attributeId]
+                    datatype = attr.visa_type
+                    retcode = None
+                    if datatype == 'ViBoolean':
+                        if attr_state == 'True':
+                            attr_state = True
+                        elif attr_state == 'False':
+                            attr_state = False
+                        else:
+                            retcode = constants.StatusCode.error_nonsupported_attribute_state
+                    elif datatype in ['ViUInt8', 'ViUInt16', 'ViUInt32', 'ViInt8', 'ViInt16', 'ViInt32']:
+                        try:
+                            attr_state = int(attr_state)
+                        except ValueError:
+                            retcode = constants.StatusCode.error_nonsupported_attribute_state
+                    if not retcode:
+                        retcode = self.current.set_visa_attribute(attributeId, attr_state)
+                    if retcode:
+                        print('Error {0}'.format(str(retcode)))
+                    else:
+                        print('Done')
                 except Exception as e:
                     print(e)
             else:
