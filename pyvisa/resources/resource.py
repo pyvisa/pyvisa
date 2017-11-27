@@ -267,8 +267,10 @@ class Resource(object):
 
         :param name: Attribute for which the state is to be modified. (Attributes.*)
         :param state: The state of the attribute to be set for the specified object.
+        :return: return value of the library call.
+        :rtype: :class:`pyvisa.constants.StatusCode`
         """
-        self.visalib.set_attribute(self.session, name, state)
+        return self.visalib.set_attribute(self.session, name, state)
 
     def clear(self):
         """Clears this resource
