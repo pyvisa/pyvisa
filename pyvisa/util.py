@@ -208,6 +208,8 @@ def to_ascii_block(iterable, converter='f', separator=','):
     :param separator: a callable that split the str into individual elements.
                       If a str is given, data.split(separator) is used.
     :type: separator: (collections.Iterable[T]) -> str | str
+
+    :rtype: bytes
     """
 
     if isinstance(separator, string_types):
@@ -215,9 +217,10 @@ def to_ascii_block(iterable, converter='f', separator=','):
 
     if isinstance(converter, string_types):
         converter = '%' + converter
-        return separator(converter % val for val in iterable)
+        block = separator(converter % val for val in iterable)
     else:
-        return separator(converter(val) for val in iterable)
+        block = separator(converter(val) for val in iterable)
+    return block.encode('ascii')
 
 
 def parse_binary(bytes_data, is_big_endian=False, is_single=False):
