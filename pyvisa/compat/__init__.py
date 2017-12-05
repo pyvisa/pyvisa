@@ -10,8 +10,12 @@
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import
-
 import sys
+import unittest
+
+from subprocess import check_output
+
+
 PYTHON3 = sys.version >= '3'
 
 if PYTHON3:
@@ -35,15 +39,6 @@ else:
 
     input = raw_input
 
-if sys.version_info < (2, 7):
-    try:
-        # noinspection PyPackageRequirements
-        import unittest2 as unittest
-    except ImportError:
-        raise Exception("Testing PyVISA in Python 2.6 requires package 'unittest2'")
-else:
-    import unittest
-
 try:
     from collections import OrderedDict
 except ImportError:
@@ -53,11 +48,6 @@ try:
     from logging import NullHandler
 except ImportError:
     from .nullhandler import NullHandler
-
-try:
-    from subprocess import check_output
-except ImportError:
-    from .check_output import check_output
 
 
 def with_metaclass(meta, *bases):

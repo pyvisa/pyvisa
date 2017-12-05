@@ -10,17 +10,13 @@ branches:
     - master
 
 python:
-  - "2.6"
   - "2.7"
-  - "3.2"
-  - "3.3"
   - "3.4"
   - "3.5"
   - "3.6"
 
 install:
-  - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
-  - if [ $TRAVIS_PYTHON_VERSION == '3.2' ]; then pip install coverage==3.7.1; else pip install coverage; fi
+  - pip install coverage
   - pip install coveralls
 
 script:

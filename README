@@ -44,7 +44,7 @@ Requirements
 ------------
 
 - VISA (tested with NI-VISA 3.2, WinXP, from www.ni.com/visa)
-- Python (tested with 2.6 and 3.2+)
+- Python (tested with 2.7 and 3.4+)
 
 
 Installation

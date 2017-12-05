@@ -3,7 +3,7 @@
 Installation
 ============
 
-PyVISA is a frontend to the VISA library. It runs on Python 2.6+ and 3.2+.
+PyVISA is a frontend to the VISA library. It runs on Python 2.7 and 3.4+.
 
 You can install it using pip_::
 
