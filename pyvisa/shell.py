@@ -131,7 +131,7 @@ class VisaShell(Cmd):
                 if not args:
                     print('({0:2d}) {1}'.format(ndx, resource_name))
                     if value.alias:
-                        print('     alias: {0}'.format(value.alias))
+                        print('     alias: {}'.format(value.alias))
 
                 self.resources.append((resource_name, value.alias or None))
 
@@ -155,7 +155,7 @@ class VisaShell(Cmd):
 
         try:
             self.current = self.resource_manager.open_resource(args)
-            print('{0} has been opened.\n'
+            print('{} has been opened.\n'
                   'You can talk to the device using "write", "read" or "query".\n'
                   'The default end of message is added to each message.'.format(args))
 
@@ -200,7 +200,7 @@ class VisaShell(Cmd):
             return
 
         try:
-            print('Response: {0}'.format(self.current.query(args)))
+            print('Response: {}'.format(self.current.query(args)))
         except Exception as e:
             print(e)
 
@@ -249,7 +249,7 @@ class VisaShell(Cmd):
 
         if not args:
             try:
-                print('Timeout: {0}ms'.format(self.current.timeout))
+                print('Timeout: {}ms'.format(self.current.timeout))
             except Exception as e:
                 print(e)
         else:        
@@ -341,7 +341,7 @@ class VisaShell(Cmd):
                     if not retcode:
                         retcode = self.current.set_visa_attribute(attributeId, attr_state)
                     if retcode:
-                        print('Error {0}'.format(str(retcode)))
+                        print('Error {}'.format(str(retcode)))
                     else:
                         print('Done')
                 except Exception as e:
@@ -389,7 +389,7 @@ class VisaShell(Cmd):
                 chw = self.current.write_termination
                 if chw in charmap:
                     chw = charmap[chw]
-                print('Termchar read: {0} write: {1}'.format(chr, chw))
+                print('Termchar read: {} write: {}'.format(chr, chw))
             except Exception as e:
                 print(e)
         else:        
