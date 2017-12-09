@@ -103,13 +103,13 @@ class MessageBasedResource(Resource):
     @property
     def values_format(self):
         warnings.warn('values_format is deprecated and will be removed in '
-                      '1.10', DeprecationWarning)
+                      '1.10', FutureWarning)
         return self._values_format
 
     @values_format.setter
     def values_format(self, fmt):
         warnings.warn('values_format is deprecated and will be removed in '
-                      '1.10', DeprecationWarning)
+                      '1.10', FutureWarning)
         self._values_format.is_binary = not (fmt & 0x01 == 0)
         if fmt & 0x03 == 1:  # single
             self._values_format.datatype = 'f'
@@ -127,13 +127,13 @@ class MessageBasedResource(Resource):
         """An alias for query_delay kept for backwards compatibility.
         """
         warnings.warn('ask_delay is deprecated and will be removed in '
-                      '1.10, use query_delay instead', DeprecationWarning)
+                      '1.10, use query_delay instead', FutureWarning)
         return self.query_delay
 
     @ask_delay.setter
     def ask_delay(self, value):
         warnings.warn('ask_delay is deprecated and will be removed in '
-                      '1.10, use query_delay instead', DeprecationWarning)
+                      '1.10, use query_delay instead', FutureWarning)
         self.query_delay = value
 
     @property
@@ -301,7 +301,7 @@ class MessageBasedResource(Resource):
     def write_values(self, message, values, termination=None, encoding=None):
         warnings.warn('write_values is deprecated and will be removed in '
                       '1.10, use write_ascii_values or write_binary_values '
-                      'instead.', DeprecationWarning)
+                      'instead.', FutureWarning)
         vf = self.values_format
 
         if vf.is_binary:
@@ -464,7 +464,7 @@ class MessageBasedResource(Resource):
         """
         warnings.warn('write_values is deprecated and will be removed in '
                       '1.10, use read_ascii_values or read_binary_values '
-                      'instead.', DeprecationWarning)
+                      'instead.', FutureWarning)
         if not fmt:
             vf = self.values_format
             if not vf.is_binary:
@@ -519,7 +519,7 @@ class MessageBasedResource(Resource):
 
     def ask(self, message, delay=None):
         warnings.warn('ask is deprecated and will be removed in '
-                      '1.10, use query instead.', DeprecationWarning)
+                      '1.10, use query instead.', FutureWarning)
         return self.query(message, delay)
 
     def query_values(self, message, delay=None):
@@ -536,7 +536,7 @@ class MessageBasedResource(Resource):
         """
         warnings.warn('query_values is deprecated and will be removed in '
                       '1.10, use query_ascii_values or quey_binary_values '
-                      'instead.', DeprecationWarning)
+                      'instead.', FutureWarning)
         vf = self.values_format
 
         if vf.is_binary:
@@ -618,7 +618,7 @@ class MessageBasedResource(Resource):
         """
         warnings.warn('ask_values is deprecated and will be removed in '
                       '1.10, use query_ascii_values or quey_binary_values '
-                      'instead.', DeprecationWarning)
+                      'instead.', FutureWarning)
         self.write(message)
         if delay is None:
             delay = self.query_delay
