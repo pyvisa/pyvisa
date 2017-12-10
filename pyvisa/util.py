@@ -21,6 +21,7 @@ import platform
 import sys
 import subprocess
 import warnings
+import inspect
 
 from .compat import check_output, string_types, OrderedDict, struct
 from . import __version__, logger
@@ -28,9 +29,22 @@ from . import __version__, logger
 
 try:
     import numpy as np
-    OPTIMIZED_CONTAINER = np.ndarray
 except ImportError:
-    OPTIMIZED_CONTAINER = None
+    np = None
+
+
+def _use_numpy_routines(container):
+    """Should optimized numpy routines be used to extract the data.
+
+    """
+    if np is None or container in (tuple, list):
+        return False
+
+    if (container is np.array or (inspect.isclass(container) and
+                                  issubclass(container, np.ndarray))):
+        return True
+
+    return False
 
 
 def read_user_library_path():
@@ -162,6 +176,16 @@ _converters = {
     'G': float,
 }
 
+_np_converters = {
+    'd': 'i',
+    'e': 'f',
+    'E': 'f',
+    'f': 'f',
+    'F': 'f',
+    'g': 'f',
+    'G': 'f',
+}
+
 
 def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
     """Parse ascii data and return an iterable of numbers.
@@ -176,10 +200,12 @@ def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
     :type: separator: (str) -> collections.Iterable[T] | str
     :param container: container type to use for the output data.
     """
-    if (OPTIMIZED_CONTAINER and issubclass(container, OPTIMIZED_CONTAINER) and
+    if (_use_numpy_routines(container) and
             isinstance(converter, string_types) and
-            isinstance(separator, string_types)):
-        return np.fromstring(ascii_data, converter, separator)
+            isinstance(separator, string_types) and
+            converter in _np_converters):
+        return np.fromstring(ascii_data, _np_converters[converter],
+                             sep=separator)
 
     if isinstance(converter, string_types):
         try:
@@ -197,7 +223,7 @@ def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
 
 
 def to_ascii_block(iterable, converter='f', separator=','):
-    """Parse ascii data and return an iterable of numbers.
+    """Turn an iterable of numbers in an ascii block of data.
 
     :param iterable: data to be parsed.
     :type iterable: collections.Iterable[T]
@@ -209,7 +235,7 @@ def to_ascii_block(iterable, converter='f', separator=','):
                       If a str is given, data.split(separator) is used.
     :type: separator: (collections.Iterable[T]) -> str | str
 
-    :rtype: bytes
+    :rtype: str
     """
 
     if isinstance(separator, string_types):
@@ -220,7 +246,7 @@ def to_ascii_block(iterable, converter='f', separator=','):
         block = separator(converter % val for val in iterable)
     else:
         block = separator(converter(val) for val in iterable)
-    return block.encode('ascii')
+    return block
 
 
 def parse_binary(bytes_data, is_big_endian=False, is_single=False):
@@ -233,6 +259,9 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
     :param is_single: boolean indicating the type (if not is double)
     :return:
     """
+    warnings.warn('parse_binary is deprecated and will be removed in '
+                  '1.10, use read_ascii_values or read_binary_values '
+                  'instead.', FutureWarning)
     data = bytes_data
 
     hash_sign_position = bytes_data.find(b"#")
@@ -288,7 +317,7 @@ def parse_ieee_block_header(block):
     #0<data>
 
     :param block: IEEE block.
-    :type block: bytes
+    :type block: bytes | bytearray
     :return: (offset, data_length)
     :rtype: (int, int)
     """
@@ -302,7 +331,6 @@ def parse_ieee_block_header(block):
         header_length = int(block[begin+1:begin+2])
     except ValueError:
         header_length = 0
-
     offset = begin + 2 + header_length
 
     if header_length > 0:
@@ -327,7 +355,7 @@ def parse_hp_block_header(block, is_big_endian):
     The data_length field specifies the size of the data.
 
     :param block: HP block.
-    :type block: bytes
+    :type block: bytes | bytearray
     :param is_big_endian: boolean indicating endianess.
     :return: (offset, data_length)
     :rtype: (int, int)
@@ -358,16 +386,43 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     Indefinite Length Arbitrary Block:
     #0<data>
 
-    :param block: IEEE block.
-    :type block: bytes
+    :param block: HP block.
+    :type block: bytes | bytearray
     :param datatype: the format string for a single element. See struct module.
     :param is_big_endian: boolean indicating endianess.
     :param container: container type to use for the output data.
     :return: items
     :rtype: type(container)
     """
-
     offset, data_length = parse_ieee_block_header(block)
+
+    if len(block) < offset + data_length:
+        raise ValueError("Binary data is incomplete. The header states %d data"
+                         " bytes, but %d where received." %
+                         (data_length, len(block) - offset))
+
+    return from_binary_block(block, offset, data_length, datatype,
+                             is_big_endian, container)
+
+
+def from_hp_block(block, datatype='f', is_big_endian=False, container=list):
+    """Convert a block in the HP format into an iterable of numbers.
+
+    Definite Length Arbitrary Block:
+    #A<data_length><data>
+
+    The header ia always 4 bytes long.
+    The data_length field specifies the size of the data.
+
+    :param block: IEEE block.
+    :type block: bytes | bytearray
+    :param datatype: the format string for a single element. See struct module.
+    :param is_big_endian: boolean indicating endianess.
+    :param container: container type to use for the output data.
+    :return: items
+    :rtype: type(container)
+    """
+    offset, data_length = parse_hp_block_header(block, is_big_endian)
 
     if len(block) < offset + data_length:
         raise ValueError("Binary data is incomplete. The header states %d data"
@@ -383,7 +438,7 @@ def from_binary_block(block, offset=0, data_length=None, datatype='f',
     """Convert a binary block into an iterable of numbers.
 
     :param block: binary block.
-    :type block: bytes
+    :type block: bytes | bytearray
     :param offset: offset at which the data block starts (default=0)
     :param data_length: size in bytes of the data block
                         (default=len(block) - offset)
@@ -401,7 +456,7 @@ def from_binary_block(block, offset=0, data_length=None, datatype='f',
 
     endianess = '>' if is_big_endian else '<'
 
-    if OPTIMIZED_CONTAINER and issubclass(container, OPTIMIZED_CONTAINER):
+    if _use_numpy_routines(container):
         return np.fromstring(block[offset:], endianess+datatype, array_length)
 
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)
@@ -436,6 +491,32 @@ def to_ieee_block(iterable, datatype='f', is_big_endian=False):
         return bytes(header, 'ascii') + struct.pack(fullfmt, *iterable)
     else:
         return str(header) + struct.pack(fullfmt, *iterable)
+
+
+def to_hp_block(iterable, datatype='f', is_big_endian=False):
+    """Convert an iterable of numbers into a block of data in the HP format.
+
+    :param iterable: an iterable of numbers.
+    :param datatype: the format string for a single element. See struct module.
+    :param is_big_endian: boolean indicating endianess.
+    :return: IEEE block.
+    :rtype: bytes
+    """
+
+    array_length = len(iterable)
+    element_length = struct.calcsize(datatype)
+    data_length = array_length * element_length
+
+    header = b'#A' + (data_length.to_bytes(2, 'big' if is_big_endian
+                                           else 'little'))
+
+    endianess = '>' if is_big_endian else '<'
+    fullfmt = '%s%d%s' % (endianess, array_length, datatype)
+
+    if sys.version >= '3':
+        return header + struct.pack(fullfmt, *iterable)
+    else:
+        return header + struct.pack(fullfmt, *iterable)
 
 
 def get_system_details(backends=True):

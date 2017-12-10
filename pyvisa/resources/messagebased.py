@@ -254,7 +254,7 @@ class MessageBasedResource(Resource):
 
         block = util.to_ascii_block(values, converter, separator)
 
-        message = message.encode(enco) + block
+        message = message.encode(enco) + block.encode(enco)
 
         if term:
             message += term.encode(enco)
@@ -407,7 +407,7 @@ class MessageBasedResource(Resource):
         return util.from_ascii_block(block, converter, separator, container)
 
     def read_binary_values(self, datatype='f', is_big_endian=False,
-                           container=list, delay=None, header_fmt='ieee'):
+                           container=list, header_fmt='ieee'):
         """Read values from the device in binary format returning an iterable
         of values.
 
@@ -417,10 +417,10 @@ class MessageBasedResource(Resource):
         :param is_big_endian: boolean indicating endianess.
                               Defaults to False.
         :param container: container type to use for the output data.
-        :param delay: delay in seconds between write and read operations.
-                      if None, defaults to self.query_delay
+        :param header_fmt: format of the header prefixing the data. Possible
+                           values are: 'ieee', 'hp', 'empty'
         :returns: the answer from the device.
-        :rtype: list
+        :rtype: type(container)
 
         """
         block = self._read_raw()
@@ -441,12 +441,14 @@ class MessageBasedResource(Resource):
             if header_fmt == 'ieee':
                 return util.from_ieee_block(block, datatype, is_big_endian,
                                             container)
+            elif header_fmt == 'hp':
+                return util.from_hp_block(block, datatype, is_big_endian,
+                                          container)
             elif header_fmt == 'empty':
                 return util.from_binary_block(block, 0, None, datatype,
                                               is_big_endian, container)
-            elif header_fmt == 'hp':
-                return util.from_binary_block(block, offset, None, datatype,
-                                              is_big_endian, container)
+            else:
+                raise
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
@@ -462,7 +464,7 @@ class MessageBasedResource(Resource):
         :return: the list of read values
         :rtype: list
         """
-        warnings.warn('write_values is deprecated and will be removed in '
+        warnings.warn('read_values is deprecated and will be removed in '
                       '1.10, use read_ascii_values or read_binary_values '
                       'instead.', FutureWarning)
         if not fmt:
