@@ -9,7 +9,9 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
 import sys
 import unittest
 
@@ -41,7 +43,8 @@ else:
 
     input = raw_input
 
-    # Implementation extracted from the python-future project
+    # The 2 following function implementation extracted from the python-future
+    # project
 
     def int_to_bytes(integer, length, byteorder='big', signed=False):
         """
@@ -86,6 +89,39 @@ else:
             raise OverflowError("int too big to convert")
         return s if byteorder == 'big' else s[::-1]
 
+    def int_from_bytes(mybytes, byteorder='big', signed=False):
+        """
+        Return the integer represented by the given array of bytes.
+        The mybytes argument must either support the buffer protocol or be an
+        iterable object producing bytes.  Bytes and bytearray are examples of
+        built-in objects that support the buffer protocol.
+        The byteorder argument determines the byte order used to represent the
+        integer.  If byteorder is 'big', the most significant byte is at the
+        beginning of the byte array.  If byteorder is 'little', the most
+        significant byte is at the end of the byte array.  To request the
+        native byte order of the host system, use `sys.byteorder' as the byte
+        order value.
+        The signed keyword-only argument indicates whether two's complement is
+        used to represent the integer.
+        """
+        if byteorder not in ('little', 'big'):
+            raise ValueError("byteorder must be either 'little' or 'big'")
+        if isinstance(mybytes, unicode):
+            raise TypeError("cannot convert unicode objects to bytes")
+        # mybytes can also be passed as a sequence of integers on Py3.
+        # Test for this:
+        elif isinstance(mybytes, collections.Iterable):
+            mybytes = bytes(mybytes)
+        b = mybytes if byteorder == 'big' else mybytes[::-1]
+        if len(b) == 0:
+            b = b'\x00'
+        # The encode() method has been disabled by newbytes, but Py2's
+        # str has it:
+        num = int(b.encode('hex'), 16)
+        if signed and (b[0] & 0x80):
+            num = num - (2 ** (len(b)*8))
+        return num
+
 if sys.version_info < (2, 7):
     try:
         # noinspection PyPackageRequirements
@@ -94,15 +130,8 @@ if sys.version_info < (2, 7):
         raise Exception("Testing PyVISA in Python 2.6 requires package 'unittest2'")
 
     import struct
-
-    def int_from_bytes(data, byteorder):
-        if byteorder not in ('little', 'big'):
-            raise ValueError("byteorder must be either 'little' or 'big'")
-        data_format = '>i' if byteorder == 'big' else '<i'
-        return struct.unpack(data_format, data)[0]
 else:
     import unittest
-    int_from_bytes = int.from_bytes
 
 try:
     from collections import OrderedDict
