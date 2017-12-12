@@ -31,6 +31,8 @@ if PYTHON3:
     input = input
 
     int_to_bytes = int.to_bytes
+    int_from_bytes = int.from_bytes
+
 else:
     string_types = basestring
 
