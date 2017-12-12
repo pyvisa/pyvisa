@@ -23,7 +23,8 @@ import subprocess
 import warnings
 import inspect
 
-from .compat import check_output, string_types, OrderedDict, struct
+from .compat import (check_output, string_types, OrderedDict, struct,
+                     int_to_bytes, int_from_bytes)
 from . import __version__, logger
 
 
@@ -367,7 +368,7 @@ def parse_hp_block_header(block, is_big_endian):
                          "indicating the start of the block.")
     offset = begin + 4
 
-    data_length = int.from_bytes(block[begin+2:offset],
+    data_length = int_from_bytes(block[begin+2:offset],
                                  byteorder='big' if is_big_endian else 'little'
                                  )
 
@@ -507,8 +508,8 @@ def to_hp_block(iterable, datatype='f', is_big_endian=False):
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
 
-    header = b'#A' + (data_length.to_bytes(2, 'big' if is_big_endian
-                                           else 'little'))
+    header = b'#A' + (int_to_bytes(data_length, 2,
+                                   'big' if is_big_endian else 'little'))
 
     endianess = '>' if is_big_endian else '<'
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)

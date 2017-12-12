@@ -27,6 +27,8 @@ if PYTHON3:
     integer_types = (int, )
 
     input = input
+
+    int_to_bytes = int.to_bytes
 else:
     string_types = basestring
 
@@ -38,6 +40,69 @@ else:
     integer_types = (int, long)
 
     input = raw_input
+
+    # Implementation extracted from the python-future project
+
+    def int_to_bytes(integer, length, byteorder='big', signed=False):
+        """
+        Return an array of bytes representing an integer.
+        The integer is represented using length bytes.  An OverflowError is
+        raised if the integer is not representable with the given number of
+        bytes.
+        The byteorder argument determines the byte order used to represent the
+        integer.  If byteorder is 'big', the most significant byte is at the
+        beginning of the byte array.  If byteorder is 'little', the most
+        significant byte is at the end of the byte array.  To request the
+        native byte order of the host system, use `sys.byteorder' as the byte
+        order value.
+        The signed keyword-only argument determines whether two's complement is
+        used to represent the integer.  If signed is False and a negative
+        integer is given, an OverflowError is raised.
+        """
+        if length < 0:
+            raise ValueError("length argument must be non-negative")
+        if length == 0 and integer == 0:
+            return bytes()
+        if signed and integer < 0:
+            bits = length * 8
+            num = (2**bits) + integer
+            if num <= 0:
+                raise OverflowError("int too smal to convert")
+        else:
+            if integer < 0:
+                raise OverflowError("can't convert negative int to unsigned")
+            num = integer
+        if byteorder not in ('little', 'big'):
+            raise ValueError("byteorder must be either 'little' or 'big'")
+        h = b'%x' % num
+        s = bytes((b'0'*(len(h) % 2) + h).zfill(length*2).decode('hex'))
+        if signed:
+            high_set = s[0] & 0x80
+            if integer > 0 and high_set:
+                raise OverflowError("int too big to convert")
+            if integer < 0 and not high_set:
+                raise OverflowError("int too small to convert")
+        if len(s) > length:
+            raise OverflowError("int too big to convert")
+        return s if byteorder == 'big' else s[::-1]
+
+if sys.version_info < (2, 7):
+    try:
+        # noinspection PyPackageRequirements
+        import unittest2 as unittest
+    except ImportError:
+        raise Exception("Testing PyVISA in Python 2.6 requires package 'unittest2'")
+
+    import struct
+
+    def int_from_bytes(data, byteorder):
+        if byteorder not in ('little', 'big'):
+            raise ValueError("byteorder must be either 'little' or 'big'")
+        data_format = '>i' if byteorder == 'big' else '<i'
+        return struct.unpack(data_format, data)[0]
+else:
+    import unittest
+    int_from_bytes = int.from_bytes
 
 try:
     from collections import OrderedDict
