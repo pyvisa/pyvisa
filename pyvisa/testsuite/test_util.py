@@ -88,7 +88,7 @@ class TestParser(BaseTestCase):
                 for endi in (True, False):
                     msg = 'block=%s, fmt=%s, endianness=%s'
                     msg = msg % (block, fmt, endi)
-                    tblock = lambda values: tb(values, fmt, endi)
+                    tblock = lambda values: bytearray(tb(values, fmt, endi))
                     fblock = lambda block, cont: fb(block, fmt, endi, cont)
                     self.round_trip_block_converstion(values, tblock, fblock,
                                                       msg)

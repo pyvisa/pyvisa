@@ -187,7 +187,7 @@ _np_converters = {
     'G': 'f',
 }
 
-
+# XXX make thing homogeneous in term of bytes vs str
 def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
     """Parse ascii data and return an iterable of numbers.
 
@@ -236,7 +236,7 @@ def to_ascii_block(iterable, converter='f', separator=','):
                       If a str is given, data.split(separator) is used.
     :type: separator: (collections.Iterable[T]) -> str | str
 
-    :rtype: str
+    :rtype: bytes
     """
 
     if isinstance(separator, string_types):
@@ -247,7 +247,7 @@ def to_ascii_block(iterable, converter='f', separator=','):
         block = separator(converter % val for val in iterable)
     else:
         block = separator(converter(val) for val in iterable)
-    return block
+    return block.encode('ascii')
 
 
 def parse_binary(bytes_data, is_big_endian=False, is_single=False):
@@ -459,7 +459,7 @@ def from_binary_block(block, offset=0, data_length=None, datatype='f',
     endianess = '>' if is_big_endian else '<'
 
     if _use_numpy_routines(container):
-        return np.fromstring(block[offset:], endianess+datatype, array_length)
+        return np.frombuffer(block, endianess+datatype, array_length, offset)
 
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)
 
@@ -468,6 +468,7 @@ def from_binary_block(block, offset=0, data_length=None, datatype='f',
     except struct.error:
         raise ValueError("Binary data was malformed")
 
+# XXX refactor to avoid duplication
 
 def to_ieee_block(iterable, datatype='f', is_big_endian=False):
     """Convert an iterable of numbers into a block of data in the IEEE format.

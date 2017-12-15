@@ -254,7 +254,7 @@ class MessageBasedResource(Resource):
 
         block = util.to_ascii_block(values, converter, separator)
 
-        message = message.encode(enco) + block.encode(enco)
+        message = message.encode(enco) + block
 
         if term:
             message += term.encode(enco)
@@ -402,6 +402,7 @@ class MessageBasedResource(Resource):
         :rtype: list
 
         """
+        # Use read rather than _read_raw because we cannot handle a bytearray
         block = self.read()
 
         return util.from_ascii_block(block, converter, separator, container)
@@ -606,7 +607,7 @@ class MessageBasedResource(Resource):
             time.sleep(delay)
 
         return self.read_binary_values(datatype, is_big_endian, container,
-                                       delay, header_fmt)
+                                       header_fmt)
 
     def ask_for_values(self, message, fmt=None, delay=None):
         """A combination of write(message) and read_values()
