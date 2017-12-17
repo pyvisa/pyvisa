@@ -24,7 +24,7 @@ import warnings
 import inspect
 
 from .compat import (check_output, string_types, OrderedDict, struct,
-                     int_to_bytes, int_from_bytes)
+                     int_to_bytes, int_from_bytes, PYTHON3)
 from . import __version__, logger
 
 
@@ -468,7 +468,27 @@ def from_binary_block(block, offset=0, data_length=None, datatype='f',
     except struct.error:
         raise ValueError("Binary data was malformed")
 
-# XXX refactor to avoid duplication
+
+def to_binary_block(iterable, header, datatype, is_big_endian):
+    """Convert an iterable of numbers into a block of data with a given header.
+
+    :param iterable: an iterable of numbers.
+    :param header: the header which should prefix the binary block
+    :param datatype: the format string for a single element. See struct module.
+    :param is_big_endian: boolean indicating endianess.
+    :return: IEEE block.
+    :rtype: bytes
+    """
+    array_length = len(iterable)
+
+    endianess = '>' if is_big_endian else '<'
+    fullfmt = '%s%d%s' % (endianess, array_length, datatype)
+
+    if isinstance(header, string_types):
+        header = bytes(header, 'ascii') if PYTHON3 else str(header)
+
+    return header + struct.pack(fullfmt, *iterable)
+
 
 def to_ieee_block(iterable, datatype='f', is_big_endian=False):
     """Convert an iterable of numbers into a block of data in the IEEE format.
@@ -479,7 +499,6 @@ def to_ieee_block(iterable, datatype='f', is_big_endian=False):
     :return: IEEE block.
     :rtype: bytes
     """
-
     array_length = len(iterable)
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
@@ -487,13 +506,7 @@ def to_ieee_block(iterable, datatype='f', is_big_endian=False):
     header = '%d' % data_length
     header = '#%d%s' % (len(header), header)
 
-    endianess = '>' if is_big_endian else '<'
-    fullfmt = '%s%d%s' % (endianess, array_length, datatype)
-
-    if sys.version >= '3':
-        return bytes(header, 'ascii') + struct.pack(fullfmt, *iterable)
-    else:
-        return str(header) + struct.pack(fullfmt, *iterable)
+    return to_binary_block(iterable, header, datatype, is_big_endian)
 
 
 def to_hp_block(iterable, datatype='f', is_big_endian=False):
@@ -513,13 +526,7 @@ def to_hp_block(iterable, datatype='f', is_big_endian=False):
     header = b'#A' + (int_to_bytes(data_length, 2,
                                    'big' if is_big_endian else 'little'))
 
-    endianess = '>' if is_big_endian else '<'
-    fullfmt = '%s%d%s' % (endianess, array_length, datatype)
-
-    if sys.version >= '3':
-        return header + struct.pack(fullfmt, *iterable)
-    else:
-        return header + struct.pack(fullfmt, *iterable)
+    return to_binary_block(iterable, header, datatype, is_big_endian)
 
 
 def get_system_details(backends=True):
