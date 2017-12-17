@@ -254,7 +254,7 @@ class MessageBasedResource(Resource):
 
         block = util.to_ascii_block(values, converter, separator)
 
-        message = message.encode(enco) + block
+        message = message.encode(enco) + block.encode(enco)
 
         if term:
             message += term.encode(enco)

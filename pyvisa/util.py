@@ -187,7 +187,7 @@ _np_converters = {
     'G': 'f',
 }
 
-# XXX make thing homogeneous in term of bytes vs str
+
 def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
     """Parse ascii data and return an iterable of numbers.
 
@@ -236,7 +236,7 @@ def to_ascii_block(iterable, converter='f', separator=','):
                       If a str is given, data.split(separator) is used.
     :type: separator: (collections.Iterable[T]) -> str | str
 
-    :rtype: bytes
+    :rtype: str
     """
 
     if isinstance(separator, string_types):
@@ -247,7 +247,7 @@ def to_ascii_block(iterable, converter='f', separator=','):
         block = separator(converter % val for val in iterable)
     else:
         block = separator(converter(val) for val in iterable)
-    return block.encode('ascii')
+    return block
 
 
 def parse_binary(bytes_data, is_big_endian=False, is_single=False):
