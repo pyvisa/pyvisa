@@ -435,6 +435,9 @@ class MessageBasedResource(Resource):
                                                              is_big_endian)
             expected_length = offset + data_length
 
+        if self._read_termination is not None:
+            expected_length += len(self._read_termination)
+
         while len(block) < expected_length:
             block.extend(self._read_raw())
 
