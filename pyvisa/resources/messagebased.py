@@ -489,6 +489,9 @@ class MessageBasedResource(Resource):
             offset, data_length = util.parse_hp_block_header(block, is_big_endian=is_big_endian)
             expected_length = offset + data_length
 
+        if self._read_termination is not None:
+            expected_length += len(self._read_termination)
+
         while len(block) < expected_length:
             block += self.read_raw()
 
