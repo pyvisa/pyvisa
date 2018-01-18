@@ -1438,13 +1438,20 @@ def get_wrapper_class(backend_name):
             _WRAPPERS['ni'] = NIVisaLibrary
             return NIVisaLibrary
 
-    for pkgname in list_backends():
-        if pkgname.endswith('-' + backend_name):
-            pkg = __import__(pkgname)
-            _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
-            return cls
-    else:
+    try:
+        pkg = __import__('pyvisa-' + backend_name)
+        _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
+        return cls
+    except ImportError:
         raise ValueError('Wrapper not found: No package named pyvisa-%s' % backend_name)
+
+#    for pkgname in list_backends():
+#        if pkgname.endswith('-' + backend_name):
+#            pkg = __import__(pkgname)
+#            _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
+#            return cls
+#    else:
+#        raise ValueError('Wrapper not found: No package named pyvisa-%s' % backend_name)
 
 
 def open_visa_library(specification):
