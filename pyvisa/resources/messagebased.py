@@ -314,6 +314,8 @@ class MessageBasedResource(Resource):
                                  self._resource_name, size, status)
                     chunk, status = self.visalib.read(self.session, size)
                     ret.extend(chunk)
+                    if len(ret) >= size:
+                        break
             except errors.VisaIOError as e:
                 logger.debug('%s - exception while reading: %s\nBuffer content: %r',
                              self._resource_name, e, ret)
