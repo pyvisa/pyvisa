@@ -13,8 +13,6 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import sys
-import unittest
-from subprocess import check_output
 
 
 PYTHON3 = sys.version >= '3'
@@ -46,6 +44,7 @@ else:
 
     # The 2 following function implementation extracted from the python-future
     # project
+    import collections
 
     def int_to_bytes(integer, length, byteorder='big', signed=False):
         """

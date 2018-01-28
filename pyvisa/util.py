@@ -22,8 +22,9 @@ import sys
 import subprocess
 import warnings
 import inspect
+from subprocess import check_output
 
-from .compat import (check_output, string_types, OrderedDict, struct,
+from .compat import (string_types, OrderedDict, struct,
                      int_to_bytes, int_from_bytes, PYTHON3)
 from . import __version__, logger
 

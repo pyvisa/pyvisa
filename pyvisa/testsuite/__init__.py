@@ -6,12 +6,13 @@ from __future__ import (division, unicode_literals, print_function,
 import os
 import logging
 import warnings
+import unittest
 from contextlib import contextmanager
 
 from logging.handlers import BufferingHandler
 
 from pyvisa import logger
-from pyvisa.compat import unittest, PYTHON3
+from pyvisa.compat import PYTHON3
 
 
 class TestHandler(BufferingHandler):
