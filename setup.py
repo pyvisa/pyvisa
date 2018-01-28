@@ -32,9 +32,6 @@ requirements = []
 if sys.version_info < (3, 4):
     requirements.append('enum34')
 
-if sys.version_info < (2, 7):
-    requirements.append('unittest2')
-
 setup(name='PyVISA',
       description='Python VISA bindings for GPIB, RS232, and USB instruments',
       version='1.9.dev0',
@@ -47,6 +44,7 @@ setup(name='PyVISA',
       test_suite='pyvisa.testsuite.testsuite',
       keywords='VISA GPIB USB serial RS232 measurement acquisition',
       license='MIT License',
+      python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
       install_requires=requirements,
       classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -59,10 +57,9 @@ setup(name='PyVISA',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
