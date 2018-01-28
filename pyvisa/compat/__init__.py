@@ -14,7 +14,6 @@ from __future__ import (division, unicode_literals, print_function,
 
 import sys
 import unittest
-
 from subprocess import check_output
 
 
@@ -123,17 +122,6 @@ else:
         if signed and (b[0] & 0x80):
             num = num - (2 ** (len(b)*8))
         return num
-
-if sys.version_info < (2, 7):
-    try:
-        # noinspection PyPackageRequirements
-        import unittest2 as unittest
-    except ImportError:
-        raise Exception("Testing PyVISA in Python 2.6 requires package 'unittest2'")
-
-    import struct
-else:
-    import unittest
 
 try:
     from collections import OrderedDict
