@@ -58,7 +58,7 @@ class ValuesFormat(object):
 
 
 class ControlRenMixin(object):
-    """Common controlt_ren method of some messaged based resources.
+    """Common control_ren method of some messaged based resources.
 
     """
     # It should work for GPIB, USB and some TCPIP
@@ -312,10 +312,51 @@ class MessageBasedResource(Resource):
         return self.write_ascii_values(message, values, vf.converter,
                                        vf.separator, termination, encoding)
 
+    def read_bytes(self, count, chunk_size=None, break_on_termchar=False):
+        """Read a certain number of bytes from the instrument.
+
+        :param count: The number of bytes to read from the instrument.
+        :type count: int
+        :param chunk_size: The chunk size to use to perform the reading.
+        :type chunk_size: int
+        :param break_on_termchar: Should the reading stop when a termination
+            character is encountered.
+        :type brak_on_termchar: bool
+
+        :rtype: bytes
+
+        """
+        chunk_size = chunk_size or self.chunk_size
+        ret = bytearray()
+        left_to_read = count
+        termchar_read = constants.StatusCode.success_termination_character_read
+
+        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT,
+                                 constants.VI_SUCCESS_MAX_CNT):
+            try:
+                status = None
+                while len(ret) < count:
+                    size = min(chunk_size, left_to_read)
+                    logger.debug('%s - reading %d bytes (last status %r)',
+                                 self._resource_name, size, status)
+                    chunk, status = self.visalib.read(self.session, size)
+                    ret.extend(chunk)
+                    left_to_read -= len(chunk)
+                    if break_on_termchar and status == termchar_read:
+                        break
+            except errors.VisaIOError as e:
+                logger.debug('%s - exception while reading: %s\n'
+                             'Buffer content: %r',  self._resource_name, e,
+                             ret)
+                raise
+        return bytes(ret)
+
     def read_raw(self, size=None):
         """Read the unmodified string sent from the instrument to the computer.
 
         In contrast to read(), no termination characters are stripped.
+
+        :param size: The chunk size to use when reading the data.
 
         :rtype: bytes
         """
@@ -325,6 +366,8 @@ class MessageBasedResource(Resource):
         """Read the unmodified string sent from the instrument to the computer.
 
         In contrast to read(), no termination characters are stripped.
+
+        :param size: The chunk size to use when reading the data.
 
         :rtype: bytearray
         """
