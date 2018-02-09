@@ -46,7 +46,7 @@ else:
     # project
     import collections
 
-    def int_to_bytes(integer, length, byteorder='big', signed=False):
+    def int_to_bytes(integer, length, byteorder, signed=False):
         """
         Return an array of bytes representing an integer.
         The integer is represented using length bytes.  An OverflowError is
