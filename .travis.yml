@@ -16,8 +16,8 @@ python:
   - "3.6"
 
 install:
-  - pip install coverage
-  - pip install coveralls
+  - if [ $TRAVIS_PYTHON_VERSION == '2.7' ] || [ $TRAVIS_PYTHON_VERSION == '3.6' ]; then pip install numpy; fi
+  - pip install coverage coveralls
 
 script:
   - coverage run -p --source=pyvisa --omit="*test*","*compat*" setup.py test

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
-from pyvisa.compat import unittest
+import unittest
 from pyvisa.testsuite import BaseTestCase
 
 from pyvisa import rname

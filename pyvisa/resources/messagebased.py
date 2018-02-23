@@ -11,7 +11,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import contextlib
 import time
@@ -47,7 +48,8 @@ class ValuesFormat(object):
         self.container = container
         self.is_binary = False
 
-    def use_binary(self, datatype, is_big_endian, container=list, header_fmt='ieee'):
+    def use_binary(self, datatype, is_big_endian, container=list,
+                   header_fmt='ieee'):
         self.datatype = datatype
         self.is_big_endian = is_big_endian
         self.container = container
@@ -56,19 +58,21 @@ class ValuesFormat(object):
 
 
 class ControlRenMixin(object):
-    """Common controlt_ren method of some messaged based resources.
+    """Common control_ren method of some messaged based resources.
+
     """
     # It should work for GPIB, USB and some TCPIP
-    # For TCPIP I found some (all?) NI's VISA library do not handle control_ren, but
-    # it works for Agilent's VISA library (at least some of them)
+    # For TCPIP I found some (all?) NI's VISA library do not handle
+    # control_ren, but it works for Agilent's VISA library (at least some of
+    # them)
     def control_ren(self, mode):
-        """Controls the state of the GPIB Remote Enable (REN) interface line, and optionally the remote/local
-        state of the device.
+        """Controls the state of the GPIB Remote Enable (REN) interface line,
+        and optionally the remote/local state of the device.
 
         Corresponds to viGpibControlREN function of the VISA library.
 
-        :param mode: Specifies the state of the REN line and optionally the device remote/local state.
-                     (Constants.GPIB_REN*)
+        :param mode: Specifies the state of the REN line and optionally the
+                     device remote/local state. (Constants.GPIB_REN*)
         :return: return value of the library call.
         :rtype: VISAStatus
         """
@@ -95,17 +99,21 @@ class MessageBasedResource(Resource):
         self._values_format = ValuesFormat()
         super(MessageBasedResource, self).__init__(*args, **kwargs)
 
-    # This is done for backwards compatibility but will be removed in 1.7
+    # This is done for backwards compatibility but will be removed in 1.10
     @property
     def values_format(self):
+        warnings.warn('values_format is deprecated and will be removed in '
+                      '1.10', FutureWarning)
         return self._values_format
 
     @values_format.setter
     def values_format(self, fmt):
+        warnings.warn('values_format is deprecated and will be removed in '
+                      '1.10', FutureWarning)
         self._values_format.is_binary = not (fmt & 0x01 == 0)
-        if fmt & 0x03 == 1: #single
+        if fmt & 0x03 == 1:  # single
             self._values_format.datatype = 'f'
-        elif fmt & 0x03 == 3: #double:
+        elif fmt & 0x03 == 3:  # double:
             self._values_format.datatype = 'd'
         else:
             raise ValueError("unknown data values fmt requested")
@@ -118,10 +126,14 @@ class MessageBasedResource(Resource):
     def ask_delay(self):
         """An alias for query_delay kept for backwards compatibility.
         """
+        warnings.warn('ask_delay is deprecated and will be removed in '
+                      '1.10, use query_delay instead', FutureWarning)
         return self.query_delay
 
     @ask_delay.setter
     def ask_delay(self, value):
+        warnings.warn('ask_delay is deprecated and will be removed in '
+                      '1.10, use query_delay instead', FutureWarning)
         self.query_delay = value
 
     @property
@@ -132,7 +144,8 @@ class MessageBasedResource(Resource):
 
     @encoding.setter
     def encoding(self, encoding):
-        _ = 'test encoding'.encode(encoding).decode(encoding)
+        # Test that the encoding specified makes sense.
+        'test encoding'.encode(encoding).decode(encoding)
         self._encoding = encoding
 
     @property
@@ -145,22 +158,25 @@ class MessageBasedResource(Resource):
     def read_termination(self, value):
 
         if value:
-            # termination character, the rest is just used for verification after
-            # each read operation.
+            # termination character, the rest is just used for verification
+            # after each read operation.
             last_char = value[-1:]
-            # Consequently, it's illogical to have the real termination character
-            # twice in the sequence (otherwise reading would stop prematurely).
+            # Consequently, it's illogical to have the real termination
+            # character twice in the sequence (otherwise reading would stop
+            # prematurely).
 
             if last_char in value[:-1]:
                 raise ValueError("ambiguous ending in termination characters")
 
             self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(last_char))
-            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_TRUE)
+            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN,
+                                    constants.VI_TRUE)
         else:
-            # The termchar is also used in VI_ATTR_ASRL_END_IN (for serial termination)
-            # so return it to its default.
+            # The termchar is also used in VI_ATTR_ASRL_END_IN (for serial
+            # termination) so return it to its default.
             self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(self.LF))
-            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_FALSE)
+            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN,
+                                    constants.VI_FALSE)
 
         self._read_termination = value
 
@@ -208,8 +224,10 @@ class MessageBasedResource(Resource):
 
         return count
 
-    def write_ascii_values(self, message, values, converter='f', separator=',', termination=None, encoding=None):
-        """Write a string message to the device followed by values in ascii format.
+    def write_ascii_values(self, message, values, converter='f', separator=',',
+                           termination=None, encoding=None):
+        """Write a string message to the device followed by values in ascii
+        format.
 
         The write_termination is always appended to it.
 
@@ -220,8 +238,8 @@ class MessageBasedResource(Resource):
                           String formatting codes are also accepted.
                           Defaults to str.
         :type converter: callable | str
-        :param separator: a callable that split the str into individual elements.
-                          If a str is given, data.split(separator) is used.
+        :param separator: a callable that join the values in a single str.
+                          If a str is given, separator.join(values) is used.
         :type: separator: (collections.Iterable[T]) -> str | str
         :return: number of bytes written.
         :rtype: int
@@ -236,7 +254,7 @@ class MessageBasedResource(Resource):
 
         block = util.to_ascii_block(values, converter, separator)
 
-        message = message.encode(enco) + block
+        message = message.encode(enco) + block.encode(enco)
 
         if term:
             message += term.encode(enco)
@@ -245,15 +263,19 @@ class MessageBasedResource(Resource):
 
         return count
 
-    def write_binary_values(self, message, values, datatype='f', is_big_endian=False, termination=None, encoding=None):
-        """Write a string message to the device followed by values in binary format.
+    def write_binary_values(self, message, values, datatype='f',
+                            is_big_endian=False, termination=None,
+                            encoding=None):
+        """Write a string message to the device followed by values in binary
+        format.
 
         The write_termination is always appended to it.
 
         :param message: the message to be sent.
         :type message: unicode (Py2) or str (Py3)
         :param values: data to be writen to the device.
-        :param datatype: the format string for a single element. See struct module.
+        :param datatype: the format string for a single element. See struct
+                         module.
         :param is_big_endian: boolean indicating endianess.
         :return: number of bytes written.
         :rtype: int
@@ -277,18 +299,64 @@ class MessageBasedResource(Resource):
         return count
 
     def write_values(self, message, values, termination=None, encoding=None):
-
+        warnings.warn('write_values is deprecated and will be removed in '
+                      '1.10, use write_ascii_values or write_binary_values '
+                      'instead.', FutureWarning)
         vf = self.values_format
 
         if vf.is_binary:
-            return self.write_binary_values(message, values, vf.datatype, vf.is_big_endian, termination, encoding)
+            return self.write_binary_values(message, values, vf.datatype,
+                                            vf.is_big_endian, termination,
+                                            encoding)
 
-        return self.write_ascii_values(message, values, vf.converter, vf.separator, termination, encoding)
+        return self.write_ascii_values(message, values, vf.converter,
+                                       vf.separator, termination, encoding)
+
+    def read_bytes(self, count, chunk_size=None, break_on_termchar=False):
+        """Read a certain number of bytes from the instrument.
+
+        :param count: The number of bytes to read from the instrument.
+        :type count: int
+        :param chunk_size: The chunk size to use to perform the reading.
+        :type chunk_size: int
+        :param break_on_termchar: Should the reading stop when a termination
+            character is encountered.
+        :type brak_on_termchar: bool
+
+        :rtype: bytes
+
+        """
+        chunk_size = chunk_size or self.chunk_size
+        ret = bytearray()
+        left_to_read = count
+        termchar_read = constants.StatusCode.success_termination_character_read
+
+        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT,
+                                 constants.VI_SUCCESS_MAX_CNT):
+            try:
+                status = None
+                while len(ret) < count:
+                    size = min(chunk_size, left_to_read)
+                    logger.debug('%s - reading %d bytes (last status %r)',
+                                 self._resource_name, size, status)
+                    chunk, status = self.visalib.read(self.session, size)
+                    ret.extend(chunk)
+                    left_to_read -= len(chunk)
+                    if break_on_termchar and status == termchar_read:
+                        break
+            except errors.VisaIOError as e:
+                logger.debug('%s - exception while reading: %s\n'
+                             'Buffer content: %r',  self._resource_name, e,
+                             ret)
+                raise
+        return bytes(ret)
 
     def read_raw(self, size=None):
         """Read the unmodified string sent from the instrument to the computer.
 
         In contrast to read(), no termination characters are stripped.
+
+        :param size: The chunk size to use when reading the data.
 
         :rtype: bytes
         """
@@ -296,9 +364,11 @@ class MessageBasedResource(Resource):
 
     def _read_raw(self, size=None):
         """Read the unmodified string sent from the instrument to the computer.
-        
+
         In contrast to read(), no termination characters are stripped.
-        
+
+        :param size: The chunk size to use when reading the data.
+
         :rtype: bytearray
         """
         size = self.chunk_size if size is None else size
@@ -306,7 +376,8 @@ class MessageBasedResource(Resource):
         loop_status = constants.StatusCode.success_max_count_read
 
         ret = bytearray()
-        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT, constants.VI_SUCCESS_MAX_CNT):
+        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT,
+                                 constants.VI_SUCCESS_MAX_CNT):
             try:
                 status = loop_status
                 while status == loop_status:
@@ -315,8 +386,8 @@ class MessageBasedResource(Resource):
                     chunk, status = self.visalib.read(self.session, size)
                     ret.extend(chunk)
             except errors.VisaIOError as e:
-                logger.debug('%s - exception while reading: %s\nBuffer content: %r',
-                             self._resource_name, e, ret)
+                logger.debug('%s - exception while reading: %s\nBuffer '
+                             'content: %r', self._resource_name, e, ret)
                 raise
 
         return ret
@@ -353,6 +424,78 @@ class MessageBasedResource(Resource):
 
         return message[:-len(termination)]
 
+    def read_ascii_values(self, converter='f', separator=',', container=list,
+                          delay=None):
+        """Read values from the device in ascii format returning an iterable of
+        values.
+
+        :param delay: delay in seconds between write and read operations.
+                      if None, defaults to self.query_delay
+        :param converter: function used to convert each element.
+                          Defaults to float
+        :type converter: callable
+        :param separator: a callable that split the str into individual
+                          elements. If a str is given, data.split(separator) is
+                          used.
+        :type: separator: (str) -> collections.Iterable[int] | str
+        :param container: container type to use for the output data.
+        :returns: the answer from the device.
+        :rtype: list
+
+        """
+        # Use read rather than _read_raw because we cannot handle a bytearray
+        block = self.read()
+
+        return util.from_ascii_block(block, converter, separator, container)
+
+    def read_binary_values(self, datatype='f', is_big_endian=False,
+                           container=list, header_fmt='ieee'):
+        """Read values from the device in binary format returning an iterable
+        of values.
+
+        :param datatype: the format string for a single element. See struct
+                         module.
+        :param is_big_endian: boolean indicating endianess.
+                              Defaults to False.
+        :param container: container type to use for the output data.
+        :param header_fmt: format of the header prefixing the data. Possible
+                           values are: 'ieee', 'hp', 'empty'
+        :returns: the answer from the device.
+        :rtype: type(container)
+
+        """
+        block = self._read_raw()
+        expected_length = 0
+
+        if header_fmt == 'ieee':
+            offset, data_length = util.parse_ieee_block_header(block)
+            expected_length = offset + data_length
+        elif header_fmt == 'hp':
+            offset, data_length = util.parse_hp_block_header(block,
+                                                             is_big_endian)
+            expected_length = offset + data_length
+
+        if self._read_termination is not None:
+            expected_length += len(self._read_termination)
+
+        while len(block) < expected_length:
+            block.extend(self._read_raw())
+
+        try:
+            if header_fmt == 'ieee':
+                return util.from_ieee_block(block, datatype, is_big_endian,
+                                            container)
+            elif header_fmt == 'hp':
+                return util.from_hp_block(block, datatype, is_big_endian,
+                                          container)
+            elif header_fmt == 'empty':
+                return util.from_binary_block(block, 0, None, datatype,
+                                              is_big_endian, container)
+            else:
+                raise
+        except ValueError as e:
+            raise errors.InvalidBinaryFormat(e.args)
+
     def read_values(self, fmt=None, container=list):
         """Read a list of floating point values from the device.
 
@@ -365,13 +508,17 @@ class MessageBasedResource(Resource):
         :return: the list of read values
         :rtype: list
         """
+        warnings.warn('read_values is deprecated and will be removed in '
+                      '1.10, use read_ascii_values or read_binary_values '
+                      'instead.', FutureWarning)
         if not fmt:
             vf = self.values_format
             if not vf.is_binary:
                 return util.from_ascii_block(self.read(), container)
             data = self._read_raw()
             try:
-                return util.parse_binary(data, vf.is_big_endian, vf.datatype=='f')
+                return util.parse_binary(data, vf.is_big_endian,
+                                         vf.datatype == 'f')
             except ValueError as e:
                 try:
                     msg = e.args[0]
@@ -379,20 +526,20 @@ class MessageBasedResource(Resource):
                     msg = ''
                 raise errors.InvalidBinaryFormat(msg)
 
-        if fmt & 0x01 == 0: # ascii
+        if fmt & 0x01 == 0:  # ascii
             return util.from_ascii_block(self.read())
 
         data = self._read_raw()
 
         try:
-            if fmt & 0x03 == 1: #single
+            if fmt & 0x03 == 1:  # single
                 is_single = True
-            elif fmt & 0x03 == 3: #double:
+            elif fmt & 0x03 == 3:  # double:
                 is_single = False
             else:
                 raise ValueError("unknown data values fmt requested")
 
-            is_big_endian = fmt & 0x04 # big endian
+            is_big_endian = fmt & 0x04  # big endian
             return util.parse_binary(data, is_big_endian, is_single)
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
@@ -416,8 +563,10 @@ class MessageBasedResource(Resource):
             time.sleep(delay)
         return self.read()
 
-    # Kept for backwards compatibility.
-    ask = query
+    def ask(self, message, delay=None):
+        warnings.warn('ask is deprecated and will be removed in '
+                      '1.10, use query instead.', FutureWarning)
+        return self.query(message, delay)
 
     def query_values(self, message, delay=None):
         """Query the device for values returning an iterable of values.
@@ -431,15 +580,23 @@ class MessageBasedResource(Resource):
         :returns: the answer from the device.
         :rtype: list
         """
+        warnings.warn('query_values is deprecated and will be removed in '
+                      '1.10, use query_ascii_values or quey_binary_values '
+                      'instead.', FutureWarning)
         vf = self.values_format
 
         if vf.is_binary:
-            return self.query_binary_values(message, vf.datatype, vf.is_big_endian, vf.container, delay, vf.header_fmt)
+            return self.query_binary_values(message, vf.datatype,
+                                            vf.is_big_endian, vf.container,
+                                            delay, vf.header_fmt)
 
-        return self.query_ascii_values(message, vf.converter, vf.separator, vf.container, delay)
+        return self.query_ascii_values(message, vf.converter, vf.separator,
+                                       vf.container, delay)
 
-    def query_ascii_values(self, message, converter='f', separator=',', container=list, delay=None):
-        """Query the device for values in ascii format returning an iterable of values.
+    def query_ascii_values(self, message, converter='f', separator=',',
+                           container=list, delay=None):
+        """Query the device for values in ascii format returning an iterable of
+        values.
 
         :param message: the message to send.
         :type message: str
@@ -448,8 +605,9 @@ class MessageBasedResource(Resource):
         :param converter: function used to convert each element.
                           Defaults to float
         :type converter: callable
-        :param separator: a callable that split the str into individual elements.
-                          If a str is given, data.split(separator) is used.
+        :param separator: a callable that split the str into individual
+                          elements. If a str is given, data.split(separator) is
+                          used.
         :type: separator: (str) -> collections.Iterable[int] | str
         :param container: container type to use for the output data.
         :returns: the answer from the device.
@@ -462,25 +620,28 @@ class MessageBasedResource(Resource):
         if delay > 0.0:
             time.sleep(delay)
 
-        block = self.read()
+        return self.read_ascii_values(converter, separator, container,
+                                      delay)
 
-        return util.from_ascii_block(block, converter, separator, container)
-
-    def query_binary_values(self, message, datatype='f', is_big_endian=False, container=list, delay=None, header_fmt='ieee'):
-        """Converts an iterable of numbers into a block of data in the ieee format.
+    def query_binary_values(self, message, datatype='f', is_big_endian=False,
+                            container=list, delay=None, header_fmt='ieee'):
+        """Query the device for values in binary format returning an iterable
+        of values.
 
         :param message: the message to send to the instrument.
-        :param datatype: the format string for a single element. See struct module.
+        :param datatype: the format string for a single element. See struct
+                         module.
         :param is_big_endian: boolean indicating endianess.
                               Defaults to False.
         :param container: container type to use for the output data.
         :param delay: delay in seconds between write and read operations.
                       if None, defaults to self.query_delay
-        :rtype: bytes
+        :returns: the answer from the device.
+        :rtype: list
         """
-
         if header_fmt not in ('ieee', 'empty', 'hp'):
-            raise ValueError("Invalid header format. Valid options are 'ieee', 'empty', 'hp'")
+            raise ValueError("Invalid header format. Valid options are 'ieee',"
+                             " 'empty', 'hp'")
 
         self.write(message)
         if delay is None:
@@ -488,24 +649,8 @@ class MessageBasedResource(Resource):
         if delay > 0.0:
             time.sleep(delay)
 
-        block = self._read_raw()
-
-        if header_fmt == 'ieee':
-            offset, data_length = util.parse_ieee_block_header(block)
-            expected_length = offset + data_length
-
-            while len(block) < expected_length:
-                block.extend(self._read_raw())
-
-        try:
-            if header_fmt == 'ieee':
-                return util.from_ieee_block(block, datatype, is_big_endian, container)
-            elif header_fmt == 'empty':
-                return util.from_binary_block(block, 0, None, datatype, is_big_endian, container)
-            elif header_fmt == 'hp':
-                return util.from_binary_block(block, 4, None, datatype, is_big_endian, container)
-        except ValueError as e:
-            raise errors.InvalidBinaryFormat(e.args)
+        return self.read_binary_values(datatype, is_big_endian, container,
+                                       header_fmt)
 
     def ask_for_values(self, message, fmt=None, delay=None):
         """A combination of write(message) and read_values()
@@ -517,7 +662,9 @@ class MessageBasedResource(Resource):
         :returns: the answer from the device.
         :rtype: list
         """
-
+        warnings.warn('ask_values is deprecated and will be removed in '
+                      '1.10, use query_ascii_values or quey_binary_values '
+                      'instead.', FutureWarning)
         self.write(message)
         if delay is None:
             delay = self.query_delay
@@ -529,7 +676,8 @@ class MessageBasedResource(Resource):
         """Sends a software trigger to the device.
         """
 
-        self.visalib.assert_trigger(self.session, constants.VI_TRIG_PROT_DEFAULT)
+        self.visalib.assert_trigger(self.session,
+                                    constants.VI_TRIG_PROT_DEFAULT)
 
     @property
     def stb(self):
@@ -546,10 +694,12 @@ class MessageBasedResource(Resource):
     @contextlib.contextmanager
     def read_termination_context(self, new_termination):
         term = self.get_visa_attribute(constants.VI_ATTR_TERMCHAR)
-        self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(new_termination[-1]))
+        self.set_visa_attribute(constants.VI_ATTR_TERMCHAR,
+                                ord(new_termination[-1]))
         yield
         self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, term)
 
 
 # Rohde and Schwarz Device via Passport. Not sure which Resource should be.
-MessageBasedResource.register(constants.InterfaceType.rsnrp, 'INSTR')(MessageBasedResource)
+MessageBasedResource.register(constants.InterfaceType.rsnrp,
+                              'INSTR')(MessageBasedResource)

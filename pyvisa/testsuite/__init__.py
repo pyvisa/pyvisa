@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import os
 import logging
+import warnings
+import unittest
 from contextlib import contextmanager
 
 from logging.handlers import BufferingHandler
 
 from pyvisa import logger
-from pyvisa.compat import unittest
+from pyvisa.compat import PYTHON3
 
 
 class TestHandler(BufferingHandler):
@@ -62,6 +65,21 @@ class BaseTestCase(unittest.TestCase):
             msg = '\n'.join(record.get('msg', str(record)) for record in buf)
             self.assertEqual(l, 0, msg='%d warnings raised.\n%s' % (l, msg))
 
+    if not PYTHON3:
+        @contextmanager
+        def assertWarns(self, category):
+            """Backport for Python 2
+
+            """
+            with warnings.catch_warnings(record=True) as w:
+                # Cause all warnings to always be triggered.
+                warnings.simplefilter("always")
+                # Trigger a warning.
+                yield
+                # Verify some things
+                assert len(w) == 1, 'No warning raised'
+                assert issubclass(w[-1].category, category)
+
 
 def testsuite():
     """A testsuite that has all the pyvisa tests.
@@ -85,4 +103,3 @@ def run():
     """
     test_runner = unittest.TextTestRunner()
     return test_runner.run(testsuite())
-

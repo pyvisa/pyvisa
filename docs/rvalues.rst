@@ -77,6 +77,11 @@ If you have doubles `d` in big endian the call will be::
 
 You can also specify the output container type, just as it was shown before.
 
+By default, PyVISA will assume that the data block is formatted according to
+the IEEE convention. If your instrument uses HP data block you can pass
+``header_fmt='hp'`` to ``read_binary_values``. If your instrument does not use
+any header for the data simply ``header_fmt='empty'``.
+
 
 Writing ASCII values
 --------------------
@@ -178,4 +183,12 @@ In those cases, you need to get the data::
 
 and then you need to implement the logic to parse it.
 
+Alternatively if the `read_raw` call fails you can try to read just a few bytes
+using::
 
+        >>> inst.write('CURV?')
+        >>> data = inst.read_bytes(1)
+
+If this call fails it may mean that your instrument did not answer, either
+because it needs more time or because your first instruction was not
+understood.

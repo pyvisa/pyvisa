@@ -688,7 +688,7 @@ class InterfaceType(enum.IntEnum):
 
 class AddressState(enum.IntEnum):
 
-    unaddressed =VI_GPIB_UNADDRESSED
+    unaddressed = VI_GPIB_UNADDRESSED
     talker = VI_GPIB_TALKER
     listenr = VI_GPIB_LISTENER
 
