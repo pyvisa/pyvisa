@@ -299,8 +299,7 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
         else:
             fmt = endianess + str(data_length // 8) + 'd'
 
-        # Python 2.6 compatibility make sure fmt is str not unicode
-        result = list(struct.unpack(str(fmt), data))
+        result = list(struct.unpack(fmt, data))
     except struct.error:
         raise ValueError("Binary data itself was malformed")
 

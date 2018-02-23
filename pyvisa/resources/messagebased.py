@@ -429,8 +429,6 @@ class MessageBasedResource(Resource):
         """Read values from the device in ascii format returning an iterable of
         values.
 
-        :param message: the message to send.
-        :type message: str
         :param delay: delay in seconds between write and read operations.
                       if None, defaults to self.query_delay
         :param converter: function used to convert each element.
@@ -455,7 +453,6 @@ class MessageBasedResource(Resource):
         """Read values from the device in binary format returning an iterable
         of values.
 
-        :param message: the message to send to the instrument.
         :param datatype: the format string for a single element. See struct
                          module.
         :param is_big_endian: boolean indicating endianess.

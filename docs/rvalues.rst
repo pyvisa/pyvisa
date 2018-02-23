@@ -78,7 +78,7 @@ If you have doubles `d` in big endian the call will be::
 You can also specify the output container type, just as it was shown before.
 
 By default, PyVISA will assume that the data block is formatted according to
-the IEEE convention. If you instrument use HP data block you can pass
+the IEEE convention. If your instrument uses HP data block you can pass
 ``header_fmt='hp'`` to ``read_binary_values``. If your instrument does not use
 any header for the data simply ``header_fmt='empty'``.
 
