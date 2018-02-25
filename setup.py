@@ -27,12 +27,12 @@ long_description = '\n\n'.join([read('README'),
 __doc__ = long_description
 
 requirements = []
-if sys.version_info < (3, 4):
+if sys.version_info < (3,):
     requirements.append('enum34')
 
 setup(name='PyVISA',
       description='Python VISA bindings for GPIB, RS232, TCPIP and USB instruments',
-      version='1.9.0',
+      version='1.10.0.dev',
       long_description=long_description,
       author='Torsten Bronger, Gregor Thalhammer',
       author_email='bronger@physik.rwth-aachen.de',
