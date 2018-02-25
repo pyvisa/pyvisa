@@ -3,7 +3,8 @@
     pyvisa.errors
     ~~~~~~~~~~~~~
 
-    Defines exceptions hierarchy and textual explanations of VISA completion and error codes.
+    Defines exceptions hierarchy and textual explanations of VISA completion
+    and error codes.
 
     This file is part of PyVISA.
 
@@ -351,7 +352,7 @@ class Error(Exception):
 
     def __init__(self, description):
         super(Error, self).__init__(description)
-        
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
@@ -365,13 +366,16 @@ class VisaIOError(Error):
     """
 
     def __init__(self, error_code):
-        abbreviation, description = completion_and_error_messages.get(error_code,
-                                                                      ('?', 'Unknown code.'))
-        super(VisaIOError, self).__init__('%s (%d): %s' % (abbreviation, error_code, description))
+        abbreviation, description =\
+            completion_and_error_messages.get(error_code,
+                                              ('?', 'Unknown code.'))
+        super(VisaIOError, self).__init__('%s (%d): %s' % (abbreviation,
+                                                           error_code,
+                                                           description))
         self.error_code = error_code
         self.abbreviation = abbreviation
         self.description = description
-        
+
     def __reduce__(self):
         return (VisaIOError, (self.error_code,))
 
@@ -384,16 +388,19 @@ class VisaIOWarning(Warning):
     """
 
     def __init__(self, error_code):
-        abbreviation, description = completion_and_error_messages.get(error_code,
-                                                                      ('?', 'Unknown code.'))
-        super(VisaIOWarning, self).__init__('%s (%d): %s' % (abbreviation, error_code, description))
+        abbreviation, description =\
+            completion_and_error_messages.get(error_code,
+                                              ('?', 'Unknown code.'))
+        super(VisaIOWarning, self).__init__('%s (%d): %s' % (abbreviation,
+                                                             error_code,
+                                                             description))
         self.error_code = error_code
         self.abbreviation = abbreviation
         self.description = description
-        
+
     def __reduce__(self):
         return (VisaIOWarning, (self.error_code,))
-        
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
@@ -421,21 +428,25 @@ class UnknownHandler(Error):
     """
 
     def __init__(self, event_type, handler, user_handle):
-        super(UnknownHandler, self).__init__('%s, %s, %s' % (event_type, handler, user_handle))
+        super(UnknownHandler, self).__init__('%s, %s, %s' % (event_type,
+                                                             handler,
+                                                             user_handle))
         self.event_type = event_type
         self.handler = handler
         self.user_handle = user_handle
-        
+
     def __reduce__(self):
-        return (UnknownHandler, (self.event_type, self.handler, self.user_handle))
+        return (UnknownHandler, (self.event_type, self.handler,
+                                 self.user_handle))
 
 
 class OSNotSupported(Error):
 
     def __init__(self, os):
-        super(OSNotSupported, self).__init__(os + " is not yet supported by PyVISA")
+        super(OSNotSupported, self).__init__(os +
+                                             " is not yet supported by PyVISA")
         self.os = os
-        
+
     def __reduce__(self):
         return (OSNotSupported, (self.os,))
 
@@ -445,11 +456,12 @@ class InvalidBinaryFormat(Error):
     def __init__(self, description=""):
         if description:
             description = ": " + description
-        super(InvalidBinaryFormat, self).__init__("Unrecognized binary data format" + description)
+        super(InvalidBinaryFormat, self).__init__(
+            "Unrecognized binary data format" + description)
         self.description = description
 
     def __reduce__(self):
-        return (InvalidBinaryFormat, (self.description,))        
+        return (InvalidBinaryFormat, (self.description,))
 
 
 class InvalidSession(Error):
@@ -457,7 +469,8 @@ class InvalidSession(Error):
     """
 
     def __init__(self):
-        super(InvalidSession, self).__init__('Invalid session handle. The resource might be closed.')
+        super(InvalidSession, self).__init__('Invalid session handle. '
+                                             'The resource might be closed.')
 
     def __reduce__(self):
         return (InvalidSession, ())
@@ -491,7 +504,9 @@ class LibraryError(OSError, Error):
     def from_wrong_arch(cls, filename):
         s = ''
         details = util.get_system_details(backends=False)
-        visalib = util.LibraryPath(filename, 'user' if filename == util.read_user_library_path() else 'auto')
+        origin = ('user' if filename == util.read_user_library_path() else
+                  'auto')
+        visalib = util.LibraryPath(filename, origin)
         s += 'No matching architecture.\n'
         s += '    Current Python interpreter is %s bits\n' % details['bits']
         s += '    The library in: %s\n' % visalib.path
@@ -532,7 +547,8 @@ def return_handler(module_logger, first_is_session=True):
                 raise VisaIOError(ret_value)
 
             if ret_value in self.issue_warning_on:
-                if session and ret_value not in self._ignore_warning_in_session[session]:
+                if (session and
+                        ret_value not in self._ignore_warning_in_session[session]):
                     module_logger.warn(VisaIOWarning(ret_value), stacklevel=2)
 
             return ret_value

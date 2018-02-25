@@ -15,7 +15,8 @@ class TestParsers(BaseTestCase):
 
     def _parse_test(self, rn, **kwargs):
         p = parse(rn)
-        r = dict((k, getattr(p, k)) for k in p._fields + ('interface_type', 'resource_class'))
+        r = dict((k, getattr(p, k)) for k in p._fields +
+                 ('interface_type', 'resource_class'))
         r['canonical_resource_name'] = str(p)
         self.assertEqual(r, kwargs, rn)
 
@@ -228,6 +229,7 @@ class TestParsers(BaseTestCase):
                          board='2',
                          usb_interface_number='3',
                          canonical_resource_name='USB2::0x1234::125::A22-5::3::RAW')
+
 
 class TestFilters(BaseTestCase):
 

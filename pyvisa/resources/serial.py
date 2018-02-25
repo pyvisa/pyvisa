@@ -11,17 +11,21 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 from .. import constants
 
 from .messagebased import MessageBasedResource
 
+
 @MessageBasedResource.register(constants.InterfaceType.asrl, 'INSTR')
 class SerialInstrument(MessageBasedResource):
     """Communicates with devices of type ASRL<board>[::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     def flush(self, mask):

@@ -11,7 +11,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 from .. import constants
 
@@ -26,8 +27,11 @@ class VXIBackplane(Resource):
     More complex resource names can be specified with the following grammar:
         VXI[board][::VXI logical address]::BACKPLANE
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
+    pass
 
 
 @Resource.register(constants.InterfaceType.vxi, 'INSTR')
@@ -37,8 +41,11 @@ class VXIInstrument(Resource):
     More complex resource names can be specified with the following grammar:
         VXI[board]::VXI logical address[::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
+    pass
 
 
 @Resource.register(constants.InterfaceType.vxi, 'MEMACC')
@@ -48,5 +55,8 @@ class VXIMemory(RegisterBasedResource):
     More complex resource names can be specified with the following grammar:
         VXI[board]::MEMACC
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
+    pass

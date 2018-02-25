@@ -11,7 +11,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import time
 
@@ -22,6 +23,7 @@ from .messagebased import MessageBasedResource, ControlRenMixin
 
 class _GPIBMixin(ControlRenMixin):
     """Common attributes and methods of GPIB Instr and Interface.
+
     """
 
     def send_command(self, data):
@@ -33,34 +35,42 @@ class _GPIBMixin(ControlRenMixin):
         :type data: bytes
         :return: Number of written bytes, return value of the library call.
         :rtype: int, VISAStatus
+
         """
         return self.visalib.gpib_command(self.session, data)
 
     def control_atn(self, mode):
-        """Specifies the state of the ATN line and the local active controller state.
+        """Specifies the state of the ATN line and the local active controller
+        state.
 
         Corresponds to viGpibControlATN function of the VISA library.
 
-        :param mode: Specifies the state of the ATN line and optionally the local active controller state.
-                     (Constants.GPIB_ATN*)
+        :param mode: Specifies the state of the ATN line and optionally the
+                     local active controller state. (Constants.GPIB_ATN*)
         :return: return value of the library call.
         :rtype: VISAStatus
+
         """
         return self.visalib.gpib_control_atn(self.session, mode)
 
     def pass_control(self, primary_address, secondary_address):
-        """Tell the GPIB device at the specified address to become controller in charge (CIC).
+        """Tell the GPIB device at the specified address to become controller
+        in charge (CIC).
 
         Corresponds to viGpibPassControl function of the VISA library.
 
-        :param primary_address: Primary address of the GPIB device to which you want to pass control.
-        :param secondary_address: Secondary address of the targeted GPIB device.
-                                  If the targeted device does not have a secondary address,
-                                  this parameter should contain the value Constants.NO_SEC_ADDR.
+        :param primary_address: Primary address of the GPIB device to which you
+                                want to pass control.
+        :param secondary_address: Secondary address of the targeted GPIB device
+                                  If the targeted device does not have a
+                                  secondary address, this parameter should
+                                  contain the value Constants.NO_SEC_ADDR.
         :return: return value of the library call.
         :rtype: VISAStatus
+
         """
-        return self.visalib.gpib_pass_control(self.session, primary_address, secondary_address)
+        return self.visalib.gpib_pass_control(self.session, primary_address,
+                                              secondary_address)
 
     def send_ifc(self):
         """Pulse the interface clear line (IFC) for at least 100 microseconds.
@@ -69,6 +79,7 @@ class _GPIBMixin(ControlRenMixin):
 
         :return: return value of the library call.
         :rtype: VISAStatus
+
         """
         return self.visalib.gpib_send_ifc(self.session)
 
@@ -80,7 +91,8 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
     More complex resource names can be specified with the following grammar:
         GPIB[board]::primary address[::secondary address][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
     def wait_for_srq(self, timeout=25000):
@@ -104,11 +116,13 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
             if timeout is None:
                 adjusted_timeout = constants.VI_TMO_INFINITE
             else:
-                adjusted_timeout = int((starting_time + timeout/1e3 - time.clock())*1e3)
+                adjusted_timeout = int((starting_time + timeout/1e3 -
+                                        time.clock())*1e3)
                 if adjusted_timeout < 0:
                     adjusted_timeout = 0
 
-            self.wait_on_event(constants.VI_EVENT_SERVICE_REQ, adjusted_timeout)
+            self.wait_on_event(constants.VI_EVENT_SERVICE_REQ,
+                               adjusted_timeout)
             if self.stb & 0x40:
                 break
 
@@ -122,7 +136,9 @@ class GPIBInterface(_GPIBMixin, Resource):
     More complex resource names can be specified with the following grammar:
         GPIB[board]::INTFC
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     def group_execute_trigger(self, *resources):
@@ -136,7 +152,8 @@ class GPIBInterface(_GPIBMixin, Resource):
         if not self.is_controller_in_charge:
             self.send_ifc()
 
-        command = [0x40, 0x20+31, ] # broadcast TAD#0 and "UNL" (don't listen) to all devices
+        # broadcast TAD#0 and "UNL" (don't listen) to all devices
+        command = [0x40, 0x20+31, ]
 
         for resource in resources:
             # tell device GPIB::11 to listen

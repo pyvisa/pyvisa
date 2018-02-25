@@ -50,7 +50,8 @@ def _use_numpy_routines(container):
 
 
 def read_user_library_path():
-    """Return the library path stored in one of the following configuration files:
+    """Return the library path stored in one of the following configuration
+    files.
 
         <sys prefix>/share/pyvisa/.pyvisarc
         ~/.pyvisarc
@@ -107,7 +108,7 @@ class LibraryPath(str):
         if self._arch is None:
             try:
                 self._arch = get_arch(self.path)
-            except:
+            except Exception:
                 self._arch = tuple()
 
         return self._arch

@@ -9,14 +9,15 @@
 
     All data types that are defined by VPP-4.3.2.
 
-    The module exports all data types including the pointer and array types.  This
-    means "ViUInt32" and such.
+    The module exports all data types including the pointer and array types.
+    This means "ViUInt32" and such.
 
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import ctypes as _ctypes
 
@@ -28,6 +29,7 @@ from .cthelper import PYTHON3, FUNCTYPE
 # Remark: The pointer and probably also the array variants are of no
 # significance in Python because there is no native call-by-reference.
 # However, as long as I'm not fully sure about this, they won't hurt.
+
 
 def _type_pair(ctypes_type):
     return ctypes_type, _ctypes.POINTER(ctypes_type)
@@ -105,8 +107,8 @@ ViARsrc = ViAString
 
 ViKeyId, ViPKeyId = ViString, ViPString
 
-ViStatus, ViPStatus, ViAStatus    = _type_triplet(ViInt32)
-ViVersion, ViPVersion, ViAVersion = _type_triplet(ViUInt32)
+ViStatus, ViPStatus, ViAStatus     = _type_triplet(ViInt32)
+ViVersion, ViPVersion, ViAVersion  = _type_triplet(ViUInt32)
 _ViObject, ViPObject, ViAObject    = _type_triplet(ViUInt32)
 _ViSession, ViPSession, ViASession = _type_triplet(ViUInt32)
 
@@ -116,7 +118,8 @@ class ViObject(_ViObject):
         @classmethod
         def from_param(cls, obj):
             if obj is None:
-                raise ValueError('Session cannot be None. The resource might be closed.')
+                raise ValueError('Session cannot be None. '
+                                 'The resource might be closed.')
             return _ViObject.from_param(obj)
 
 
@@ -135,9 +138,9 @@ ViAccessMode, ViPAccessMode = _type_pair(ViUInt32)
 ViBusAddress, ViPBusAddress = _type_pair(ViUInt32)
 ViBusAddress64, ViPBusAddress64 = _type_pair(ViUInt64)
 
-ViBusSize     = ViUInt32
+ViBusSize = ViUInt32
 
-ViAttrState, ViPAttrState   = _type_pair(ViUInt32)
+ViAttrState, ViPAttrState = _type_pair(ViUInt32)
 
 # The following is weird, taken from news:zn2ek2w2.fsf@python.net
 ViVAList      = _ctypes.POINTER(_ctypes.c_char)
@@ -149,9 +152,9 @@ ViAAttr       = ViPAttr
 
 ViEventFilter = ViUInt32
 
-ViFindList, ViPFindList     = _type_pair(ViObject)
-ViEvent, ViPEvent           = _type_pair(ViObject)
-ViJobId, ViPJobId           = _type_pair(ViUInt32)
+ViFindList, ViPFindList = _type_pair(ViObject)
+ViEvent, ViPEvent       = _type_pair(ViObject)
+ViJobId, ViPJobId       = _type_pair(ViUInt32)
 
 # Class of callback functions for event handling, first type is result type
 ViHndlr = FUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent, ViAddr)

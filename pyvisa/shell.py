@@ -12,7 +12,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import cmd
 import sys
@@ -21,6 +22,9 @@ from .compat import input
 from . import ResourceManager, attributes, constants, VisaIOError
 from .thirdparty import prettytable
 
+NS_ATTR_STATE = constants.StatusCode.error_nonsupported_attribute_state
+
+
 if sys.platform == 'darwin':
 
     class Cmd(cmd.Cmd):
@@ -28,8 +32,8 @@ if sys.platform == 'darwin':
         # This has been patched to enable autocompletion on Mac OSX
         def cmdloop(self, intro=None):
             """Repeatedly issue a prompt, accept input, parse an initial prefix
-            off the received input, and dispatch to action methods, passing them
-            the remainder of the line as argument.
+            off the received input, and dispatch to action methods, passing
+            them the remainder of the line as argument.
             """
 
             self.preloop()
@@ -48,7 +52,8 @@ if sys.platform == 'darwin':
                         readline.parse_and_bind('bind %s rl_complete' % (key,))
                     else:
                         # readline linked to the real readline
-                        readline.parse_and_bind(self.completekey + ': complete')
+                        readline.parse_and_bind(self.completekey +
+                                                ': complete')
 
                 except ImportError:
                     pass
@@ -143,7 +148,8 @@ class VisaShell(Cmd):
             return
 
         if self.current:
-            print('You can only open one resource at a time. Please close the current one first.')
+            print('You can only open one resource at a time. '
+                  'Please close the current one first.')
             return
 
         if args.isdigit():
@@ -155,9 +161,11 @@ class VisaShell(Cmd):
 
         try:
             self.current = self.resource_manager.open_resource(args)
-            print('{} has been opened.\n'
-                  'You can talk to the device using "write", "read" or "query".\n'
-                  'The default end of message is added to each message.'.format(args))
+            print(('{} has been opened.\n'
+                   'You can talk to the device using "write", "read" or '
+                   '"query".\n'
+                   'The default end of message is added to each message.'
+                   ).format(args))
 
             self.py_attr = []
             self.vi_attr = []
@@ -173,8 +181,10 @@ class VisaShell(Cmd):
     def complete_open(self, text, line, begidx, endidx):
         if not self.resources:
             self.do_list('do not print')
-        return [item[0] for item in self.resources if item[0].startswith(text)] + \
-               [item[1] for item in self.resources if item[1] and item[1].startswith(text)]
+        return ([item[0] for item in self.resources
+                 if item[0].startswith(text)] +
+                [item[1] for item in self.resources
+                 if item[1] and item[1].startswith(text)])
 
     def do_close(self, args):
         """Close resource in use."""
@@ -252,7 +262,7 @@ class VisaShell(Cmd):
                 print('Timeout: {}ms'.format(self.current.timeout))
             except Exception as e:
                 print(e)
-        else:        
+        else:
             args = args.split(' ')
             try:
                 self.current.timeout = float(args[0])
@@ -261,7 +271,8 @@ class VisaShell(Cmd):
                 print(e)
 
     def print_attribute_list(self):
-        p = prettytable.PrettyTable(('VISA name', 'Constant', 'Python name', 'val'))
+        p = prettytable.PrettyTable(('VISA name', 'Constant', 'Python name',
+                                     'val'))
         for attr in getattr(self.current, 'visa_attributes_classes', ()):
             try:
                 val = self.current.get_visa_attribute(attr.attribute_id)
@@ -304,13 +315,15 @@ class VisaShell(Cmd):
         args = args.split(' ')
 
         if len(args) > 2:
-            print('Invalid syntax, use `attr <name>` to get; or `attr <name> <value>` to set')
+            print('Invalid syntax, use `attr <name>` to get; '
+                  'or `attr <name> <value>` to set')
         elif len(args) == 1:
             # Get
             attr_name = args[0]
             if attr_name.startswith('VI_'):
                 try:
-                    print(self.current.get_visa_attribute(getattr(constants, attr_name)))
+                    print(self.current.get_visa_attribute(getattr(constants,
+                                                                  attr_name)))
                 except Exception as e:
                     print(e)
             else:
@@ -332,14 +345,16 @@ class VisaShell(Cmd):
                         elif attr_state == 'False':
                             attr_state = False
                         else:
-                            retcode = constants.StatusCode.error_nonsupported_attribute_state
-                    elif datatype in ['ViUInt8', 'ViUInt16', 'ViUInt32', 'ViInt8', 'ViInt16', 'ViInt32']:
+                            retcode = NS_ATTR_STATE
+                    elif datatype in ['ViUInt8', 'ViUInt16', 'ViUInt32',
+                                      'ViInt8', 'ViInt16', 'ViInt32']:
                         try:
                             attr_state = int(attr_state)
                         except ValueError:
-                            retcode = constants.StatusCode.error_nonsupported_attribute_state
+                            retcode = NS_ATTR_STATE
                     if not retcode:
-                        retcode = self.current.set_visa_attribute(attributeId, attr_state)
+                        retcode = self.current.set_visa_attribute(attributeId,
+                                                                  attr_state)
                     if retcode:
                         print('Error {}'.format(str(retcode)))
                     else:
@@ -347,7 +362,8 @@ class VisaShell(Cmd):
                 except Exception as e:
                     print(e)
             else:
-                print('Setting Resource Attributes by python name is not yet supported.')
+                print('Setting Resource Attributes by python name '
+                      'is not yet supported.')
                 return
                 try:
                     print(getattr(self.current, attr_name))
@@ -363,7 +379,7 @@ class VisaShell(Cmd):
         """Get or set termination character for resource in use.
         <termchar> can be one of: CR, LF, CRLF, NUL or None.
         None is used to disable termination character
-        
+
         Get termination character:
 
             termchar
@@ -382,7 +398,8 @@ class VisaShell(Cmd):
 
         if not args:
             try:
-                charmap = { u'\r': 'CR', u'\n': 'LF', u'\r\n': 'CRLF', u'\0': 'NUL' }
+                charmap = {u'\r': 'CR', u'\n': 'LF', u'\r\n': 'CRLF',
+                           u'\0': 'NUL'}
                 chr = self.current.read_termination
                 if chr in charmap:
                     chr = charmap[chr]
@@ -392,9 +409,10 @@ class VisaShell(Cmd):
                 print('Termchar read: {} write: {}'.format(chr, chw))
             except Exception as e:
                 print(e)
-        else:        
+        else:
             args = args.split(' ')
-            charmap = { 'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0', 'None': None }
+            charmap = {'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n',
+                       'NUL': u'\0', 'None': None}
             chr = args[0]
             chw = args[0 if len(args) == 1 else 1]
             if chr in charmap and chw in charmap:
@@ -425,4 +443,3 @@ class VisaShell(Cmd):
 
 def main(library_path=''):
     VisaShell(library_path).cmdloop()
-

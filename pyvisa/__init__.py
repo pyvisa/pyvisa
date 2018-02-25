@@ -12,7 +12,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import logging
 import pkg_resources
@@ -27,7 +28,8 @@ def log_to_screen(level=logging.DEBUG):
     ch = logging.StreamHandler()
     ch.setLevel(level)
 
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s -'
+                                  '%(levelname)s - %(message)s')
 
     ch.setFormatter(formatter)
 
@@ -37,9 +39,10 @@ def log_to_screen(level=logging.DEBUG):
 __version__ = "unknown"
 try:                # pragma: no cover
     __version__ = pkg_resources.get_distribution('pyvisa').version
-except:             # pragma: no cover
-    pass  # we seem to have a local copy without any repository control or installed without setuptools
-          # so the reported version will be __unknown__
+except Exception:             # pragma: no cover
+    # we seem to have a local copy without any repository control or installed
+    # without setuptools so the reported version will be __unknown__
+    pass
 
 
 from .highlevel import ResourceManager

@@ -11,7 +11,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import logging
 import warnings
@@ -48,9 +49,9 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
     """High level NI-VISA Library wrapper using ctypes.
 
     The easiest way to instantiate the library is to let `pyvisa` find the
-    right one for you. This looks first in your configuration file (~/.pyvisarc).
-    If it fails, it uses `ctypes.util.find_library` to try to locate a library
-    in a way similar to what the compiler does:
+    right one for you. This looks first in your configuration file
+    (~/.pyvisarc). If it fails, it uses `ctypes.util.find_library` to try to
+    locate a library in a way similar to what the compiler does:
 
        >>> visa_library = NIVisaLibrary()
 
@@ -72,7 +73,8 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
 
         user_lib = read_user_library_path()
         tmp = [find_library(library_path)
-               for library_path in ('visa', 'visa32', 'visa32.dll', 'visa64', 'visa64.dll')]
+               for library_path in ('visa', 'visa32', 'visa32.dll',
+                                    'visa64', 'visa64.dll')]
 
         tmp = [LibraryPath(library_path)
                for library_path in set(tmp)
@@ -107,14 +109,21 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
             try:
                 lib = NIVisaLibrary(visalib)
                 sess, _ = lib.open_default_resource_manager()
-                nfo['Vendor'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_MANF_NAME)[0])
-                nfo['Impl. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_IMPL_VERSION)[0])
-                nfo['Spec. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_SPEC_VERSION)[0])
+                nfo['Vendor'] = str(
+                    lib.get_attribute(sess,
+                                      constants.VI_ATTR_RSRC_MANF_NAME)[0])
+                nfo['Impl. Version'] = str(
+                    lib.get_attribute(sess,
+                                      constants.VI_ATTR_RSRC_IMPL_VERSION)[0])
+                nfo['Spec. Version'] = str(
+                    lib.get_attribute(sess,
+                                      constants.VI_ATTR_RSRC_SPEC_VERSION)[0])
                 lib.close(sess)
             except Exception as e:
                 e = str(e)
                 if 'No matching architecture' in e:
-                    nfo['Could not get more info'] = 'Interpreter and library have different bitness.'
+                    nfo['Could not get more info'] =\
+                        'Interpreter and library have different bitness.'
                 else:
                     nfo['Could not get more info'] = str(e).split('\n')
 
@@ -161,15 +170,16 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
 
         self._last_status = ret_value
 
-        # The first argument of almost all registered visa functions is a session.
-        # We store the error code per session
+        # The first argument of almost all registered visa functions is a
+        # session. We store the error code per session
         session = None
         if func.__name__ not in ('viFindNext', ):
             try:
                 session = arguments[0]
             except KeyError:
                 raise Exception('Function %r does not seem to be a valid '
-                                'visa function (len args %d)' % (func, len(arguments)))
+                                'visa function (len args %d)' %
+                                (func, len(arguments)))
 
             # Functions that use the first parameter to get a session value.
             if func.__name__ in ('viOpenDefaultRM', ):
@@ -179,16 +189,20 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
             if isinstance(session, integer_types):
                 self._last_status_in_session[session] = ret_value
             else:
-                # Functions that might or might have a session in the first argument.
-                if func.__name__ not in ('viClose', 'viGetAttribute', 'viSetAttribute', 'viStatusDesc'):
+                # Functions that might or might have a session in the first
+                # argument.
+                if func.__name__ not in ('viClose', 'viGetAttribute',
+                                         'viSetAttribute', 'viStatusDesc'):
                     raise Exception('Function %r does not seem to be a valid '
-                                    'visa function (type args[0] %r)' % (func, type(session)))
+                                    'visa function (type args[0] %r)' %
+                                    (func, type(session)))
 
         if ret_value < 0:
             raise errors.VisaIOError(ret_value)
 
         if ret_value in self.issue_warning_on:
-            if session and ret_value not in self._ignore_warning_in_session[session]:
+            if (session and
+                    ret_value not in self._ignore_warning_in_session[session]):
                 warnings.warn(errors.VisaIOWarning(ret_value), stacklevel=2)
 
         return ret_value
@@ -202,7 +216,8 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
         resources = []
 
         try:
-            find_list, return_counter, instrument_description, err = self.find_resources(session, query)
+            find_list, return_counter, instrument_description, err =\
+                self.find_resources(session, query)
         except errors.VisaIOError as e:
             if e.error_code == constants.StatusCode.error_resource_not_found:
                 return tuple()
@@ -215,4 +230,3 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
         self.close(find_list)
 
         return tuple(resource for resource in resources)
-

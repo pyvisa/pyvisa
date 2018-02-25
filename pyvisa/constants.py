@@ -6,8 +6,8 @@
     VISA VPP-4.3 constants (VPP-4.3.2 spec, section 3).
 
     Makes all "completion and error codes", "attribute values", "event type
-    values", and "values and ranges" defined in the VISA specification VPP-4.3.2,
-    section 3, available as variable values.
+    values", and "values and ranges" defined in the VISA specification
+    VPP-4.3.2, section 3, available as variable values.
 
     The module exports the values under the original, all-uppercase names.
 
@@ -17,7 +17,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import enum
 
@@ -496,19 +497,19 @@ VI_VXI_CLASS_MESSAGE         = 2
 VI_VXI_CLASS_REGISTER        = 3
 VI_VXI_CLASS_OTHER           = 4
 
-VI_PXI_LBUS_UNKNOWN = -1
-VI_PXI_LBUS_NONE    =  0
-VI_PXI_LBUS_STAR_TRIG_BUS_0 = 1000
-VI_PXI_LBUS_STAR_TRIG_BUS_1 = 1001
-VI_PXI_LBUS_STAR_TRIG_BUS_2 = 1002
-VI_PXI_LBUS_STAR_TRIG_BUS_3 = 1003
-VI_PXI_LBUS_STAR_TRIG_BUS_4 = 1004
-VI_PXI_LBUS_STAR_TRIG_BUS_5 = 1005
-VI_PXI_LBUS_STAR_TRIG_BUS_6 = 1006
-VI_PXI_LBUS_STAR_TRIG_BUS_7 = 1007
-VI_PXI_LBUS_STAR_TRIG_BUS_8 = 1008
-VI_PXI_LBUS_STAR_TRIG_BUS_9 = 1009
-VI_PXI_STAR_TRIG_CONTROLLER = 1413
+VI_PXI_LBUS_UNKNOWN          = -1
+VI_PXI_LBUS_NONE             =  0
+VI_PXI_LBUS_STAR_TRIG_BUS_0  = 1000
+VI_PXI_LBUS_STAR_TRIG_BUS_1  = 1001
+VI_PXI_LBUS_STAR_TRIG_BUS_2  = 1002
+VI_PXI_LBUS_STAR_TRIG_BUS_3  = 1003
+VI_PXI_LBUS_STAR_TRIG_BUS_4  = 1004
+VI_PXI_LBUS_STAR_TRIG_BUS_5  = 1005
+VI_PXI_LBUS_STAR_TRIG_BUS_6  = 1006
+VI_PXI_LBUS_STAR_TRIG_BUS_7  = 1007
+VI_PXI_LBUS_STAR_TRIG_BUS_8  = 1008
+VI_PXI_LBUS_STAR_TRIG_BUS_9  = 1009
+VI_PXI_STAR_TRIG_CONTROLLER  = 1413
 VI_PXI_LBUS_SCXI = 2000
 
 VI_ATTR_PXI_DEV_NUM         = _to_int(0x3FFF0201)
@@ -554,27 +555,27 @@ VI_ATTR_PXI_RECV_INTR_SEQ   = _to_int(0x3FFF4240)
 VI_ATTR_PXI_RECV_INTR_DATA  = _to_int(0x3FFF4241)
 
 # TODO: What is the value
-VI_ATTR_PXI_MEM_BASE_BARX = None
-VI_ATTR_PXI_MEM_SIZE_BARX = None
-VI_ATTR_PXI_MEM_TYPE_BARX = None
+VI_ATTR_PXI_MEM_BASE_BARX   = None
+VI_ATTR_PXI_MEM_SIZE_BARX   = None
+VI_ATTR_PXI_MEM_TYPE_BARX   = None
 
 
-VI_ATTR_USB_BULK_OUT_PIPE = _to_int(0x3FFF01A2)
-VI_ATTR_USB_BULK_IN_PIPE = _to_int(0x3FFF01A3)
-VI_ATTR_USB_INTR_IN_PIPE = _to_int(0x3FFF01A4)
-VI_ATTR_USB_CLASS = _to_int(0x3FFF01A5)
-VI_ATTR_USB_SUBCLASS = _to_int(0x3FFF01A6)
-VI_ATTR_USB_ALT_SETTING = _to_int(0x3FFF01A8)
-VI_ATTR_USB_END_IN = _to_int(0x3FFF01A9)
-VI_ATTR_USB_NUM_INTFCS = _to_int(0x3FFF01AA)
-VI_ATTR_USB_NUM_PIPES = _to_int(0x3FFF01AB)
+VI_ATTR_USB_BULK_OUT_PIPE   = _to_int(0x3FFF01A2)
+VI_ATTR_USB_BULK_IN_PIPE    = _to_int(0x3FFF01A3)
+VI_ATTR_USB_INTR_IN_PIPE    = _to_int(0x3FFF01A4)
+VI_ATTR_USB_CLASS           = _to_int(0x3FFF01A5)
+VI_ATTR_USB_SUBCLASS        = _to_int(0x3FFF01A6)
+VI_ATTR_USB_ALT_SETTING     = _to_int(0x3FFF01A8)
+VI_ATTR_USB_END_IN          = _to_int(0x3FFF01A9)
+VI_ATTR_USB_NUM_INTFCS      = _to_int(0x3FFF01AA)
+VI_ATTR_USB_NUM_PIPES       = _to_int(0x3FFF01AB)
 VI_ATTR_USB_BULK_OUT_STATUS = _to_int(0x3FFF01AC)
-VI_ATTR_USB_BULK_IN_STATUS = _to_int(0x3FFF01AD)
-VI_ATTR_USB_INTR_IN_STATUS = _to_int(0x3FFF01AE)
-VI_ATTR_USB_CTRL_PIPE = _to_int(0x3FFF01B0)
-VI_USB_PIPE_STATE_UNKNOWN = -1
-VI_USB_PIPE_READY = 0
-VI_USB_PIPE_STALLED = 1
+VI_ATTR_USB_BULK_IN_STATUS  = _to_int(0x3FFF01AD)
+VI_ATTR_USB_INTR_IN_STATUS  = _to_int(0x3FFF01AE)
+VI_ATTR_USB_CTRL_PIPE       = _to_int(0x3FFF01B0)
+VI_USB_PIPE_STATE_UNKNOWN   = -1
+VI_USB_PIPE_READY           = 0
+VI_USB_PIPE_STALLED         = 1
 
 
 # From VI_ATTR_USB_END_IN
@@ -611,6 +612,7 @@ class AccessModes(enum.IntEnum):
 
 class StopBits(enum.IntEnum):
     """The number of stop bits that indicate the end of a frame.
+
     """
     one = VI_ASRL_STOP_ONE
     one_and_a_half = VI_ASRL_STOP_ONE5
@@ -618,7 +620,9 @@ class StopBits(enum.IntEnum):
 
 
 class Parity(enum.IntEnum):
-    """The parity types to use with every frame transmitted and received on a serial session.
+    """The parity types to use with every frame transmitted and received on a
+    serial session.
+
     """
     none = VI_ASRL_PAR_NONE
     odd = VI_ASRL_PAR_ODD
@@ -629,6 +633,7 @@ class Parity(enum.IntEnum):
 
 class SerialTermination(enum.IntEnum):
     """The available methods for terminating a serial transfer.
+
     """
 
     #: The transfer terminates when all requested data is transferred
@@ -658,7 +663,8 @@ class InterfaceType(enum.IntEnum):
     #: GPIB Interface.
     gpib = VI_INTF_GPIB
 
-    #: VXI (VME eXtensions for Instrumentation), VME, MXI (Multisystem eXtension Interface).
+    #: VXI (VME eXtensions for Instrumentation), VME, MXI (Multisystem
+    #: eXtension Interface).
     vxi = VI_INTF_VXI
 
     #: GPIB VXI (VME eXtensions for Instrumentation).
@@ -732,7 +738,8 @@ class EventMechanism(enum.IntEnum):
 
 # Note that enum.IntEnum fails here for python2:
 #  OverflowError: Python int too large to convert to C long
-# so use LongEnum instead (some values are too large, and ViEventType is unsigned)
+# so use LongEnum instead (some values are too large, and ViEventType is
+# unsigned)
 class EventType(LongEnum):
     """The available event types for event handling.
     """
@@ -771,13 +778,15 @@ class StatusCode(enum.IntEnum):
     #: Bus error occurred during transfer.
     error_bus_error = VI_ERROR_BERR
 
-    #: Unable to deallocate the previously allocated data structures corresponding to this session or object reference.
+    #: Unable to deallocate the previously allocated data structures
+    #: corresponding to this session or object reference.
     error_closing_failed = VI_ERROR_CLOSING_FAILED
 
     #: The connection for the specified session has been lost.
     error_connection_lost = VI_ERROR_CONN_LOST
 
-    #: An error occurred while trying to open the specified file. Possible causes include an invalid path or lack of access rights.
+    #: An error occurred while trying to open the specified file. Possible
+    #: causes include an invalid path or lack of access rights.
     error_file_access = VI_ERROR_FILE_ACCESS
 
     #: An error occurred while performing I/O on the specified file.
@@ -786,13 +795,15 @@ class StatusCode(enum.IntEnum):
     #: A handler is not currently installed for the specified event.
     error_handler_not_installed = VI_ERROR_HNDLR_NINSTALLED
 
-    #: Unable to queue the asynchronous operation because there is already an operation in progress.
+    #: Unable to queue the asynchronous operation because there is already an
+    #: operation in progress.
     error_in_progress = VI_ERROR_IN_PROGRESS
 
     #: Device reported an input protocol error during transfer.
     error_input_protocol_violation = VI_ERROR_INP_PROT_VIOL
 
-    #: The interface type is valid but the specified interface number is not configured.
+    #: The interface type is valid but the specified interface number is not
+    #: configured.
     error_interface_number_not_configured = VI_ERROR_INTF_NUM_NCONFIG
 
     #: An interrupt is still pending from a previous call.
@@ -861,7 +872,8 @@ class StatusCode(enum.IntEnum):
     #: Invalid resource reference specified. Parsing error.
     error_invalid_resource_name = VI_ERROR_INV_RSRC_NAME
 
-    #: Unable to start operation because setup is invalid due to inconsistent state of properties.
+    #: Unable to start operation because setup is invalid due to inconsistent
+    #: state of properties.
     error_invalid_setup = VI_ERROR_INV_SETUP
 
     #: Invalid size of window specified.
@@ -891,19 +903,24 @@ class StatusCode(enum.IntEnum):
     #: The specified operation is unimplemented.
     error_nonimplemented_operation = VI_ERROR_NIMPL_OPER
 
-    #: The specified attribute is not defined or supported by the referenced session, event, or find list.
+    #: The specified attribute is not defined or supported by the referenced
+    #: session, event, or find list.
     error_nonsupported_attribute = VI_ERROR_NSUP_ATTR
 
-    #: The specified state of the attribute is not valid or is not supported as defined by the session, event, or find list.
+    #: The specified state of the attribute is not valid or is not supported as
+    #: defined by the session, event, or find list.
     error_nonsupported_attribute_state = VI_ERROR_NSUP_ATTR_STATE
 
     #: A format specifier in the format string is not supported.
     error_nonsupported_format = VI_ERROR_NSUP_FMT
 
-    #: The interface cannot generate an interrupt on the requested level or with the requested statusID value.
+    #: The interface cannot generate an interrupt on the requested level or
+    #: with the requested statusID value.
     error_nonsupported_interrupt = VI_ERROR_NSUP_INTR
 
-    #: The specified trigger source line (trigSrc) or destination line (trigDest) is not supported by this VISA implementation, or the combination of lines is not a valid mapping.
+    #: The specified trigger source line (trigSrc) or destination line
+    #: (trigDest) is not supported by this VISA implementation, or the
+    #: combination of lines is not a valid mapping.
     error_nonsupported_line = VI_ERROR_NSUP_LINE
 
     #: The specified mechanism is not supported for the specified event type.
@@ -915,7 +932,8 @@ class StatusCode(enum.IntEnum):
     #: Specified offset is not accessible from this hardware.
     error_nonsupported_offset = VI_ERROR_NSUP_OFFSET
 
-    #: The specified offset is not properly aligned for the access width of the operation.
+    #: The specified offset is not properly aligned for the access width of the
+    #: operation.
     error_nonsupported_offset_alignment = VI_ERROR_NSUP_OFFSET
 
     #: The session or object reference does not support this operation.
@@ -930,10 +948,12 @@ class StatusCode(enum.IntEnum):
     #: Access to the remote machine is denied.
     error_no_permission = VI_ERROR_NPERMISSION
 
-    #: The interface associated with this session is not currently the Controller-in-Charge.
+    #: The interface associated with this session is not currently the
+    #: Controller-in-Charge.
     error_not_cic = VI_ERROR_NCIC
 
-    #: The session must be enabled for events of the specified type in order to receive them.
+    #: The session must be enabled for events of the specified type in order to
+    #: receive them.
     error_not_enabled = VI_ERROR_NENABLED
 
     #: The interface associated with this session is not the system controller.
@@ -945,7 +965,8 @@ class StatusCode(enum.IntEnum):
     #: Unable to queue asynchronous operation.
     error_queue_error = VI_ERROR_QUEUE_ERROR
 
-    #: The event queue for the specified type has overflowed, usually due to not closing previous events.
+    #: The event queue for the specified type has overflowed, usually due to
+    #: not closing previous events.
     error_queue_overflow = VI_ERROR_QUEUE_OVERFLOW
 
     #: Violation of raw read protocol occurred during transfer.
@@ -957,10 +978,12 @@ class StatusCode(enum.IntEnum):
     #: The resource is valid, but VISA cannot currently access it.
     error_resource_busy = VI_ERROR_RSRC_BUSY
 
-    #: Specified type of lock cannot be obtained or specified operation cannot be performed because the resource is locked.
+    #: Specified type of lock cannot be obtained or specified operation cannot
+    #: be performed because the resource is locked.
     error_resource_locked = VI_ERROR_RSRC_LOCKED
 
-    #: Insufficient location information, or the device or resource is not present in the system.
+    #: Insufficient location information, or the device or resource is not
+    #: present in the system.
     error_resource_not_found = VI_ERROR_RSRC_NFOUND
 
     #: A previous response is still pending, causing a multiple query error.
@@ -969,7 +992,8 @@ class StatusCode(enum.IntEnum):
     #: A framing error occurred during transfer.
     error_serial_framing = VI_ERROR_ASRL_FRAMING
 
-    #: An overrun error occurred during transfer. A character was not read from the hardware before the next character arrived.
+    #: An overrun error occurred during transfer. A character was not read from
+    #: the hardware before the next character arrived.
     error_serial_overrun = VI_ERROR_ASRL_OVERRUN
 
     #: A parity error occurred during transfer.
@@ -987,10 +1011,12 @@ class StatusCode(enum.IntEnum):
     #: Timeout expired before operation completed.
     error_timeout = VI_ERROR_TMO
 
-    #: The path from the trigger source line (trigSrc) to the destination line (trigDest) is not currently mapped.
+    #: The path from the trigger source line (trigSrc) to the destination line
+    #: (trigDest) is not currently mapped.
     error_trigger_not_mapped = VI_ERROR_TRIG_NMAPPED
 
-    #: A specified user buffer is not valid or cannot be accessed for the required size.
+    #: A specified user buffer is not valid or cannot be accessed for the
+    #: required size.
     error_user_buffer = VI_ERROR_USER_BUF
 
     #: The specified session currently contains a mapped window.
@@ -1002,31 +1028,39 @@ class StatusCode(enum.IntEnum):
     #: Operation completed successfully.
     success = VI_SUCCESS
 
-    #: Session opened successfully, but the device at the specified address is not responding.
+    #: Session opened successfully, but the device at the specified address is
+    #: not responding.
     success_device_not_present = VI_SUCCESS_DEV_NPRESENT
 
-    #: Specified event is already disabled for at least one of the specified mechanisms.
+    #: Specified event is already disabled for at least one of the specified
+    #: mechanisms.
     success_event_already_disabled = VI_SUCCESS_EVENT_DIS
 
-    #: Specified event is already enabled for at least one of the specified mechanisms.
+    #: Specified event is already enabled for at least one of the specified
+    #: mechanisms.
     success_event_already_enabled = VI_SUCCESS_EVENT_EN
 
     #: The number of bytes read is equal to the input count.
     success_max_count_read = VI_SUCCESS_MAX_CNT
 
-    #: Operation completed successfully, and this session has nested exclusive locks.
+    #: Operation completed successfully, and this session has nested exclusive
+    #: locks.
     success_nested_exclusive = VI_SUCCESS_NESTED_EXCLUSIVE
 
-    #: Operation completed successfully, and this session has nested shared locks.
+    #: Operation completed successfully, and this session has nested shared
+    #: locks.
     success_nested_shared = VI_SUCCESS_NESTED_SHARED
 
-    #: Event handled successfully. Do not invoke any other handlers on this session for this event.
+    #: Event handled successfully. Do not invoke any other handlers on this
+    #: session for this event.
     success_no_more_handler_calls_in_chain = VI_SUCCESS_NCHAIN
 
     #: Operation completed successfully, but the queue was already empty.
     success_queue_already_empty = VI_SUCCESS_QUEUE_EMPTY
 
-    #: Wait terminated successfully on receipt of an event notification. There is still at least one more event occurrence of the requested type(s) available for this session.
+    #: Wait terminated successfully on receipt of an event notification. There
+    #: is still at least one more event occurrence of the requested type(s)
+    #: available for this session.
     success_queue_not_empty = VI_SUCCESS_QUEUE_NEMPTY
 
     #: Asynchronous operation request was performed synchronously.
@@ -1035,16 +1069,20 @@ class StatusCode(enum.IntEnum):
     #: The specified termination character was read.
     success_termination_character_read = VI_SUCCESS_TERM_CHAR
 
-    #: The path from the trigger source line (trigSrc) to the destination line (trigDest) is already mapped.
+    #: The path from the trigger source line (trigSrc) to the destination line
+    #: (trigDest) is already mapped.
     success_trigger_already_mapped = VI_SUCCESS_TRIG_MAPPED
 
-    #: The specified configuration either does not exist or could not be loaded. The VISA-specified defaults are used.
+    #: The specified configuration either does not exist or could not be
+    #: loaded. The VISA-specified defaults are used.
     warning_configuration_not_loaded = VI_WARN_CONFIG_NLOADED
 
-    #: The operation succeeded, but a lower level driver did not implement the extended functionality.
+    #: The operation succeeded, but a lower level driver did not implement the
+    #: extended functionality.
     warning_ext_function_not_implemented = VI_WARN_EXT_FUNC_NIMPL
 
-    #: Although the specified state of the attribute is valid, it is not supported by this resource implementation.
+    #: Although the specified state of the attribute is valid, it is not
+    #: supported by this resource implementation.
     warning_nonsupported_attribute_state = VI_WARN_NSUP_ATTR_STATE
 
     #: The specified buffer is not supported.
@@ -1053,7 +1091,8 @@ class StatusCode(enum.IntEnum):
     #: The specified object reference is uninitialized.
     warning_null_object = VI_WARN_NULL_OBJECT
 
-    #: VISA received more event information of the specified type than the configured queue size could hold.
+    #: VISA received more event information of the specified type than the
+    #: configured queue size could hold.
     warning_queue_overflow = VI_WARN_QUEUE_OVERFLOW
 
     #: The status code passed to the operation could not be interpreted.

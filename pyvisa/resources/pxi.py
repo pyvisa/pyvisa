@@ -11,7 +11,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 from .. import constants
 
@@ -28,9 +29,12 @@ class PXIInstrument(RegisterBasedResource):
     or:
         PXI[interface]::bus-device[.function][::INSTR]
     or:
-        PXI[interface]::CHASSISchassis number::SLOTslot number[::FUNCfunction][::INSTR]
+        PXI[interface]::CHASSISchassis number::SLOTslot
+        number[::FUNCfunction][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
 
@@ -38,5 +42,7 @@ class PXIInstrument(RegisterBasedResource):
 class PXIMemory(RegisterBasedResource):
     """Communicates with to devices of type PXI[interface]::MEMACC
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """

@@ -9,7 +9,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 
 import re
 import contextlib
@@ -56,8 +57,9 @@ class InvalidResourceName(ValueError):
     @classmethod
     def subclass_notfound(cls, interface_type_resource_class,
                           resource_name=None):
-        """Exception used when the subclass for a given interface type / resource class pair
-        cannot be found.
+        """Exception used when the subclass for a given interface type /
+        resource class pair cannot be found.
+
         """
 
         msg = "Parser for not found (%s)." % interface_type_resource_class
@@ -69,10 +71,13 @@ class InvalidResourceName(ValueError):
 
     @classmethod
     def rc_notfound(cls, interface_type, resource_name=None):
-        """Exception used when no resource class is provided and no default is found.
+        """Exception used when no resource class is provided and no default is
+        found.
+
         """
 
-        msg = "Resource class for %s not provided and default not found." % interface_type
+        msg = ("Resource class for %s not provided and"
+               "default not found." % interface_type)
 
         if resource_name:
             msg = "Could not parse '%s'. %s" % (resource_name, msg)
@@ -131,8 +136,9 @@ class ResourceName(object):
     @property
     def interface_type_const(self):
         try:
-            return getattr(constants.InterfaceType, self.interface_type.lower())
-        except:
+            return getattr(constants.InterfaceType,
+                           self.interface_type.lower())
+        except Exception:
             return constants.InterfaceType.unknown
 
     @classmethod
@@ -314,7 +320,8 @@ def build_rn_class(interface_type, resource_parts, resource_class,
             p, pending = parts[0], parts[1:]
             kwargs = {k: default if p == '' else p}
 
-            # The rest of the parts are consumed when mandatory elements are required.
+            # The rest of the parts are consumed when mandatory elements are
+            # required.
             while len(pending) < len(rp):
                 (k, default), rp = rp[0], rp[1:]
                 if default is None:
@@ -343,8 +350,8 @@ def build_rn_class(interface_type, resource_parts, resource_class,
 
     return register_subclass(_C)
 
-# Build subclasses for each resource
 
+# Build subclasses for each resource
 GPIBInstr = build_rn_class('GPIB',
                            (('board', '0'), ('primary address', None),
                             ('secondary address', constants.VI_NO_SEC_ADDR)),
@@ -460,10 +467,11 @@ def filter(resources, query):
         +           Matches 1 or more occurrences of the preceding character or
                     expression.
 
-        Exp|exp     Matches either the preceding or following expression. The or
-                    operator | matches the entire expression that precedes or
-                    follows it and not just the character that precedes or follows
-                    it. For example, VXI|GPIB means (VXI)|(GPIB), not VX(I|G)PIB.
+        Exp|exp     Matches either the preceding or following expression. The
+                    or operator | matches the entire expression that precedes
+                    or follows it and not just the character that precedes or
+                    follows it. For example, VXI|GPIB means (VXI)|(GPIB),
+                    not VX(I|G)PIB.
 
         (exp)       Grouping characters or expressions.
 
@@ -513,8 +521,8 @@ def filter2(resources, query, open_resource):
     if not optional:
         return filtered
 
-    optional = optional.replace('&&', 'and').replace('||', 'or').replace('!', 'not ')
-    optional = optional.replace('VI_', 'res.VI_')
+    optional = optional.replace('&&', 'and').replace('||', 'or')
+    optional = optional.replace('!', 'not ').replace('VI_', 'res.VI_')
 
     class AttrGetter():
 
@@ -525,27 +533,27 @@ def filter2(resources, query, open_resource):
 
         def __getattr__(self, item):
             if item == 'VI_ATTR_INTF_NUM':
-                   return int(self.parsed.board)
+                return int(self.parsed.board)
             elif item == 'VI_ATTR_MANF_ID':
-                   return self.parsed.manufacturer_id
+                return self.parsed.manufacturer_id
             elif item == 'VI_ATTR_MODEL_CODE':
-                   return self.parsed.model_code
+                return self.parsed.model_code
             elif item == 'VI_ATTR_USB_SERIAL_NUM':
-                   return self.parsed.serial_number
+                return self.parsed.serial_number
             elif item == 'VI_ATTR_USB_INTFC_NUM':
-                   return int(self.parsed.board)
+                return int(self.parsed.board)
             elif item == 'VI_ATTR_TCPIP_ADDR':
-                   return self.parsed.host_address
+                return self.parsed.host_address
             elif item == 'VI_ATTR_TCPIP_DEVICE_NAME':
-                   return self.parsed.lan_device_name
+                return self.parsed.lan_device_name
             elif item == 'VI_ATTR_TCPIP_PORT':
-                   return int(self.parsed.port)
+                return int(self.parsed.port)
             elif item == 'VI_ATTR_INTF_NUM':
-                   return int(self.parsed.board)
+                return int(self.parsed.board)
             elif item == 'VI_ATTR_GPIB_PRIMARY_ADDR':
-                   return int(self.parsed.primary_address)
+                return int(self.parsed.primary_address)
             elif item == 'VI_ATTR_GPIB_SECONDARY_ADDR':
-                   return int(self.parsed.secondary_address)
+                return int(self.parsed.secondary_address)
             elif item == 'VI_ATTR_PXI_CHASSIS':
                 return self.parsed.chassis_number
             elif item == 'VI_ATTR_MAINFRAME_LA':
@@ -568,6 +576,3 @@ def filter2(resources, query, open_resource):
         with open_close(rn) as getter:
             if eval(optional, None, dict(res=getter)):
                 selected.append(rn)
-
-
-
