@@ -41,7 +41,7 @@ class AttributeType(type):
         if not name.startswith('AttrVI_'):
             return
         cls.attribute_id = getattr(constants, cls.visa_name)
-        cls.redoc()
+        if cls.__doc__: cls.redoc()
         if cls.resources is AllSessionTypes:
             AttributesPerResource[AllSessionTypes].add(cls)
         else:
