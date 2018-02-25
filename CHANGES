@@ -2,10 +2,29 @@ PyVISA Changelog
 ================
 
 
-1.9 (unreleased)
+1.9 (2017-02-25)
 ----------------
 
-- Nothing changed yet.
+- Drop support for Python 2.6, 3.2 and 3.3 PR #300
+- add the missing read_binary_values and read_ascii_values (PR #301)
+- deprecate old methods in MessageBased (ask, read_values, query_values,
+  write_values, ask_delay) (PR #301)
+- add support for hp headers in binary data (PR #301)
+- fix encoding issue in write_ascii_values (PR #301)
+- use import to load backend rather than pkgutil.iter_modules. This allows
+  PyVISA to support PyInstaller PR #307
+- improvements to the visa shell: attributes type conversion (PR #299),
+  termchar command (PR #285), timeout command (PR #284),
+  support for non-default backend (PR #283), console script pyvisa-shell
+  (PR #286)
+- improve speed for large data transfer by using bytearray instead of bytes
+  (PR #282)
+- make Resource a context manager closing it. (PR #255)
+- add 64 bits version of registry based functions (PR #278)
+- make exceptions pickable (PR #249)
+- add resource_name to the output of parse_resource_extended (PR #238)
+- fix wait_on_event behavior in case of timeout (PR #234)
+- allow selecting the backend using the PYVISA_LIBRARY env var (PR #195)
 
 
 1.8 (2015-08-24)
@@ -104,7 +123,7 @@ PyVISA Changelog
 - Better debug info for binary libraries.
 - Fixed exceptions formatting
   (thanks Matthew94)
-  
+
 
 
 1.6 (2014-09-28)

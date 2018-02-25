@@ -15,11 +15,9 @@ except ImportError:
     sys.exit(1)
 
 
-import codecs
-
-
 def read(filename):
-    return codecs.open(filename, encoding='utf-8').read()
+    with open(filename, 'r') as f:
+        return f.read()
 
 
 long_description = '\n\n'.join([read('README'),
@@ -33,8 +31,8 @@ if sys.version_info < (3, 4):
     requirements.append('enum34')
 
 setup(name='PyVISA',
-      description='Python VISA bindings for GPIB, RS232, and USB instruments',
-      version='1.9.dev0',
+      description='Python VISA bindings for GPIB, RS232, TCPIP and USB instruments',
+      version='1.9.0',
       long_description=long_description,
       author='Torsten Bronger, Gregor Thalhammer',
       author_email='bronger@physik.rwth-aachen.de',
