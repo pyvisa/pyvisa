@@ -41,7 +41,10 @@ class AttributeType(type):
         if not name.startswith('AttrVI_'):
             return
         cls.attribute_id = getattr(constants, cls.visa_name)
-        cls.redoc()
+        # Check that the docstring are populated before extending them
+        # Cover the case of running with Python with -OO option
+        if cls.__doc__ is not None:
+            cls.redoc()
         if cls.resources is AllSessionTypes:
             AttributesPerResource[AllSessionTypes].add(cls)
         else:
@@ -181,7 +184,7 @@ class RangeAttribute(IntAttribute):
             if not self.values:
                 raise ValueError('%r is an invalid value for attribute %s, '
                                  'should be between %r and %r' % (
-                                                            value, 
+                                                            value,
                                                             self.visa_name,
                                                             self.min_value,
                                                             self.max_value))
@@ -190,7 +193,7 @@ class RangeAttribute(IntAttribute):
                                  'should be between %r and %r or %r' % (
                                                             value,
                                                             self.visa_name,
-                                                            self.min_value, 
+                                                            self.min_value,
                                                             self.max_value,
                                                             self.values))
         return value
