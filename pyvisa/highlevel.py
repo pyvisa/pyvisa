@@ -1559,7 +1559,46 @@ class ResourceManager(object):
     def list_resources(self, query='?*::INSTR'):
         """Returns a tuple of all connected devices matching query.
 
-        :param query: regular expression used to match devices.
+        note: The query uses the VISA Resource Regular Expression syntax - which is not the same 
+              as the Python regular expression syntax. (see below)
+
+            The VISA Resource Regular Expression syntax is defined in the VISA Library specification:
+            http://www.ivifoundation.org/docs/vpp43.pdf
+
+            Symbol      Meaning
+            ----------  ----------
+
+            ?           Matches any one character.
+
+            \           Makes the character that follows it an ordinary character
+                        instead of special character. For example, when a question
+                        mark follows a backslash (\?), it matches the ? character
+                        instead of any one character.
+
+            [list]      Matches any one character from the enclosed list. You can
+                        use a hyphen to match a range of characters.
+
+            [^list]     Matches any character not in the enclosed list. You can use
+                        a hyphen to match a range of characters.
+
+            *           Matches 0 or more occurrences of the preceding character or
+                        expression.
+
+            +           Matches 1 or more occurrences of the preceding character or
+                        expression.
+
+            Exp|exp     Matches either the preceding or following expression. The or
+                        operator | matches the entire expression that precedes or
+                        follows it and not just the character that precedes or follows
+                        it. For example, VXI|GPIB means (VXI)|(GPIB), not VX(I|G)PIB.
+
+            (exp)       Grouping characters or expressions.
+        
+            Thus the default query, '?*::INSTR', matches any sequences of characters ending
+            ending with '::INSTR'.
+        
+        :param query: a VISA Resource Regular Expression used to match devices.
+        
         """
 
         return self.visalib.list_resources(self.session, query)
@@ -1567,8 +1606,11 @@ class ResourceManager(object):
     def list_resources_info(self, query='?*::INSTR'):
         """Returns a dictionary mapping resource names to resource extended
         information of all connected devices matching query.
+        
+        For details of the VISA Resource Regular Expression syntax used in query,
+        refer to list_resources().
 
-        :param query: regular expression used to match devices.
+        :param query: a VISA Resource Regular Expression used to match devices.
         :return: Mapping of resource name to ResourceInfo
         :rtype: dict[str, :class:`pyvisa.highlevel.ResourceInfo`]
         """
