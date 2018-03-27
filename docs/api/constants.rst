@@ -1,9 +1,9 @@
 .. _api_constants:
 
-.. py:module:: pyvisa.constants
-
 Constants module
 ----------------
+
+.. py:module:: pyvisa.constants
 
 Provides user-friendly naming to values used in different functions.
 

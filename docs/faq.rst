@@ -59,9 +59,9 @@ Check that the path provided to the constructor or in the configuration file
 Error: Could not found VISA library
 -----------------------------------
 
-This error occurs when you have not provided a path for the VISA library and PyVISA
-is not able to find it for you. You can solve it by providing the library path to the
-``VisaLibrary`` or ``ResourceManager`` constructor::
+This error occurs when you have not provided a path for the VISA library and 
+PyVISA is not able to find it for you. You can solve it by providing the 
+library path to the ``VisaLibrary`` or ``ResourceManager`` constructor::
 
     >>> visalib = VisaLibrary('/path/to/library')
 
@@ -94,31 +94,34 @@ architecture.
         Error while accessing /usr/local/vxipnp/linux/bin/libvisa.so.7:/usr/local/vxipnp/linux/bin/libvisa.so.7: wrong ELF class: ELFCLASS32
 
 
-First, determine the details of your installation with the help of the following debug command::
+First, determine the details of your installation with the help of the 
+following debug command::
 
     python -m visa info
 
-You will see the 'bitness' of the Python interpreter and at the end you will see the list of VISA
-libraries that PyVISA was able to find.
+You will see the 'bitness' of the Python interpreter and at the end you will 
+see the list of VISA libraries that PyVISA was able to find.
 
 The solution is to:
 
   1. Install and use a VISA library matching your Python 'bitness'
 
-     Download and install it from **National Instruments's VISA**. Run the debug
-     command again to see if the new library was found by PyVISA. If not,
+     Download and install it from **National Instruments's VISA**. Run the 
+     debug command again to see if the new library was found by PyVISA. If not,
      create a configuration file as described in :ref:`configuring`.
 
-     If there is no VISA library with the correct bitness available, try solution 2.
+     If there is no VISA library with the correct bitness available, try 
+     solution 2.
 
 or
 
   2. Install and use a Python matching your VISA library 'bitness'
 
-     In Windows and Linux: Download and install Python with the matching bitness.
-     Run your script again using the new Python
+     In Windows and Linux: Download and install Python with the matching 
+     bitness. Run your script again using the new Python
 
-     In Mac OS X, Python is usually delivered as universal binary (32 and 64 bits).
+     In Mac OS X, Python is usually delivered as universal binary (32 and 
+     64 bits).
 
      You can run it in 32 bit by running::
 
@@ -132,8 +135,8 @@ or
 
         alias python32="arch -i386 python"
 
-     into your .bashrc or .profile or ~/.bash_profile (or whatever file depending
-     on which shell you are using.)
+     into your .bashrc or .profile or ~/.bash_profile (or whatever file 
+     depending on which shell you are using.)
 
      You can also create a `virtual environment`_ for this.
 

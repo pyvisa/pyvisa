@@ -47,9 +47,14 @@ work together with arbitrary peripherical devices, although they may be
 limited to certain interface devices, such as the vendor's GPIB card.
 
 The VISA specification has explicit bindings to Visual Basic, C, and G
-(LabVIEW's graphical language). However, you can use VISA with any language
-capable of calling functions in a shared library (`.dll`, `.so`, `.dylib`).
-PyVISA is Python wrapper for such shared library ... and more.
+(LabVIEW’s graphical language). Python can be used to call functions from a
+VISA shared library (`.dll`, `.so`, `.dylib`) allowing to directly leverage the
+standard implementations. In addition, Python can be used to directly access
+most bus systems used by instruments which is why one can envision to implement
+the VISA standard directly in Python (see the `PyVISA-Py` project for more
+details). PyVISA is both a Python wrapper for VISA shared libraries but
+can also serve as a front-end for other VISA implementation such as 
+`PyVISA-Py`.
 
 
 User guide
