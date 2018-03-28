@@ -3,15 +3,25 @@
 NI-VISA Installation
 ====================
 
-In every OS, the NI-VISA library bitness (i.e. 32- or 64-bit) has to match the Python bitness. So first you need to install a NI-VISA that works with your OS and then choose the Python version matching the installed NI-VISA bitness.
+In every OS, the NI-VISA library bitness (i.e. 32- or 64-bit) has to match the
+Python bitness. So first you need to install a NI-VISA that works with your OS
+and then choose the Python version matching the installed NI-VISA bitness.
 
-PyVISA includes a debugging command to help you troubleshoot this (and other things)::
+PyVISA includes a debugging command to help you troubleshoot this 
+(and other things)::
 
     python -m visa info
+    
+or equivalently::
 
-According to National Instruments, NI VISA **5.4.1** is available for:
+    pyvisa-info
 
-.. note:: If NI-VISA is not available for your system, take a look at the :ref:`faq`.
+According to National Instruments, NI VISA **17.5** is available for the 
+following platforms.
+
+.. note:: 
+
+    If NI-VISA is not available for your system, take a look at the :ref:`faq`.
 
 
 Mac OS X
@@ -24,7 +34,9 @@ Supports:
 - Mac OS X 10.7.x x86 and x86-64
 - Mac OS X 10.8.x
 
-*64-bit VISA applications are supported for a limited set of instrumentation buses. The supported buses are ENET-Serial, USB, and TCPIP. Logging VISA operations in NI I/O Trace from 64-bit VISA applications is not supported.*
+*64-bit VISA applications are supported for a limited set of instrumentation 
+buses. The supported buses are ENET-Serial, USB, and TCPIP. Logging VISA 
+operations in NI I/O Trace from 64-bit VISA applications is not supported.*
 
 Windows
 -------
@@ -43,7 +55,8 @@ Suports:
 - Windows Vista (32-bit version)
 - Windows XP Service Pack 3
 
-*Support for Windows Server 2003 R2 may require disabling physical address extensions (PAE).*
+*Support for Windows Server 2003 R2 may require disabling physical address 
+extensions (PAE).*
 
 Linux
 -----
@@ -59,10 +72,19 @@ Supports:
 - Scientific Linux 6.x
 - Scientific Linux 5.x
 
-*Currently, only 32-bit applications are supported on the x86-64 architecture.*
+More details details can be found in the `README`_ of the installer.
 
-.. note:: NI-VISA runs on other linux distros but the installation is more cumbersome.
+.. note:: 
 
-.. _`NI-VISA for Mac OS X`: http://www.ni.com/download/ni-visa-14.0.2/5075/en/
-.. _`NI-VISA for Windows`: http://www.ni.com/download/ni-visa-5.4.1/4626/en/
-.. _`NI-VISA for Linux`: http://www.ni.com/download/ni-visa-5.4.1/4629/en/
+    NI-VISA runs on other linux distros but the installation is more 
+    cumbersome. On Arch linux and related distributions, the AUR package 
+    `ni-visa`_ (early development) is known to work for the USB and TCPIP
+    interfaces. Please note that you should restart after the installation for
+    things to work properly.
+
+   
+.. _`README`: http://download.ni.com/support/softlib//visa/NI-VISA/17.0/Linux/README.txt
+.. _`ni-visa`: https://aur.archlinux.org/packages/ni-visa/
+.. _`NI-VISA for Mac OS X`: http://www.ni.com/download/ni-visa-17.5/7224/en/
+.. _`NI-VISA for Windows`: http://www.ni.com/download/ni-visa-17.5/7220/en/
+.. _`NI-VISA for Linux`: http://www.ni.com/download/ni-visa-17.0/6700/en/
