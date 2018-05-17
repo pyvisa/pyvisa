@@ -41,13 +41,13 @@ class TestParsers(BaseTestCase):
                          canonical_resource_name='ASRL1::INSTR')
 
     def test_gpib_instr(self):
-        self._parse_test('GPIB::1::0::INSTR',
+        self._parse_test('GPIB::1::1::INSTR',
                          interface_type='GPIB',
                          resource_class='INSTR',
                          board='0',
                          primary_address='1',
-                         secondary_address='0',
-                         canonical_resource_name='GPIB0::1::0::INSTR')
+                         secondary_address='1',
+                         canonical_resource_name='GPIB0::1::1::INSTR')
 
         self._parse_test('GPIB::1::INSTR',
                          interface_type='GPIB',
