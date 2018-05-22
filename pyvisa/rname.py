@@ -345,9 +345,11 @@ def build_rn_class(interface_type, resource_parts, resource_class,
 
 # Build subclasses for each resource
 
+# Reference for the GPIB secondary address
+# https://www.mathworks.com/help/instrument/secondaryaddress.html
 GPIBInstr = build_rn_class('GPIB',
                            (('board', '0'), ('primary address', None),
-                            ('secondary address', constants.VI_NO_SEC_ADDR)),
+                            ('secondary address', '0')),
                            'INSTR')
 
 GPIBIntfc = build_rn_class('GPIB', (('board', '0'), ), 'INTFC', False)
