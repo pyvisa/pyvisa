@@ -349,11 +349,7 @@ default_warnings = frozenset([VI_SUCCESS_MAX_CNT, VI_SUCCESS_DEV_NPRESENT,
 class Error(Exception):
     """Abstract basic exception class for this module."""
 
-    def __init__(self, description):
-        super(Error, self).__init__(description)
-        
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+    pass
 
 
 class VisaIOError(Error):
@@ -371,7 +367,7 @@ class VisaIOError(Error):
         self.error_code = error_code
         self.abbreviation = abbreviation
         self.description = description
-        
+
     def __reduce__(self):
         return (VisaIOError, (self.error_code,))
 
@@ -390,12 +386,9 @@ class VisaIOWarning(Warning):
         self.error_code = error_code
         self.abbreviation = abbreviation
         self.description = description
-        
+
     def __reduce__(self):
         return (VisaIOWarning, (self.error_code,))
-        
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
 
 
 class VisaTypeError(Error):
@@ -425,7 +418,7 @@ class UnknownHandler(Error):
         self.event_type = event_type
         self.handler = handler
         self.user_handle = user_handle
-        
+
     def __reduce__(self):
         return (UnknownHandler, (self.event_type, self.handler, self.user_handle))
 
@@ -435,7 +428,7 @@ class OSNotSupported(Error):
     def __init__(self, os):
         super(OSNotSupported, self).__init__(os + " is not yet supported by PyVISA")
         self.os = os
-        
+
     def __reduce__(self):
         return (OSNotSupported, (self.os,))
 
@@ -449,7 +442,7 @@ class InvalidBinaryFormat(Error):
         self.description = description
 
     def __reduce__(self):
-        return (InvalidBinaryFormat, (self.description,))        
+        return (InvalidBinaryFormat, (self.description,))
 
 
 class InvalidSession(Error):
