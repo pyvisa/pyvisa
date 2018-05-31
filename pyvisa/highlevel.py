@@ -1446,6 +1446,30 @@ def get_wrapper_class(backend_name):
         raise ValueError('Wrapper not found: No package named pyvisa-%s' % backend_name)
 
 
+def _get_default_wrapper():
+    """Return an available default VISA wrapper as a string ('ni' or 'py').
+
+    Use NI if the binary is found, else try to use pyvisa-py.
+    If neither can be found, raise a ValueError.
+    """
+
+    from .ctwrapper import NIVisaLibrary
+    ni_binary_found = bool(NIVisaLibrary.get_library_paths())
+    if ni_binary_found:
+        logger.debug('The NI implementation available')
+        return 'ni'
+    else:
+        logger.debug('Did not find NI binary')
+
+    try:
+        get_wrapper_class('py')  # check for pyvisa-py availability
+        logger.debug('pyvisa-py is available.')
+        return 'py'
+    except ValueError:
+        logger.debug('Did not find pyvisa-py package')
+    raise ValueError('Could not locate a VISA implementation. Install either the NI binary or pyvisa-py.')
+
+
 def open_visa_library(specification):
     """Helper function to create a VISA library wrapper.
 
@@ -1454,16 +1478,19 @@ def open_visa_library(specification):
     """
 
     if not specification:
+        logger.debug('No visa library specified, trying to find alternatives.')
         try:
             specification = os.environ['PYVISA_LIBRARY']
         except KeyError:
-            logger.debug('No visa libaray specified and environment variable PYVISA_LIBRARY is unset. Using NI library')
+            logger.debug('Environment variable PYVISA_LIBRARY is unset.')
 
     try:
         argument, wrapper = specification.split('@')
     except ValueError:
         argument = specification
-        wrapper = 'ni'
+        wrapper = None  # Flag that we need a fallback, but avoid nested exceptions
+    if wrapper is None:
+        wrapper = _get_default_wrapper()
 
     cls = get_wrapper_class(wrapper)
 
