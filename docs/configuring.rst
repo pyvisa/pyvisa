@@ -3,15 +3,15 @@
 Configuring the backend
 ============================
 
-Currently there are two backends available: The one included in pyvisa which
-uses the NI library. This is used by default and the configuration is described
-in the next chapter.
-And then there is pyvisa-py a pure python implementation of the VISA libary.
-It can be selected by passing a parameter to the ResourceManager:
+Currently there are two backends available: The one included in pyvisa, which
+uses the NI library, and the backend provided by pyvisa-py, which is a pure python implementation of the VISA library.
+If no backend is specified, pyvisa uses the NI backend if the NI library has been installed (see next section for details). Failing that, it uses the pyvisa-py backend.
+
+You can also select a desired backend by passing a parameter to the ResourceManager, shown here for pyvisa-py:
 
     >>> visa.ResourceManager('@py')
 
-Alternativly it can also be selected by setting the environment variable
+Alternatively it can also be selected by setting the environment variable
 PYVISA_LIBRARY. It takes the same values as the ResourceManager constructor.
 
 Configuring the NI backend
