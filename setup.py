@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-try:
-    import sys
-    reload(sys).setdefaultencoding("UTF-8")
-except:
-    pass
-
+import sys
 
 try:
     from setuptools import setup
@@ -16,8 +11,8 @@ except ImportError:
 
 
 def read(filename):
-    with open(filename, 'r') as f:
-        return f.read()
+    with open(filename, 'rb') as f:
+        return f.read().decode('utf8')
 
 
 long_description = '\n\n'.join([read('README'),
