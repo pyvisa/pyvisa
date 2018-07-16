@@ -7,6 +7,19 @@ PyVISA Changelog
 No changes yet
 
 
+1.9.1 (unreleased)
+------------------
+
+- Add expect_termination argument to read_binary_values and query_binary_values.
+  This allows to retain the behavior of these methods from pyvisa 1.8, where
+  the length of the block of values that is being read did not include the very
+  final read termination. For such instruments, visa library raises a timeout
+  exception in case pyvisa 1.9.0 is used. Note that the behavior is not reverted
+  completely to its pyvisa 1.8 state because for other instruments (for example,
+  Keysight PNA on Ethernet) the termination character is indeed added at the end
+  of the message, and is not counted in the declared length in the header.
+
+
 1.9 (2017-02-25)
 ----------------
 
