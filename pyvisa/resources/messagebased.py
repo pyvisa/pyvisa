@@ -449,7 +449,8 @@ class MessageBasedResource(Resource):
         return util.from_ascii_block(block, converter, separator, container)
 
     def read_binary_values(self, datatype='f', is_big_endian=False,
-                           container=list, header_fmt='ieee'):
+                           container=list, header_fmt='ieee',
+                           expect_termination=True):
         """Read values from the device in binary format returning an iterable
         of values.
 
@@ -460,6 +461,10 @@ class MessageBasedResource(Resource):
         :param container: container type to use for the output data.
         :param header_fmt: format of the header prefixing the data. Possible
                            values are: 'ieee', 'hp', 'empty'
+        :param expect_termination: when set to False, the expected length of
+                                   the binary values block does not account
+                                   for the final termination character (the
+                                   read termination)
         :returns: the answer from the device.
         :rtype: type(container)
 
@@ -475,7 +480,7 @@ class MessageBasedResource(Resource):
                                                              is_big_endian)
             expected_length = offset + data_length
 
-        if self._read_termination is not None:
+        if expect_termination and self._read_termination is not None:
             expected_length += len(self._read_termination)
 
         while len(block) < expected_length:
@@ -624,7 +629,8 @@ class MessageBasedResource(Resource):
                                       delay)
 
     def query_binary_values(self, message, datatype='f', is_big_endian=False,
-                            container=list, delay=None, header_fmt='ieee'):
+                            container=list, delay=None, header_fmt='ieee',
+                            expect_termination=True):
         """Query the device for values in binary format returning an iterable
         of values.
 
@@ -636,6 +642,10 @@ class MessageBasedResource(Resource):
         :param container: container type to use for the output data.
         :param delay: delay in seconds between write and read operations.
                       if None, defaults to self.query_delay
+        :param expect_termination: when set to False, the expected length of
+                                   the binary values block does not account
+                                   for the final termination character (the
+                                   read termination)
         :returns: the answer from the device.
         :rtype: list
         """
@@ -650,7 +660,7 @@ class MessageBasedResource(Resource):
             time.sleep(delay)
 
         return self.read_binary_values(datatype, is_big_endian, container,
-                                       header_fmt)
+                                       header_fmt, expect_termination)
 
     def ask_for_values(self, message, fmt=None, delay=None):
         """A combination of write(message) and read_values()
