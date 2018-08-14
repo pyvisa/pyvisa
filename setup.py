@@ -27,7 +27,7 @@ if sys.version_info < (3,):
 
 setup(name='PyVISA',
       description='Python VISA bindings for GPIB, RS232, TCPIP and USB instruments',
-      version='1.9.1',
+      version='1.10.0.dev',
       long_description=long_description,
       author='Torsten Bronger, Gregor Thalhammer',
       author_email='bronger@physik.rwth-aachen.de',
