@@ -497,7 +497,7 @@ class MessageBasedResource(Resource):
                 return util.from_binary_block(block, 0, None, datatype,
                                               is_big_endian, container)
             else:
-                raise
+                raise ValueError('Unsupported binary block format.')
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 

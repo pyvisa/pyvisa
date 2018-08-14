@@ -7,17 +7,31 @@ PyVISA Changelog
 No changes yet
 
 
-1.9.1 (unreleased)
+1.9.1 (2018-08-13)
 ------------------
 
-- Add expect_termination argument to read_binary_values and query_binary_values.
-  This allows to retain the behavior of these methods from pyvisa 1.8, where
-  the length of the block of values that is being read did not include the very
-  final read termination. For such instruments, visa library raises a timeout
-  exception in case pyvisa 1.9.0 is used. Note that the behavior is not reverted
-  completely to its pyvisa 1.8 state because for other instruments (for example,
-  Keysight PNA on Ethernet) the termination character is indeed added at the end
-  of the message, and is not counted in the declared length in the header.
+- Add expect_termination argument to read_binary_values and
+  query_binary_values. This allows to retain the behavior of these methods from
+  pyvisa 1.8, where the length of the block of values that is being read did
+  not include the very final read termination. For instruments omitting the
+  termination character when transferring binary data, visa  library raises a
+  timeout exception in case pyvisa 1.9.0 is used. Note that the behavior is not
+  reverted completely to its pyvisa 1.8 state because for other instruments
+  (for example, Keysight PNA on Ethernet) the termination character is indeed
+  added at the end of the message, and is not counted in the declared length in
+  the header. Prior to 1.9, if the last character of the binary block is also
+  the termination character, the actual termination could be missed, which
+  leads to hard to debug bugs hence the choice to preserve 1.9 behavior by
+  default. PR #349
+- fix an encoding handling issue in setup.py PR #343
+- if installed use pyvisa-py backend if a binary VISA implementation is not
+  installed. PR #341
+- make custom exception hashable by removing __eq__. This should not impact
+  user code. PR #340
+- fix an issue with the default value for GPIB secondary address in rname.py
+  PR #336
+- ensure docstrings exist before manipulating them (attributes.py) PR #318
+- documentation improvements PR #320 #323
 
 
 1.9 (2017-02-25)

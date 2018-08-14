@@ -82,6 +82,17 @@ the IEEE convention. If your instrument uses HP data block you can pass
 ``header_fmt='hp'`` to ``read_binary_values``. If your instrument does not use
 any header for the data simply ``header_fmt='empty'``.
 
+By default PyVISA assumes, that the instrument will add the termination
+character at the end of the data block and actually makes sure it reads it to
+avoid issues. This behavior fits well a number of devices. However some devices
+omit the termination character, in which cases the operation will timeout.
+In this situation, first makes sure you can actually read from the instrument
+by reading the answer using the ``read_raw`` function (you may need to call it
+multiple time), and check that the advertized length of the block match what
+you get from your instrument (plus the header). If it is so, then you can
+safely pass ``expect_termination=False``, and PyVISA will not look for a
+termination character at the end of the message.
+
 
 Writing ASCII values
 --------------------
