@@ -4,8 +4,8 @@ PyVISA Changelog
 1.10 (unreleased)
 -----------------
 
-- fixing missing argument for USBInstrument.usb_control_out. homogeneous naming:
-  usb_control_out -> control_out. warnings for deprecated usb_control_out.
+- fixing missing argument for USBInstrument.usb_control_out PR #353
+- usb_control_out -> control_out. warnings for deprecated usb_control_out PR #353
 
 
 1.9.1 (2018-08-13)
