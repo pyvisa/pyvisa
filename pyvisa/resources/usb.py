@@ -12,6 +12,7 @@
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import
+import warnings
 
 from .. import constants
 from .messagebased import MessageBasedResource, ControlRenMixin
@@ -44,7 +45,7 @@ class USBInstrument(ControlRenMixin, MessageBasedResource):
         return self.visalib.usb_control_in(self.session, request_type_bitmap_field,
                                            request_id, request_value, index, length)
 
-    def usb_control_out(self, request_type_bitmap_field, request_id, request_value, index, data=""):
+    def control_out(self, request_type_bitmap_field, request_id, request_value, index, data=""):
         """Performs a USB control pipe transfer to the device.
 
         :param request_type_bitmap_field: bmRequestType parameter of the setup stage of a USB control transfer.
@@ -54,7 +55,21 @@ class USBInstrument(ControlRenMixin, MessageBasedResource):
                       This is usually the index of the interface or endpoint.
         :param data: The data buffer that sends the data in the optional data stage of the control transfer.
         """
-        return self.visalib.usb_control_out(request_type_bitmap_field, request_id, request_value, index, data)
+        return self.visalib.usb_control_out(self.session, request_type_bitmap_field, 
+                                            request_id, request_value, index, data)
+
+    def usb_control_out(self, request_type_bitmap_field, request_id, request_value, index, data=""):
+        """Performs a USB control pipe transfer to the device. (Deprecated)
+
+        :param request_type_bitmap_field: bmRequestType parameter of the setup stage of a USB control transfer.
+        :param request_id: bRequest parameter of the setup stage of a USB control transfer.
+        :param request_value: wValue parameter of the setup stage of a USB control transfer.
+        :param index: wIndex parameter of the setup stage of a USB control transfer.
+                      This is usually the index of the interface or endpoint.
+        :param data: The data buffer that sends the data in the optional data stage of the control transfer.
+        """
+        warnings.warn('usb_control_out is deprecated use control_out instead.', FutureWarning)
+        return self.control_out(request_type_bitmap_field, request_id, request_value, index, data)
 
 
 @MessageBasedResource.register(constants.InterfaceType.usb, 'RAW')
