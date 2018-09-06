@@ -97,7 +97,9 @@ class Resource(object):
         :raises: :class:`pyvisa.errors.InvalidSession` if session is closed.
         """
         if self._session is None:
-            raise errors.InvalidSession()
+            msg = ('The VISA session is not valid. This may be because the '
+                   'ResourceManager was closed.')
+            raise errors.InvalidSession(msg)
         return self._session
 
     @session.setter
