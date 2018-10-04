@@ -23,9 +23,9 @@ logger.addHandler(compat.NullHandler())
 
 
 def log_to_screen(level=logging.DEBUG):
-    log(None, level) # sys.stderr by default
+    log_to_stream(None, level) # sys.stderr by default
 
-def log(stream_output, level=logging.DEBUG):
+def log_to_stream(stream_output, level=logging.DEBUG):
     logger.setLevel(level)
     ch = logging.StreamHandler(stream_output)
     ch.setLevel(level)
