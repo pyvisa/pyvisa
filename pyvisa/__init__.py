@@ -23,8 +23,11 @@ logger.addHandler(compat.NullHandler())
 
 
 def log_to_screen(level=logging.DEBUG):
+    log_to_stream(None, level) # sys.stderr by default
+
+def log_to_stream(stream_output, level=logging.DEBUG):
     logger.setLevel(level)
-    ch = logging.StreamHandler()
+    ch = logging.StreamHandler(stream_output)
     ch.setLevel(level)
 
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
