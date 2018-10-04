@@ -6,6 +6,7 @@ PyVISA Changelog
 
 - fixing missing argument for USBInstrument.usb_control_out PR #353
 - usb_control_out -> control_out. warnings for deprecated usb_control_out PR #353
+- added new function log_to_stream() PR #363
 
 
 1.9.1 (2018-08-13)
