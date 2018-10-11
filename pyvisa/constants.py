@@ -596,6 +596,7 @@ VI_ASRL_OUT_BUF_DISCARD      = VI_IO_OUT_BUF_DISCARD
 
 # Enums
 
+@enum.unique
 class AccessModes(enum.IntEnum):
 
     #: Does not obtain any lock on the VISA resource.
@@ -609,6 +610,7 @@ class AccessModes(enum.IntEnum):
     shared_lock = 2
 
 
+@enum.unique
 class StopBits(enum.IntEnum):
     """The number of stop bits that indicate the end of a frame.
     """
@@ -617,6 +619,7 @@ class StopBits(enum.IntEnum):
     two = VI_ASRL_STOP_TWO
 
 
+@enum.unique
 class Parity(enum.IntEnum):
     """The parity types to use with every frame transmitted and received on a serial session.
     """
@@ -627,6 +630,7 @@ class Parity(enum.IntEnum):
     space = VI_ASRL_PAR_SPACE
 
 
+@enum.unique
 class SerialTermination(enum.IntEnum):
     """The available methods for terminating a serial transfer.
     """
@@ -648,6 +652,7 @@ class SerialTermination(enum.IntEnum):
     termination_break = VI_ASRL_END_BREAK
 
 
+@enum.unique
 class InterfaceType(enum.IntEnum):
     """The hardware interface
     """
@@ -686,6 +691,7 @@ class InterfaceType(enum.IntEnum):
     rsnrp = 33024
 
 
+@enum.unique
 class AddressState(enum.IntEnum):
 
     unaddressed = VI_GPIB_UNADDRESSED
@@ -693,6 +699,7 @@ class AddressState(enum.IntEnum):
     listenr = VI_GPIB_LISTENER
 
 
+@enum.unique
 class IOProtocol(enum.IntEnum):
 
     normal = VI_PROT_NORMAL
@@ -710,6 +717,7 @@ class IOProtocol(enum.IntEnum):
     usbtmc_vendor = VI_PROT_USBTMC_VENDOR
 
 
+@enum.unique
 class LineState(enum.IntEnum):
 
     asserted = VI_STATE_ASSERTED
@@ -717,6 +725,7 @@ class LineState(enum.IntEnum):
     unknown = VI_STATE_UNKNOWN
 
 
+@enum.unique
 class EventMechanism(enum.IntEnum):
     """The available event mechanisms for event handling.
     """
@@ -733,6 +742,7 @@ class EventMechanism(enum.IntEnum):
 # Note that enum.IntEnum fails here for python2:
 #  OverflowError: Python int too large to convert to C long
 # so use LongEnum instead (some values are too large, and ViEventType is unsigned)
+@enum.unique
 class EventType(LongEnum):
     """The available event types for event handling.
     """
@@ -755,6 +765,7 @@ class EventType(LongEnum):
     all_enabled = VI_ALL_ENABLED_EVENTS
 
 
+@enum.unique
 class StatusCode(enum.IntEnum):
     """Specifies the status codes that NI-VISA driver-level operations can return.
     """
@@ -916,7 +927,7 @@ class StatusCode(enum.IntEnum):
     error_nonsupported_offset = VI_ERROR_NSUP_OFFSET
 
     #: The specified offset is not properly aligned for the access width of the operation.
-    error_nonsupported_offset_alignment = VI_ERROR_NSUP_OFFSET
+    error_nonsupported_offset_alignment = VI_ERROR_NSUP_ALIGN_OFFSET
 
     #: The session or object reference does not support this operation.
     error_nonsupported_operation = VI_ERROR_NSUP_OPER
