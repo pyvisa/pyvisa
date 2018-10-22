@@ -1490,7 +1490,10 @@ def open_visa_library(specification):
         argument = specification
         wrapper = None  # Flag that we need a fallback, but avoid nested exceptions
     if wrapper is None:
-        wrapper = _get_default_wrapper()
+        if argument: # some filename given
+            wrapper = 'ni'
+        else:
+            wrapper = _get_default_wrapper()
 
     cls = get_wrapper_class(wrapper)
 
