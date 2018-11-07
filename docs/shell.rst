@@ -9,7 +9,7 @@ interface to interact with instruments. You can invoke it from the command-line:
     python -m visa shell
 
 or::
-    
+
     pyvisa-shell
 
 that will show something the following prompt::
@@ -116,9 +116,10 @@ We can also get a list of all visa attributes::
     +-----------------------------+------------+----------------------------+-------------------------------------+
 
 
-To simplify the handling of VI_ATTR_TERMCHAR and VI_ATTR_TERMCHAR_EN, the command 'termchar' can be used.
-If only one character provided, it sets both read and write termination character to the same character.
-If two characters are provided, it sets read and write termination characters independently.
+To simplify the handling of VI_ATTR_TERMCHAR and VI_ATTR_TERMCHAR_EN, the
+command 'termchar' can be used. If only one character provided, it sets both
+read and write termination character to the same character. If two characters
+are provided, it sets read and write termination characters independently.
 
 To setup termchar to '\r' (CR or ascii code 10)::
 
@@ -145,10 +146,11 @@ Finally, you can close the device::
 
 
 PyVisa Shell Backends
-=====================
+---------------------
 
-Based on available backend (see bellow for ``info`` command), it is possible to switch shell to use non-default backend via
-``-b BACKEND`` or ``--backend BACKEND``.
+Based on available backend (see bellow for ``info`` command), it is possible to
+switch shell to use non-default backend via ``-b BACKEND`` or
+``--backend BACKEND``.
 
 You can invoke::
 
@@ -158,7 +160,7 @@ or::
 
     pyvisa-shell -b sim
 
-to use python-sim as backend instead of ni backend. 
+to use python-sim as backend instead of ni backend.
 This can be used for example for testing of python-sim configuration.
 
 You can invoke::
@@ -169,11 +171,12 @@ or::
 
     pyvisa-shell -b py
 
-uses python-py as backend instead of ni backend, for situation when ni not installed.
+uses python-py as backend instead of ni backend, for situation when ni not
+installed.
 
 
 PyVisa Info
-===========
+-----------
 
 You can invoke it from the command-line::
 
@@ -183,7 +186,8 @@ or::
 
     pyvisa-info
 
-that will  print information to diagnose PyVISA, info about Machine, Python, backends, etc ::
+that will  print information to diagnose PyVISA, info about Machine, Python,
+backends, etc ::
 
     Machine Details:
        Platform ID:    Windows
@@ -204,10 +208,10 @@ that will  print information to diagnose PyVISA, info about Machine, Python, bac
 
 
 Summary
-=======
+-------
 
-Cool, right? It will be great to have a GUI similar to NI-MAX, but we leave that to be developed outside PyVISA.
-Want to help? Let us know!
+Cool, right? It will be great to have a GUI similar to NI-MAX, but we leave
+that to be developed outside PyVISA. Want to help? Let us know!
 
 
 .. _`Lantz`: https://lantz.readthedocs.org

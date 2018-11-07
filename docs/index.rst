@@ -53,7 +53,7 @@ standard implementations. In addition, Python can be used to directly access
 most bus systems used by instruments which is why one can envision to implement
 the VISA standard directly in Python (see the `PyVISA-Py` project for more
 details). PyVISA is both a Python wrapper for VISA shared libraries but
-can also serve as a front-end for other VISA implementation such as 
+can also serve as a front-end for other VISA implementation such as
 `PyVISA-Py`.
 
 
@@ -66,8 +66,8 @@ User guide
     getting
     configuring
     tutorial
-    rvalues
     example
+    rvalues
     resources
     backends
     shell
