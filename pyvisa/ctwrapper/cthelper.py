@@ -62,12 +62,13 @@ if _os.name == "posix" and _sys.platform.startswith('linux'):
         def _findlib_ldconfig(name):
             # XXX assuming GLIBC's ldconfig (with option -p)
             expr = r'/[^\(\)\s]*lib%s\.[^\(\)\s]*' % re.escape(name)
-            res = re.search(expr,
-                            _os.popen('/sbin/ldconfig -p 2>/dev/null').read())
+            with _os.popen('/sbin/ldconfig -p 2>/dev/null') as pipe:
+                res = re.search(expr, pipe.read())
             if not res:
                 # Hm, this works only for libs needed by the python executable.
                 cmd = 'ldd %s 2>/dev/null' % _sys.executable
-                res = re.search(expr, _os.popen(cmd).read())
+                with _os.popen(cmd) as pipe:
+                    res = re.search(expr, pipe.read())
                 if not res:
                     return None
             return res.group(0)
