@@ -61,6 +61,7 @@ Then also to change the timeout for example to 1500ms (1.5 sec)::
 
 We can also get a list of all visa attributes::
 
+    (open) attr
     +-----------------------------+------------+----------------------------+-------------------------------------+
     |          VISA name          |  Constant  |        Python name         |                 val                 |
     +-----------------------------+------------+----------------------------+-------------------------------------+
