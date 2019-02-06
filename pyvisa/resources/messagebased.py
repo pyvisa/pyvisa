@@ -709,6 +709,15 @@ class MessageBasedResource(Resource):
         yield
         self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, term)
 
+    def flush(self, mask):
+        """Manually clears the specified buffers and cause the buffer data
+        to be written to the device.
+
+        :param mask: Specifies the action to be taken with flushing the buffer.
+                 (Constants.READ*, .WRITE*, .IO*)
+        """
+        self.visalib.flush(self.session, mask)
+
 
 # Rohde and Schwarz Device via Passport. Not sure which Resource should be.
 MessageBasedResource.register(constants.InterfaceType.rsnrp,

@@ -23,12 +23,3 @@ class SerialInstrument(MessageBasedResource):
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
-
-    def flush(self, mask):
-        """Manually clears the specified buffers and cause the buffer data
-        to be written to the device.
-
-        :param mask: Specifies the action to be taken with flushing the buffer.
-                 (Constants.READ*, .WRITE*, .IO*)
-        """
-        self.visalib.flush(self.session, mask)
