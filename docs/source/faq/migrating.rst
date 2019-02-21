@@ -1,4 +1,4 @@
-.. _migrating:
+.. _faq-migrating:
 
 Migrating from PyVISA < 1.5
 ===========================

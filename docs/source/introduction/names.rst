@@ -1,10 +1,12 @@
 
-.. _resource_names:
+.. _intro-resource-names:
 
 VISA resource names
 ===================
 
-If you use the function :func:`open_resource`, you must tell this
+.. include:: substitutions.sub
+
+If you use the method |open_resource|, you must tell this
 function the *VISA resource name* of the instrument you want to
 connect to.  Generally, it starts with the bus type, followed by a
 double colon ``"::"``, followed by the number within the bus.  For

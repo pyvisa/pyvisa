@@ -22,27 +22,27 @@ Let's go *in medias res* and have a look at a simple example::
 This example already shows the two main design goals of PyVISA: preferring
 simplicity over generality, and doing it the object-oriented way.
 
-After importing ``visa``, we create a ``ResourceManager`` object. If called 
+After importing ``visa``, we create a ``ResourceManager`` object. If called
 without arguments, PyVISA will use the default backend (NI) which tries to find
-the VISA shared library for you. You can check, the location of the shared 
+the VISA shared library for you. You can check, the location of the shared
 library used simply by:
 
     >>> print(rm)
     <ResourceManager('/path/to/visa.so')>
 
-.. note:: 
-    
-    In some cases, PyVISA is not able to find the library for you resulting in 
-    an ``OSError``. To fix it, find the library path yourself and pass it to 
+.. note::
+
+    In some cases, PyVISA is not able to find the library for you resulting in
+    an ``OSError``. To fix it, find the library path yourself and pass it to
     the ResourceManager constructor. You can also specify it in a configuration
     file as discussed in :ref:`configuring`.
 
 
 Once that you have a ``ResourceManager``, you can list the available resources
 using the ``list_resources`` method. The output is a tuple listing the
-:ref:`resource_names`. You can use a dedicated regular expression syntax to 
-filter the instruments discovered by this method. The syntax is described in 
-details in :py:meth:`~pyvisa.highlevel.ResourceManager.list_resources`. The 
+:ref:`advanced-resource-names`. You can use a dedicated regular expression syntax to
+filter the instruments discovered by this method. The syntax is described in
+details in :py:meth:`~pyvisa.highlevel.ResourceManager.list_resources`. The
 default value is '?*::INSTR' which means that by default only instrument
 whose resource name ends with '::INSTR' (in particular USB RAW resources and
 TCPIP SOCKET resources are not listed).
@@ -57,14 +57,14 @@ Notice ``open_resource`` has given you an instance of ``GPIBInstrument`` class
     >>> print(my_instrument)
     <GPIBInstrument('GPIB::14')>
 
-There many ``Resource`` subclasses representing the different types of 
+There many ``Resource`` subclasses representing the different types of
 resources, but you do not have to worry as the ``ResourceManager`` will provide
-you with the appropriate class. You can check the methods and attributes of 
+you with the appropriate class. You can check the methods and attributes of
 each class in the :ref:`api_resources`
 
 Then, you query the device with the following message: ``'\*IDN?'``.
 Which is the standard GPIB message for "what are you?" or -- in some cases --
-"what's on your display at the moment?". ``query`` is a short form for a 
+"what's on your display at the moment?". ``query`` is a short form for a
 ``write`` operation to send a message, followed by a ``read``.
 
 So::
@@ -83,7 +83,7 @@ Example for serial (RS232) device
 Consider an Oxford ITC4 temperature controller, which is connected
 through COM2 with my computer.  The following code prints its
 self-identification on the screen::
-   
+
    itc4 = rm.open_resource("COM2")
    itc4.write("V")
    print(itc4.read())

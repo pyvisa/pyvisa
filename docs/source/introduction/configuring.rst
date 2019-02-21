@@ -1,7 +1,9 @@
-.. _configuring:
+.. _intro-configuring:
 
 Configuring the backend
 =======================
+
+.. include:: substitutions.sub
 
 Currently there are two backends available: The one included in pyvisa, which
 uses the NI library, and the backend provided by pyvisa-py, which is a pure
@@ -23,13 +25,12 @@ Configuring the NI backend
 .. note::
 
     The NI backend requires that you install first the NI-VISA library. You can
-    get info here: (:ref:`getting_nivisa`)
+    get info here: (:ref:`faq-getting-nivisa`)
 
 
 In most cases PyVISA will be able to find the location of the shared visa
 library. If this does not work or you want to use another one, you need to
-provide the library path to the :class:`pyvisa.highlevel.ResourceManager`
-constructor::
+provide the library path to the |ResourceManager| constructor::
 
     >>> rm = ResourceManager('Path to library')
 

@@ -1,0 +1,22 @@
+..
+   This file holds some common substitutions (mainly for referencing code).
+   To use it add the directive include:: substitutions.rst at the beginning of
+   the file.
+
+.. ============================================================================
+.. PyVISA substitutions
+.. ============================================================================
+
+.. |VisaLibraryBase| replace:: :class:~`pyvisa.highlevel.VisaLibraryBase`
+
+.. |ResourceManager| replace:: :class:~`pyvisa.highlevel.ResourceManager`
+
+.. |open_resource| replace:: :meth:~`pyvisa.highlevel.ResourceManager.open_resource`
+
+.. |visalib| replace:: :attr:~`pyvisa.highlevel.ResourceManager.visalib`
+
+.. |Resource| replace:: :class:~`pyvisa.resources.Resource`
+
+.. |MessageBasedResource| replace:: :class:~`pyvisa.resources.MessageBasedResource`
+
+.. |RegisterBasedResource| replace:: :class:~`pyvisa.resources.RegisterBasedResource`

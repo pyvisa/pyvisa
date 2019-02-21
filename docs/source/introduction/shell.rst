@@ -1,10 +1,11 @@
-.. _shell:
+.. _intro-shell:
 
 PyVISA Shell
 ============
 
 The shell, moved into PyVISA from the Lantz_ Project is a text based user
-interface to interact with instruments. You can invoke it from the command-line::
+interface to interact with instruments. You can invoke it from the
+command-line::
 
     python -m visa shell
 
@@ -136,8 +137,8 @@ To setup read termchar to '\n' and write termchar to '\r\n\'::
     (open) termchar LF CRLF
     Done
 
-Supported termchar values are: CR ('\r'), LF ('\n'), CRLF ('\r\n') , NUL ('\0'), None.
-None is used to disable termchar.
+Supported termchar values are: CR ('\r'), LF ('\n'), CRLF ('\r\n') ,
+NUL ('\0'), None. None is used to disable termchar.
 
 
 Finally, you can close the device::

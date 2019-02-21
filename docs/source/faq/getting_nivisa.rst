@@ -1,4 +1,4 @@
-.. _getting_nivisa:
+.. _faq-getting_nivisa:
 
 NI-VISA Installation
 ====================
@@ -7,19 +7,19 @@ In every OS, the NI-VISA library bitness (i.e. 32- or 64-bit) has to match the
 Python bitness. So first you need to install a NI-VISA that works with your OS
 and then choose the Python version matching the installed NI-VISA bitness.
 
-PyVISA includes a debugging command to help you troubleshoot this 
+PyVISA includes a debugging command to help you troubleshoot this
 (and other things)::
 
     python -m visa info
-    
+
 or equivalently::
 
     pyvisa-info
 
-According to National Instruments, NI VISA **17.5** is available for the 
+According to National Instruments, NI VISA **17.5** is available for the
 following platforms.
 
-.. note:: 
+.. note::
 
     If NI-VISA is not available for your system, take a look at the :ref:`faq`.
 
@@ -34,8 +34,8 @@ Supports:
 - Mac OS X 10.7.x x86 and x86-64
 - Mac OS X 10.8.x
 
-*64-bit VISA applications are supported for a limited set of instrumentation 
-buses. The supported buses are ENET-Serial, USB, and TCPIP. Logging VISA 
+*64-bit VISA applications are supported for a limited set of instrumentation
+buses. The supported buses are ENET-Serial, USB, and TCPIP. Logging VISA
 operations in NI I/O Trace from 64-bit VISA applications is not supported.*
 
 Windows
@@ -55,7 +55,7 @@ Suports:
 - Windows Vista (32-bit version)
 - Windows XP Service Pack 3
 
-*Support for Windows Server 2003 R2 may require disabling physical address 
+*Support for Windows Server 2003 R2 may require disabling physical address
 extensions (PAE).*
 
 Linux
@@ -74,15 +74,15 @@ Supports:
 
 More details details can be found in the `README`_ of the installer.
 
-.. note:: 
+.. note::
 
-    NI-VISA runs on other linux distros but the installation is more 
-    cumbersome. On Arch linux and related distributions, the AUR package 
+    NI-VISA runs on other linux distros but the installation is more
+    cumbersome. On Arch linux and related distributions, the AUR package
     `ni-visa`_ (early development) is known to work for the USB and TCPIP
     interfaces. Please note that you should restart after the installation for
     things to work properly.
 
-   
+
 .. _`README`: http://download.ni.com/support/softlib//visa/NI-VISA/17.0/Linux/README.txt
 .. _`ni-visa`: https://aur.archlinux.org/packages/ni-visa/
 .. _`NI-VISA for Mac OS X`: http://www.ni.com/download/ni-visa-17.5/7224/en/

@@ -57,34 +57,13 @@ can also serve as a front-end for other VISA implementation such as
 `PyVISA-Py`.
 
 
-User guide
-----------
-
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
-    getting
-    configuring
-    tutorial
-    example
-    rvalues
-    resources
-    backends
-    shell
-    architecture
-
-More information
-----------------
-
-.. toctree::
-    :maxdepth: 1
-
-    names
-    migrating
-    contributing
-    faq
-    getting_nivisa
-    api/index
+    User guide <introduction/index.rst>
+    Advanced topics <advanced/index.rst>
+    FAQ <faq/index.rst>
+    API Documentation <api/index.rst>
 
 
 ..  LocalWords:  rst british reST ies vpp pyvisa docs pyvLab
