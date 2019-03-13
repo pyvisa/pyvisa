@@ -13,5 +13,9 @@ communications issues.
 
     getting
     configuring
-
+    communication
+    example
+    rvalues
+    resources
     shell
+    names

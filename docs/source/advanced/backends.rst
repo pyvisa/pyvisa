@@ -4,7 +4,7 @@
 A frontend for multiple backends
 ================================
 
-.. include:: substitutions.sub
+.. include:: ../substitutions.sub
 
 A small historical note might help to make this section clearer. So bear with
 with me for a couple of lines. Originally PyVISA was a Python wrapper to the
@@ -81,9 +81,9 @@ An important aspect of developing a backend is knowing which VisaLibraryBase
 method to implement and what API to expose.
 
 A **complete** implementation of a VISA Library requires a lot of functions
-(basically almost all level 2 functions as described in :ref:`architecture`
-(there is also a complete list at the bottom of this page). But a working
-implementation does not require all of them.
+(basically almost all level 2 functions as described in
+:ref:`advanced-architecture` (there is also a complete list at the bottom of
+this page). But a working implementation does not require all of them.
 
 As a **very minimum** set you need:
 

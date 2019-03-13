@@ -4,7 +4,7 @@
 VISA resource names
 ===================
 
-.. include:: substitutions.sub
+.. include:: ../substitutions.sub
 
 If you use the method |open_resource|, you must tell this
 function the *VISA resource name* of the instrument you want to

@@ -1,9 +1,9 @@
-.. _resources:
+.. _intro-resources:
 
 Resources
 =========
 
-.. include:: substitutions.sub
+.. include:: ../substitutions.sub
 
 A resource represents an instrument, e.g. a measurement device. There are
 multiple classes derived from resources representing the different available
@@ -12,7 +12,7 @@ attributes an methods that are available by the underlying device.
 
 You do not create this objects directly but they are returned by the
 |open_resource| method of a |ResourceManager|. In general terms, there
-are two main groups derived from |Resource|, |MessagedBasedResource| and
+are two main groups derived from |Resource|, |MessageBasedResource| and
 |RegisterBasedResource|.
 
 .. note::
@@ -158,7 +158,7 @@ There are two further options related to message termination, namely
 
 ``send_end`` is a boolean.  If it's ``True`` (the default), the EOI line is
 asserted after each write operation, signalling the end of the operation.  EOI
- is GPIB-specific but similar action is taken for other interfaces.
+is GPIB-specific but similar action is taken for other interfaces.
 
 The argument ``query_delay`` is the time in seconds to wait after
 each write operation when performing a query.  So you could write::

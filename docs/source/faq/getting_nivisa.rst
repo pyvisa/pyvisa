@@ -1,4 +1,4 @@
-.. _faq-getting_nivisa:
+.. _faq-getting-nivisa:
 
 NI-VISA Installation
 ====================

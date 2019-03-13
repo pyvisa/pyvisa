@@ -3,6 +3,8 @@
 PyVISA Shell
 ============
 
+.. include:: ../substitutions.sub
+
 The shell, moved into PyVISA from the Lantz_ Project is a text based user
 interface to interact with instruments. You can invoke it from the
 command-line::

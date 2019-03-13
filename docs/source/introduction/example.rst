@@ -1,16 +1,16 @@
-
-
-.. _sec:more-complex-example:
+.. _more-complex-example:
 
 A more complex example
 ======================
+
+.. include:: ../substitutions.sub
 
 The following example shows how to use SCPI commands with a Keithley
 2000 multimeter in order to measure 10 voltages. After having read
 them, the program calculates the average voltage and prints it on the
 screen.
 
-I'll explain the program step-by-step.  First, we have to initialise
+I'll explain the program step-by-step.  First, we have to initialize
 the instrument::
 
    >>> keithley = rm.open_resource("GPIB::12")
@@ -18,7 +18,7 @@ the instrument::
 
 Here, we create the instrument variable *keithley*, which is used for
 all further operations on the instrument.  Immediately after it, we
-send the initialisation and reset message to the instrument.
+send the initialization and reset message to the instrument.
 
 The next step is to write all the measurement parameters, in
 particular the interval time (500ms) and the number of readings (10)
@@ -56,7 +56,7 @@ however, then we'd get:
    -000.0002E+0,-000.0005E+0
 
 which we would have to convert to a Python list of numbers.
-Fortunately, the `query_ascii_values()` method does this work for us::
+Fortunately, the |query_ascii_values| method does this work for us::
 
    >>> voltages = keithley.query_ascii_values("trace:data?")
    >>> print("Average voltage: ", sum(voltages) / len(voltages))

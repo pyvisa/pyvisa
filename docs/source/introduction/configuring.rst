@@ -3,7 +3,7 @@
 Configuring the backend
 =======================
 
-.. include:: substitutions.sub
+.. include:: ../substitutions.sub
 
 Currently there are two backends available: The one included in pyvisa, which
 uses the NI library, and the backend provided by pyvisa-py, which is a pure

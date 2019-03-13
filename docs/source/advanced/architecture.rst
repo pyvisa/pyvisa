@@ -3,7 +3,7 @@
 Architecture
 ============
 
-.. include:: substitutions.sub
+.. include:: ../substitutions.sub
 
 PyVISA implements convenient and Pythonic programming in three layers:
 

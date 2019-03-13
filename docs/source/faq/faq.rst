@@ -70,7 +70,7 @@ or::
 
     >>> rm = ResourceManager('Path to library')
 
-or creating a configuration file as described in :ref:`configuring`.
+or creating a configuration file as described in :ref:`intro-configuring`.
 
 
 Error: No matching architecture
@@ -109,7 +109,7 @@ The solution is to:
 
      Download and install it from **National Instruments's VISA**. Run the
      debug command again to see if the new library was found by PyVISA. If not,
-     create a configuration file as described in :ref:`configuring`.
+     create a configuration file as described in :ref:`intro-configuring`.
 
      If there is no VISA library with the correct bitness available, try
      solution 2.

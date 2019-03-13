@@ -7,16 +7,34 @@
 .. PyVISA substitutions
 .. ============================================================================
 
-.. |VisaLibraryBase| replace:: :class:~`pyvisa.highlevel.VisaLibraryBase`
+.. |VisaLibraryBase| replace:: :class:`~pyvisa.highlevel.VisaLibraryBase`
 
-.. |ResourceManager| replace:: :class:~`pyvisa.highlevel.ResourceManager`
+.. |ResourceManager| replace:: :class:`~pyvisa.highlevel.ResourceManager`
 
-.. |open_resource| replace:: :meth:~`pyvisa.highlevel.ResourceManager.open_resource`
+.. |open_resource| replace:: :meth:`~pyvisa.highlevel.ResourceManager.open_resource`
 
-.. |visalib| replace:: :attr:~`pyvisa.highlevel.ResourceManager.visalib`
+.. |list_resources| replace:: :py:meth:`~pyvisa.highlevel.ResourceManager.list_resources`
 
-.. |Resource| replace:: :class:~`pyvisa.resources.Resource`
+.. |visalib| replace:: :attr:`~pyvisa.highlevel.ResourceManager.visalib`
 
-.. |MessageBasedResource| replace:: :class:~`pyvisa.resources.MessageBasedResource`
+.. |Resource| replace:: :class:`~pyvisa.resources.Resource`
 
-.. |RegisterBasedResource| replace:: :class:~`pyvisa.resources.RegisterBasedResource`
+.. |MessageBasedResource| replace:: :class:`~pyvisa.resources.MessageBasedResource`
+
+.. |read_bytes| replace:: :meth:`~pyvisa.resources.MessageBasedResource.read_bytes`
+
+.. |read_ascii_values| replace:: :meth:`~pyvisa.resources.MessageBasedResource.read_ascii_values`
+
+.. |read_binary_values| replace:: :meth:`~pyvisa.resources.MessageBasedResource.read_binary_values`
+
+.. |query_ascii_values| replace:: :meth:`~pyvisa.resources.MessageBasedResource.query_ascii_values`
+
+.. |query_binary_values| replace:: :meth:`~pyvisa.resources.MessageBasedResource.query_binary_values`
+
+.. |read_termination| replace:: :attr:`~pyvisa.resources.MessageBasedResource.read_termination`
+
+.. |write_termination| replace:: :attr:`~pyvisa.resources.MessageBasedResource.write_termination`
+
+.. |RegisterBasedResource| replace:: :class:`~pyvisa.resources.RegisterBasedResource`
+
+.. |VisaIOError| replace:: :exc:`~pyvisa.errors.VisaIOError`

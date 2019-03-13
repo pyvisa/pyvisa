@@ -3,7 +3,7 @@
 Installation
 ============
 
-.. include:: substitutions.sub
+.. include:: ../substitutions.sub
 
 PyVISA is a frontend to the VISA library. It runs on Python 2.7 and 3.4+.
 
