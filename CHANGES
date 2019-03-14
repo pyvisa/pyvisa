@@ -4,11 +4,12 @@ PyVISA Changelog
 1.10 (unreleased)
 -----------------
 
+- make the ordering of the visa library deterministic PR #399
 - properly close pipes when looking for a shared libary path on linux #380
 - fixing missing argument for USBInstrument.usb_control_out PR #353
 - usb_control_out -> control_out. warnings for deprecated usb_control_out PR #353
 - added new function log_to_stream() PR #363
-- Made all enumerations of the `constants` module unique. 
+- Made all enumerations of the `constants` module unique.
   Fixed duplicate enums in StatusCode PR #371
 - Use ni backend when specifying a file in open_visa_library PR #373
 
