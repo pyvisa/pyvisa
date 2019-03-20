@@ -147,10 +147,11 @@ class Resource(object):
         """The timeout in milliseconds for all resource I/O operations.
 
         Special values:
+
         - **immediate** (``VI_TMO_IMMEDIATE``): 0
-            (for convenience, any value smaller than 1 is considered as 0)
+          (for convenience, any value smaller than 1 is considered as 0)
         - **infinite** (``VI_TMO_INFINITE``): ``float('+inf')``
-            (for convenience, None is considered as ``float('+inf')``)
+          (for convenience, None is considered as ``float('+inf')``)
 
         To set an **infinite** timeout, you can also use:
 
@@ -357,6 +358,7 @@ class Resource(object):
                               a new shared access key.
         :returns: A new shared access key if requested_key is None,
                   otherwise, same value as the requested_key
+
         """
         timeout = self.timeout if timeout == 'default' else timeout
         timeout = self._cleanup_timeout(timeout)
@@ -368,6 +370,7 @@ class Resource(object):
         :param timeout: Absolute time period (in milliseconds) that a resource
                         waits to get unlocked by the locking session before
                         returning an error. (Defaults to self.timeout)
+
         """
         timeout = self.timeout if timeout == 'default' else timeout
         timeout = self._cleanup_timeout(timeout)
@@ -389,7 +392,9 @@ class Resource(object):
                               is an exclusive lock.
                               Otherwise it is the access key for the shared lock or
                               None to generate a new shared access key.
+
         The returned context is the access_key if applicable.
+
         """
         if requested_key == 'exclusive':
             self.lock_excl(timeout)
