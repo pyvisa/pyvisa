@@ -132,6 +132,12 @@ try:
 except ImportError:
     from .nullhandler import NullHandler
 
+try:
+    from types import coroutine
+except ImportError:
+    def coroutine(gen_func):
+        return gen_func
+
 
 def with_metaclass(meta, *bases):
     """Create a base class with a metaclass."""
