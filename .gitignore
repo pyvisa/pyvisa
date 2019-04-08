@@ -13,3 +13,4 @@ MANIFEST
 # WebDAV file system cache files
 .DAV/
 _test/
+.vscode
