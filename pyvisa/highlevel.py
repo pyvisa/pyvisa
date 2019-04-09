@@ -18,6 +18,7 @@ import collections
 import pkgutil
 import os
 from collections import defaultdict
+from weakref import WeakSet
 
 from . import logger
 from . import constants
@@ -1539,6 +1540,7 @@ class ResourceManager(object):
 
         obj.visalib = visa_library
         obj.visalib.resource_manager = obj
+        obj._created_resources = WeakSet()
 
         logger.debug('Created ResourceManager with session %s',  obj.session)
         return obj
@@ -1586,6 +1588,9 @@ class ResourceManager(object):
         """
         try:
             logger.debug('Closing ResourceManager (session: %s)', self.session)
+            # Cleanly close all resources when closing the manager.
+            for resource in self._created_resources:
+                resource.close()
             self.visalib.close(self.session)
             self.session = None
             self.visalib.resource_manager = None
@@ -1595,7 +1600,7 @@ class ResourceManager(object):
     def list_resources(self, query='?*::INSTR'):
         """Returns a tuple of all connected devices matching query.
 
-        note: The query uses the VISA Resource Regular Expression syntax - which is not the same 
+        note: The query uses the VISA Resource Regular Expression syntax - which is not the same
               as the Python regular expression syntax. (see below)
 
             The VISA Resource Regular Expression syntax is defined in the VISA Library specification:
@@ -1629,12 +1634,12 @@ class ResourceManager(object):
                         it. For example, VXI|GPIB means (VXI)|(GPIB), not VX(I|G)PIB.
 
             (exp)       Grouping characters or expressions.
-        
+
             Thus the default query, '?*::INSTR', matches any sequences of characters ending
             ending with '::INSTR'.
-        
+
         :param query: a VISA Resource Regular Expression used to match devices.
-        
+
         """
 
         return self.visalib.list_resources(self.session, query)
@@ -1642,7 +1647,7 @@ class ResourceManager(object):
     def list_resources_info(self, query='?*::INSTR'):
         """Returns a dictionary mapping resource names to resource extended
         information of all connected devices matching query.
-        
+
         For details of the VISA Resource Regular Expression syntax used in query,
         refer to list_resources().
 
@@ -1725,6 +1730,8 @@ class ResourceManager(object):
                 raise ValueError('%r is not a valid attribute for type %s' % (key, res.__class__.__name__))
 
         res.open(access_mode, open_timeout)
+
+        self._created_resources.add(res)
 
         for key, value in kwargs.items():
             setattr(res, key, value)
