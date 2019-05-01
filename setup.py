@@ -15,7 +15,7 @@ def read(filename):
         return f.read().decode('utf8')
 
 
-long_description = '\n\n'.join([read('README'),
+long_description = '\n\n'.join([read('README.rst'),
                                 read('AUTHORS'),
                                 read('CHANGES')])
 

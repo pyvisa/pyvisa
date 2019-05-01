@@ -28,7 +28,7 @@ standard implementations. In addition, Python can be used to directly access
 most bus systems used by instruments which is why one can envision to implement
 the VISA standard directly in Python (see the `PyVISA-Py` project for more
 details). PyVISA is both a Python wrapper for VISA shared libraries but
-can also serve as a front-end for other VISA implementation such as 
+can also serve as a front-end for other VISA implementation such as
 `PyVISA-Py`.
 
 
@@ -57,6 +57,12 @@ Requirements
 - Python (tested with 2.7 and 3.4+)
 - VISA (tested with NI-VISA 17.5, Win7, from www.ni.com/visa)
 
+Python 2 support
+----------------
+
+Python 2 EOL is now near (January 1st 2020), and given the limited time
+maintainers have, the next release of PyVISA (1.10) to be released around July
+2019 will be the last version of PyVISA supporting Python 2.
 
 Installation
 --------------
