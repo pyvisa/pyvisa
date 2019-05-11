@@ -501,13 +501,34 @@ class VisaLibraryBase(object):
         raise NotImplementedError
 
     def flush(self, session, mask):
-        """Manually flushes the specified buffers associated with formatted I/O operations and/or serial communication.
+        """Manually flushes the specified buffers associated with formatted
+        I/O operations and/or serial communication.
 
         Corresponds to viFlush function of the VISA library.
 
         :param session: Unique logical identifier to a session.
         :param mask: Specifies the action to be taken with flushing the buffer.
-                     (Constants.READ*, .WRITE*, .IO*)
+            The following values (defined in the constants module can be
+            combined using the | operator. However multiple operations on a
+            single buffer cannot be combined.
+            - VI_READ_BUF: Discard the read buffer contents and if data was
+              present in the read buffer and no END-indicator was present,
+              read from the device until encountering an END indicator
+              (which causes the loss of data).
+            - VI_READ_BUF_DISCARD: Discard the read buffer contents (does not
+              perform any I/O to the device).
+            - VI_WRITE_BUF: Flush the write buffer by writing all buffered
+              data to the device.
+            - VI_WRITE_BUF_DISCARD: Discard the write buffer contents (does not
+              perform any I/O to the device).
+            - VI_IO_IN_BUF: Discards the receive buffer contents
+              (same as VI_IO_IN_BUF_DISCARD).
+            - VI_IO_IN_BUF_DISCARD: Discard the receive buffer contents (does
+              not perform any I/O to the device).
+            - VI_IO_OUT_BUF: Flush the transmit buffer by writing all buffered
+              data to the device.
+            - VI_IO_OUT_BUF_DISCARD: Discard the transmit buffer contents (does
+              not perform any I/O to the device).
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """
@@ -1595,7 +1616,7 @@ class ResourceManager(object):
     def list_resources(self, query='?*::INSTR'):
         """Returns a tuple of all connected devices matching query.
 
-        note: The query uses the VISA Resource Regular Expression syntax - which is not the same 
+        note: The query uses the VISA Resource Regular Expression syntax - which is not the same
               as the Python regular expression syntax. (see below)
 
             The VISA Resource Regular Expression syntax is defined in the VISA Library specification:
@@ -1629,12 +1650,12 @@ class ResourceManager(object):
                         it. For example, VXI|GPIB means (VXI)|(GPIB), not VX(I|G)PIB.
 
             (exp)       Grouping characters or expressions.
-        
+
             Thus the default query, '?*::INSTR', matches any sequences of characters ending
             ending with '::INSTR'.
-        
+
         :param query: a VISA Resource Regular Expression used to match devices.
-        
+
         """
 
         return self.visalib.list_resources(self.session, query)
@@ -1642,7 +1663,7 @@ class ResourceManager(object):
     def list_resources_info(self, query='?*::INSTR'):
         """Returns a dictionary mapping resource names to resource extended
         information of all connected devices matching query.
-        
+
         For details of the VISA Resource Regular Expression syntax used in query,
         refer to list_resources().
 

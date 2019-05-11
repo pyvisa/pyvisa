@@ -148,10 +148,13 @@ class GPIBInterface(_GPIBMixin, Resource):
         return self.send_command(bytes(command))
 
     def flush(self, mask):
-        """Manually clears the specified buffers and cause the buffer data
-        to be written to the device.
+        """Manually clears the specified buffers.
+
+        Depending on the mask this can cause the buffer data to be written to
+        the device.
 
         :param mask: Specifies the action to be taken with flushing the buffer.
-                 (Constants.READ*, .WRITE*, .IO*)
+            See highlevel.VisaLibraryBase.flush for a detailed description.
+
         """
         self.visalib.flush(self.session, mask)
