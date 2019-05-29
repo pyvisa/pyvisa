@@ -104,14 +104,21 @@ class Resource(object):
     def session(self, value):
         self._session = value
 
+    @property
+    def resource_name(self):
+        """Resource name used to open this resource.
+
+        """
+        return self._resource_name
+
     def __del__(self):
         self.close()
 
     def __str__(self):
-        return "%s at %s" % (self.__class__.__name__, self.resource_name)
+        return "%s at %s" % (self.__class__.__name__, self._resource_name)
 
     def __repr__(self):
-        return "<%r(%r)>" % (self.__class__.__name__, self.resource_name)
+        return "<%r(%r)>" % (self.__class__.__name__, self._resource_name)
 
     def __enter__(self):
         return self
@@ -180,14 +187,14 @@ class Resource(object):
 
         :rtype: :class:`pyvisa.highlevel.ResourceInfo`
         """
-        return self.visalib.parse_resource_extended(self._resource_manager.session, self.resource_name)
+        return self.visalib.parse_resource_extended(self._resource_manager.session, self._resource_name)
 
     @property
     def interface_type(self):
         """The interface type of the resource as a number.
         """
         return self.visalib.parse_resource(self._resource_manager.session,
-                                           self.resource_name)[0].interface_type
+                                           self._resource_name)[0].interface_type
 
     def ignore_warning(self, *warnings_constants):
         """Ignoring warnings context manager for the current resource.

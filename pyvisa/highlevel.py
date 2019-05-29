@@ -1659,6 +1659,14 @@ class ResourceManager(object):
         return dict((resource, self.resource_info(resource))
                     for resource in self.list_resources(query))
 
+    def list_opened_resources(self):
+        """Returns a list of all the opened resources.
+
+        :return: List of resources
+        :rtype: list[:class:`pyvisa.resources.resource.Resource`]
+        """
+        return list(self._created_resources)
+
     def resource_info(self, resource_name, extended=True):
         """Get the (extended) information of a particular resource.
 
