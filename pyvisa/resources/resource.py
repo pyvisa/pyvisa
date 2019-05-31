@@ -80,6 +80,11 @@ class Resource(object):
     def __init__(self, resource_manager, resource_name):
         self._resource_manager = resource_manager
         self.visalib = self._resource_manager.visalib
+
+        # We store the resource name and use preferably the private attr over
+        # the public descriptor intyernally because the public descriptor
+        # requires a live instance the VISA library, which means it is much
+        # slower but also can cause issue in error reporting in th repr.
         self._resource_name = resource_name
 
         self._logging_extra = {'library_path': self.visalib.library_path,
@@ -103,13 +108,6 @@ class Resource(object):
     @session.setter
     def session(self, value):
         self._session = value
-
-    @property
-    def resource_name(self):
-        """Resource name used to open this resource.
-
-        """
-        return self._resource_name
 
     def __del__(self):
         self.close()
