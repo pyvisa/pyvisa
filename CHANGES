@@ -4,6 +4,7 @@ PyVISA Changelog
 1.10 (unreleased)
 -----------------
 
+- avoid attempting to close already closed resources in del PR #424
 - make the ordering of the visa library deterministic PR #399
 - properly close pipes when looking for a shared libary path on linux #380
 - fixing missing argument for USBInstrument.usb_control_out PR #353
