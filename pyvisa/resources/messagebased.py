@@ -469,15 +469,38 @@ class MessageBasedResource(Resource):
         :rtype: type(container)
 
         """
-        block = self._read_raw()
+        block = b''
         expected_length = 0
 
         if header_fmt == 'ieee':
-            offset, data_length = util.parse_ieee_block_header(block)
+            hash = self.read_bytes(1)                   # Hash '#'
+            digits = self.read_bytes(1)                 # Digits
+            block_size = self.read_bytes(int(digits))   # Block size
+
+            block = block + hash
+            block = block + digits
+            block = block + block_size
+
+            block = block + self.read_bytes(int(block_size))
+
+            offset = 2 + int(digits)
+            data_length = int(block_size)
+
             expected_length = offset + data_length
+
         elif header_fmt == 'hp':
-            offset, data_length = util.parse_hp_block_header(block,
-                                                             is_big_endian)
+
+            hash = self.read_bytes(2)                   # Hash '#A'
+            block_size = self.read_bytes(4)             # Block size
+
+            block = block + hash
+            block = block + block_size
+
+            offset = 6
+            data_length = int_from_bytes(block_size,
+                                 byteorder='big' if is_big_endian else 'little'
+                                 )
+
             expected_length = offset + data_length
 
         if expect_termination and self._read_termination is not None:
@@ -697,7 +720,6 @@ class MessageBasedResource(Resource):
 
     def read_stb(self):
         """Service request status register.
-
         """
         value, retcode = self.visalib.read_stb(self.session)
         return value
