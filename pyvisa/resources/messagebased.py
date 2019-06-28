@@ -503,7 +503,7 @@ class MessageBasedResource(Resource):
 
             expected_length = offset + data_length
 
-        else header_fmt == 'empty':
+        elif header_fmt == 'empty':
 
             block = block + self._read_raw()
 
