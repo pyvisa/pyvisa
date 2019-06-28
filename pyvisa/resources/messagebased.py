@@ -495,7 +495,7 @@ class MessageBasedResource(Resource):
         if data_length is not None:
             block.extend(self.read_bytes(data_length))
         else:
-            block.extend(self.read_raw())
+            block.extend(self._read_raw())
 
         if expect_termination and self._read_termination is not None:
             expected_length += len(self._read_termination)
