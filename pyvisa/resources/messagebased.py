@@ -469,43 +469,33 @@ class MessageBasedResource(Resource):
         :rtype: type(container)
 
         """
-        block = b''
+        block = bytearray()
         expected_length = 0
 
         if header_fmt == 'ieee':
-            hash = self.read_bytes(1)                   # Hash '#'
-            digits = self.read_bytes(1)                 # Digits
-            block_size = self.read_bytes(int(digits))   # Block size
+            header = self.read_bytes(2)                    # Hash '#' and digits
+            digits = int(header[1:])                       # Digits
+            block_size = self.read_bytes(digits)           # Block size
+            header += block_size
+            block.extend(header)
 
-            block = block + hash
-            block = block + digits
-            block = block + block_size
-
-            block = block + self.read_bytes(int(block_size))
-
-            offset = 2 + int(digits)
-            data_length = int(block_size)
+            offset, data_length = util.parse_ieee_block_header(header)
 
             expected_length = offset + data_length
 
         elif header_fmt == 'hp':
 
-            hash = self.read_bytes(2)                   # Hash '#A'
-            block_size = self.read_bytes(4)             # Block size
+            header = self.read_bytes(6)                     # Hash '#A' + block size
+            block.extend(header)
 
-            block = block + hash
-            block = block + block_size
-
-            offset = 6
-            data_length = int_from_bytes(block_size,
-                                 byteorder='big' if is_big_endian else 'little'
-                                 )
+            offset, data_length = util.parse_hp_block_header(header, is_big_endian)
 
             expected_length = offset + data_length
 
-        elif header_fmt == 'empty':
-
-            block = block + self._read_raw()
+        if data_length is not None:
+            block.extend(self.read_bytes(data_length))
+        else:
+            block.extend(self.read_raw())
 
         if expect_termination and self._read_termination is not None:
             expected_length += len(self._read_termination)
