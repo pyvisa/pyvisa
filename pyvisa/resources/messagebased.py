@@ -450,7 +450,8 @@ class MessageBasedResource(Resource):
 
     def read_binary_values(self, datatype='f', is_big_endian=False,
                            container=list, header_fmt='ieee',
-                           expect_termination=True):
+                           expect_termination=True, data_length=0,
+                           chunk_size=None):
         """Read values from the device in binary format returning an iterable
         of values.
 
@@ -465,42 +466,57 @@ class MessageBasedResource(Resource):
                                    the binary values block does not account
                                    for the final termination character (the
                                    read termination)
+        :param data_length: Length of the block to be received. This is used
+                            only if the instrument does not report it itself.
+        :param chunk_size: Size of the chunks to read from the device. Using
+                           larger chunks may be faster for large amount of
+                           data.
         :returns: the answer from the device.
         :rtype: type(container)
 
         """
         block = bytearray()
-        expected_length = 0
 
         if header_fmt == 'ieee':
             header = self.read_bytes(2)                    # Hash '#' and digits
             digits = int(header[1:])                       # Digits
-            block_size = self.read_bytes(digits)           # Block size
-            header += block_size
-            block.extend(header)
-
-            offset, data_length = util.parse_ieee_block_header(header)
-
-            expected_length = offset + data_length
+            # Allow to support instrument such as the Keithley 2000 that do not
+            # report the length of the block
+            if digits:
+                block_size = self.read_bytes(digits)           # Block size
+                header += block_size
+                block.extend(header)
+                offset, data_length = util.parse_ieee_block_header(header)
+            else:
+                offset = 2
 
         elif header_fmt == 'hp':
-
             header = self.read_bytes(6)                     # Hash '#A' + block size
             block.extend(header)
 
             offset, data_length = util.parse_hp_block_header(header, is_big_endian)
 
-            expected_length = offset + data_length
-
-        if data_length is not None:
-            block.extend(self.read_bytes(data_length))
+        elif header == 'empty':
+            offset = 0
         else:
-            block.extend(self._read_raw())
+            raise ValueError("Invalid header format. Valid options are 'ieee',"
+                             " 'empty', 'hp'")
+
+        expected_length = offset + data_length
 
         if expect_termination and self._read_termination is not None:
             expected_length += len(self._read_termination)
 
-        while len(block) < expected_length:
+        # Read all the data if we know what to expect.
+        if expected_length != 0:
+            block.extend(self.read_bytes(expected_length - offset,
+                                         chunk_size=chunk_size))
+        else:
+            # Beckward compatibility. This is dangerous and should probably be
+            # removed
+            warnings.warn('Reading binary data without a known less is error '
+                          'prone, and should be avoided. This capability will '
+                          'will be removed in future versions.', FutureWarning)
             block.extend(self._read_raw())
 
         try:
@@ -647,7 +663,8 @@ class MessageBasedResource(Resource):
 
     def query_binary_values(self, message, datatype='f', is_big_endian=False,
                             container=list, delay=None, header_fmt='ieee',
-                            expect_termination=True):
+                            expect_termination=True, data_length=0,
+                            chunk_size=None):
         """Query the device for values in binary format returning an iterable
         of values.
 
@@ -663,6 +680,11 @@ class MessageBasedResource(Resource):
                                    the binary values block does not account
                                    for the final termination character (the
                                    read termination)
+        :param data_length: Length of the block to be received. This is used
+                            only if the instrument does not report it itself.
+        :param chunk_size: Size of the chunks to read from the device. Using
+                           larger chunks may be faster for large amount of
+                           data.
         :returns: the answer from the device.
         :rtype: list
         """
@@ -677,7 +699,8 @@ class MessageBasedResource(Resource):
             time.sleep(delay)
 
         return self.read_binary_values(datatype, is_big_endian, container,
-                                       header_fmt, expect_termination)
+                                       header_fmt, expect_termination,
+                                       data_length, chunk_size)
 
     def ask_for_values(self, message, fmt=None, delay=None):
         """A combination of write(message) and read_values()
