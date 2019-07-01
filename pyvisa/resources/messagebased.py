@@ -478,14 +478,14 @@ class MessageBasedResource(Resource):
         block = self._read_raw(chunk_size)
 
         if header_fmt == 'ieee':
-            offset, ieee_data_length = util.parse_ieee_block_header(header)
+            offset, ieee_data_length = util.parse_ieee_block_header(block)
 
             # Allow to support instrument such as the Keithley 2000 that do not
             # report the length of the block
             data_length = ieee_data_length or data_length
 
         elif header_fmt == 'hp':
-            offset, data_length = util.parse_hp_block_header(header,
+            offset, data_length = util.parse_hp_block_header(block,
                                                              is_big_endian)
 
         elif header == 'empty':
@@ -500,7 +500,7 @@ class MessageBasedResource(Resource):
             expected_length += len(self._read_termination)
 
         # Read all the data if we know what to expect.
-        if expected_length != 0:
+        if data_length != 0:
             block.extend(self.read_bytes(expected_length - len(block),
                                          chunk_size=chunk_size))
         else:
