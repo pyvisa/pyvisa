@@ -487,7 +487,6 @@ class MessageBasedResource(Resource):
         elif header_fmt == 'hp':
             offset, data_length = util.parse_hp_block_header(block,
                                                              is_big_endian)
-
         elif header == 'empty':
             offset = 0
         else:
@@ -517,18 +516,16 @@ class MessageBasedResource(Resource):
             warnings.warn(msg, FutureWarning)
             # Do not keep reading since we may have already read everything
 
+            # Set the datalength to None to infer it from the block length
+            data_length = None
+
+
         try:
-            if header_fmt == 'ieee':
-                return util.from_ieee_block(block, datatype, is_big_endian,
-                                            container)
-            elif header_fmt == 'hp':
-                return util.from_hp_block(block, datatype, is_big_endian,
+            # Do not reparse the headers since it was already done and since
+            # this allows for custom data length
+            return util.from_binary_block(block, offset, data_length,
+                                          datatype, is_big_endian,
                                           container)
-            elif header_fmt == 'empty':
-                return util.from_binary_block(block, 0, None, datatype,
-                                              is_big_endian, container)
-            else:
-                raise ValueError('Unsupported binary block format.')
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
