@@ -114,8 +114,9 @@ In some cases, the instrument may use a protocol that does not indicate how
 many bytes will be transferred. The Keithley 2000 for example always return the
 full buffer whose size is reported by the 'trace:points?' command. Since a
 binary block may contain the termination character, PyVISA need to know how
-many bytes to expect. For those case, you can pass the expected number of bytes
-using the ``data_length`` keyword argument.
+many bytes to expect. For those case, you can pass the expected number of
+points using the ``data_points`` keyword argument. The number of bytes will be
+inferred from the datatype of the block.
 
 
 Writing ASCII values
