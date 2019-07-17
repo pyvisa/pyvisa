@@ -321,7 +321,7 @@ class MessageBasedResource(Resource):
         :type chunk_size: int
         :param break_on_termchar: Should the reading stop when a termination
             character is encountered.
-        :type brak_on_termchar: bool
+        :type break_on_termchar: bool
 
         :rtype: bytes
 
