@@ -4,6 +4,7 @@ PyVISA Changelog
 1.10 (unreleased)
 -----------------
 
+- replace time.clock by time.perf_counter under Python 3 PR #441
 - make the ordering of the visa library deterministic PR #399
 - properly close pipes when looking for a shared libary path on linux #380
 - fixing missing argument for USBInstrument.usb_control_out PR #353
