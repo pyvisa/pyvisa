@@ -502,13 +502,34 @@ class VisaLibraryBase(object):
         raise NotImplementedError
 
     def flush(self, session, mask):
-        """Manually flushes the specified buffers associated with formatted I/O operations and/or serial communication.
+        """Manually flushes the specified buffers associated with formatted
+        I/O operations and/or serial communication.
 
         Corresponds to viFlush function of the VISA library.
 
         :param session: Unique logical identifier to a session.
         :param mask: Specifies the action to be taken with flushing the buffer.
-                     (Constants.READ*, .WRITE*, .IO*)
+            The following values (defined in the constants module can be
+            combined using the | operator. However multiple operations on a
+            single buffer cannot be combined.
+            - VI_READ_BUF: Discard the read buffer contents and if data was
+              present in the read buffer and no END-indicator was present,
+              read from the device until encountering an END indicator
+              (which causes the loss of data).
+            - VI_READ_BUF_DISCARD: Discard the read buffer contents (does not
+              perform any I/O to the device).
+            - VI_WRITE_BUF: Flush the write buffer by writing all buffered
+              data to the device.
+            - VI_WRITE_BUF_DISCARD: Discard the write buffer contents (does not
+              perform any I/O to the device).
+            - VI_IO_IN_BUF: Discards the receive buffer contents
+              (same as VI_IO_IN_BUF_DISCARD).
+            - VI_IO_IN_BUF_DISCARD: Discard the receive buffer contents (does
+              not perform any I/O to the device).
+            - VI_IO_OUT_BUF: Flush the transmit buffer by writing all buffered
+              data to the device.
+            - VI_IO_OUT_BUF_DISCARD: Discard the transmit buffer contents (does
+              not perform any I/O to the device).
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
         """

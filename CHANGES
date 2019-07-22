@@ -13,6 +13,8 @@ PyVISA Changelog
 - Made all enumerations of the `constants` module unique.
   Fixed duplicate enums in StatusCode PR #371
 - Use ni backend when specifying a file in open_visa_library PR #373
+- Add flush() method to all resource classes that support viFlush()
+  (with the exception of VXIInstrument class) PR #390
 
 
 1.9.1 (2018-08-13)
