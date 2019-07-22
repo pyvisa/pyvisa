@@ -14,6 +14,12 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import time
+import sys
+
+if sys.version_info > (3,2):
+    perf_counter = time.perf_counter
+else:
+    perf_counter = time.clock
 
 from .. import constants
 from .resource import Resource
@@ -98,13 +104,15 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
         if timeout and not(0 <= timeout <= 4294967295):
             raise ValueError("timeout value is invalid")
 
-        starting_time = time.clock()
+        starting_time = perf_counter()
 
         while True:
             if timeout is None:
                 adjusted_timeout = constants.VI_TMO_INFINITE
             else:
-                adjusted_timeout = int((starting_time + timeout/1e3 - time.clock())*1e3)
+                adjusted_timeout = int((starting_time +
+                                        timeout/1e3 -
+                                        perf_counter())*1e3)
                 if adjusted_timeout < 0:
                     adjusted_timeout = 0
 
@@ -146,3 +154,15 @@ class GPIBInterface(_GPIBMixin, Resource):
         command.append(0x08)
 
         return self.send_command(bytes(command))
+
+    def flush(self, mask):
+        """Manually clears the specified buffers.
+
+        Depending on the mask this can cause the buffer data to be written to
+        the device.
+
+        :param mask: Specifies the action to be taken with flushing the buffer.
+            See highlevel.VisaLibraryBase.flush for a detailed description.
+
+        """
+        self.visalib.flush(self.session, mask)

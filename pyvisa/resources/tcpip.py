@@ -28,6 +28,7 @@ class TCPIPInstrument(ControlRenMixin, MessageBasedResource):
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
+    pass
 
 
 @Resource.register(constants.InterfaceType.tcpip, 'SOCKET')
@@ -39,3 +40,4 @@ class TCPIPSocket(MessageBasedResource):
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
+    pass
