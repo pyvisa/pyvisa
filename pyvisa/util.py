@@ -318,6 +318,9 @@ def parse_ieee_block_header(block):
     Indefinite Length Arbitrary Block:
     #0<data>
 
+    In this case the data length returned will be 0. The actual length can be
+    deduced from the block and the offset.
+
     :param block: IEEE block.
     :type block: bytes | bytearray
     :return: (offset, data_length)
@@ -342,7 +345,7 @@ def parse_ieee_block_header(block):
     else:
         # #0DATA
         # 012
-        data_length = len(block) - offset - 1
+        data_length = 0
 
     return offset, data_length
 
@@ -388,7 +391,7 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     Indefinite Length Arbitrary Block:
     #0<data>
 
-    :param block: HP block.
+    :param block: IEEE block.
     :type block: bytes | bytearray
     :param datatype: the format string for a single element. See struct module.
     :param is_big_endian: boolean indicating endianess.
@@ -397,6 +400,9 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     :rtype: type(container)
     """
     offset, data_length = parse_ieee_block_header(block)
+
+    if data_length == 0:
+        data_length = len(block) - offset - 1
 
     if len(block) < offset + data_length:
         raise ValueError("Binary data is incomplete. The header states %d data"
@@ -416,7 +422,7 @@ def from_hp_block(block, datatype='f', is_big_endian=False, container=list):
     The header ia always 4 bytes long.
     The data_length field specifies the size of the data.
 
-    :param block: IEEE block.
+    :param block: HP block.
     :type block: bytes | bytearray
     :param datatype: the format string for a single element. See struct module.
     :param is_big_endian: boolean indicating endianess.
