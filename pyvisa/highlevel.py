@@ -1587,7 +1587,8 @@ class ResourceManager(object):
         return '<ResourceManager(%r)>' % self.visalib
 
     def __del__(self):
-        self.close()
+        if self._session is not None:
+            self.close()
 
     def ignore_warning(self, *warnings_constants):
         """Ignoring warnings context manager for the current resource.
@@ -1606,6 +1607,7 @@ class ResourceManager(object):
 
     def close(self):
         """Close the resource manager session.
+
         """
         try:
             logger.debug('Closing ResourceManager (session: %s)', self.session)

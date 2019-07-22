@@ -4,6 +4,7 @@ PyVISA Changelog
 1.10 (unreleased)
 -----------------
 
+- avoid attempting to close already closed resources in del PR #424
 - add a list_opened_resources method to the ResourceManager PR #415
 - use privately stored resource name in Resource class rather than relying on
   VisaLibrary PR #415

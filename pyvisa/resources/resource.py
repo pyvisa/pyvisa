@@ -110,7 +110,8 @@ class Resource(object):
         self._session = value
 
     def __del__(self):
-        self.close()
+        if self._session is not None:
+            self.close()
 
     def __str__(self):
         return "%s at %s" % (self.__class__.__name__, self._resource_name)
