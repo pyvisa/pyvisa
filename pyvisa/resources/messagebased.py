@@ -321,7 +321,7 @@ class MessageBasedResource(Resource):
         :type chunk_size: int
         :param break_on_termchar: Should the reading stop when a termination
             character is encountered.
-        :type brak_on_termchar: bool
+        :type break_on_termchar: bool
 
         :rtype: bytes
 
@@ -709,6 +709,18 @@ class MessageBasedResource(Resource):
                                 ord(new_termination[-1]))
         yield
         self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, term)
+
+    def flush(self, mask):
+        """Manually clears the specified buffers.
+
+        Depending on the value of the mask this can cause the buffer data
+        to be written to the device.
+
+        :param mask: Specifies the action to be taken with flushing the buffer.
+            See highlevel.VisaLibraryBase.flush for a detailed description.
+
+        """
+        self.visalib.flush(self.session, mask)
 
 
 # Rohde and Schwarz Device via Passport. Not sure which Resource should be.

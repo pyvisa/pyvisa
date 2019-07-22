@@ -80,6 +80,11 @@ class Resource(object):
     def __init__(self, resource_manager, resource_name):
         self._resource_manager = resource_manager
         self.visalib = self._resource_manager.visalib
+
+        # We store the resource name and use preferably the private attr over
+        # the public descriptor intyernally because the public descriptor
+        # requires a live instance the VISA library, which means it is much
+        # slower but also can cause issue in error reporting in th repr.
         self._resource_name = resource_name
 
         self._logging_extra = {'library_path': self.visalib.library_path,
@@ -109,10 +114,10 @@ class Resource(object):
             self.close()
 
     def __str__(self):
-        return "%s at %s" % (self.__class__.__name__, self.resource_name)
+        return "%s at %s" % (self.__class__.__name__, self._resource_name)
 
     def __repr__(self):
-        return "<%r(%r)>" % (self.__class__.__name__, self.resource_name)
+        return "<%r(%r)>" % (self.__class__.__name__, self._resource_name)
 
     def __enter__(self):
         return self
@@ -181,14 +186,14 @@ class Resource(object):
 
         :rtype: :class:`pyvisa.highlevel.ResourceInfo`
         """
-        return self.visalib.parse_resource_extended(self._resource_manager.session, self.resource_name)
+        return self.visalib.parse_resource_extended(self._resource_manager.session, self._resource_name)
 
     @property
     def interface_type(self):
         """The interface type of the resource as a number.
         """
         return self.visalib.parse_resource(self._resource_manager.session,
-                                           self.resource_name)[0].interface_type
+                                           self._resource_name)[0].interface_type
 
     def ignore_warning(self, *warnings_constants):
         """Ignoring warnings context manager for the current resource.

@@ -34,7 +34,7 @@ SCPI and/or Keithley 2000 manual.
    >>> keithley.write("trigger:source bus")
    >>> keithley.write("trigger:delay %f" % (interval_in_ms / 1000.0))
    >>> keithley.write("trace:points %d" % number_of_readings)
-   >>> keithley.write("trace:feed sense1; feed:control next")
+   >>> keithley.write("trace:feed sense1; trace:feed:control next")
 
 Okay, now the instrument is prepared to do the measurement.  The next
 three lines make the instrument waiting for a trigger pulse, trigger
@@ -66,7 +66,7 @@ register, so that it's ready for a new run.  Again, this is explained
 in detail in the instrument's manual::
 
    >>> keithley.query("status:measurement?")
-   >>> keithley.write("trace:clear; feed:control next")
+   >>> keithley.write("trace:clear; trace:feed:control next")
 
 That's it. 18 lines of lucid code.  (Well, SCPI is awkward, but
 that's another story.)

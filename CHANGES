@@ -5,6 +5,11 @@ PyVISA Changelog
 -----------------
 
 - avoid attempting to close already closed resources in del PR #424
+- add a list_opened_resources method to the ResourceManager PR #415
+- use privately stored resource name in Resource class rather than relying on
+  VisaLibrary PR #415
+- keep track of resources created by the ResourceManager to properly close them PR #357
+- replace time.clock by time.perf_counter under Python 3 PR #441
 - make the ordering of the visa library deterministic PR #399
 - properly close pipes when looking for a shared libary path on linux #380
 - fixing missing argument for USBInstrument.usb_control_out PR #353
@@ -13,6 +18,8 @@ PyVISA Changelog
 - Made all enumerations of the `constants` module unique.
   Fixed duplicate enums in StatusCode PR #371
 - Use ni backend when specifying a file in open_visa_library PR #373
+- Add flush() method to all resource classes that support viFlush()
+  (with the exception of VXIInstrument class) PR #390
 
 
 1.9.1 (2018-08-13)
