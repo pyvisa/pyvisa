@@ -79,6 +79,13 @@ is the same as::
     >>> print(my_instrument.read())
 
 
+.. note::
+
+    You can access all the opened resources by calling
+    ``rm.list_opened_resources()``. This will return a list of ``Resource``,
+    however note that this list is not dynamically updated.
+
+
 Getting the instrument configuration right
 ------------------------------------------
 
