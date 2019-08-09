@@ -14,6 +14,7 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
 
 install:
   - if [ $TRAVIS_PYTHON_VERSION == '2.7' ] || [ $TRAVIS_PYTHON_VERSION == '3.6' ]; then pip install numpy; fi
