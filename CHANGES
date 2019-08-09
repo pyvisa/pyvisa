@@ -1,13 +1,17 @@
 PyVISA Changelog
 ================
 
+1.11 (unreleased)
+-----------------
+
+
 1.10 (2019-08-09)
 -----------------
 
 - Change the returned data_length for IEEE block of undefined size to 0 PR #435
 - Add chunk_size and data_length keyword argument to read/query_binary_values PR #435
 - Make the ordering of the visa library deterministic PR #399
-- Properly close pipes when looking for a shared libary path on linux #380
+- Properly close pipes when looking for a shared library path on linux #380
 - Fixing missing argument for USBInstrument.usb_control_out PR #353
 - avoid attempting to close already closed resources in del PR #424
 - add a list_opened_resources method to the ResourceManager PR #415
@@ -16,7 +20,7 @@ PyVISA Changelog
 - keep track of resources created by the ResourceManager to properly close them PR #357
 - replace time.clock by time.perf_counter under Python 3 PR #441
 - make the ordering of the visa library deterministic PR #399
-- properly close pipes when looking for a shared libary path on linux #380
+- properly close pipes when looking for a shared library path on linux #380
 - fixing missing argument for USBInstrument.usb_control_out PR #353
 - usb_control_out -> control_out. warnings for deprecated usb_control_out PR #353
 - Added new function log_to_stream() PR #363
