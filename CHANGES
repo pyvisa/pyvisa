@@ -1,7 +1,7 @@
 PyVISA Changelog
 ================
 
-1.10 (unreleased)
+1.10 (2019-08-09)
 -----------------
 
 - Change the returned data_length for IEEE block of undefined size to 0 PR #435
