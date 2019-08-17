@@ -14,8 +14,8 @@ An example
 
 Let's go *in medias res* and have a look at a simple example::
 
-    >>> import visa
-    >>> rm = visa.ResourceManager()
+    >>> import pyvisa
+    >>> rm = pyvisa.ResourceManager()
     >>> rm.list_resources()
     ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::14::INSTR')
     >>> my_instrument = rm.open_resource('GPIB0::14::INSTR')
@@ -24,7 +24,7 @@ Let's go *in medias res* and have a look at a simple example::
 This example already shows the two main design goals of PyVISA: preferring
 simplicity over generality, and doing it the object-oriented way.
 
-After importing ``visa``, we create a ``ResourceManager`` object. If called
+After importing ``pyvisa``, we create a ``ResourceManager`` object. If called
 without arguments, PyVISA will prefer the default backend (IVI) which tries to
 find the VISA shared library for you. If it fails it will fall back to
 pyvisa-py if installed. You can check what backend is used and the location of

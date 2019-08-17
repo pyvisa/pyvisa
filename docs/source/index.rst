@@ -14,8 +14,8 @@ devices independently of the interface (e.g. GPIB, RS232, USB, Ethernet). As
 an example, reading self-identification from a Keithley Multimeter with GPIB
 number 12 is as easy as three lines of Python code::
 
-    >>> import visa
-    >>> rm = visa.ResourceManager()
+    >>> import pyvisa
+    >>> rm = pyvisa.ResourceManager()
     >>> rm.list_resources()
     ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::12::INSTR')
     >>> inst = rm.open_resource('GPIB0::12::INSTR')

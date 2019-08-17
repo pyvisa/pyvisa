@@ -24,20 +24,20 @@ Indeed PyVISA 1.6 breaks compatibility to bring across a few good things.
 
 **If you are doing:**
 
-    >>> import visa
-    >>> keithley = visa.instrument("GPIB::12")
+    >>> import pyvisa
+    >>> keithley = pyvisa.instrument("GPIB::12")
     >>> print(keithley.ask("*IDN?"))
 
 change it to:
 
-    >>> import visa
-    >>> rm = visa.ResourceManager()
+    >>> import pyvisa
+    >>> rm = pyvisa.ResourceManager()
     >>> keithley = rm.open_resource("GPIB::12")
     >>> print(keithley.query("*IDN?"))
 
 **If you are doing:**
 
-    >>> print(visa.get_instruments_list())
+    >>> print(pyvisa.get_instruments_list())
 
 change it to:
 
@@ -50,8 +50,8 @@ change it to:
 
 change it to:
 
-    >>> import visa
-    >>> rm = visa.ResourceManager("/path/to/my/libvisa.so.7")
+    >>> import pyvisa
+    >>> rm = pyvisa.ResourceManager("/path/to/my/libvisa.so.7")
     >>> lib = rm.visalib
 
 
@@ -186,9 +186,9 @@ both in ``pyvisa.highlevel``). The new classes are not singletons, at least not 
 strict sense. Multiple instances of ``VisaLibrary`` and ``ResourceManager`` are possible,
 but only if they refer to different foreign libraries. In code, this means:
 
-    >>> lib1 = visa.VisaLibrary("/path/to/my/libvisa.so.7")
-    >>> lib2 = visa.VisaLibrary("/path/to/my/libvisa.so.7")
-    >>> lib3 = visa.VisaLibrary("/path/to/my/libvisa.so.8")
+    >>> lib1 = pyvisa.VisaLibrary("/path/to/my/libvisa.so.7")
+    >>> lib2 = pyvisa.VisaLibrary("/path/to/my/libvisa.so.7")
+    >>> lib3 = pyvisa.VisaLibrary("/path/to/my/libvisa.so.8")
     >>> lib1 is lib2
     True
     >>> lib1 is lib3
@@ -197,12 +197,12 @@ but only if they refer to different foreign libraries. In code, this means:
 Most of the time, you will not need access to a ``VisaLibrary`` object but to a ``ResourceManager``.
 You can do:
 
-    >>> lib = visa.VisaLibrary("/path/to/my/libvisa.so.7")
+    >>> lib = pyvisa.VisaLibrary("/path/to/my/libvisa.so.7")
     >>> rm = lib.resource_manager
 
 or equivalently:
 
-    >>> rm = visa.ResourceManager("/path/to/my/libvisa.so.7")
+    >>> rm = pyvisa.ResourceManager("/path/to/my/libvisa.so.7")
 
 .. note:: If the path for the library is not given, the path is obtained from
           the user settings file (if exists) or guessed from the OS.
@@ -224,8 +224,8 @@ In 1.5, we introduced a new ``VisaLibrary`` class (``pyvisa.highlevel``) which h
 every single low level function defined in ``ctwrapper`` as bound methods. In code,
 this means that you can do::
 
-    >>> import visa
-    >>> rm = visa.ResourceManager("/path/to/my/libvisa.so.7")
+    >>> import pyvisa
+    >>> rm = pyvisa.ResourceManager("/path/to/my/libvisa.so.7")
     >>> lib = rm.visalib
     >>> print(lib.read_stb(session))
 

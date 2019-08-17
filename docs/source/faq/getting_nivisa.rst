@@ -10,10 +10,6 @@ and then choose the Python version matching the installed NI-VISA bitness.
 PyVISA includes a debugging command to help you troubleshoot this
 (and other things)::
 
-    python -m visa info
-
-or equivalently::
-
     pyvisa-info
 
 According to National Instruments, NI VISA **17.5** is available for the

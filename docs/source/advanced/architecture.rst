@@ -67,8 +67,8 @@ Calling middle- and low-level functions
 
 After you have instantiated the |ResourceManager|::
 
-    >>> import visa
-    >>> rm = visa.ResourceManager()
+    >>> import pyvisa
+    >>> rm = pyvisa.ResourceManager()
 
 you can access the corresponding ``VisaLibrary`` instance under the |visalib|
 attribute.
