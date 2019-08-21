@@ -483,18 +483,19 @@ class MessageBasedResource(Resource):
         if header_fmt == 'ieee':
             offset, data_length = util.parse_ieee_block_header(block)
 
-            # Allow to support instrument such as the Keithley 2000 that do not
-            # report the length of the block
-            data_length = data_length or data_points*struct.calcsize(datatype)
-
         elif header_fmt == 'hp':
             offset, data_length = util.parse_hp_block_header(block,
                                                              is_big_endian)
-        elif header == 'empty':
+        elif header_fmt == 'empty':
             offset = 0
+            data_length = 0
         else:
             raise ValueError("Invalid header format. Valid options are 'ieee',"
                              " 'empty', 'hp'")
+
+        # Allow to support instrument such as the Keithley 2000 that do not
+        # report the length of the block
+        data_length = data_length or data_points*struct.calcsize(datatype)
 
         expected_length = offset + data_length
 
@@ -515,7 +516,7 @@ class MessageBasedResource(Resource):
                    'as part of the transfer, it may be because the size is '
                    'fixed or can be accessed from the instrumentin using a '
                    'specific command. You should find the expected number of '
-                   'bytes and pass it using the `data_length` keyword.')
+                   'points and pass it using the `data_points` keyword.')
             warnings.warn(msg, FutureWarning)
             # Do not keep reading since we may have already read everything
 
