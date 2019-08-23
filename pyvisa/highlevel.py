@@ -48,7 +48,8 @@ class VisaLibraryBase(object):
     derived class must/will implement all methods.
 
     The default VisaLibrary class is :class:`pyvisa.ctwrapper.highlevel.NIVisaLibrary`,
-    which implements a ctypes wrapper around the NI-VISA library.
+    which implements a ctypes wrapper around the IVI-VISA library.
+    Certainly, IVI-VISA can be NI-VISA, R&SVISA, tekVISA etc.
 
     In general, you should not instantiate it directly. The object exposed to the user
     is the :class:`pyvisa.highlevel.ResourceManager`. If needed, you can access the
