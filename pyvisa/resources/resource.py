@@ -23,6 +23,7 @@ from .. import errors
 from .. import logger
 from .. import highlevel
 from .. import attributes
+from .. import rname
 
 
 class WaitResponse(object):
@@ -85,8 +86,12 @@ class Resource(object):
         # the public descriptor internally because the public descriptor
         # requires a live instance the VISA library, which means it is much
         # slower but also can cause issue in error reporting when accessing the
-        # repr.
-        self._resource_name = resource_name
+        # repr
+        try:
+            # Attempt to normalize the resource name. Can fail for aliases
+            self._resource_name = str(rname.ResourceName.from_string(resource_name))
+        except InvalidResourceName:
+            self._resource_name = resource_name
 
         self._logging_extra = {'library_path': self.visalib.library_path,
                                'resource_manager.session': self._resource_manager.session,
