@@ -180,12 +180,12 @@ _converters = {
 
 _np_converters = {
     'd': 'i',
-    'e': 'f',
-    'E': 'f',
-    'f': 'f',
-    'F': 'f',
-    'g': 'f',
-    'G': 'f',
+    'e': 'd',
+    'E': 'd',
+    'f': 'd',
+    'F': 'd',
+    'g': 'd',
+    'G': 'd',
 }
 
 
@@ -262,8 +262,7 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
     :return:
     """
     warnings.warn('parse_binary is deprecated and will be removed in '
-                  '1.10, use from_ascii_values or from_binary_values '
-                  'instead.', FutureWarning)
+                  '1.10, use instead.', FutureWarning)
     data = bytes_data
 
     hash_sign_position = bytes_data.find(b"#")
