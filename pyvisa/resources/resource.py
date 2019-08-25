@@ -82,9 +82,10 @@ class Resource(object):
         self.visalib = self._resource_manager.visalib
 
         # We store the resource name and use preferably the private attr over
-        # the public descriptor intyernally because the public descriptor
+        # the public descriptor internally because the public descriptor
         # requires a live instance the VISA library, which means it is much
-        # slower but also can cause issue in error reporting in th repr.
+        # slower but also can cause issue in error reporting when accessing the
+        # repr.
         self._resource_name = resource_name
 
         self._logging_extra = {'library_path': self.visalib.library_path,
@@ -191,6 +192,7 @@ class Resource(object):
     @property
     def interface_type(self):
         """The interface type of the resource as a number.
+
         """
         return self.visalib.parse_resource(self._resource_manager.session,
                                            self._resource_name)[0].interface_type
@@ -199,6 +201,7 @@ class Resource(object):
         """Ignoring warnings context manager for the current resource.
 
         :param warnings_constants: constants identifying the warnings to ignore.
+
         """
         return self.visalib.ignore_warning(self.session, *warnings_constants)
 
@@ -321,7 +324,7 @@ class Resource(object):
         """Discards event occurrences for specified event types and mechanisms in this resource.
 
         :param event_type: Logical event identifier.
-        :param mechanism: Specifies event handling mechanisms to be dicarded.
+        :param mechanism: Specifies event handling mechanisms to be discarded.
                           (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
         """
         self.visalib.discard_events(self.session, event_type, mechanism)
@@ -386,6 +389,7 @@ class Resource(object):
 
     def unlock(self):
         """Relinquishes a lock for the specified resource.
+
         """
         self.visalib.unlock(self.session)
 

@@ -262,7 +262,7 @@ def parse_binary(bytes_data, is_big_endian=False, is_single=False):
     :return:
     """
     warnings.warn('parse_binary is deprecated and will be removed in '
-                  '1.10, use read_ascii_values or read_binary_values '
+                  '1.10, use from_ascii_values or from_binary_values '
                   'instead.', FutureWarning)
     data = bytes_data
 

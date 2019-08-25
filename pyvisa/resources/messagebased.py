@@ -152,6 +152,7 @@ class MessageBasedResource(Resource):
     @property
     def read_termination(self):
         """Read termination character.
+
         """
         return self._read_termination
 
@@ -183,7 +184,8 @@ class MessageBasedResource(Resource):
 
     @property
     def write_termination(self):
-        """Writer termination character.
+        """Write termination character.
+
         """
         return self._write_termination
 
@@ -254,8 +256,8 @@ class MessageBasedResource(Resource):
         enco = self._encoding if encoding is None else encoding
 
         if term and message.endswith(term):
-                warnings.warn("write message already ends with "
-                              "termination characters", stacklevel=2)
+            warnings.warn("write message already ends with "
+                            "termination characters", stacklevel=2)
 
         block = util.to_ascii_block(values, converter, separator)
 

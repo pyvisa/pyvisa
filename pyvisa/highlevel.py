@@ -1725,8 +1725,8 @@ class ResourceManager(object):
         return ret
 
     def open_bare_resource(self, resource_name,
-                          access_mode=constants.AccessModes.no_lock,
-                          open_timeout=constants.VI_TMO_IMMEDIATE):
+                           access_mode=constants.AccessModes.no_lock,
+                           open_timeout=constants.VI_TMO_IMMEDIATE):
         """Open the specified resource without wrapping into a class
 
         :param resource_name: Name or alias of the resource to open.
@@ -1787,12 +1787,32 @@ class ResourceManager(object):
 
         res.open(access_mode, open_timeout)
 
-        self._created_resources.add(res)
-
         for key, value in kwargs.items():
             setattr(res, key, value)
 
+        self._created_resources.add(res)
+
         return res
 
-    #: For backwards compatibility
-    get_instrument = open_resource
+    def get_instrument(self, resource_name,
+                       access_mode=constants.AccessModes.no_lock,
+                       open_timeout=constants.VI_TMO_IMMEDIATE,
+                       resource_pyclass=None,
+                       **kwargs):
+        """Return an instrument for the resource name.
+
+        :param resource_name: name or alias of the resource to open.
+        :param access_mode: access mode.
+        :type access_mode: :class:`pyvisa.constants.AccessModes`
+        :param open_timeout: time out to open.
+        :param resource_pyclass: resource python class to use to instantiate the Resource.
+                                 Defaults to None: select based on the resource name.
+        :param kwargs: keyword arguments to be used to change instrument attributes
+                       after construction.
+
+        :rtype: :class:`pyvisa.resources.Resource`
+        """
+        warnings.warn('get_instrument is deprecated and will be removed in '
+                      '1.11, use open_resource instead.', FutureWarning)
+        self.open_resource(self, resource_name, access_mode, open_timeout,
+                           resource_pyclass, **kwargs)
