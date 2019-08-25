@@ -1707,7 +1707,15 @@ class ResourceManager(object):
         :return: List of resources
         :rtype: list[:class:`pyvisa.resources.resource.Resource`]
         """
-        return list(self._created_resources)
+        opened = []
+        for resource in self._created_resources:
+            try:
+                resource.session
+            except errors.InvalidSession:
+                pass
+            else:
+                opened.append(resource)
+        return opened
 
     def resource_info(self, resource_name, extended=True):
         """Get the (extended) information of a particular resource.
@@ -1814,5 +1822,5 @@ class ResourceManager(object):
         """
         warnings.warn('get_instrument is deprecated and will be removed in '
                       '1.11, use open_resource instead.', FutureWarning)
-        self.open_resource(self, resource_name, access_mode, open_timeout,
+        self.open_resource(resource_name, access_mode, open_timeout,
                            resource_pyclass, **kwargs)
