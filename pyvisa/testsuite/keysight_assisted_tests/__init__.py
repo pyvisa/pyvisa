@@ -14,8 +14,6 @@ from __future__ import (division, unicode_literals, print_function,
 import os
 import unittest
 
-unittest.skipUnless("PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ)
-
 
 RESOURCE_ADDRESSES = {
     # "GPIB::INSTR": "GPIB::19::INSTR",

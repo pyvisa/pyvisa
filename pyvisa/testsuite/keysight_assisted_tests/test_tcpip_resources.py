@@ -5,10 +5,18 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+import os
+import unittest
+
 from .messagebased_resource_utils import MessagebasedResourceTestCase
 
+unittest.skipUnless("PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ,
+                    "Requires the Keysight virtual instrument. Run on PyVISA "
+                    "buildbot.")
 
-class TCPIPInstrTestCase(MessagebasedResourceTestCase):
+
+class TCPIPInstrTestCase(MessagebasedResourceTestCase,
+                         unittest.TestCase):
     """Test pyvisa against a TCPIP INSTR resource.
 
     """

@@ -28,15 +28,15 @@ class EventHandler:
         self.srq_success = False
         self.io_completed = False
 
-    def handle_event(self, instrument, event_type, event, handle=None):
+    def handle_event(self, instr, event_type, event, handle=None):
         """Event handler
 
         """
-        if (event_type == visa.constants.EventType.service_request):
+        if (event_type == constants.EventType.service_request):
             self.event_success = True
             self.srq_success = True
             return 0
-        if (event_type == visa.constants.EventType.io_completion):
+        if (event_type == constants.EventType.io_completion):
             self.event_success = True
             self.io_completed = True
             return 0
@@ -59,11 +59,11 @@ class MessagebasedResourceTestCase(ResourceTestCase):
     # Any test involving communication involve to first write to glider the
     # data then request it to send it back
 
-    def setup(self):
+    def setUp(self):
         """Create a resource using the address matching the type.
 
         """
-        super().setup()
+        super().setUp()
         self.instr.write_termination = '\n'
         self.instr.read_termination = '\n'
         self.instr.timeout = 100
@@ -87,6 +87,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertEqual(self.instr.write_termination, "\r\n")
 
         self.instr.read_termination = "\r\0"
+        self.assertEqual(self.instr.read_termination, "\r\0")
         self.assertEqual(
             self.instr.get_visa_attribute(constants.VI_ATTR_TERMCHAR),
             ord("\0")
@@ -96,7 +97,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         )
 
         # Disable read termination
-        self.read_termination = None
+        self.instr.read_termination = None
         self.assertEqual(
             self.instr.get_visa_attribute(constants.VI_ATTR_TERMCHAR),
             ord("\n")
@@ -109,7 +110,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         with self.assertRaises(ValueError):
             self.instr.read_termination = "\n\n"
 
-    def test_write_raw_read_bytes(self)
+    def test_write_raw_read_bytes(self):
         """Test writing raw data and reading a specific number of bytes.
 
         """
@@ -117,23 +118,23 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"test\n")
         self.instr.write_raw(b"SEND\n")
-        self.assertEqual(self.read_bytes(5, chunk_size=2), "test\n")
+        self.assertEqual(self.instr.read_bytes(5, chunk_size=2), b"test\n")
 
         # Reading one byte at a time
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"test\n")
         self.instr.write_raw(b"SEND\n")
         for ch in b"test\n":
-            self.assertEqual(self.instr.read_bytes(1), ch)
+            self.assertEqual(self.instr.read_bytes(1), ch.to_bytes(1, 'little'))
 
         # Breaking on termchar
         self.instr.read_termination = "\r"
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"te\rst\r\n")
         self.instr.write_raw(b"SEND\n")
-        self.assertEqual(self.read_bytes(100), "te\r")
-        self.assertEqual(self.read_bytes(100), "st\r")
-        self.assertEqual(self.read_bytes(1), "\n")
+        self.assertEqual(self.instr.read_bytes(100, break_on_termchar=True), b"te\r")
+        self.assertEqual(self.instr.read_bytes(100, break_on_termchar=True), b"st\r")
+        self.assertEqual(self.instr.read_bytes(1), b"\n")
 
     def test_write_raw_read_raw(self):
         """Test writing raw data and reading an answer.
@@ -142,7 +143,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"test\n")
         self.instr.write_raw(b"SEND\n")
-        self.assertEqual(self.read_raw(size=2), "test\n")
+        self.assertEqual(self.instr.read_raw(size=2), b"test\n")
 
     def test_write_read(self):
         """Test writing and reading.
@@ -152,21 +153,21 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write("RECEIVE")
         self.instr.write("test\r")
         self.instr.write("SEND")
-        self.assertEqual(self.read(), "test")
+        self.assertEqual(self.instr.read(), "test")
 
         # Dynamic termination
         self.instr.write_termination = "\r"
         self.instr.write("RECEIVE", termination="\n")
         self.instr.write("test\r", termination="\n")
         self.instr.write("SEND", termination="\n")
-        self.assertEqual(self.read(termination="\r"), "test")
+        self.assertEqual(self.instr.read(termination="\r"), "test")
 
         # Test query
-        elf.instr.write_termination = "\n"
+        self.instr.write_termination = "\n"
         self.instr.write("RECEIVE")
         self.instr.write("test\r")
         tic = time.time()
-        self.assertEqual(self.query("SEND", delay=0.5), "test")
+        self.assertEqual(self.instr.query("SEND", delay=0.5), "test")
         self.assertGreater(time.time()-tic, 0.5)
 
         # XXX not sure how to test encoding
@@ -188,7 +189,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write_ascii_values("", l, "d", separator=";",
                                       termination="\n")
         self.instr.write("SEND", termination="\n")
-        self.assertEqual(self.instr.read(), "1:2:3:4:5")
+        self.assertEqual(self.instr.read(), "1;2;3;4;5")
 
     def test_write_binary_values(self):
         """Test writing binary data.
@@ -199,21 +200,22 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.subTest(hfmt)
 
             l = [1, 2, 3, 4, 5]
+            self.instr.write_termination = "\n"
             self.instr.write("RECEIVE")
             self.instr.write_binary_values("", l, "h", header_fmt=hfmt)
             self.instr.write("SEND")
-            self.assertEqual(self.instr.read_bytes(11),
+            self.assertEqual(self.instr.read_bytes(11 + len(prefix)),
                              prefix + b"\x01\x00\x02\x00\x03\x00\x04\x00\x05\x00\n")
 
             if hfmt == "hp":
-                prefix = prefix[0:2] + prefix[-1] = prefix[-2]
+                prefix = prefix[0:2] + prefix[-2::][::-1]
             self.instr.write_termination = "\r"
             self.instr.write("RECEIVE", termination="\n")
             self.instr.write_binary_values("", l, "h", is_big_endian=True,
                                            termination="\n", header_fmt=hfmt)
             self.instr.write("SEND", termination="\n")
-            self.assertEqual(self.instr.read_bytes(11),
-                             prefix + b"\x00\x01\x00\x02\x00\x01\x00\x04\x00\x05\n")
+            self.assertEqual(self.instr.read_bytes(11 + len(prefix)),
+                             prefix + b"\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05\n")
 
     def test_read_ascii_values(self):
         """Test reading ascii values.
@@ -241,11 +243,12 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Numpy container
         if np:
             self.instr.write("RECEIVE")
-            self.instr.write("1;2;3;4;5")
+            self.instr.write("1,2,3,4,5")
             self.instr.write("SEND")
             values = self.instr.read_ascii_values(container=np.array)
-            self.assertIs(values.dtype, np.float64)
-            np.testing.assert_array_equal(values, np.array([1, 2, 3, 4, 5]))
+            expected = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+            self.assertIs(values.dtype, expected.dtype)
+            np.testing.assert_array_equal(values, expected)
 
     def test_read_binary_values(self):
         """Test reading binary data.
@@ -256,32 +259,34 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # transmission midway to test some corner cases
         data = [1, 2, 3328, 3, 4, 5, 6, 7]
         for hfmt in ("ieee", "hp", "empty"):
+            print(hfmt)
             self.subTest(hfmt)
 
             self.instr.write("RECEIVE")
             self.instr.write_binary_values("", data, "h", header_fmt=hfmt,
-                                           write_termination='\r\n')
+                                           termination='\r\n')
             self.instr.write("SEND")
             new = self.instr.read_binary_values(datatype='h',
                                                 is_big_endian=False,
                                                 header_fmt=hfmt,
                                                 expect_termination=True,
-                                                chunk_size=8)
+                                                chunk_size=8,
+                                                data_points=8 if hfmt == "empty" else 0)
             self.instr.read_bytes(1)
             self.assertEqual(data, new)
 
             self.instr.write("RECEIVE")
             self.instr.write_binary_values("", data, "h", header_fmt=hfmt,
-                                           is_big_endiam=True)
+                                           is_big_endian=True)
             self.instr.write("SEND")
             new = self.instr.read_binary_values(datatype='h',
-                                                is_big_endian=False,
                                                 header_fmt=hfmt,
                                                 is_big_endian=True,
                                                 expect_termination=False,
                                                 chunk_size=8,
-                                                container= np.array if np else list)
-            self.read_bytes(1)
+                                                container= np.array if np else list,
+                                                data_points=8 if hfmt == "empty" else 0)
+            self.instr.read_bytes(1)
             if np:
                 np.testing.assert_array_equal(new,
                                               np.array(data, dtype=np.int16))
@@ -293,8 +298,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test reading the status byte.
 
         """
-        self.assertEqual(self.instr.stb, 0)
-        self.assertEqual(self.instr.read_stb(), 0)
+        self.assertTrue(0 <= self.instr.stb <= 256)
+        self.assertTrue(0 <= self.instr.read_stb() <= 256)
 
     def test_wait_on_event(self):
         """Test waiting on a VISA event.
@@ -303,13 +308,13 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         event_type = constants.EventType.service_request
         event_mech = constants.EventMechanism.queue
         wait_time = 2000 # set time that program waits to receive event
-        self.instrument.enable_event(event_type, event_mech, None)
-        self.instrument.write("RCVSLOWSRQ")
-        self.instrument.write("SENDSLOWSRQ")
+        self.instr.enable_event(event_type, event_mech, None)
+        self.instr.write("RCVSLOWSRQ")
+        self.instr.write("SENDSLOWSRQ")
         try:
-            response = self.instrument.wait_on_event(event_type, wait_time)
+            response = self.instr.wait_on_event(event_type, wait_time)
         finally:
-            self.instrument.disable_event(event_type, event_mech)
+            self.instr.disable_event(event_type, event_mech)
         self.assertFalse(response.timed_out)
         self.assertEqual(response.event_type, constants.EventType.service_request)
 
@@ -318,8 +323,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         """
         handler = EventHandler()
-        event_type = visa.constants.EventType.service_request
-        event_mech = visa.constants.EventMechanism.handler
+        event_type = constants.EventType.service_request
+        event_mech = constants.EventMechanism.handler
         self.instr.install_handler(event_type, handler.handle_event)
         self.instr.enable_event(event_type, event_mech, None)
         self.instr.write("RCVSLOWSRQ")
@@ -332,7 +337,60 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                     break
                 time.sleep(0.1)
         finally:
-            self.instr.disable_event(event_type, eventMech)
-            self.instr.uninstall_handler(event_type, event_hndlr)
+            self.instr.disable_event(event_type, event_mech)
+            # self.instr.uninstall_handler(event_type, handle_id)
 
         self.assertTrue(handler.srq_success)
+
+    # XXX need to test based on writing/reading since timeout does not work
+    # def test_shared_locking(self):
+    #     """Test locking/unlocking a resource.
+
+    #     """
+    #     instr2 = self.rm.open_resource(str(self.rname))
+    #     instr3 = self.rm.open_resource(str(self.rname))
+
+    #     key = self.instr.lock()
+    #     instr2.lock(requested_key=key)
+
+    #     self.instr.timeout = 1
+    #     instr2.timeout = 10
+    #     self.assertEqual(self.instr.timeout, 10)
+    #     with self.assertRaises(VisaIOError):
+    #         instr3.timeout = 20
+
+    #     # Share the lock for a limited time
+    #     with instr3.lock_context(requested_key=key) as key2:
+    #         self.assertEqual(key, key2)
+    #         instr3.timeout = 20
+    #     self.assertEqual(self.instr.timeout, 20)
+
+    #     # Stop sharing the lock
+    #     instr2.unlock()
+
+    #     self.instr.timeout = 2
+    #     self.assertEqual(self.instr.timeout, 2)
+    #     with self.assertRaises(VisaIOError):
+    #         instr2.timeout = 20
+    #     with self.assertRaises(VisaIOError):
+    #         instr3.timeout = 20
+
+    #     self.instr.unlock()
+
+    #     instr3.timeout = 30
+    #     self.assertEqual(self.instr.timeout, 30)
+
+    # def test_exclusive_locking(self):
+    #     """Test locking/unlocking a resource.
+
+    #     """
+    #     instr2 = self.rm.open_resource(str(self.rname))
+
+    #     self.instr.lock_excl()
+    #     with self.assertRaises(VisaIOError):
+    #         instr2.timeout = 20
+
+    #     self.instr.unlock()
+
+    #     instr2.timeout = 30
+    #     self.assertEqual(self.instr.timeout, 30)

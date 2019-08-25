@@ -5,13 +5,18 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+import os
 import unittest
 
 from pyvisa import ResourceManager, InvalidSession, VisaIOError
-from pyvisa.constants import StatusCode, AccessModes
+from pyvisa.constants import StatusCode, AccessModes, InterfaceType
 from pyvisa.rname import ResourceName
 
 from . import RESOURCE_ADDRESSES
+
+unittest.skipUnless("PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ,
+                    "Requires the Keysight virtual instrument. Run on PyVISA "
+                    "buildbot.")
 
 
 class TestResourceManager(unittest.TestCase):
@@ -19,13 +24,13 @@ class TestResourceManager(unittest.TestCase):
 
     """
 
-    def setup():
+    def setUp(self):
         """Create a ResourceManager with the default backend library.
 
         """
         self.rm = ResourceManager()
 
-    def teardown(self):
+    def tearDown(self):
         """Close the ResourceManager.
 
         """
@@ -42,10 +47,9 @@ class TestResourceManager(unittest.TestCase):
 
         self.rm.close()
 
-        with self.assertRaises(InvalidSession)
+        with self.assertRaises(InvalidSession):
             self.rm.session
-        self.assertIsNone(self.rm.visalib)
-        self.assertIsNone(self.rm, self.rm.visalib.resource_manager)
+        self.assertIsNone(self.rm.visalib.resource_manager)
 
     def test_resource_manager_unicity(self):
         """Test the resource manager is unique per backend as expected.
@@ -61,15 +65,15 @@ class TestResourceManager(unittest.TestCase):
         """
         self.assertRegex(str(self.rm), r"Resource Manager of .*")
         self.rm.close()
-        self.assertEqual(str(self.rm), r"Resource Manager of None")
+        self.assertRegex(str(self.rm), r"Resource Manager of .*")
 
     def test_repr(self):
         """Test computing the repr of the resource manager
 
         """
-        self.assertRegex(repr(self.rm), r"<ResourceManager\(.*\)")
+        self.assertRegex(repr(self.rm), r"<ResourceManager\(<.*>\)>")
         self.rm.close()
-        self.assertEqual(repr(self.rm), r"<ResourceManager\(None\)")
+        self.assertRegex(repr(self.rm), r"<ResourceManager\(<.*>\)>")
 
     def test_last_status(self):
         """Test accessing the status of the last operation.
@@ -100,18 +104,16 @@ class TestResourceManager(unittest.TestCase):
         rinfo_ext = self.rm.resource_info(rname)
         rinfo = self.rm.resource_info(rname, extended=False)
 
-        # Currently this is all done within Python so both are identical and
-        # we do not have access to the alias info...
-        rname = ResourceName(rname)
-        self.assertEqual(rinfo_ext.interface_type, rname.interface_type)
-        self.assertEqual(rinfo_ext.interface_board_number, rname.board)
+        rname = ResourceName().from_string(rname)
+        self.assertEqual(rinfo_ext.interface_type,
+                         getattr(InterfaceType, rname.interface_type.lower()))
+        self.assertEqual(rinfo_ext.interface_board_number, int(rname.board))
         self.assertEqual(rinfo_ext.resource_class, rname.resource_class)
         self.assertEqual(rinfo_ext.resource_name, str(rname))
 
-        self.assertEqual(rinfo.interface_type, rname.interface_type)
-        self.assertEqual(rinfo.interface_board_number, rname.board)
-        self.assertEqual(rinfo.resource_class, rname.resource_class)
-        self.assertEqual(rinfo.resource_name, str(rname))
+        self.assertEqual(rinfo.interface_type,
+                         getattr(InterfaceType, rname.interface_type.lower()))
+        self.assertEqual(rinfo.interface_board_number, int(rname.board))
 
     def test_opening_resource(self):
         """Test opening and closing resources.
@@ -168,7 +170,7 @@ class TestResourceManager(unittest.TestCase):
 
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             rsc = self.rm.open_resource(rname, unknown_attribute=None)
 
         self.assertEqual(len(self.rm.list_opened_resources()), 0)
