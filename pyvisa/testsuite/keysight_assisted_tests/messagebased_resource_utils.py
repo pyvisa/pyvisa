@@ -2,9 +2,6 @@
 """Common test case for all message based resources.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import time
 import unittest
 

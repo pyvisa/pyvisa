@@ -10,12 +10,8 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 from collections import defaultdict
 
-from .compat import with_metaclass
 from . import constants
 
 #: Not available value.
@@ -53,7 +49,7 @@ class AttributeType(type):
         AttributesByID[cls.attribute_id] = cls
 
 
-class Attribute(with_metaclass(AttributeType)):
+class Attribute(object, metaclass=AttributeType):
     """Base class for Attributes to be used as Properties.
     """
 

@@ -10,14 +10,11 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import logging
 import warnings
+from collections import OrderedDict
 
 from pyvisa import constants, errors, highlevel, logger
-from pyvisa.compat import integer_types, OrderedDict
 
 from .cthelper import Library, find_library
 from . import functions
@@ -182,7 +179,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
                 # noinspection PyProtectedMember
                 session = session._obj.value
 
-            if isinstance(session, integer_types):
+            if isinstance(session, int):
                 self._last_status_in_session[session] = ret_value
             else:
                 # Functions that might or might have a session in the first argument.

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
+"""Test test the resource name parsing.
 
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
+"""
 import unittest
 from pyvisa.testsuite import BaseTestCase
 

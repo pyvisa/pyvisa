@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
+"""Test pyvisa utility functions.
 
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
+"""
 from pyvisa.testsuite import BaseTestCase
 
 from pyvisa import util
@@ -23,10 +22,6 @@ class TestParser(BaseTestCase):
         e = [0.01707566, 0.01707566, 0.01707566, 0.01707566, 0.01707375,
              0.01707375, 0.01707375, 0.01707375, 0.01707470, 0.01707470,
              0.01707280, 0.01707375, 0.01707566, 0.01707470]
-        with self.assertWarns(FutureWarning):
-            p = util.parse_binary(s, is_big_endian=False, is_single=True)
-        for a, b in zip(p, e):
-            self.assertAlmostEqual(a, b)
 
         # Test handling indefinite length block
         p = util.from_ieee_block(s, datatype='f', is_big_endian=False)

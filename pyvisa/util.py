@@ -10,24 +10,19 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import functools
+import inspect
 import io
 import os
 import platform
-import sys
+import struct
 import subprocess
+import sys
 import warnings
-import inspect
+from collections import OrderedDict
 from subprocess import check_output
 
-from .compat import (string_types, OrderedDict, struct,
-                     int_to_bytes, int_from_bytes, PYTHON3)
 from . import __version__, logger
-
 
 try:
     import numpy as np
@@ -203,20 +198,20 @@ def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
     :param container: container type to use for the output data.
     """
     if (_use_numpy_routines(container) and
-            isinstance(converter, string_types) and
-            isinstance(separator, string_types) and
+            isinstance(converter, str) and
+            isinstance(separator, str) and
             converter in _np_converters):
         return np.fromstring(ascii_data, _np_converters[converter],
                              sep=separator)
 
-    if isinstance(converter, string_types):
+    if isinstance(converter, str):
         try:
             converter = _converters[converter]
         except KeyError:
             raise ValueError('Invalid code for converter: %s not in %s' %
                              (converter, str(tuple(_converters.keys()))))
 
-    if isinstance(separator, string_types):
+    if isinstance(separator, str):
         data = ascii_data.split(separator)
     else:
         data = separator(ascii_data)
@@ -240,69 +235,15 @@ def to_ascii_block(iterable, converter='f', separator=','):
     :rtype: str
     """
 
-    if isinstance(separator, string_types):
+    if isinstance(separator, str):
         separator = separator.join
 
-    if isinstance(converter, string_types):
+    if isinstance(converter, str):
         converter = '%' + converter
         block = separator(converter % val for val in iterable)
     else:
         block = separator(converter(val) for val in iterable)
     return block
-
-
-def parse_binary(bytes_data, is_big_endian=False, is_single=False):
-    """Parse ascii data and return an iterable of numbers.
-
-    To be deprecated in 1.7
-
-    :param bytes_data: data to be parsed.
-    :param is_big_endian: boolean indicating the endianness.
-    :param is_single: boolean indicating the type (if not is double)
-    :return:
-    """
-    warnings.warn('parse_binary is deprecated and will be removed in '
-                  '1.10, use instead.', FutureWarning)
-    data = bytes_data
-
-    hash_sign_position = bytes_data.find(b"#")
-    if hash_sign_position == -1:
-        raise ValueError('Could not find valid hash position')
-
-    if hash_sign_position > 0:
-        data = data[hash_sign_position:]
-
-    data_1 = data[1:2].decode('ascii')
-
-    if data_1.isdigit() and int(data_1) > 0:
-        number_of_digits = int(data_1)
-        # I store data and data_length in two separate variables in case
-        # that data is too short.  FixMe: Maybe I should raise an error if
-        # it's too long and the trailing part is not just CR/LF.
-        data_length = int(data[2:2 + number_of_digits])
-        data = data[2 + number_of_digits:2 + number_of_digits + data_length]
-    else:
-        data = data[2:]
-        if data[-1:].decode('ascii') == "\n":
-            data = data[:-1]
-        data_length = len(data)
-
-    if is_big_endian:
-        endianess = ">"
-    else:
-        endianess = "<"
-
-    try:
-        if is_single:
-            fmt = endianess + str(data_length // 4) + 'f'
-        else:
-            fmt = endianess + str(data_length // 8) + 'd'
-
-        result = list(struct.unpack(fmt, data))
-    except struct.error:
-        raise ValueError("Binary data itself was malformed")
-
-    return result
 
 
 def parse_ieee_block_header(block):
@@ -371,7 +312,7 @@ def parse_hp_block_header(block, is_big_endian):
                          "indicating the start of the block.")
     offset = begin + 4
 
-    data_length = int_from_bytes(block[begin+2:offset],
+    data_length = int.from_bytes(block[begin+2:offset],
                                  byteorder='big' if is_big_endian else 'little'
                                  )
 
@@ -489,8 +430,8 @@ def to_binary_block(iterable, header, datatype, is_big_endian):
     endianess = '>' if is_big_endian else '<'
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)
 
-    if isinstance(header, string_types):
-        header = bytes(header, 'ascii') if PYTHON3 else str(header)
+    if isinstance(header, str):
+        header = bytes(header, 'ascii')
 
     return header + struct.pack(fullfmt, *iterable)
 
@@ -528,7 +469,7 @@ def to_hp_block(iterable, datatype='f', is_big_endian=False):
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
 
-    header = b'#A' + (int_to_bytes(data_length, 2,
+    header = b'#A' + (int.to_bytes(data_length, 2,
                                    'big' if is_big_endian else 'little'))
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
@@ -609,7 +550,7 @@ def system_details_to_str(d, indent=''):
     def _to_list(key, value, indent_level=0):
         sp = ' ' * indent_level * 3
 
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             if key:
                 return ['%s%s: %s' % (sp, key, value)]
             else:

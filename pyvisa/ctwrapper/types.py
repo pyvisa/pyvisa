@@ -15,12 +15,9 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import ctypes as _ctypes
 
-from .cthelper import PYTHON3, FUNCTYPE
+from .cthelper import FUNCTYPE
 
 # Part One: Type Assignments for VISA and Instrument Drivers, see spec table
 # 3.1.1.
@@ -52,42 +49,21 @@ ViReal32, ViPReal32, ViAReal32    = _type_triplet(_ctypes.c_float)
 ViReal64, ViPReal64, ViAReal64    = _type_triplet(_ctypes.c_double)
 
 
-if PYTHON3:
-    class ViString(object):
+class ViString(object):
 
-        @classmethod
-        def from_param(cls, obj):
-            if isinstance(obj, str):
-                return bytes(obj, 'ascii')
-            return obj
+    @classmethod
+    def from_param(cls, obj):
+        if isinstance(obj, str):
+            return bytes(obj, 'ascii')
+        return obj
 
-    class ViAString(object):
+class ViAString(object):
 
-        @classmethod
-        def from_param(cls, obj):
-            return _ctypes.POINTER(obj)
+    @classmethod
+    def from_param(cls, obj):
+        return _ctypes.POINTER(obj)
 
-    ViPString = ViString
-
-else:
-
-    class ViString(object):
-
-        @classmethod
-        def from_param(cls, obj):
-            if isinstance(obj, str):
-                return obj
-            elif isinstance(obj, unicode):
-                return obj.encode('ascii')
-            return obj
-
-    class ViAString(object):
-
-        @classmethod
-        def from_param(cls, obj):
-            return _ctypes.POINTER(obj)
-
-    ViPString = ViString
+ViPString = ViString
 
 # This follows visa.h definition, but involves a lot of manual conversion.
 # ViBuf, ViPBuf, ViABuf = ViPByte, ViPByte, _ctypes.POINTER(ViPByte)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+"""Test the handling of errors.
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
+"""
 import pickle
 
 from pyvisa.testsuite import BaseTestCase

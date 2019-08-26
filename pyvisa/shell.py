@@ -11,13 +11,9 @@
     :copyright: (c) 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import cmd
 import sys
 
-from .compat import input
 from . import ResourceManager, attributes, constants, VisaIOError
 from .thirdparty import prettytable
 
@@ -252,7 +248,7 @@ class VisaShell(Cmd):
                 print('Timeout: {}ms'.format(self.current.timeout))
             except Exception as e:
                 print(e)
-        else:        
+        else:
             args = args.split(' ')
             try:
                 self.current.timeout = float(args[0])
@@ -363,7 +359,7 @@ class VisaShell(Cmd):
         """Get or set termination character for resource in use.
         <termchar> can be one of: CR, LF, CRLF, NUL or None.
         None is used to disable termination character
-        
+
         Get termination character:
 
             termchar
@@ -392,7 +388,7 @@ class VisaShell(Cmd):
                 print('Termchar read: {} write: {}'.format(chr, chw))
             except Exception as e:
                 print(e)
-        else:        
+        else:
             args = args.split(' ')
             charmap = { 'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0', 'None': None }
             chr = args[0]

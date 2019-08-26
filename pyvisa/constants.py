@@ -16,18 +16,8 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import enum
 
-from .compat import PYTHON3
-
-if PYTHON3:
-    LongEnum = enum.IntEnum
-else:
-    class LongEnum(long, enum.Enum):
-        pass
 
 # _to_int() is necessary because the VISA specification is flawed: It defines
 # the VISA codes, which have a value less than zero, in their internal 32-bit
@@ -739,11 +729,8 @@ class EventMechanism(enum.IntEnum):
     all = VI_ALL_MECH
 
 
-# Note that enum.IntEnum fails here for python2:
-#  OverflowError: Python int too large to convert to C long
-# so use LongEnum instead (some values are too large, and ViEventType is unsigned)
 @enum.unique
-class EventType(LongEnum):
+class EventType(enum.IntEnum):
     """The available event types for event handling.
     """
 

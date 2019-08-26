@@ -10,10 +10,6 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import contextlib
 import struct
 import time
@@ -99,43 +95,6 @@ class MessageBasedResource(Resource):
     def __init__(self, *args, **kwargs):
         self._values_format = ValuesFormat()
         super(MessageBasedResource, self).__init__(*args, **kwargs)
-
-    # This is done for backwards compatibility but will be removed in 1.10
-    @property
-    def values_format(self):
-        warnings.warn('values_format is deprecated and will be removed in '
-                      '1.10', FutureWarning)
-        return self._values_format
-
-    @values_format.setter
-    def values_format(self, fmt):
-        warnings.warn('values_format is deprecated and will be removed in '
-                      '1.10', FutureWarning)
-        self._values_format.is_binary = not (fmt & 0x01 == 0)
-        if fmt & 0x03 == 1:  # single
-            self._values_format.datatype = 'f'
-        elif fmt & 0x03 == 3:  # double:
-            self._values_format.datatype = 'd'
-        else:
-            raise ValueError("unknown data values fmt requested")
-
-        self._values_format.is_big_endian = fmt & 0x04
-
-    ####
-
-    @property
-    def ask_delay(self):
-        """An alias for query_delay kept for backwards compatibility.
-        """
-        warnings.warn('ask_delay is deprecated and will be removed in '
-                      '1.10, use query_delay instead', FutureWarning)
-        return self.query_delay
-
-    @ask_delay.setter
-    def ask_delay(self, value):
-        warnings.warn('ask_delay is deprecated and will be removed in '
-                      '1.10, use query_delay instead', FutureWarning)
-        self.query_delay = value
 
     @property
     def encoding(self):
@@ -313,20 +272,6 @@ class MessageBasedResource(Resource):
         count = self.write_raw(message)
 
         return count
-
-    def write_values(self, message, values, termination=None, encoding=None):
-        warnings.warn('write_values is deprecated and will be removed in '
-                      '1.10, use write_ascii_values or write_binary_values '
-                      'instead.', FutureWarning)
-        vf = self.values_format
-
-        if vf.is_binary:
-            return self.write_binary_values(message, values, vf.datatype,
-                                            vf.is_big_endian, termination,
-                                            encoding)
-
-        return self.write_ascii_values(message, values, vf.converter,
-                                       vf.separator, termination, encoding)
 
     def read_bytes(self, count, chunk_size=None, break_on_termchar=False):
         """Read a certain number of bytes from the instrument.
@@ -521,22 +466,10 @@ class MessageBasedResource(Resource):
             block.extend(self.read_bytes(expected_length - len(block),
                                          chunk_size=chunk_size))
         else:
-            # Backward compatibility. This is dangerous and should probably be
-            # removed
-            msg = ('Reading binary data without a known length is error prone,'
-                   ' and should be avoided. This capability will will be'
-                   ' removed in future versions.\n'
-                   'If the instrument does not report the length of the block '
-                   'as part of the transfer, it may be because the size is '
-                   'fixed or can be accessed from the instrumentin using a '
-                   'specific command. You should find the expected number of '
-                   'points and pass it using the `data_points` keyword.')
-            warnings.warn(msg, FutureWarning)
-            # Do not keep reading since we may have already read everything
-
-            # Set the datalength to None to infer it from the block length
-            data_length = None
-
+            raise ValueError("The length of the data to receive could not be "
+                             "determined. You should provide the number of "
+                             "points you expect using the data_points keyword "
+                             "argument.")
 
         try:
             # Do not reparse the headers since it was already done and since
@@ -544,54 +477,6 @@ class MessageBasedResource(Resource):
             return util.from_binary_block(block, offset, data_length,
                                           datatype, is_big_endian,
                                           container)
-        except ValueError as e:
-            raise errors.InvalidBinaryFormat(e.args)
-
-    def read_values(self, fmt=None, container=list):
-        """Read a list of floating point values from the device.
-
-        :param fmt: the format of the values.  If given, it overrides
-            the class attribute "values_format".  Possible values are bitwise
-            disjunctions of the above constants ascii, single, double, and
-            big_endian. Default is ascii.
-        :param container: the output datatype
-
-        :return: the list of read values
-        :rtype: list
-        """
-        warnings.warn('read_values is deprecated and will be removed in '
-                      '1.10, use read_ascii_values or read_binary_values '
-                      'instead.', FutureWarning)
-        if not fmt:
-            vf = self.values_format
-            if not vf.is_binary:
-                return util.from_ascii_block(self.read(), container)
-            data = self._read_raw()
-            try:
-                return util.parse_binary(data, vf.is_big_endian,
-                                         vf.datatype == 'f')
-            except ValueError as e:
-                try:
-                    msg = e.args[0]
-                except IndexError:
-                    msg = ''
-                raise errors.InvalidBinaryFormat(msg)
-
-        if fmt & 0x01 == 0:  # ascii
-            return util.from_ascii_block(self.read())
-
-        data = self._read_raw()
-
-        try:
-            if fmt & 0x03 == 1:  # single
-                is_single = True
-            elif fmt & 0x03 == 3:  # double:
-                is_single = False
-            else:
-                raise ValueError("unknown data values fmt requested")
-
-            is_big_endian = fmt & 0x04  # big endian
-            return util.parse_binary(data, is_big_endian, is_single)
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
@@ -613,36 +498,6 @@ class MessageBasedResource(Resource):
         if delay > 0.0:
             time.sleep(delay)
         return self.read()
-
-    def ask(self, message, delay=None):
-        warnings.warn('ask is deprecated and will be removed in '
-                      '1.10, use query instead.', FutureWarning)
-        return self.query(message, delay)
-
-    def query_values(self, message, delay=None):
-        """Query the device for values returning an iterable of values.
-
-        The datatype expected is obtained from `values_format`
-
-        :param message: the message to send.
-        :type message: str
-        :param delay: delay in seconds between write and read operations.
-                      if None, defaults to self.query_delay
-        :returns: the answer from the device.
-        :rtype: list
-        """
-        warnings.warn('query_values is deprecated and will be removed in '
-                      '1.10, use query_ascii_values or quey_binary_values '
-                      'instead.', FutureWarning)
-        vf = self.values_format
-
-        if vf.is_binary:
-            return self.query_binary_values(message, vf.datatype,
-                                            vf.is_big_endian, vf.container,
-                                            delay, vf.header_fmt)
-
-        return self.query_ascii_values(message, vf.converter, vf.separator,
-                                       vf.container, delay)
 
     def query_ascii_values(self, message, converter='f', separator=',',
                            container=list, delay=None):
@@ -715,26 +570,6 @@ class MessageBasedResource(Resource):
         return self.read_binary_values(datatype, is_big_endian, container,
                                        header_fmt, expect_termination,
                                        data_points, chunk_size)
-
-    def ask_for_values(self, message, fmt=None, delay=None):
-        """A combination of write(message) and read_values()
-
-        :param message: the message to send.
-        :type message: str
-        :param delay: delay in seconds between write and read operations.
-                      if None, defaults to self.query_delay
-        :returns: the answer from the device.
-        :rtype: list
-        """
-        warnings.warn('ask_values is deprecated and will be removed in '
-                      '1.10, use query_ascii_values or quey_binary_values '
-                      'instead.', FutureWarning)
-        self.write(message)
-        if delay is None:
-            delay = self.query_delay
-        if delay > 0.0:
-            time.sleep(delay)
-        return self.read_values(fmt)
 
     def assert_trigger(self):
         """Sends a software trigger to the device.

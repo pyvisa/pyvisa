@@ -8,9 +8,6 @@ For this part of the testsuite to be run, you need to set the
 PYVISA_KEYSIGHT_VIRTUAL_INSTR environment value.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import os
 import unittest
 

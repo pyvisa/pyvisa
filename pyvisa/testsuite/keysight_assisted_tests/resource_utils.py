@@ -2,9 +2,6 @@
 """Common test case for all resources.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import unittest
 
 from pyvisa import ResourceManager, InvalidSession, VisaIOError
