@@ -87,7 +87,7 @@ class Resource(object):
         try:
             # Attempt to normalize the resource name. Can fail for aliases
             self._resource_name = str(rname.ResourceName.from_string(resource_name))
-        except InvalidResourceName:
+        except rname.InvalidResourceName:
             self._resource_name = resource_name
 
         self._logging_extra = {'library_path': self.visalib.library_path,
