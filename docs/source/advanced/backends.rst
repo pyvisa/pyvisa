@@ -17,7 +17,8 @@ Since 1.6, PyVISA is a frontend to VISA. It provides a nice, Pythonic API and
 can connect to multiple backends. Each backend exposes a class derived from
 VisaLibraryBase that implements the low-level communication. The ctypes wrapper
 around IVI-VISA is the default backend (called **ivi**) and is bundled with
-PyVISA for simplicity. In general, IVI-VISA can be NI-VISA, R&SVISA, tekVISA etc.
+PyVISA for simplicity. In general, IVI-VISA can be NI-VISA, Keysight VISA,
+R&S VISA, tekVISA etc.
 By default, it calls the library that is installed on your system as VISA library.
 
 You can specify the backend to use when you instantiate the resource manager
