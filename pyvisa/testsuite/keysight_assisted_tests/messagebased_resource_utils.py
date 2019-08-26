@@ -335,7 +335,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                 time.sleep(0.1)
         finally:
             self.instr.disable_event(event_type, event_mech)
-            # self.instr.uninstall_handler(event_type, handle_id)
+            self.instr.uninstall_handler(event_type, handler.handle_event)
 
         self.assertTrue(handler.srq_success)
 
