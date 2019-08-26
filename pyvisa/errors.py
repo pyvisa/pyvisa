@@ -497,6 +497,7 @@ def _args_to_str(args, kwargs):
 
 def return_handler(module_logger, first_is_session=True):
     """Decorator for VISA library classes.
+
     """
 
     def _outer(visa_library_method):
