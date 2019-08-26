@@ -6,7 +6,7 @@ Configuring the backend
 .. include:: ../substitutions.sub
 
 Currently there are two backends available: The one included in pyvisa, which
-uses the IVI library (include NI-VISA, R&SVISA, tekVISA etc.),
+uses the IVI library (include NI-VISA, Keysight VISA, R&S VISA, tekVISA etc.),
 and the backend provided by pyvisa-py, which is a pure python implementation
 of the VISA library. If no backend is specified, pyvisa uses the IVI backend
 if any IVI library has been installed (see next section for details).
