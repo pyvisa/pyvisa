@@ -342,55 +342,47 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         self.assertTrue(handler.srq_success)
 
-    # XXX need to test based on writing/reading since timeout does not work
-    # def test_shared_locking(self):
-    #     """Test locking/unlocking a resource.
+    def test_shared_locking(self):
+        """Test locking/unlocking a resource.
 
-    #     """
-    #     instr2 = self.rm.open_resource(str(self.rname))
-    #     instr3 = self.rm.open_resource(str(self.rname))
+        """
+        instr2 = self.rm.open_resource(str(self.rname))
+        instr3 = self.rm.open_resource(str(self.rname))
 
-    #     key = self.instr.lock()
-    #     instr2.lock(requested_key=key)
+        key = self.instr.lock()
+        instr2.lock(requested_key=key)
 
-    #     self.instr.timeout = 1
-    #     instr2.timeout = 10
-    #     self.assertEqual(self.instr.timeout, 10)
-    #     with self.assertRaises(VisaIOError):
-    #         instr3.timeout = 20
+        self.assertTrue(self.instr.query("*IDN?"))
+        self.assertTrue(instr2.query("*IDN?"))
+        with self.assertRaises(VisaIOError):
+            instr3.query("*IDN?")
 
-    #     # Share the lock for a limited time
-    #     with instr3.lock_context(requested_key=key) as key2:
-    #         self.assertEqual(key, key2)
-    #         instr3.timeout = 20
-    #     self.assertEqual(self.instr.timeout, 20)
+        # Share the lock for a limited time
+        with instr3.lock_context(requested_key=key) as key2:
+            self.assertTrue(instr3.query("*IDN?"))
 
-    #     # Stop sharing the lock
-    #     instr2.unlock()
+        # Stop sharing the lock
+        instr2.unlock()
 
-    #     self.instr.timeout = 2
-    #     self.assertEqual(self.instr.timeout, 2)
-    #     with self.assertRaises(VisaIOError):
-    #         instr2.timeout = 20
-    #     with self.assertRaises(VisaIOError):
-    #         instr3.timeout = 20
+        with self.assertRaises(VisaIOError):
+            instr2.query("*IDN?")
+        with self.assertRaises(VisaIOError):
+            instr3.query("*IDN?")
 
-    #     self.instr.unlock()
+        self.instr.unlock()
 
-    #     instr3.timeout = 30
-    #     self.assertEqual(self.instr.timeout, 30)
+        self.assertTrue(instr3.query("*IDN?"))
 
-    # def test_exclusive_locking(self):
-    #     """Test locking/unlocking a resource.
+    def test_exclusive_locking(self):
+        """Test locking/unlocking a resource.
 
-    #     """
-    #     instr2 = self.rm.open_resource(str(self.rname))
+        """
+        instr2 = self.rm.open_resource(str(self.rname))
 
-    #     self.instr.lock_excl()
-    #     with self.assertRaises(VisaIOError):
-    #         instr2.timeout = 20
+        self.instr.lock_excl()
+        with self.assertRaises(VisaIOError):
+            instr2.query("*IDN?")
 
-    #     self.instr.unlock()
+        self.instr.unlock()
 
-    #     instr2.timeout = 30
-    #     self.assertEqual(self.instr.timeout, 30)
+        self.assertTrue(instr2.query("*IDN?"))
