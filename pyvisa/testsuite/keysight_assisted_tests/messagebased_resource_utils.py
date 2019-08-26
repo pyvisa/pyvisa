@@ -5,7 +5,7 @@
 import time
 import unittest
 
-from pyvisa import constants
+from pyvisa import constants, errors
 
 from .resource_utils import ResourceTestCase
 
@@ -351,7 +351,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         self.assertTrue(self.instr.query("*IDN?"))
         self.assertTrue(instr2.query("*IDN?"))
-        with self.assertRaises(VisaIOError):
+        with self.assertRaises(errors.VisaIOError):
             instr3.query("*IDN?")
 
         # Share the lock for a limited time
@@ -361,9 +361,9 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Stop sharing the lock
         instr2.unlock()
 
-        with self.assertRaises(VisaIOError):
+        with self.assertRaises(errors.VisaIOError):
             instr2.query("*IDN?")
-        with self.assertRaises(VisaIOError):
+        with self.assertRaises(errors.VisaIOError):
             instr3.query("*IDN?")
 
         self.instr.unlock()
@@ -377,7 +377,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         instr2 = self.rm.open_resource(str(self.rname))
 
         self.instr.lock_excl()
-        with self.assertRaises(VisaIOError):
+        with self.assertRaises(errors.VisaIOError):
             instr2.query("*IDN?")
 
         self.instr.unlock()
