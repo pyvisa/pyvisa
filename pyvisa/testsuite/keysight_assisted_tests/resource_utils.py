@@ -61,8 +61,8 @@ class ResourceTestCase:
         """Test that a resource that cannot normalize an alias keep the alias.
 
         """
-        instr = Resource(self.resource_manager, "visa_alias")
-        self.assertRegex(str(self.instr), r".* at %s" % "visa_alias")
+        instr = Resource(self.rm, "visa_alias")
+        self.assertRegex(str(instr), r".* at %s" % "visa_alias")
 
     def test_str(self):
         """Test the string representation of a resource.
@@ -92,7 +92,7 @@ class ResourceTestCase:
         # XXX for some obscure reason setting the value to immedite still
         # return a value of 1 instead of 0
         self.instr.timeout = 0.1
-        self.assertEqual(self.instr.timeout, 0)
+        self.assertEqual(self.instr.timeout, 1)
         self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
                          1)
 
@@ -140,10 +140,10 @@ class ResourceTestCase:
 
         # XXX for some obscure reason setting the value to immedite still
         # return a value of 1 instead of 0
-        # self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_IMMEDIATE)
-        # self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-        #                  VI_TMO_IMMEDIATE)
-        # self.assertEqual(self.instr.timeout, 0)
+        self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_IMMEDIATE)
+        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
+                         1)
+        self.assertEqual(self.instr.timeout, 1)
 
         self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
         self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),

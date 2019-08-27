@@ -27,6 +27,7 @@ class WaitResponse(object):
     """Class used in return of wait_on_event. It properly closes the context upon delete.
        A call with event_type of 0 (normally used when timed_out is True) will be
        recorded as None, otherwise it records the proper EventType enum.
+
     """
     def __init__(self, event_type, context, ret, visalib, timed_out=False):
         if event_type == 0:
@@ -40,7 +41,10 @@ class WaitResponse(object):
 
     def __del__(self):
         if self.context != None:
-            self._visalib.close(self.context)
+            try:
+                self._visalib.close(self.context)
+            except errors.VisaIOError:
+                pass
 
 
 class Resource(object):

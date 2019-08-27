@@ -146,7 +146,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test writing and reading.
 
         """
-        self.instr.read_termination = '\r\n'
+        self.instr.read_termination = "\r\n"
         self.instr.write("RECEIVE")
         self.instr.write("test\r")
         self.instr.write("SEND")
@@ -168,6 +168,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertGreater(time.time()-tic, 0.5)
 
         # Test handling repeated term char
+        self.instr.read_termination = "\n"
         for char in ("\r", None):
             self.instr.write_termination = "\n" if char else "\r"
             self.instr.write("RECEIVE", termination="\n")
@@ -203,11 +204,12 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write_termination = "\n" if char else "\r"
             self.instr.write("RECEIVE", termination="\n")
             with self.assertWarns(Warning):
-                self.instr.write_ascii_values("", l, "d", separator=";",
-                                        termination=char)
+                l = [1, 2, 3, 4, 5]
+                self.instr.write_ascii_values("\r", l, "s", separator=";",
+                                              termination=char)
             self.instr.write("", termination="\n")
             self.instr.write("SEND", termination="\n")
-            self.assertEqual(self.instr.read(), "1;2;3;4;5\r\r")
+            self.assertEqual(self.instr.read(), "\r1;2;3;4;5\r")
 
     def test_write_binary_values(self):
         """Test writing binary data.
@@ -245,11 +247,12 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                                                termination=char)
             self.instr.write("", termination="\n")
             self.instr.write("SEND", termination="\n")
-            self.assertEqual(self.instr.read(), "1;2;3;4;5\r\r")
+            self.assertEqual(self.instr.read(),
+                             "\r\x01\x00\x02\x00\x03\x00\x04\x00\x05\x00\r")
 
         # Wrong header format
         with self.assertRaises(ValueError):
-            self.instr.write_binary_values("\r", l, "h", header_fmt="xxx")
+            self.instr.write_binary_values("", l, "h", header_fmt="xxx")
 
     def test_read_ascii_values(self):
         """Test reading ascii values.
@@ -336,7 +339,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # transmission midway to test some corner cases
         data = [1, 2, 3328, 3, 4, 5]
         for hfmt, header in zip(("ieee", "hp", "empty"),
-                                ("#10", "#A\x00\x00\x00\x00", "")):
+                                ("#10", "#A\x00\x00", "")):
             print(hfmt)
             self.subTest(hfmt)
 
@@ -395,15 +398,27 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertFalse(response.timed_out)
         self.assertEqual(response.event_type, constants.EventType.service_request)
 
+    def test_wait_on_event_timeout(self):
+        """Test waiting on a VISA event.
+
+        """
+        event_type = constants.EventType.service_request
+        event_mech = constants.EventMechanism.queue
         self.instr.enable_event(event_type, event_mech, None)
         try:
-            response = self.instr.wait_on_event(event_type, wait_time)
-        except errors.VisaIOError:
-            pass
+            response = self.instr.wait_on_event(event_type, 10,
+                                                capture_timeout=True)
         finally:
             self.instr.disable_event(event_type, event_mech)
         self.assertTrue(response.timed_out)
-        self.assertIsNone(response.event_type)
+        self.assertEqual(response.event_type, event_type)
+
+        with self.assertRaises(errors.VisaIOError):
+            self.instr.enable_event(event_type, event_mech, None)
+            try:
+                response = self.instr.wait_on_event(event_type, 10)
+            finally:
+                self.instr.disable_event(event_type, event_mech)
 
     def test_managing_visa_handler(self):
         """Test using visa handlers.
@@ -477,5 +492,5 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Share the lock for a limited time
         with self.instr.lock_context(requested_key='exclusive') as key:
             self.assertIsNone(key)
-            with self.assertRaises(VisaIOError):
+            with self.assertRaises(errors.VisaIOError):
                 instr2.query("*IDN?")

@@ -47,6 +47,7 @@ class ControlRenMixin(object):
 
 class MessageBasedResource(Resource):
     """Base class for resources that use message based communication.
+
     """
 
     CR = '\r'
@@ -58,12 +59,6 @@ class MessageBasedResource(Resource):
 
     chunk_size = 20 * 1024
     query_delay = 0.0
-
-    _values_format = None
-
-    def __init__(self, *args, **kwargs):
-        self._values_format = ValuesFormat()
-        super(MessageBasedResource, self).__init__(*args, **kwargs)
 
     @property
     def encoding(self):
@@ -171,7 +166,7 @@ class MessageBasedResource(Resource):
         :param values: data to be writen to the device.
         :param converter: function used to convert each value.
                           String formatting codes are also accepted.
-                          Defaults to 'f'.
+                          Defaults to "f".
         :type converter: callable | str
         :param separator: a callable that join the values in a single str.
                           If a str is given, separator.join(values) is used.
