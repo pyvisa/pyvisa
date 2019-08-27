@@ -112,6 +112,8 @@ class TestResourceManager(unittest.TestCase):
                          getattr(InterfaceType, rname.interface_type.lower()))
         self.assertEqual(rinfo.interface_board_number, int(rname.board))
 
+    # XXX need to test list_resource_infos
+
     def test_opening_resource(self):
         """Test opening and closing resources.
 

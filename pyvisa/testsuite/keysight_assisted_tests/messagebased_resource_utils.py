@@ -167,6 +167,16 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertEqual(self.instr.query("SEND", delay=0.5), "test")
         self.assertGreater(time.time()-tic, 0.5)
 
+        # Test handling repeated term char
+        for char in ("\r", None):
+            self.instr.write_termination = "\n" if char else "\r"
+            self.instr.write("RECEIVE", termination="\n")
+            with self.assertWarns(Warning):
+                self.instr.write("test\r", termination=char)
+            self.instr.write("", termination="\n")
+            self.instr.write("SEND", termination="\n")
+            self.assertEqual(self.instr.read(), "test\r\r")
+
         # XXX not sure how to test encoding
 
     def test_write_ascii_values(self):
@@ -187,6 +197,17 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                                       termination="\n")
         self.instr.write("SEND", termination="\n")
         self.assertEqual(self.instr.read(), "1;2;3;4;5")
+
+        # Test handling repeated term char
+        for char in ("\r", None):
+            self.instr.write_termination = "\n" if char else "\r"
+            self.instr.write("RECEIVE", termination="\n")
+            with self.assertWarns(Warning):
+                self.instr.write_ascii_values("", l, "d", separator=";",
+                                        termination=char)
+            self.instr.write("", termination="\n")
+            self.instr.write("SEND", termination="\n")
+            self.assertEqual(self.instr.read(), "1;2;3;4;5\r\r")
 
     def test_write_binary_values(self):
         """Test writing binary data.
@@ -213,6 +234,22 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write("SEND", termination="\n")
             self.assertEqual(self.instr.read_bytes(11 + len(prefix)),
                              prefix + b"\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05\n")
+
+        # Test handling repeated term char
+        self.subTest("Repeated term char")
+        for char in ("\r", None):
+            self.instr.write_termination = "\n" if char else "\r"
+            self.instr.write("RECEIVE", termination="\n")
+            with self.assertWarns(Warning):
+                self.instr.write_binary_values("\r", l, "h", header_fmt=hfmt,
+                                               termination=char)
+            self.instr.write("", termination="\n")
+            self.instr.write("SEND", termination="\n")
+            self.assertEqual(self.instr.read(), "1;2;3;4;5\r\r")
+
+        # Wrong header format
+        with self.assertRaises(ValueError):
+            self.instr.write_binary_values("\r", l, "h", header_fmt="xxx")
 
     def test_read_ascii_values(self):
         """Test reading ascii values.
@@ -275,14 +312,14 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write("RECEIVE")
             self.instr.write_binary_values("", data, "h", header_fmt=hfmt,
                                            is_big_endian=True)
-            self.instr.write("SEND")
-            new = self.instr.read_binary_values(datatype='h',
-                                                header_fmt=hfmt,
-                                                is_big_endian=True,
-                                                expect_termination=False,
-                                                chunk_size=8,
-                                                container= np.array if np else list,
-                                                data_points=8 if hfmt == "empty" else 0)
+            new = self.instr.query_binary_values("SEND",
+                                                 datatype='h',
+                                                 header_fmt=hfmt,
+                                                 is_big_endian=True,
+                                                 expect_termination=False,
+                                                 chunk_size=8,
+                                                 container= np.array if np else list,
+                                                 data_points=8 if hfmt == "empty" else 0)
             self.instr.read_bytes(1)
             if np:
                 np.testing.assert_array_equal(new,
@@ -314,6 +351,16 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.disable_event(event_type, event_mech)
         self.assertFalse(response.timed_out)
         self.assertEqual(response.event_type, constants.EventType.service_request)
+
+        self.instr.enable_event(event_type, event_mech, None)
+        try:
+            response = self.instr.wait_on_event(event_type, wait_time)
+        except errors.VisaIOError:
+            pass
+        finally:
+            self.instr.disable_event(event_type, event_mech)
+        self.assertTrue(response.timed_out)
+        self.assertIsNone(response.event_type)
 
     def test_managing_visa_handler(self):
         """Test using visa handlers.
@@ -383,3 +430,9 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.unlock()
 
         self.assertTrue(instr2.query("*IDN?"))
+
+        # Share the lock for a limited time
+        with self.instr.lock_context(requested_key='exclusive') as key:
+            self.assertIsNone(key)
+            with self.assertRaises(VisaIOError):
+                instr2.query("*IDN?")

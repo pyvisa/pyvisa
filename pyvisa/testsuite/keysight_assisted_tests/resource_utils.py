@@ -8,6 +8,7 @@ from pyvisa import ResourceManager, InvalidSession, VisaIOError
 from pyvisa.constants import (StatusCode, InterfaceType, VI_ATTR_TMO_VALUE,
                               VI_TMO_IMMEDIATE, VI_TMO_INFINITE)
 from pyvisa.rname import ResourceName
+from pyvisa.resources.resource import Resource
 
 from . import RESOURCE_ADDRESSES
 
@@ -56,6 +57,13 @@ class ResourceTestCase:
             self.assertEqual(len(self.rm.list_opened_resources()), 1)
         self.assertEqual(len(self.rm.list_opened_resources()), 0)
 
+    def test_alias_bypassing(self):
+        """Test that a resource that cannot normalize an alias keep the alias.
+
+        """
+        instr = Resource(self.resource_manager, "visa_alias")
+        self.assertRegex(str(self.instr), r".* at %s" % "visa_alias")
+
     def test_str(self):
         """Test the string representation of a resource.
 
@@ -83,10 +91,10 @@ class ResourceTestCase:
 
         # XXX for some obscure reason setting the value to immedite still
         # return a value of 1 instead of 0
-        # self.instr.timeout = 0.1
-        # self.assertEqual(self.instr.timeout, 0)
-        # self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-        #                  VI_TMO_IMMEDIATE)
+        self.instr.timeout = 0.1
+        self.assertEqual(self.instr.timeout, 0)
+        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
+                         1)
 
         self.instr.timeout = 10
         self.assertEqual(self.instr.timeout, 10)
@@ -160,54 +168,14 @@ class ResourceTestCase:
         """
         raise NotImplementedError()
 
-    # def test_shared_locking(self):
-    #     """Test locking/unlocking a resource.
+    def test_shared_locking(self):
+        """Test locking/unlocking a resource.
 
-    #     """
-    #     instr2 = self.rm.open_resource(str(self.rname))
-    #     instr3 = self.rm.open_resource(str(self.rname))
+        """
+        raise NotImplementedError()
 
-    #     key = self.instr.lock()
-    #     instr2.lock(requested_key=key)
+    def test_exclusive_locking(self):
+        """Test locking/unlocking a resource.
 
-    #     self.instr.timeout = 1
-    #     instr2.timeout = 10
-    #     self.assertEqual(self.instr.timeout, 10)
-    #     with self.assertRaises(VisaIOError):
-    #         instr3.timeout = 20
-
-    #     # Share the lock for a limited time
-    #     with instr3.lock_context(requested_key=key) as key2:
-    #         self.assertEqual(key, key2)
-    #         instr3.timeout = 20
-    #     self.assertEqual(self.instr.timeout, 20)
-
-    #     # Stop sharing the lock
-    #     instr2.unlock()
-
-    #     self.instr.timeout = 2
-    #     self.assertEqual(self.instr.timeout, 2)
-    #     with self.assertRaises(VisaIOError):
-    #         instr2.timeout = 20
-    #     with self.assertRaises(VisaIOError):
-    #         instr3.timeout = 20
-
-    #     self.instr.unlock()
-
-    #     instr3.timeout = 30
-    #     self.assertEqual(self.instr.timeout, 30)
-
-    # def test_exclusive_locking(self):
-    #     """Test locking/unlocking a resource.
-
-    #     """
-    #     instr2 = self.rm.open_resource(str(self.rname))
-
-    #     self.instr.lock_excl()
-    #     with self.assertRaises(VisaIOError):
-    #         instr2.timeout = 20
-
-    #     self.instr.unlock()
-
-    #     instr2.timeout = 30
-    #     self.assertEqual(self.instr.timeout, 30)
+        """
+        raise NotImplementedError()

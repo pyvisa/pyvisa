@@ -23,37 +23,6 @@ from .. import util
 from .resource import Resource
 
 
-class ValuesFormat(object):
-    """Options for reading values.
-    """
-    __slots__ = ('is_binary', 'container',
-                 'datatype', 'is_big_endian',
-                 'converter', 'separator', 'header_fmt')
-
-    def __init__(self):
-        self.is_binary = True
-        self.datatype = 'f'
-        self.is_big_endian = False
-        self.container = list
-        self.converter = 'f'
-        self.separator = ','
-        self.header_fmt = 'ieee'
-
-    def use_ascii(self, converter, separator, container=list):
-        self.converter = converter
-        self.separator = separator
-        self.container = container
-        self.is_binary = False
-
-    def use_binary(self, datatype, is_big_endian, container=list,
-                   header_fmt='ieee'):
-        self.datatype = datatype
-        self.is_big_endian = is_big_endian
-        self.container = container
-        self.is_binary = True
-        self.header_fmt = header_fmt
-
-
 class ControlRenMixin(object):
     """Common control_ren method of some messaged based resources.
 
