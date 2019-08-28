@@ -207,7 +207,9 @@ class Resource(object):
 
         :param access_mode: Specifies the mode by which the resource is to be accessed.
         :type access_mode: :class:`pyvisa.constants.AccessModes`
-        :param open_timeout: Milliseconds before the open operation times out.
+        :param open_timeout: If the ``access_mode`` parameter requests a lock, then this parameter specifies the
+                             absolute time period (in milliseconds) that the resource waits to get unlocked before this
+                             operation returns an error.
         :type open_timeout: int
         """
 

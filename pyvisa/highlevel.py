@@ -956,8 +956,10 @@ class VisaLibraryBase(object):
         :param resource_name: Unique symbolic name of a resource.
         :param access_mode: Specifies the mode by which the resource is to be accessed.
         :type access_mode: :class:`pyvisa.constants.AccessModes`
-        :param open_timeout: Specifies the maximum time period (in milliseconds) that this operation waits
-                             before returning an error.
+        :param open_timeout: If the ``access_mode`` parameter requests a lock, then this parameter specifies the
+                             absolute time period (in milliseconds) that the resource waits to get unlocked before this
+                             operation returns an error.
+        :type open_timeout: int
         :return: Unique logical identifier reference to a session, return value of the library call.
         :rtype: session, :class:`pyvisa.constants.StatusCode`
         """
@@ -1710,10 +1712,13 @@ class ResourceManager(object):
                           open_timeout=constants.VI_TMO_IMMEDIATE):
         """Open the specified resource without wrapping into a class
 
-        :param resource_name: name or alias of the resource to open.
-        :param access_mode: access mode.
+        :param resource_name: Name or alias of the resource to open.
+        :param access_mode: Specifies the mode by which the resource is to be accessed.
         :type access_mode: :class:`pyvisa.constants.AccessModes`
-        :param open_timeout: time out to open.
+        :param open_timeout: If the ``access_mode`` parameter requests a lock, then this parameter specifies the
+                             absolute time period (in milliseconds) that the resource waits to get unlocked before this
+                             operation returns an error.
+        :type open_timeout: int
 
         :return: Unique logical identifier reference to a session.
         """
@@ -1726,13 +1731,16 @@ class ResourceManager(object):
                       **kwargs):
         """Return an instrument for the resource name.
 
-        :param resource_name: name or alias of the resource to open.
-        :param access_mode: access mode.
+        :param resource_name: Name or alias of the resource to open.
+        :param access_mode: Specifies the mode by which the resource is to be accessed.
         :type access_mode: :class:`pyvisa.constants.AccessModes`
-        :param open_timeout: time out to open.
-        :param resource_pyclass: resource python class to use to instantiate the Resource.
+        :param open_timeout: If the ``access_mode`` parameter requests a lock, then this parameter specifies the
+                             absolute time period (in milliseconds) that the resource waits to get unlocked before this
+                             operation returns an error.
+        :type open_timeout: int
+        :param resource_pyclass: Resource Python class to use to instantiate the Resource.
                                  Defaults to None: select based on the resource name.
-        :param kwargs: keyword arguments to be used to change instrument attributes
+        :param kwargs: Keyword arguments to be used to change instrument attributes
                        after construction.
 
         :rtype: :class:`pyvisa.resources.Resource`
