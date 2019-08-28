@@ -9,6 +9,8 @@ PyVISA Changelog
 -----------------
 
 - Fix reading binary values with an empty header PR #454
+- Allow to use different headers in write_binary_values PR #454
+- Remove delay kwarg from read_ascii_values which should never have been there PR #454
 
 
 1.10 (2019-08-09)
