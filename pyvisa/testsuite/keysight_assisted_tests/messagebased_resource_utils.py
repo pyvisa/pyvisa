@@ -292,7 +292,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # 3328 in binary short is \x00\r this way we can interrupt the
         # transmission midway to test some corner cases
         data = [1, 2, 3328, 3, 4, 5, 6, 7]
-        for hfmt in ("ieee", "hp", "empty"):
+        for hfmt in ("ieee", "hp"):
             print(hfmt)
             self.subTest(hfmt)
 
@@ -305,7 +305,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                                                 header_fmt=hfmt,
                                                 expect_termination=True,
                                                 chunk_size=8,
-                                                data_points=8 if hfmt == "empty" else 0)
+                                                )
             self.instr.read_bytes(1)
             self.assertEqual(data, new)
 
@@ -319,7 +319,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                                                  expect_termination=False,
                                                  chunk_size=8,
                                                  container= np.array if np else list,
-                                                 data_points=8 if hfmt == "empty" else 0)
+                                                 )
             self.instr.read_bytes(1)
             if np:
                 np.testing.assert_array_equal(new,
@@ -327,6 +327,49 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             else:
                 self.assertEqual(data, new)
 
+    def test_read_binary_values_unreported_length(self):
+        """Test reading binary data.
+
+        """
+        self.instr.read_termination = '\r'
+        # 3328 in binary short is \x00\r this way we can interrupt the
+        # transmission midway to test some corner cases
+        data = [1, 2, 3328, 3, 4, 5]
+        for hfmt, header in zip(("ieee", "hp", "empty"),
+                                ("#10", "#A\x00\x00\x00\x00", "")):
+            print(hfmt)
+            self.subTest(hfmt)
+
+            self.instr.write("RECEIVE")
+            self.instr.write(header + "\x01\x00\x02\x00\x00\r\x03\x00\x04\x00\x05\x00",
+                             termination='\r\n')
+            self.instr.write("SEND")
+            new = self.instr.read_binary_values(datatype='h',
+                                                is_big_endian=False,
+                                                header_fmt=hfmt,
+                                                expect_termination=True,
+                                                chunk_size=6,
+                                                data_points=6)
+            self.instr.read_bytes(1)
+            self.assertEqual(data, new)
+
+            self.instr.write("RECEIVE")
+            self.instr.write(header + "\x00\x01\x00\x02\r\x00\x00\x03\x00\x04\x00\x05",
+                             termination='\r\n')
+            new = self.instr.query_binary_values("SEND",
+                                                 datatype='h',
+                                                 header_fmt=hfmt,
+                                                 is_big_endian=True,
+                                                 expect_termination=False,
+                                                 chunk_size=6,
+                                                 container= np.array if np else list,
+                                                 data_points=6)
+            self.instr.read_bytes(1)
+            if np:
+                np.testing.assert_array_equal(new,
+                                              np.array(data, dtype=np.int16))
+            else:
+                self.assertEqual(data, new)
 
     def test_stb(self):
         """Test reading the status byte.
