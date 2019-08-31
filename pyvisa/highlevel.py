@@ -1479,8 +1479,8 @@ def get_wrapper_class(backend_name):
 def _get_default_wrapper():
     """Return an available default VISA wrapper as a string ('ivi' or 'py').
 
-    Use NI if the binary is found, else try to use pyvisa-py.
-    'ni' VISA wrapper is NOT used since version > 10.0.0
+    Use IVI if the binary is found, else try to use pyvisa-py.
+    'ni' VISA wrapper is NOT used since version > 1.10.0
     If neither can be found, raise a ValueError.
     """
 
