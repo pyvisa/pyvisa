@@ -49,7 +49,7 @@ class VisaLibraryBase(object):
 
     The default VisaLibrary class is :class:`pyvisa.ctwrapper.highlevel.NIVisaLibrary`,
     which implements a ctypes wrapper around the IVI-VISA library.
-    Certainly, IVI-VISA can be NI-VISA, R&SVISA, tekVISA etc.
+    Certainly, IVI-VISA can be NI-VISA, Keysight VISA, R&S VISA, tekVISA etc.
 
     In general, you should not instantiate it directly. The object exposed to the user
     is the :class:`pyvisa.highlevel.ResourceManager`. If needed, you can access the
