@@ -17,6 +17,7 @@ import contextlib
 import collections
 import pkgutil
 import os
+import warnings
 from collections import defaultdict
 from weakref import WeakSet
 
@@ -1442,7 +1443,7 @@ def list_backends():
     :rtype: list
     """
     return ['ivi'] + [name for (loader, name, ispkg) in pkgutil.iter_modules()
-                     if name.startswith('pyvisa-') and not name.endswith('-script')]
+                      if name.startswith('pyvisa-') and not name.endswith('-script')]
 
 #: Maps backend name to VisaLibraryBase derived class
 #: dict[str, :class:`pyvisa.highlevel.VisaLibraryBase`]
@@ -1459,13 +1460,14 @@ def get_wrapper_class(backend_name):
     try:
         return _WRAPPERS[backend_name]
     except KeyError:
-        if backend_name == 'ivi':
+        if backend_name == 'ivi' or backend_name == 'ni':
             from .ctwrapper import NIVisaLibrary
             _WRAPPERS['ivi'] = NIVisaLibrary
-            return NIVisaLibrary
-        elif backend_name == 'ni':
-            from .ctwrapper import NIVisaLibrary
-            _WRAPPERS['ivi'] = NIVisaLibrary
+            if backend_name == 'ni':
+                warnings.warn(
+                    '@ni backend name is no longer used by default and was'
+                    'replaced by @ivi Check the documentation for details',
+                    FutureWarning)
             return NIVisaLibrary
 
     try:
