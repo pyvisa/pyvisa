@@ -208,6 +208,10 @@ class MessageBasedResource(Resource):
 
         :param message: the message to be sent.
         :type message: unicode (Py2) or str (Py3)
+        :param termination: alternative character termination to use.
+        :type termination: unicode (Py2) or str (Py3)
+        :param encoding: encoding to convert from unicode to bytes.
+        :type encoding: unicode (Py2) or str (Py3)
         :return: number of bytes written.
         :rtype: int
         """
@@ -237,7 +241,7 @@ class MessageBasedResource(Resource):
         :param values: data to be writen to the device.
         :param converter: function used to convert each value.
                           String formatting codes are also accepted.
-                          Defaults to str.
+                          Defaults to 'f'.
         :type converter: callable | str
         :param separator: a callable that join the values in a single str.
                           If a str is given, separator.join(values) is used.
@@ -266,7 +270,7 @@ class MessageBasedResource(Resource):
 
     def write_binary_values(self, message, values, datatype='f',
                             is_big_endian=False, termination=None,
-                            encoding=None):
+                            encoding=None, header_fmt='ieee'):
         """Write a string message to the device followed by values in binary
         format.
 
@@ -278,6 +282,8 @@ class MessageBasedResource(Resource):
         :param datatype: the format string for a single element. See struct
                          module.
         :param is_big_endian: boolean indicating endianess.
+        :param header_fmt: format of the header prefixing the data. Possible
+                           values are: 'ieee', 'hp', 'empty'
         :return: number of bytes written.
         :rtype: int
         """
@@ -288,7 +294,14 @@ class MessageBasedResource(Resource):
                 warnings.warn("write message already ends with "
                               "termination characters", stacklevel=2)
 
-        block = util.to_ieee_block(values, datatype, is_big_endian)
+        if header_fmt == "ieee":
+           block = util.to_ieee_block(values, datatype, is_big_endian)
+        elif header_fmt == "hp":
+            block = util.to_hp_block(values, datatype, is_big_endian)
+        elif header_fmt =="empty":
+            block = util.to_binary_block(values, b"", datatype, is_big_endian)
+        else:
+            raise ValueError("Unsupported header_fmt: %s" % header_fmt)
 
         message = message.encode(enco) + block
 
@@ -425,8 +438,7 @@ class MessageBasedResource(Resource):
 
         return message[:-len(termination)]
 
-    def read_ascii_values(self, converter='f', separator=',', container=list,
-                          delay=None):
+    def read_ascii_values(self, converter='f', separator=',', container=list):
         """Read values from the device in ascii format returning an iterable of
         values.
 
@@ -483,18 +495,19 @@ class MessageBasedResource(Resource):
         if header_fmt == 'ieee':
             offset, data_length = util.parse_ieee_block_header(block)
 
-            # Allow to support instrument such as the Keithley 2000 that do not
-            # report the length of the block
-            data_length = data_length or data_points*struct.calcsize(datatype)
-
         elif header_fmt == 'hp':
             offset, data_length = util.parse_hp_block_header(block,
                                                              is_big_endian)
-        elif header == 'empty':
+        elif header_fmt == 'empty':
             offset = 0
+            data_length = 0
         else:
             raise ValueError("Invalid header format. Valid options are 'ieee',"
                              " 'empty', 'hp'")
+
+        # Allow to support instrument such as the Keithley 2000 that do not
+        # report the length of the block
+        data_length = data_length or data_points*struct.calcsize(datatype)
 
         expected_length = offset + data_length
 
@@ -515,7 +528,7 @@ class MessageBasedResource(Resource):
                    'as part of the transfer, it may be because the size is '
                    'fixed or can be accessed from the instrumentin using a '
                    'specific command. You should find the expected number of '
-                   'bytes and pass it using the `data_length` keyword.')
+                   'points and pass it using the `data_points` keyword.')
             warnings.warn(msg, FutureWarning)
             # Do not keep reading since we may have already read everything
 
@@ -656,8 +669,7 @@ class MessageBasedResource(Resource):
         if delay > 0.0:
             time.sleep(delay)
 
-        return self.read_ascii_values(converter, separator, container,
-                                      delay)
+        return self.read_ascii_values(converter, separator, container)
 
     def query_binary_values(self, message, datatype='f', is_big_endian=False,
                             container=list, delay=None, header_fmt='ieee',
