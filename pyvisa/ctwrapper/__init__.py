@@ -13,7 +13,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from .highlevel import NIVisaLibrary
+from .highlevel import IVIVisaLibrary
 
-WRAPPER_CLASS = NIVisaLibrary
+WRAPPER_CLASS = IVIVisaLibrary
 

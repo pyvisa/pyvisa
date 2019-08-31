@@ -51,7 +51,7 @@ def unique(seq):
 
 
 @add_visa_methods
-class NIVisaLibrary(highlevel.VisaLibraryBase):
+class IVIVisaLibrary(highlevel.VisaLibraryBase):
     """High level NI-VISA Library wrapper using ctypes.
 
     The easiest way to instantiate the library is to let `pyvisa` find the
@@ -59,11 +59,11 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
     If it fails, it uses `ctypes.util.find_library` to try to locate a library
     in a way similar to what the compiler does:
 
-       >>> visa_library = NIVisaLibrary()
+       >>> visa_library = IVIVisaLibrary()
 
     But you can also specify the path:
 
-        >>> visa_library = NIVisaLibrary('/my/path/visa.so')
+        >>> visa_library = IVIVisaLibrary('/my/path/visa.so')
 
     :param library_path: path of the VISA library.
     """
@@ -103,14 +103,14 @@ class NIVisaLibrary(highlevel.VisaLibraryBase):
         d = OrderedDict()
         d['Version'] = '%s (bundled with PyVISA)' % __version__
 
-        paths = NIVisaLibrary.get_library_paths()
+        paths = IVIVisaLibrary.get_library_paths()
 
         for ndx, visalib in enumerate(paths, 1):
             nfo = OrderedDict()
             nfo['found by'] = visalib.found_by
             nfo['bitness'] = visalib.bitness
             try:
-                lib = NIVisaLibrary(visalib)
+                lib = IVIVisaLibrary(visalib)
                 sess, _ = lib.open_default_resource_manager()
                 nfo['Vendor'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_MANF_NAME)[0])
                 nfo['Impl. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_IMPL_VERSION)[0])

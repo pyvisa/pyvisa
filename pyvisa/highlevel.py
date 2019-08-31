@@ -48,7 +48,7 @@ class VisaLibraryBase(object):
     to the underlying devices providing Pythonic wrappers to VISA functions. But not all
     derived class must/will implement all methods.
 
-    The default VisaLibrary class is :class:`pyvisa.ctwrapper.highlevel.NIVisaLibrary`,
+    The default VisaLibrary class is :class:`pyvisa.ctwrapper.highlevel.IVIVisaLibrary`,
     which implements a ctypes wrapper around the IVI-VISA library.
     Certainly, IVI-VISA can be NI-VISA, Keysight VISA, R&S VISA, tekVISA etc.
 
@@ -1461,14 +1461,14 @@ def get_wrapper_class(backend_name):
         return _WRAPPERS[backend_name]
     except KeyError:
         if backend_name == 'ivi' or backend_name == 'ni':
-            from .ctwrapper import NIVisaLibrary
-            _WRAPPERS['ivi'] = NIVisaLibrary
+            from .ctwrapper import IVIVisaLibrary
+            _WRAPPERS['ivi'] = IVIVisaLibrary
             if backend_name == 'ni':
                 warnings.warn(
                     '@ni backend name is no longer used by default and was'
                     'replaced by @ivi Check the documentation for details',
                     FutureWarning)
-            return NIVisaLibrary
+            return IVIVisaLibrary
 
     try:
         pkg = __import__('pyvisa-' + backend_name)
@@ -1486,8 +1486,8 @@ def _get_default_wrapper():
     If neither can be found, raise a ValueError.
     """
 
-    from .ctwrapper import NIVisaLibrary
-    ni_binary_found = bool(NIVisaLibrary.get_library_paths())
+    from .ctwrapper import IVIVisaLibrary
+    ni_binary_found = bool(IVIVisaLibrary.get_library_paths())
     if ni_binary_found:
         logger.debug('The IVI implementation available')
         return 'ivi'
