@@ -126,13 +126,17 @@ class LibraryPath(str):
         return ', '.join(str(a) for a in self.arch)
 
 
-def warn_for_invalid_kwargs(keyw, allowed_keys):
+def warn_for_invalid_kwargs(keyw, allowed_keys):  # pragma: no cover
+    warnings.warn('warn_for_invalid_kwargs will be removed in 1.12',
+                   FutureWarning)
     for key in keyw.keys():
         if key not in allowed_keys:
             warnings.warn('Keyword argument "%s" unknown' % key, stacklevel=3)
 
 
-def filter_kwargs(keyw, selected_keys):
+def filter_kwargs(keyw, selected_keys):  # pragma: no cover
+    warnings.warn('warn_for_invalid_kwargs will be removed in 1.12',
+                   FutureWarning)
     result = {}
     for key, value in keyw.items():
         if key in selected_keys:
@@ -140,7 +144,9 @@ def filter_kwargs(keyw, selected_keys):
     return result
 
 
-def split_kwargs(keyw, self_keys, parent_keys, warn=True):
+def split_kwargs(keyw, self_keys, parent_keys, warn=True):  # pragma: no cover
+    warnings.warn('warn_for_invalid_kwargs will be removed in 1.12',
+                   FutureWarning)
     self_kwargs = dict()
     parent_kwargs = dict()
     self_keys = set(self_keys)
