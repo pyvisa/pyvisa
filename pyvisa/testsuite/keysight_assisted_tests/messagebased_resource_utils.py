@@ -42,7 +42,6 @@ class EventHandler:
             return 0
 
 
-# Add extra tests for attributes (manual term_char, manual term_char enabled)
 class MessagebasedResourceTestCase(ResourceTestCase):
     """Base test case for all message based resources.
 
@@ -115,6 +114,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"test\n")
         self.instr.write_raw(b"SEND\n")
+        self.instr.flush()
         self.assertEqual(self.instr.read_bytes(5, chunk_size=2), b"test\n")
 
         # Reading one byte at a time

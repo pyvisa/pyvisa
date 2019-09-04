@@ -7,16 +7,64 @@ from pyvisa.testsuite import BaseTestCase
 
 from pyvisa import rname
 
-parse = rname.ResourceName.from_string
+
+class TestInvalidResourceName(BaseTestCase):
+    """Test the creation of InvalidResourceName errors.
+
+    """
+    def test_bad_syntax(self):
+        """
+
+        """
+        pass
+
+    def test_subclass_notfound(self):
+        """
+
+        """
+        pass
+
+    def test_rc_notfound(self):
+        """
+
+        """
+        pass
+
+
+# XXX test register_subclass errors
+
+
+class TestResourceName(BaseTestCase):
+    """
+
+    """
+    def _validate_resource_name(self):
+        pass
+
+    def test_creation_from_string(self):
+        """
+
+        """
+        pass
+
+    def test_creation_from_kwargs(self):
+        """
+
+        """
+        pass
+
+
+# XXX test building bad resource name class
 
 
 class TestParsers(BaseTestCase):
 
     def _parse_test(self, rn, **kwargs):
-        p = parse(rn)
+        p = rname.to_canonical_name(rn)
         r = dict((k, getattr(p, k)) for k in p._fields + ('interface_type', 'resource_class'))
         r['canonical_resource_name'] = str(p)
         self.assertEqual(r, kwargs, rn)
+        # XXX add assemble_canonical_nametesting
 
     @unittest.expectedFailure
     def test_asrl_ethernet(self):
@@ -254,3 +302,5 @@ class TestFilters(BaseTestCase):
         self._test_filter('ASRL1+::INSTR', 2, 7)
         self._test_filter('(GPIB|VXI)?*INSTR', 0, 6)
         self._test_filter('?*', *tuple(range(len(self.run_list))))
+
+    # XXX also test bad filter formats

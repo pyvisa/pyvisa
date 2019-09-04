@@ -112,7 +112,19 @@ class TestResourceManager(unittest.TestCase):
                          getattr(InterfaceType, rname.interface_type.lower()))
         self.assertEqual(rinfo.interface_board_number, int(rname.board))
 
-    # XXX need to test list_resource_infos
+    def test_listing_resource_infos(self):
+        """Test listing resource infos.
+
+        """
+        infos = self.rm.list_resources_info()
+
+        for rname, rinfo_ext in infos.items():
+        rname = ResourceName().from_string(rname)
+            self.assertEqual(rinfo_ext.interface_type,
+                            getattr(InterfaceType, rname.interface_type.lower()))
+            self.assertEqual(rinfo_ext.interface_board_number, int(rname.board))
+            self.assertEqual(rinfo_ext.resource_class, rname.resource_class)
+            self.assertEqual(rinfo_ext.resource_name, str(rname))
 
     def test_opening_resource(self):
         """Test opening and closing resources.
@@ -120,7 +132,7 @@ class TestResourceManager(unittest.TestCase):
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
         rsc = self.rm.open_resource(rname,
-                                   timeout=1234)
+                                    timeout=1234)
 
         # Check the resource is listed as opened and the attributes are right.
         self.assertIn(rsc, self.rm.list_opened_resources())

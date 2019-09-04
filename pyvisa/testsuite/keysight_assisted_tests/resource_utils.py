@@ -23,6 +23,11 @@ class ResourceTestCase:
     #: acceptable values
     RESOURCE_TYPE = ''
 
+    #: Minimal timeout value accepted by the resource. When setting the timeout
+    #: to VI_TMO_IMMEDIATE, Visa (Keysight at least) may actually use a
+    #: different value depending on the values supported by the resource.
+    MINIMAL_TIMEOUT = VI_TMO_IMMEDIATE
+
     def setUp(self):
         """Create a resource using the address matching the type.
 
@@ -89,12 +94,10 @@ class ResourceTestCase:
         self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
                          VI_TMO_INFINITE)
 
-        # XXX for some obscure reason setting the value to immedite still
-        # return a value of 1 instead of 0
         self.instr.timeout = 0.1
         self.assertEqual(self.instr.timeout, 1)
         self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-                         1)
+                         self.MINIMAL_TIMEOUT)
 
         self.instr.timeout = 10
         self.assertEqual(self.instr.timeout, 10)
@@ -138,11 +141,9 @@ class ResourceTestCase:
         self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), 10)
         self.assertEqual(self.instr.timeout, 10)
 
-        # XXX for some obscure reason setting the value to immedite still
-        # return a value of 1 instead of 0
         self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_IMMEDIATE)
         self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-                         1)
+                         self.MINIMAL_TIMEOUT)
         self.assertEqual(self.instr.timeout, 1)
 
         self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)

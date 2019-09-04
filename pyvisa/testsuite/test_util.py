@@ -13,6 +13,8 @@ except ImportError:
     np = None
 
 
+# XXX test reading config from file (use tempfile)
+
 class TestParser(BaseTestCase):
 
     def test_parse_binary(self):
@@ -60,6 +62,26 @@ class TestParser(BaseTestCase):
                                                            cont)
             self.round_trip_block_converstion(values, tb, fb, msg)
 
+    def test_invalid_string_converter(self):
+        with self.raises(ValueError) as ex:
+            util.to_ascii_block([1,2], 'm')
+        self.assertIn("unsupported format character", ex.value)
+        with self.raises(ValueError) as ex:
+            util.from_ascii_block("1,2,3", 'm')
+        self.assertIn("Invalid code for converter", ex.value)
+
+    def test_function_separator(self):
+        values = list(range(99))
+        msg = 'block=ascii, fmt=d'
+        tb = lambda values: util.to_ascii_block(values, fmt, ':'.join)
+        fb = lambda block, cont: util.from_ascii_block(block, fmt, ':'.split,
+                                                        cont)
+        self.round_trip_block_converstion(values, tb, fb, msg)
+
+    # XXX handle missing # (ieee), #A (hp)
+    # XXX handle too short block (ieee, hp)
+    # XXX guess length
+    # XXX malformed binary
     def test_integer_binary_block(self):
         values = list(range(99))
         for block, tb, fb in zip(('ieee', 'hp'),
@@ -107,3 +129,5 @@ class TestParser(BaseTestCase):
                 np.testing.assert_array_equal(conv, parsed, msg)
             else:
                 self.assertEqual(conv, parsed, msg)
+
+# XXX system details and binary analysis
