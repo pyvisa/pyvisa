@@ -1819,6 +1819,6 @@ class ResourceManager(object):
         :rtype: :class:`pyvisa.resources.Resource`
         """
         warnings.warn('get_instrument is deprecated and will be removed in '
-                      '1.11, use open_resource instead.', FutureWarning)
+                      '1.12, use open_resource instead.', FutureWarning)
         self.open_resource(resource_name, access_mode, open_timeout,
                            resource_pyclass, **kwargs)
