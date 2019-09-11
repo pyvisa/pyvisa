@@ -3,12 +3,11 @@
     pyvisa
     ~~~~~~
 
-    Python wrapper of National Instrument (NI) Virtual Instruments Software
-    Architecture library (VISA).
+    Python wrapper of IVI Virtual Instruments Software Architecture library (VISA).
 
     This file is part of PyVISA.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
+    :copyright: 2014-2019 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
 

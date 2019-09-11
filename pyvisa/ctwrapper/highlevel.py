@@ -23,7 +23,7 @@ from .cthelper import Library, find_library
 from . import functions
 
 
-logger = logging.LoggerAdapter(logger, {'backend': 'ni'})
+logger = logging.LoggerAdapter(logger, {'backend': 'ivi'})
 
 
 def add_visa_methods(aclass):
@@ -52,7 +52,7 @@ def unique(seq):
 
 @add_visa_methods
 class IVIVisaLibrary(highlevel.VisaLibraryBase):
-    """High level NI-VISA Library wrapper using ctypes.
+    """High level IVI-VISA Library wrapper using ctypes.
 
     The easiest way to instantiate the library is to let `pyvisa` find the
     right one for you. This looks first in your configuration file (~/.pyvisarc).
@@ -77,7 +77,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         from ..util import LibraryPath, read_user_library_path
 
-        # Try to find NI libraries using known names.
+        # Try to find IVI libraries using known names.
         tmp = [find_library(library_path)
                for library_path in ('visa', 'visa32', 'visa32.dll', 'visa64', 'visa64.dll')]
 
@@ -98,6 +98,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
     @staticmethod
     def get_debug_info():
         """Return a list of lines with backend info.
+
         """
         from pyvisa import __version__
         d = OrderedDict()
@@ -259,3 +260,33 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         return tuple(resource for resource in resources)
 
+
+class NIVisaLibrary(IVIVisaLibrary):
+    """Deprecated name for IVIVisaLibrary.
+
+    This class will be removed in 1.12
+
+    """
+    @staticmethod
+    def get_library_paths():
+        """Return a tuple of possible library paths.
+
+        :rtype: tuple
+        """
+        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12."
+                      "Use IVIVisaLibrary instead.", FutureWarning)
+        IVIVisaLibrary.get_library_paths()
+
+    @staticmethod
+    def get_debug_info():
+        """Return a list of lines with backend info.
+
+        """
+        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12."
+                      "Use IVIVisaLibrary instead.", FutureWarning)
+        IVIVisaLibrary.get_debug_info()
+
+    def __new__(cls, library_path=''):
+        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12."
+                      "Use IVIVisaLibrary instead.", FutureWarning)
+        IVIVisaLibrary.__new__(cls, library_path)
