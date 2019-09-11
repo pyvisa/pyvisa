@@ -25,7 +25,7 @@ This example already shows the two main design goals of PyVISA: preferring
 simplicity over generality, and doing it the object-oriented way.
 
 After importing ``visa``, we create a ``ResourceManager`` object. If called
-without arguments, PyVISA will prefer the default backend (NI) which tries to
+without arguments, PyVISA will prefer the default backend (IVI) which tries to
 find the VISA shared library for you. If it fails it will fall back to
 pyvisa-py if installed. You can check what backend is used and the location of
 the shared library used, if relevant, simply by:

@@ -174,7 +174,7 @@ or::
 
     pyvisa-shell -b py
 
-uses python-py as backend instead of ni backend, for situation when ni not
+uses python-py as backend instead of ivi backend, for situation when ivi not
 installed.
 
 
