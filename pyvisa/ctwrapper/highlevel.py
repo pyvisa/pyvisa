@@ -273,7 +273,7 @@ class NIVisaLibrary(IVIVisaLibrary):
 
         :rtype: tuple
         """
-        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12."
+        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12. "
                       "Use IVIVisaLibrary instead.", FutureWarning)
         IVIVisaLibrary.get_library_paths()
 
@@ -282,11 +282,11 @@ class NIVisaLibrary(IVIVisaLibrary):
         """Return a list of lines with backend info.
 
         """
-        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12."
+        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12. "
                       "Use IVIVisaLibrary instead.", FutureWarning)
         IVIVisaLibrary.get_debug_info()
 
     def __new__(cls, library_path=''):
-        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12."
+        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12. "
                       "Use IVIVisaLibrary instead.", FutureWarning)
         IVIVisaLibrary.__new__(cls, library_path)

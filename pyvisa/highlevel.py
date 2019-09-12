@@ -1454,6 +1454,7 @@ def get_wrapper_class(backend_name):
     """Return the WRAPPER_CLASS for a given backend.
 
     backend_name == 'ni' is used for backwards compatibility
+    and will be removed in 1.12.
 
     :rtype: pyvisa.highlevel.VisaLibraryBase
     """
@@ -1465,8 +1466,9 @@ def get_wrapper_class(backend_name):
             _WRAPPERS['ivi'] = IVIVisaLibrary
             if backend_name == 'ni':
                 warnings.warn(
-                    '@ni backend name is no longer used by default and was'
-                    'replaced by @ivi Check the documentation for details',
+                    '@ni backend name is deprecated and will be '
+                    'removed in 1.12. Use @ivi instead. '
+                    'Check the documentation for details',
                     FutureWarning)
             return IVIVisaLibrary
 
@@ -1482,7 +1484,10 @@ def _get_default_wrapper():
     """Return an available default VISA wrapper as a string ('ivi' or 'py').
 
     Use IVI if the binary is found, else try to use pyvisa-py.
+
     'ni' VISA wrapper is NOT used since version > 1.10.0
+    and will be removed in 1.12
+
     If neither can be found, raise a ValueError.
     """
 
