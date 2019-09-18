@@ -5,7 +5,9 @@ PyVISA Changelog
 -----------------
 
 - Make the library less biased towards National Instrument by referring to IVI
-  where relevant PR #456
+  where relevant. In particular rename the @ni backend to @ivi PR #456
+- Deprecate the `visa` module that is causing issue with the VISA payment
+  processing package PR #448
 
 1.10.1 (2019-09-11)
 -------------------
