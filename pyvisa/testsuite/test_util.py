@@ -72,16 +72,13 @@ class TestParser(BaseTestCase):
 
     def test_function_separator(self):
         values = list(range(99))
-        msg = 'block=ascii, fmt=d'
+        fmt = "d"
+        msg = 'block=ascii, fmt=%s' % fmt
         tb = lambda values: util.to_ascii_block(values, fmt, ':'.join)
         fb = lambda block, cont: util.from_ascii_block(block, fmt, ':'.split,
                                                         cont)
         self.round_trip_block_converstion(values, tb, fb, msg)
 
-    # XXX handle missing # (ieee), #A (hp)
-    # XXX handle too short block (ieee, hp)
-    # XXX guess length
-    # XXX malformed binary
     def test_integer_binary_block(self):
         values = list(range(99))
         for block, tb, fb in zip(('ieee', 'hp'),
@@ -109,6 +106,52 @@ class TestParser(BaseTestCase):
                     fblock = lambda block, cont: fb(block, fmt, endi, cont)
                     self.round_trip_block_converstion(values, tblock, fblock,
                                                       msg)
+
+    def test_malformed_binary_block_header(self):
+        values = list(range(99))
+        for header, tb, fb in zip(('ieee', 'hp'),
+                                  (util.to_ieee_block, util.to_hp_block),
+                                  (util.from_ieee_block, util.from_hp_block)):
+            block = tb(values, "h", False)
+            bad_block = block[1:]
+            with self.assertRaises(ValueError) as e:
+                fb(bad_block, "h", False, list)
+
+            self.assertIn("(#", e.exception.args[0])
+
+    def test_binary_block_shorter_than_advertized(self):
+        values = list(range(99))
+        for header, tb, fb in zip(('ieee', 'hp'),
+                                  (util.to_ieee_block, util.to_hp_block),
+                                  (util.from_ieee_block, util.from_hp_block)):
+            block = tb(values, "h", False)
+            if header == "ieee":
+                l = int(block[1])
+                block = block[:2] + b"9" * l + block[2+l:]
+            else:
+                block = block[:2] + b"\xff\xff\xff\xff" * l + block[2+l:]
+            with self.assertRaises(ValueError) as e:
+                fb(block, "h", False, list)
+
+            self.assertIn("Binary data is incomplete", e.exception.args[0])
+
+    def test_guessing_block_length(self):
+        values = list(range(99))
+        for header, tb, fb in zip(('ieee', 'hp'),
+                                  (util.to_ieee_block, util.to_hp_block),
+                                  (util.from_ieee_block, util.from_hp_block)):
+            block = tb(values, "h", False)
+            if header == "ieee":
+                l = int(block[1])
+                block[2:2+l] = int("0" * l)
+            else:
+                block[2:2+4] = "\x00\x00\x00\x00"
+            self.assertListEqual(fb(block, "h", False, list),
+                                 values)
+
+    # XXX malformed binary
+    def test_handling_malformed_binary(self):
+        pass
 
     def round_trip_block_converstion(self, values, to_block, from_block, msg):
         """Test that block conversion round trip as expected.

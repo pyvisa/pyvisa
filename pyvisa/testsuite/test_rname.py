@@ -60,7 +60,7 @@ class TestResourceName(BaseTestCase):
 class TestParsers(BaseTestCase):
 
     def _parse_test(self, rn, **kwargs):
-        p = rname.to_canonical_name(rn)
+        p = rname.ResourceName.from_string(rn)
         r = dict((k, getattr(p, k)) for k in p._fields + ('interface_type', 'resource_class'))
         r['canonical_resource_name'] = str(p)
         self.assertEqual(r, kwargs, rn)

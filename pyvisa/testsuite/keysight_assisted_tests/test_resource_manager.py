@@ -11,6 +11,7 @@ from pyvisa.rname import ResourceName
 
 from . import RESOURCE_ADDRESSES
 
+
 unittest.skipUnless("PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ,
                     "Requires the Keysight virtual instrument. Run on PyVISA "
                     "buildbot.")
@@ -119,9 +120,9 @@ class TestResourceManager(unittest.TestCase):
         infos = self.rm.list_resources_info()
 
         for rname, rinfo_ext in infos.items():
-        rname = ResourceName().from_string(rname)
+            rname = ResourceName().from_string(rname)
             self.assertEqual(rinfo_ext.interface_type,
-                            getattr(InterfaceType, rname.interface_type.lower()))
+                             getattr(InterfaceType, rname.interface_type.lower()))
             self.assertEqual(rinfo_ext.interface_board_number, int(rname.board))
             self.assertEqual(rinfo_ext.resource_class, rname.resource_class)
             self.assertEqual(rinfo_ext.resource_name, str(rname))
