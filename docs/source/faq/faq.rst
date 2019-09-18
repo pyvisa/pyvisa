@@ -36,8 +36,8 @@ I have an error in my program and I am having trouble to fix it
 PyVISA provides useful logs of all operations. Add the following commands to
 your program and run it again::
 
-    import visa
-    visa.log_to_screen()
+    import pyvisa
+    pyvisa.log_to_screen()
 
 
 I found a bug, how can I report it?
@@ -47,7 +47,7 @@ Please report it on the `Issue Tracker`_, including operating system, python
 version and library version. In addition you might add supporting information
 by pasting the output of this command::
 
-    python -m visa info
+    pyvisa-info
 
 
 Error: Image not found
@@ -71,6 +71,16 @@ or::
     >>> rm = ResourceManager('Path to library')
 
 or creating a configuration file as described in :ref:`intro-configuring`.
+
+
+Error: `visa` module has no attribute `ResourceManager`
+-------------------------------------------------------
+
+The https://github.com/visa-sdk/visa-python provides a visa package that can
+conflict with :py:mod:`visa` module provided by PyVISA, which is why the
+:py:mod:`visa` module is deprecated and it is preferred to import
+:py:mod:`pyvisa` instead of :py:mod:`visa`. Both modules provides the
+same interface and no other changes should be needed.
 
 
 Error: No matching architecture
@@ -98,7 +108,7 @@ architecture.
 First, determine the details of your installation with the help of the
 following debug command::
 
-    python -m visa info
+    pyvisa-info
 
 You will see the 'bitness' of the Python interpreter and at the end you will
 see the list of VISA libraries that PyVISA was able to find.

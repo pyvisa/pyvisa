@@ -56,8 +56,8 @@ class VisaLibraryBase(object):
     is the :class:`pyvisa.highlevel.ResourceManager`. If needed, you can access the
     VISA library from it::
 
-        >>> import visa
-        >>> rm = visa.ResourceManager("/path/to/my/libvisa.so.7")
+        >>> import pyvisa
+        >>> rm = pyvisa.ResourceManager("/path/to/my/libvisa.so.7")
         >>> lib = rm.visalib
     """
 
@@ -514,6 +514,7 @@ class VisaLibraryBase(object):
             The following values (defined in the constants module can be
             combined using the | operator. However multiple operations on a
             single buffer cannot be combined.
+
             - VI_READ_BUF: Discard the read buffer contents and if data was
               present in the read buffer and no END-indicator was present,
               read from the device until encountering an END indicator
@@ -532,8 +533,10 @@ class VisaLibraryBase(object):
               data to the device.
             - VI_IO_OUT_BUF_DISCARD: Discard the transmit buffer contents (does
               not perform any I/O to the device).
+
         :return: return value of the library call.
         :rtype: :class:`pyvisa.constants.StatusCode`
+
         """
         raise NotImplementedError
 

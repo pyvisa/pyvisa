@@ -14,13 +14,13 @@ questions. In some cases, platform specific information is required. If you
 think this is the case, run the following command and paste the output into
 the issue::
 
-    python -m visa info
+    pyvisa-info
 
 It is useful that you also provide the log output. To obtain it, add the
 following lines to your code::
 
-    import visa
-    visa.log_to_screen()
+    import pyvisa
+    pyvisa.log_to_screen()
 
 If your issue concern a specific instrument please be sure to indicate the
 manufacturer and the model.

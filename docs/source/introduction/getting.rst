@@ -50,8 +50,8 @@ Testing your installation
 That's all! You can check that PyVISA is correctly installed by starting up
 python, and creating a ResourceManager:
 
-    >>> import visa
-    >>> rm = visa.ResourceManager()
+    >>> import pyvisa
+    >>> rm = pyvisa.ResourceManager()
     >>> print(rm.list_resources())
 
 If you encounter any problem, take a look at the :ref:`faq-faq`. There you will

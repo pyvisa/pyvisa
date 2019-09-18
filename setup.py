@@ -65,8 +65,8 @@ setup(name='PyVISA',
                 'pyvisa.testsuite'],
       platforms="Linux, Windows,Mac",
       entry_points={'console_scripts':
-                    ['pyvisa-shell=visa:visa_shell',
-                     'pyvisa-info=visa:visa_info']},
+                    ['pyvisa-shell=pyvisa.cmd_line_tools:visa_shell',
+                     'pyvisa-info=pyvisa.cmd_line_tools:visa_info']},
       py_modules=['visa'],
       use_2to3=False,
       zip_safe=False)

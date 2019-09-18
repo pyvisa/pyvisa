@@ -9,10 +9,6 @@ The shell, moved into PyVISA from the Lantz_ Project is a text based user
 interface to interact with instruments. You can invoke it from the
 command-line::
 
-    python -m visa shell
-
-or::
-
     pyvisa-shell
 
 that will show something the following prompt::
@@ -157,20 +153,12 @@ switch shell to use non-default backend via ``-b BACKEND`` or
 
 You can invoke::
 
-    python -m visa -b sim shell
-
-or::
-
     pyvisa-shell -b sim
 
 to use python-sim as backend instead of ni backend.
 This can be used for example for testing of python-sim configuration.
 
 You can invoke::
-
-    python -m visa -b py shell
-
-or::
 
     pyvisa-shell -b py
 
@@ -182,10 +170,6 @@ PyVisa Info
 -----------
 
 You can invoke it from the command-line::
-
-    python -m visa info
-
-or::
 
     pyvisa-info
 
