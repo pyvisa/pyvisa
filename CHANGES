@@ -4,6 +4,8 @@ PyVISA Changelog
 1.11 (unreleased)
 -----------------
 
+- Make the library less biased towards National Instrument by referring to IVI
+  where relevant PR #456
 
 1.10.1 (unreleased)
 -------------------
