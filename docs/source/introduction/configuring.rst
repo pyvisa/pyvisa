@@ -6,10 +6,11 @@ Configuring the backend
 .. include:: ../substitutions.sub
 
 Currently there are two backends available: The one included in pyvisa, which
-uses the NI library, and the backend provided by pyvisa-py, which is a pure
-python implementation of the VISA library. If no backend is specified, pyvisa
-uses the NI backend if the NI library has been installed (see next section for
-details). Failing that, it uses the pyvisa-py backend.
+uses the IVI library (include NI-VISA, Keysight VISA, R&S VISA, tekVISA etc.),
+and the backend provided by pyvisa-py, which is a pure python implementation
+of the VISA library. If no backend is specified, pyvisa uses the IVI backend
+if any IVI library has been installed (see next section for details).
+Failing that, it uses the pyvisa-py backend.
 
 You can also select a desired backend by passing a parameter to the
 ResourceManager, shown here for pyvisa-py:
@@ -19,13 +20,14 @@ ResourceManager, shown here for pyvisa-py:
 Alternatively it can also be selected by setting the environment variable
 PYVISA_LIBRARY. It takes the same values as the ResourceManager constructor.
 
-Configuring the NI backend
+Configuring the IVI backend
 --------------------------
 
 .. note::
 
-    The NI backend requires that you install first the NI-VISA library. You can
-    get info here: (:ref:`faq-getting-nivisa`)
+    The IVI backend requires that you install first the IVI-VISA library.
+    For example you can use NI-VISA or any other library in your opinion.
+    about NI-VISA get info here: (:ref:`faq-getting-nivisa`)
 
 
 In most cases PyVISA will be able to find the location of the shared visa

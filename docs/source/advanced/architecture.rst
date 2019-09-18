@@ -52,7 +52,7 @@ given resource, you will use the |open_resource| method to obtain the
 appropriate object. If needed, you will be able to access the ``VisaLibrary``
 object directly using the |visalib| attribute.
 
-The ``VisaLibrary`` does the low-level calls. In the default NI Backend,
+The ``VisaLibrary`` does the low-level calls. In the default IVI Backend,
 levels 1 and 2 are implemented in the same package called
 :mod:`pyvisa.ctwrapper` (which stands for ctypes wrapper). This package is
 included in PyVISA.

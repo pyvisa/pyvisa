@@ -17,6 +17,7 @@ import contextlib
 import collections
 import pkgutil
 import os
+import warnings
 from collections import defaultdict
 from weakref import WeakSet
 
@@ -47,8 +48,9 @@ class VisaLibraryBase(object):
     to the underlying devices providing Pythonic wrappers to VISA functions. But not all
     derived class must/will implement all methods.
 
-    The default VisaLibrary class is :class:`pyvisa.ctwrapper.highlevel.NIVisaLibrary`,
-    which implements a ctypes wrapper around the NI-VISA library.
+    The default VisaLibrary class is :class:`pyvisa.ctwrapper.highlevel.IVIVisaLibrary`,
+    which implements a ctypes wrapper around the IVI-VISA library.
+    Certainly, IVI-VISA can be NI-VISA, Keysight VISA, R&S VISA, tekVISA etc.
 
     In general, you should not instantiate it directly. The object exposed to the user
     is the :class:`pyvisa.highlevel.ResourceManager`. If needed, you can access the
@@ -1440,9 +1442,8 @@ def list_backends():
 
     :rtype: list
     """
-    return ['ni'] + [name for (loader, name, ispkg) in pkgutil.iter_modules()
-                     if name.startswith('pyvisa-') and not name.endswith('-script')]
-
+    return ['ivi'] + [name for (loader, name, ispkg) in pkgutil.iter_modules()
+                      if name.startswith('pyvisa-') and not name.endswith('-script')]
 
 #: Maps backend name to VisaLibraryBase derived class
 #: dict[str, :class:`pyvisa.highlevel.VisaLibraryBase`]
@@ -1452,15 +1453,24 @@ _WRAPPERS = {}
 def get_wrapper_class(backend_name):
     """Return the WRAPPER_CLASS for a given backend.
 
+    backend_name == 'ni' is used for backwards compatibility
+    and will be removed in 1.12.
+
     :rtype: pyvisa.highlevel.VisaLibraryBase
     """
     try:
         return _WRAPPERS[backend_name]
     except KeyError:
-        if backend_name == 'ni':
-            from .ctwrapper import NIVisaLibrary
-            _WRAPPERS['ni'] = NIVisaLibrary
-            return NIVisaLibrary
+        if backend_name == 'ivi' or backend_name == 'ni':
+            from .ctwrapper import IVIVisaLibrary
+            _WRAPPERS['ivi'] = IVIVisaLibrary
+            if backend_name == 'ni':
+                warnings.warn(
+                    '@ni backend name is deprecated and will be '
+                    'removed in 1.12. Use @ivi instead. '
+                    'Check the documentation for details',
+                    FutureWarning)
+            return IVIVisaLibrary
 
     try:
         pkg = __import__('pyvisa-' + backend_name)
@@ -1471,19 +1481,23 @@ def get_wrapper_class(backend_name):
 
 
 def _get_default_wrapper():
-    """Return an available default VISA wrapper as a string ('ni' or 'py').
+    """Return an available default VISA wrapper as a string ('ivi' or 'py').
 
-    Use NI if the binary is found, else try to use pyvisa-py.
+    Use IVI if the binary is found, else try to use pyvisa-py.
+
+    'ni' VISA wrapper is NOT used since version > 1.10.0
+    and will be removed in 1.12
+
     If neither can be found, raise a ValueError.
     """
 
-    from .ctwrapper import NIVisaLibrary
-    ni_binary_found = bool(NIVisaLibrary.get_library_paths())
+    from .ctwrapper import IVIVisaLibrary
+    ni_binary_found = bool(IVIVisaLibrary.get_library_paths())
     if ni_binary_found:
-        logger.debug('The NI implementation available')
-        return 'ni'
+        logger.debug('The IVI implementation available')
+        return 'ivi'
     else:
-        logger.debug('Did not find NI binary')
+        logger.debug('Did not find IVI binary')
 
     try:
         get_wrapper_class('py')  # check for pyvisa-py availability
@@ -1491,7 +1505,7 @@ def _get_default_wrapper():
         return 'py'
     except ValueError:
         logger.debug('Did not find pyvisa-py package')
-    raise ValueError('Could not locate a VISA implementation. Install either the NI binary or pyvisa-py.')
+    raise ValueError('Could not locate a VISA implementation. Install either the IVI binary or pyvisa-py.')
 
 
 def open_visa_library(specification):
@@ -1515,7 +1529,7 @@ def open_visa_library(specification):
         wrapper = None  # Flag that we need a fallback, but avoid nested exceptions
     if wrapper is None:
         if argument: # some filename given
-            wrapper = 'ni'
+            wrapper = 'ivi'
         else:
             wrapper = _get_default_wrapper()
 

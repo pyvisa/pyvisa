@@ -26,7 +26,7 @@ def visa_main(command=None):
     parser = argparse.ArgumentParser(description='PyVISA command-line utilities')
 
     parser.add_argument('--backend', '-b', dest='backend', action='store', default=None,
-                        help='backend to be used (default: ni)')
+                        help='backend to be used (default: ivi)')
 
     if not command:
         subparsers = parser.add_subparsers(title='command', dest='command')
