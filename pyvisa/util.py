@@ -596,7 +596,9 @@ def get_debug_info(to_screen=True):
     print(out)
 
 
-def pip_install(package):
+def pip_install(package):  # pragma: no cover
+    warnings.warn('warn_for_invalid_kwargs will be removed in 1.12',
+                   FutureWarning)
     try:
         # noinspection PyPackageRequirements,PyUnresolvedReferences
         import pip
