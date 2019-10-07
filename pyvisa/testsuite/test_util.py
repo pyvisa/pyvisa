@@ -8,6 +8,7 @@ import sys
 import tempfile
 from configparser import ConfigParser
 from io import StringIO
+from functools import partial
 
 from pyvisa import util
 from pyvisa.testsuite import BaseTestCase
@@ -120,20 +121,28 @@ class TestParser(BaseTestCase):
             self.round_trip_block_converstion(values, tb, fb, msg)
 
     def test_invalid_string_converter(self):
-        with self.raises(ValueError) as ex:
+        with self.assertRaises(ValueError) as ex:
             util.to_ascii_block([1,2], 'm')
-        self.assertIn("unsupported format character", ex.value)
-        with self.raises(ValueError) as ex:
+        self.assertIn("unsupported format character", ex.exception.args[0])
+        with self.assertRaises(ValueError) as ex:
             util.from_ascii_block("1,2,3", 'm')
-        self.assertIn("Invalid code for converter", ex.value)
+        self.assertIn("Invalid code for converter", ex.exception.args[0])
 
     def test_function_separator(self):
         values = list(range(99))
         fmt = "d"
         msg = 'block=ascii, fmt=%s' % fmt
         tb = lambda values: util.to_ascii_block(values, fmt, ':'.join)
-        fb = lambda block, cont: util.from_ascii_block(block, fmt, ':'.split,
-                                                        cont)
+        fb = lambda block, cont: util.from_ascii_block(
+            block, fmt, lambda s: s.split(':'), cont)
+        self.round_trip_block_converstion(values, tb, fb, msg)
+
+    def test_function_converter(self):
+        values = list(range(99))
+        msg = 'block=ascii'
+        tb = lambda values: util.to_ascii_block(values, str, ':'.join)
+        fb = lambda block, cont: util.from_ascii_block(
+            block, int, lambda s: s.split(':'), cont)
         self.round_trip_block_converstion(values, tb, fb, msg)
 
     def test_integer_binary_block(self):
@@ -165,7 +174,7 @@ class TestParser(BaseTestCase):
                                                       msg)
 
     def test_malformed_binary_block_header(self):
-        values = list(range(99))
+        values = list(range(10))
         for header, tb, fb in zip(('ieee', 'hp'),
                                   (util.to_ieee_block, util.to_hp_block),
                                   (util.from_ieee_block, util.from_hp_block)):
@@ -175,6 +184,37 @@ class TestParser(BaseTestCase):
                 fb(bad_block, "h", False, list)
 
             self.assertIn("(#", e.exception.args[0])
+
+    def test_weird_binary_block_header(self):
+        values = list(range(100))
+        for header, tb, fb in zip(('ieee', 'hp'),
+                                  (util.to_ieee_block, util.to_hp_block),
+                                  (util.from_ieee_block, util.from_hp_block)):
+            block = tb(values, "h", False)
+            bad_block = block[1:]
+            if header == 'hp':
+                index = bad_block.find(b'#')
+                bad_block = bad_block[:index] + b"#A" + bad_block[index+2:]
+            with self.assertWarns(UserWarning):
+                fb(bad_block, "h", False, list)
+
+    def test_weird_binary_block_header_raise(self):
+        values = list(range(100))
+        for header, tb, fb in zip(('ieee', 'hp'),
+                                  (util.to_ieee_block, util.to_hp_block),
+                                  (util.from_ieee_block, util.from_hp_block)):
+            block = tb(values, "h", False)
+            bad_block = block[1:]
+            if header == 'hp':
+                index = bad_block.find(b'#')
+                bad_block = bad_block[:index] + b"#A" + bad_block[index+2:]
+            parse = (util.parse_ieee_block_header if header == 'ieee' else
+                     partial(util.parse_hp_block_header, is_big_endian=False))
+
+            with self.assertRaises(RuntimeError):
+                parse(bad_block, raise_on_late_block=True)
+
+            parse(bad_block, length_before_block=1000)
 
     def test_binary_block_shorter_than_advertized(self):
         values = list(range(99))
@@ -197,18 +237,30 @@ class TestParser(BaseTestCase):
         for header, tb, fb in zip(('ieee', 'hp'),
                                   (util.to_ieee_block, util.to_hp_block),
                                   (util.from_ieee_block, util.from_hp_block)):
-            block = tb(values, "h", False)
+            block = tb(values, "h", False) + b"\n"
             if header == "ieee":
-                l = int(block[1])
-                block[2:2+l] = int("0" * l)
+                l = int(block[1:2].decode())
+                block = block[:2] + b"0" * l + block[2+l:]
             else:
-                block[2:2+4] = "\x00\x00\x00\x00"
+                block = block[:2] + b"\x00\x00\x00\x00" + block[2+4:]
             self.assertListEqual(fb(block, "h", False, list),
                                  values)
 
-    # XXX malformed binary
     def test_handling_malformed_binary(self):
-        pass
+        containers = (list, tuple) + ((np.array, np.ndarray) if np else ())
+
+        # Use this to generate malformed data which should in theory be
+        # impossible
+        class DumbBytes(bytes):
+            def __len__(self):
+                return 10
+
+        for container in containers:
+            with self.assertRaises(ValueError) as e:
+                util.from_binary_block(DumbBytes(b"\x00\x00\x00"),
+                                       container=container)
+            self.assertIn("malformed" if container in (list, tuple) else "buffer",
+                          e.exception.args[0])
 
     def round_trip_block_converstion(self, values, to_block, from_block, msg):
         """Test that block conversion round trip as expected.

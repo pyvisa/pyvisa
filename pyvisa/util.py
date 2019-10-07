@@ -30,6 +30,13 @@ except ImportError:
     np = None
 
 
+#: Length of the header found before a binary block (ieee or hp) that will
+#: trigger a warning to alert the user of a possibly incorrect answer from the
+#: instrument. In general binary block are not prefixed by a header and finding
+#: a long one may mean that we picked up a # in the bulk of the message.
+DEFAULT_LENGTH_BEFORE_BLOCK = 25
+
+
 def _use_numpy_routines(container):
     """Should optimized numpy routines be used to extract the data.
 
@@ -248,7 +255,8 @@ def to_ascii_block(iterable, converter='f', separator=','):
     return block
 
 
-def parse_ieee_block_header(block):
+def parse_ieee_block_header(block, length_before_block=None,
+                            raise_on_late_block=False) -> (int, int):
     """Parse the header of a IEEE block.
 
     Definite Length Arbitrary Block:
@@ -267,11 +275,23 @@ def parse_ieee_block_header(block):
     :type block: bytes | bytearray
     :return: (offset, data_length)
     :rtype: (int, int)
+
     """
     begin = block.find(b'#')
     if begin < 0:
         raise ValueError("Could not find hash sign (#) indicating the start of"
                          " the block.")
+
+    length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK
+    if begin > length_before_block:
+        msg = ("The beginning of the block has been found at %d which "
+               "is an unexpectedly large value. The actual block may "
+               "have been missing a beginning marker but the block "
+               "contained one:\n%s") % (begin, repr(block))
+        if raise_on_late_block:
+            raise RuntimeError(msg)
+        else:
+            warnings.warn(msg, UserWarning)
 
     try:
         # int(block[begin+1]) != int(block[begin+1:begin+2]) in Python 3
@@ -292,7 +312,8 @@ def parse_ieee_block_header(block):
     return offset, data_length
 
 
-def parse_hp_block_header(block, is_big_endian):
+def parse_hp_block_header(block, is_big_endian, length_before_block=None,
+                          raise_on_late_block=False):
     """Parse the header of a HP block.
 
     Definite Length Arbitrary Block:
@@ -312,6 +333,18 @@ def parse_hp_block_header(block, is_big_endian):
     if begin < 0:
         raise ValueError("Could not find the standard block header (#A) "
                          "indicating the start of the block.")
+
+    length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK
+    if begin > length_before_block:
+        msg = ("The beginning of the block has been found at %d which "
+               "is an unexpectedly large value. The actual block may "
+               "have been missing a beginning marker but the block "
+               "contained one:\n%s") % (begin, repr(block))
+        if raise_on_late_block:
+            raise RuntimeError(msg)
+        else:
+            warnings.warn(msg, UserWarning)
+
     offset = begin + 4
 
     data_length = int.from_bytes(block[begin+2:offset],
@@ -340,11 +373,14 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     :param container: container type to use for the output data.
     :return: items
     :rtype: type(container)
+
     """
     offset, data_length = parse_ieee_block_header(block)
 
+    # If the data length is not reported takes all the data and do not make
+    # any assumption about the termination character
     if data_length == 0:
-        data_length = len(block) - offset - 1
+        data_length = len(block) - offset
 
     if len(block) < offset + data_length:
         raise ValueError("Binary data is incomplete. The header states %d data"
@@ -373,6 +409,11 @@ def from_hp_block(block, datatype='f', is_big_endian=False, container=list):
     :rtype: type(container)
     """
     offset, data_length = parse_hp_block_header(block, is_big_endian)
+
+    # If the data length is not reported takes all the data and do not make
+    # any assumption about the termination character
+    if data_length == 0:
+        data_length = len(block) - offset
 
     if len(block) < offset + data_length:
         raise ValueError("Binary data is incomplete. The header states %d data"
@@ -529,6 +570,7 @@ def get_system_details(backends=True):
 
 def system_details_to_str(d, indent=''):
     """Return a str with the system details.
+
     """
 
     l = ['Machine Details:',
