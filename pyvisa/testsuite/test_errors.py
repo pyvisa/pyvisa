@@ -32,6 +32,7 @@ class TestPicleUnpickle(BaseTestCase):
 
     def test_InvalidBinaryFormat(self):
         self._test_pickle_unpickle(errors.InvalidBinaryFormat())
+        self._test_pickle_unpickle(errors.InvalidBinaryFormat("test"))
 
-    def InvalidSession(self):
+    def test_InvalidSession(self):
         self._test_pickle_unpickle(errors.InvalidSession())

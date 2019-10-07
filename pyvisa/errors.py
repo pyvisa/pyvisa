@@ -433,9 +433,8 @@ class OSNotSupported(Error):
 class InvalidBinaryFormat(Error):
 
     def __init__(self, description=""):
-        if description:
-            description = ": " + description
-        super(InvalidBinaryFormat, self).__init__("Unrecognized binary data format" + description)
+        desc = ": " + description if description else ""
+        super(InvalidBinaryFormat, self).__init__("Unrecognized binary data format" + desc)
         self.description = description
 
     def __reduce__(self):
