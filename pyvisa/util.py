@@ -61,11 +61,7 @@ def read_user_library_path():
     Return `None` if  configuration files or keys are not present.
 
     """
-    try:
-        from ConfigParser import (SafeConfigParser as ConfigParser,
-                                  NoSectionError)
-    except ImportError:
-        from configparser import ConfigParser, NoSectionError
+    from configparser import ConfigParser, NoSectionError, NoOptionError
 
     config_parser = ConfigParser()
     files = config_parser.read([os.path.join(sys.prefix, "share", "pyvisa",
@@ -80,8 +76,8 @@ def read_user_library_path():
     logger.debug('User defined library files: %s' % files)
     try:
         return config_parser.get("Paths", "visa library")
-    except (KeyError, NoSectionError):
-        logger.debug('KeyError or NoSectionError while reading config file')
+    except (NoOptionError, NoSectionError):
+        logger.debug('NoOptionError or NoSectionError while reading config file')
         return None
 
 

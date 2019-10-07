@@ -2,9 +2,15 @@
 """Test pyvisa utility functions.
 
 """
-from pyvisa.testsuite import BaseTestCase
+import contextlib
+import os
+import sys
+import tempfile
+from configparser import ConfigParser
+from io import StringIO
 
 from pyvisa import util
+from pyvisa.testsuite import BaseTestCase
 
 try:
     # noinspection PyPackageRequirements
@@ -13,7 +19,58 @@ except ImportError:
     np = None
 
 
-# XXX test reading config from file (use tempfile)
+class TestConfigFile(BaseTestCase):
+    """Test reading information from a user configuration file.
+
+    """
+
+    def setUp(self):
+        # Skip if a real config file exists
+        if any(os.path.isfile(p)
+               for p in [os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
+                         os.path.join(os.path.expanduser("~"), ".pyvisarc")]
+              ):
+            self.skipTest(".pyvisarc file exists cannot properly test in this case")
+        self.temp_dir = tempfile.TemporaryDirectory()
+        os.makedirs(os.path.join(self.temp_dir.name, "share", "pyvisa"))
+        self.config_path = os.path.join(self.temp_dir.name, "share", "pyvisa",
+                                        ".pyvisarc")
+        self._prefix = sys.prefix
+        sys.prefix = self.temp_dir.name
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+        sys.prefix = self._prefix
+
+    def test_reading_config_file(self):
+        config = ConfigParser()
+        config['Paths'] = {}
+        config['Paths']["visa library"] = "test"
+        with open(self.config_path, "w") as f:
+            config.write(f)
+        self.assertEqual(util.read_user_library_path(), "test")
+
+    def test_no_section(self):
+        config = ConfigParser()
+        with open(self.config_path, "w") as f:
+            config.write(f)
+        with self.assertLogs(level='DEBUG') as cm:
+            self.assertIsNone(util.read_user_library_path())
+        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+
+    def test_no_key(self):
+        config = ConfigParser()
+        config['Paths'] = {}
+        with open(self.config_path, "w") as f:
+            config.write(f)
+        with self.assertLogs(level='DEBUG') as cm:
+            self.assertIsNone(util.read_user_library_path())
+        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+
+    def test_no_config_file(self):
+        with self.assertLogs(level='DEBUG') as cm:
+            self.assertIsNone(util.read_user_library_path())
+        self.assertIn("No user defined", cm.output[0])
 
 class TestParser(BaseTestCase):
 
@@ -173,4 +230,21 @@ class TestParser(BaseTestCase):
             else:
                 self.assertEqual(conv, parsed, msg)
 
-# XXX system details and binary analysis
+
+class TestSystemDetailsAnalysis(BaseTestCase):
+    """Test geeting the system details.
+
+    """
+
+    def test_getting_system_details(self):
+        details = util.get_system_details(False)
+        self.assertFalse(details['backends'])
+
+    def test_get_debug_info(self):
+        details = util.system_details_to_str(util.get_system_details())
+        self.assertSequenceEqual(util.get_debug_info(False), details)
+        temp_stdout = StringIO()
+        with contextlib.redirect_stdout(temp_stdout):
+            util.get_debug_info()
+        output = temp_stdout.getvalue()
+        self.assertSequenceEqual(output.strip(), details.strip())
