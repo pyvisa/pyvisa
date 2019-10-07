@@ -9,14 +9,10 @@ from pyvisa import ResourceManager, InvalidSession, VisaIOError
 from pyvisa.constants import StatusCode, AccessModes, InterfaceType
 from pyvisa.rname import ResourceName
 
-from . import RESOURCE_ADDRESSES
+from . import RESOURCE_ADDRESSES, require_virtual_instr
 
 
-unittest.skipUnless("PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ,
-                    "Requires the Keysight virtual instrument. Run on PyVISA "
-                    "buildbot.")
-
-
+@require_virtual_instr
 class TestResourceManager(unittest.TestCase):
     """Test the pyvisa ResourceManager.
 

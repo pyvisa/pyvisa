@@ -12,6 +12,13 @@ import os
 import unittest
 
 
+require_virtual_instr = (
+     unittest.skipUnless("PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ,
+                         "Requires the Keysight virtual instrument. Run on PyVISA "
+                         "buildbot.")
+)
+
+
 RESOURCE_ADDRESSES = {
     # "GPIB::INSTR": "GPIB::19::INSTR",
     # "USB::INSTR": "USB::",

@@ -252,7 +252,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         # Wrong header format
         with self.assertRaises(ValueError):
-            self.instr.write_binary_values("", l, "h", header_fmt="xxx")
+            self.instr.write_binary_values("", l, "h", header_fmt="zxz")
 
     def test_read_ascii_values(self):
         """Test reading ascii values.
