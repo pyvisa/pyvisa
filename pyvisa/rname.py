@@ -31,6 +31,7 @@ _DEFAULT_RC = {}
 
 class InvalidResourceName(ValueError):
     """Exception raised when the resource name cannot be parsed.
+
     """
 
     def __init__(self, msg):
@@ -39,6 +40,7 @@ class InvalidResourceName(ValueError):
     @classmethod
     def bad_syntax(cls, syntax, resource_name, ex=None):
         """Exception used when the resource name cannot be parsed.
+
         """
 
         if ex:
@@ -55,9 +57,10 @@ class InvalidResourceName(ValueError):
                           resource_name=None):
         """Exception used when the subclass for a given interface type / resource class pair
         cannot be found.
+
         """
 
-        msg = "Parser for not found (%s)." % interface_type_resource_class
+        msg = "Parser not found for: %s." % (interface_type_resource_class,)
 
         if resource_name:
             msg = "Could not parse '%s'. %s" % (resource_name, msg)
@@ -67,6 +70,7 @@ class InvalidResourceName(ValueError):
     @classmethod
     def rc_notfound(cls, interface_type, resource_name=None):
         """Exception used when no resource class is provided and no default is found.
+
         """
 
         msg = "Resource class for %s not provided and default not found." % interface_type
@@ -82,6 +86,7 @@ class InvalidResourceName(ValueError):
 
 def register_subclass(cls):
     """Register a subclass for a given interface type and resource class.
+
     """
 
     key = cls.interface_type, cls.resource_class
@@ -104,7 +109,8 @@ def register_subclass(cls):
 
 
 class ResourceName(object):
-    """Base class for ResourceNames to be used as a Mixin
+    """Base class for ResourceNames to be used as a Mixin.
+
     """
 
     # Interface type string
@@ -140,6 +146,7 @@ class ResourceName(object):
         :rtype: ResourceName
 
         :raises InvalidResourceName: if the resource name is invalid.
+
         """
         # TODO Remote VISA
 
@@ -193,6 +200,9 @@ class ResourceName(object):
     def from_kwargs(cls, **kwargs):
         interface_type = kwargs.pop('interface_type')
 
+        if interface_type not in _INTERFACE_TYPES:
+            raise InvalidResourceName('Unknown interface type: %s' % interface_type)
+
         try:
             resource_class = kwargs.pop('resource_class',
                                         _DEFAULT_RC[interface_type])
@@ -235,6 +245,7 @@ def build_rn_class(interface_type, resource_parts, resource_class,
     :type resource_class: str
     :param is_rc_optional: indicates if the resource class part is optional
     :type is_rc_optional: boolean.
+
     """
 
     interface_type = interface_type.upper()
@@ -283,6 +294,7 @@ def build_rn_class(interface_type, resource_parts, resource_class,
 
         Format :
             %s
+
         """ % (resource_class, interface_type, '    \n'.join(kwdoc), syntax)
 
         def __new__(cls, **kwargs):
@@ -306,7 +318,7 @@ def build_rn_class(interface_type, resource_parts, resource_class,
             (k, default), rp = p_resource_parts[0], p_resource_parts[1:]
 
             # The first part (just after the interface_type) is the only
-            # optional part which can be and empty and therefore the
+            # optional part which can be empty and therefore the
             # default value should be used.
             p, pending = parts[0], parts[1:]
             kwargs = {k: default if p == '' else p}
@@ -315,8 +327,10 @@ def build_rn_class(interface_type, resource_parts, resource_class,
             while len(pending) < len(rp):
                 (k, default), rp = rp[0], rp[1:]
                 if default is None:
+                    # This is impossible as far as I can tell for currently implemented
+                    # resource names
                     if not parts:
-                        raise ValueError(k + ' part is mandatory')
+                        raise ValueError(k + ' part is mandatory')  # pragma: no cover
                     p, pending = pending[0], pending[1:]
                     if not p:
                         raise ValueError(k + ' part is mandatory')
@@ -469,6 +483,7 @@ def filter(resources, query):
 
     :param resources: iterable of resources.
     :param query: query expression.
+
     """
 
     if '{' in query:
@@ -496,6 +511,7 @@ def filter2(resources, query, open_resource):
     :param resources: iterable of resources.
     :param query: query expression.
     :param open_resource: function to open the resource.
+
     """
 
     if '{' in query:
@@ -524,36 +540,70 @@ def filter2(resources, query, open_resource):
 
         def __getattr__(self, item):
             if item == 'VI_ATTR_INTF_NUM':
-                   return int(self.parsed.board)
+                return int(self.parsed.board)
             elif item == 'VI_ATTR_MANF_ID':
-                   return self.parsed.manufacturer_id
+                if not isinstance(self.parsed, (USBInstr, USBRaw)):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return self.parsed.manufacturer_id
             elif item == 'VI_ATTR_MODEL_CODE':
-                   return self.parsed.model_code
+                if not isinstance(self.parsed, (USBInstr, USBRaw)):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return self.parsed.model_code
             elif item == 'VI_ATTR_USB_SERIAL_NUM':
-                   return self.parsed.serial_number
+                if not isinstance(self.parsed, (USBInstr, USBRaw)):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return self.parsed.serial_number
             elif item == 'VI_ATTR_USB_INTFC_NUM':
-                   return int(self.parsed.board)
+                if not isinstance(self.parsed, (USBInstr, USBRaw)):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return int(self.parsed.board)
             elif item == 'VI_ATTR_TCPIP_ADDR':
-                   return self.parsed.host_address
+                if not isinstance(self.parsed, (TCPIPInstr, TCPIPSocket)):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return self.parsed.host_address
             elif item == 'VI_ATTR_TCPIP_DEVICE_NAME':
-                   return self.parsed.lan_device_name
+                if not isinstance(self.parsed, TCPIPInstr):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return self.parsed.lan_device_name
             elif item == 'VI_ATTR_TCPIP_PORT':
-                   return int(self.parsed.port)
-            elif item == 'VI_ATTR_INTF_NUM':
-                   return int(self.parsed.board)
+                if not isinstance(self.parsed, TCPIPSocket):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return int(self.parsed.port)
             elif item == 'VI_ATTR_GPIB_PRIMARY_ADDR':
-                   return int(self.parsed.primary_address)
+                if not isinstance(self.parsed, GPIBInstr):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return int(self.parsed.primary_address)
             elif item == 'VI_ATTR_GPIB_SECONDARY_ADDR':
-                   return int(self.parsed.secondary_address)
+                if not isinstance(self.parsed, GPIBInstr):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return int(self.parsed.secondary_address)
             elif item == 'VI_ATTR_PXI_CHASSIS':
-                return self.parsed.chassis_number
+                if not isinstance(self.parsed, PXIBackplane):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return int(self.parsed.chassis_number)
             elif item == 'VI_ATTR_MAINFRAME_LA':
-                return self.parsed.vxi_logical_address
+                if not isinstance(self.parsed, (VXIInstr, VXIBackplane)):
+                    raise self.raise_missing_attr(item)
+                else:
+                    return self.parsed.vxi_logical_address
 
             if self.resource is None:
                 self.resource = open_resource(self.resource_name)
 
             return self.resource.get_visa_attribute(item)
+
+        def raise_missing_attr(self, item):
+            raise errors.VisaIOError(constants.VI_ERROR_NSUP_ATTR)
 
     @contextlib.contextmanager
     def open_close(resource_name):
@@ -565,8 +615,10 @@ def filter2(resources, query, open_resource):
     selected = []
     for rn in filtered:
         with open_close(rn) as getter:
-            if eval(optional, None, dict(res=getter)):
-                selected.append(rn)
+            try:
+                if eval(optional, None, dict(res=getter)):
+                    selected.append(rn)
+            except Exception:
+                pass# logger.exception("Failed to evaluate %s on %s", optional, rn)
 
-
-
+    return selected
