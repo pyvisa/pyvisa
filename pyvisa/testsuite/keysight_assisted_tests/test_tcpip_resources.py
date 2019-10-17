@@ -7,13 +7,11 @@ import unittest
 
 from pyvisa import constants
 
+from . import require_virtual_instr
 from .messagebased_resource_utils import MessagebasedResourceTestCase
 
-unittest.skipUnless("PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ,
-                    "Requires the Keysight virtual instrument. Run on PyVISA "
-                    "buildbot.")
 
-
+@require_virtual_instr
 class TCPIPInstrTestCase(MessagebasedResourceTestCase,
                          unittest.TestCase):
     """Test pyvisa against a TCPIP INSTR resource.
@@ -49,6 +47,7 @@ class TCPIPInstrTestCase(MessagebasedResourceTestCase,
                                           constants.IOProtocol.normal)
 
 
+@require_virtual_instr
 class TCPIPSocket(MessagebasedResourceTestCase):
     """Test pyvisa against a TCPIP SOCKET resource.
 
