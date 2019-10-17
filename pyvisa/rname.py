@@ -595,7 +595,7 @@ def filter2(resources, query, open_resource):
                 if not isinstance(self.parsed, (VXIInstr, VXIBackplane)):
                     raise self.raise_missing_attr(item)
                 else:
-                    return self.parsed.vxi_logical_address
+                    return int(self.parsed.vxi_logical_address)
 
             if self.resource is None:
                 self.resource = open_resource(self.resource_name)
