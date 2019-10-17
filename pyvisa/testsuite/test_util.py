@@ -2,6 +2,7 @@
 """Test pyvisa utility functions.
 
 """
+import array
 import contextlib
 import os
 import sys
@@ -95,7 +96,8 @@ class TestParser(BaseTestCase):
             self.assertAlmostEqual(a, b)
 
         p = util.from_hp_block(b'#A\x0e\x00' + s[2:], datatype='f',
-                               is_big_endian=False)
+                               is_big_endian=False,
+                               container=partial(array.array, 'f'))
         for a, b in zip(p, e):
             self.assertAlmostEqual(a, b)
 
