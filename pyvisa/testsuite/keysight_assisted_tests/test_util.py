@@ -7,6 +7,7 @@ from pyvisa.testsuite import BaseTestCase
 
 # XXX system details and binary analysis
 class TestSystemDetailsAnalysis(BaseTestCase):
-    """
+    """Test getting details about the VISA library architecture.
 
     """
+
