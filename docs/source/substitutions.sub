@@ -35,6 +35,8 @@
 
 .. |write_termination| replace:: :attr:`~pyvisa.resources.MessageBasedResource.write_termination`
 
+.. |visa_attributes_classes| replace:: :attr:`~pyvisa.resources.Resource.visa_attributes_classes`
+
 .. |RegisterBasedResource| replace:: :class:`~pyvisa.resources.RegisterBasedResource`
 
 .. |VisaIOError| replace:: :exc:`~pyvisa.errors.VisaIOError`
