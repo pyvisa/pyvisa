@@ -194,7 +194,7 @@ have lighter aliases that makes them easier to access as illustrated below:
     rm = ResourceManager()
     instr = rm.open_resource('TCPIP0::1.2.3.4::56789::SOCKET')
     instr.io_protocol = constants.VI_PROT_4882_STRS
-    # equivalent to
+    # is equivalent to
     instr.VI_ATTR_IO_PROT = constants.VI_PROT_4882_STRS
 
 .. note::
@@ -202,3 +202,14 @@ have lighter aliases that makes them easier to access as illustrated below:
     To know the full list of attribute available on a resource you can inspect
     |visa_attributes_classes| or if you are using ``pyvisa-shell`` simply use the
     ``attr`` command.
+
+You can also manipulate the VISA attributes using |get_visa_attribute| and
+|set_visa_attribute|. However you will have use the proper values (as defined in
+:mod:`pyvisa.constants`) both to access the attribute and to specify the value.
+
+.. code:: python
+
+    from pyvisa import constants, ResourceManager
+    rm = ResourceManager()
+    instr = rm.open_resource('TCPIP0::1.2.3.4::56789::SOCKET')
+    instr.set_visa_attribute(constants.VI_ATTR_SUPPRESS_END_EN, constants.VI_TRUE)
