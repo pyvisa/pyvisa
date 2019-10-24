@@ -21,7 +21,7 @@ Alternatively it can also be selected by setting the environment variable
 PYVISA_LIBRARY. It takes the same values as the ResourceManager constructor.
 
 Configuring the IVI backend
---------------------------
+---------------------------
 
 .. note::
 

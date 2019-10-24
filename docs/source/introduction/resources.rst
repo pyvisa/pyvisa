@@ -111,7 +111,7 @@ This example sets it to 100 kilobytes.
 .. _sec:termchars:
 
 Termination characters
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 Somehow the computer must detect when the device is finished with sending a
 message.  It does so by using different methods, depending on the bus system.
@@ -145,6 +145,12 @@ in particular for GPIB. For RS232 it's ``\r``.
 You can specify the character to add to each outgoing message using the
 ``write_termination`` attribute.
 
+.. note::
+
+    Under the hood PyVISA manipulates several VISA attributes in a coherent
+    manner. You can also access those directly if you need to see the
+    :ref:visa-attr section below.
+
 
 `query_delay` and `send_end`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -171,3 +177,39 @@ This will set the delay to 1.2 seconds, and the EOI line is omitted.  By the
 way, omitting EOI is *not* recommended, so if you omit it nevertheless, you
 should know what you're doing.
 
+.. _visa-attr:
+
+VISA attributes
+---------------
+
+In addition to the above mentioned attributes, you can access most of the VISA
+attributes as defined in the visa standard on your resources through properties.
+Those properties will take for you of converting Python values to values VISA
+values and hence simplify their manipulations. Some of those attributes also
+have lighter aliases that makes them easier to access as illustrated below:
+
+.. code:: python
+
+    from pyvisa import constants, ResourceManager
+    rm = ResourceManager()
+    instr = rm.open_resource('TCPIP0::1.2.3.4::56789::SOCKET')
+    instr.io_protocol = constants.VI_PROT_4882_STRS
+    # is equivalent to
+    instr.VI_ATTR_IO_PROT = constants.VI_PROT_4882_STRS
+
+.. note::
+
+    To know the full list of attribute available on a resource you can inspect
+    |visa_attributes_classes| or if you are using ``pyvisa-shell`` simply use the
+    ``attr`` command.
+
+You can also manipulate the VISA attributes using |get_visa_attribute| and
+|set_visa_attribute|. However you will have use the proper values (as defined in
+:mod:`pyvisa.constants`) both to access the attribute and to specify the value.
+
+.. code:: python
+
+    from pyvisa import constants, ResourceManager
+    rm = ResourceManager()
+    instr = rm.open_resource('TCPIP0::1.2.3.4::56789::SOCKET')
+    instr.set_visa_attribute(constants.VI_ATTR_SUPPRESS_END_EN, constants.VI_TRUE)
