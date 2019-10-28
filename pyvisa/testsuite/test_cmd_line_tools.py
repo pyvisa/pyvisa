@@ -20,10 +20,10 @@ class TestCmdLineTools(BaseTestCase):
         should be removed too.
 
         """
-        result = run(["python", "-m", "visa", "info"], capture_output=True)
+        result = run(["python", "-m", "visa", "info"], stdout=PIPE,
+                     universal_newlines=True)
         details = util.system_details_to_str(util.get_system_details())
-        self.assertSequenceEqual(result.stdout.strip().decode('utf-8'),
-                                 details.strip())
+        self.assertSequenceEqual(result.stdout.strip(), details.strip())
 
         with Popen(["python", "-m", "visa", "shell"],
                    stdin=PIPE, stdout=PIPE) as p:
@@ -34,10 +34,9 @@ class TestCmdLineTools(BaseTestCase):
         """Test the visa info command line tool.
 
         """
-        result = run('pyvisa-info', capture_output=True)
+        result = run('pyvisa-info', stdout=PIPE, universal_newlines=True)
         details = util.system_details_to_str(util.get_system_details())
-        self.assertSequenceEqual(result.stdout.strip().decode('utf-8'),
-                                 details.strip())
+        self.assertMultiLineEqual(result.stdout.strip(), details.strip())
 
     # XXX test backend selection
     def test_visa_shell(self):

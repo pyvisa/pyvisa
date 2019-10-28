@@ -80,15 +80,15 @@ class TestResourceManager(unittest.TestCase):
 
         """
         # Default settings
-        self.assertSequenceEqual(self.rm.list_resources(),
-                                 [str(ResourceName.from_string(v))
-                                  for v in RESOURCE_ADDRESSES.values()
-                                  if v.endswith("INSTR")])
+        self.assertSequenceEqual(sorted(self.rm.list_resources()),
+                                 sorted([str(ResourceName.from_string(v))
+                                       for v in RESOURCE_ADDRESSES.values()
+                                         if v.endswith("INSTR")]))
 
         # All resources
-        self.assertSequenceEqual(self.rm.list_resources("?*"),
-                                 [str(ResourceName.from_string(v))
-                                  for v in RESOURCE_ADDRESSES.values()])
+        self.assertSequenceEqual(sorted(self.rm.list_resources("?*")),
+                                 sorted([str(ResourceName.from_string(v))
+                                        for v in RESOURCE_ADDRESSES.values()]))
 
     def test_accessing_resource_infos(self):
         """Test accessing resource infos.

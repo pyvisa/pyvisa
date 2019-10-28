@@ -114,7 +114,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"test\n")
         self.instr.write_raw(b"SEND\n")
-        self.instr.flush()
+        self.instr.flush(constants.VI_READ_BUF)
         self.assertEqual(self.instr.read_bytes(5, chunk_size=2), b"test\n")
 
         # Reading one byte at a time
@@ -259,8 +259,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         """
         # Standard separator
-        l = [1, 2, 3, 4, 5]
         self.instr.write("RECEIVE")
+        l = [1, 2, 3, 4, 5]
         self.instr.write("1,2,3,4,5")
         self.instr.write("SEND")
         values = self.instr.read_ascii_values()
@@ -390,6 +390,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         wait_time = 2000 # set time that program waits to receive event
         self.instr.enable_event(event_type, event_mech, None)
         self.instr.write("RCVSLOWSRQ")
+        self.instr.write("1")
         self.instr.write("SENDSLOWSRQ")
         try:
             response = self.instr.wait_on_event(event_type, wait_time)
@@ -397,6 +398,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.disable_event(event_type, event_mech)
         self.assertFalse(response.timed_out)
         self.assertEqual(response.event_type, constants.EventType.service_request)
+        self.assertEqual(self.instr.read(), "1")
 
     def test_wait_on_event_timeout(self):
         """Test waiting on a VISA event.
@@ -404,6 +406,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """
         event_type = constants.EventType.service_request
         event_mech = constants.EventMechanism.queue
+        # Emit a clear to avoid dealing with previous requests
+        self.instr.clear()
         self.instr.enable_event(event_type, event_mech, None)
         try:
             response = self.instr.wait_on_event(event_type, 10,
@@ -430,6 +434,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.install_handler(event_type, handler.handle_event)
         self.instr.enable_event(event_type, event_mech, None)
         self.instr.write("RCVSLOWSRQ")
+        self.instr.write("1")
         self.instr.write("SENDSLOWSRQ")
 
         try:
@@ -443,6 +448,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.uninstall_handler(event_type, handler.handle_event)
 
         self.assertTrue(handler.srq_success)
+        self.assertEqual(self.instr.read(), "1")
 
     def test_shared_locking(self):
         """Test locking/unlocking a resource.
