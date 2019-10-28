@@ -25,3 +25,7 @@ RESOURCE_ADDRESSES = {
     "TCPIP::INSTR": "TCPIP::127.0.0.1::INSTR",  # ie localhost
     "TCPIP::SOCKET": "TCPIP::127.0.0.1::5025::SOCKET",
 }
+
+ALIASES = {
+    "TCPIP::127.0.0.1::INSTR": "tcpip",
+}

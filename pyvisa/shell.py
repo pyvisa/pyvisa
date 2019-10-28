@@ -321,9 +321,14 @@ class VisaShell(cmd.Cmd):
                 print('Termchar read: {} write: {}'.format(chr, chw))
             except Exception as e:
                 print(e)
+        if len(args) > 2:
+            print('Invalid syntax, use `termchar <termchar>` to set both '
+                  'read_termination and write_termination to the same value, or '
+                  '`termchar <read_termchar> <read_termchar>` to use distinct values.')
         else:
             args = args.split(' ')
-            charmap = { 'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0', 'None': None }
+            charmap = {'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0',
+                       'None': None}
             chr = args[0]
             chw = args[0 if len(args) == 1 else 1]
             if chr in charmap and chw in charmap:
