@@ -251,263 +251,262 @@ class TestVisaShell(BaseTestCase):
         output = temp_stdout.getvalue()
         self.assertIn('no attribute', output)
 
-# XXX keep updating
-    # def test_read_write(self):
-    #     """Test writing/reading values from the resource.
+    def test_read_write(self):
+        """Test writing/reading values from the resource.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"write *IDN?")
-    #     stdout, stderr = self.shell.communicate(b"read")
-    #     self.assertIn(b"Response: ", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("write *IDN?")
+        lines = self.communicate(b"read")
+        self.assertIn(b"Response: ", lines[0])
 
-    # def test_read_handle_error(self):
-    #     """Test handling an error in read.
+    def test_read_handle_error(self):
+        """Test handling an error in read.
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.current = True
-    #     temp_stdout = StringIO()
-    #     with redirect_stdout(temp_stdout):
-    #         shell.do_read("")
-    #     output = temp_stdout.getvalue()
-    #     self.assertIn('no attribute', output)
+        """
+        shell = VisaShell()
+        shell.current = True
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_read("")
+        output = temp_stdout.getvalue()
+        self.assertIn('no attribute', output)
 
-    # def test_write_handle_error(self):
-    #     """Test handling an error in write.
+    def test_write_handle_error(self):
+        """Test handling an error in write.
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.current = True
-    #     temp_stdout = StringIO()
-    #     with redirect_stdout(temp_stdout):
-    #         shell.do_write("")
-    #     output = temp_stdout.getvalue()
-    #     self.assertIn('no attribute', output)
+        """
+        shell = VisaShell()
+        shell.current = True
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_write("")
+        output = temp_stdout.getvalue()
+        self.assertIn('no attribute', output)
 
-    # def test_timeout_get(self):
-    #     """Test accessing the timeout.
+    def test_timeout_get(self):
+        """Test accessing the timeout.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"timeout")
-    #     self.assertIn("Timeout: ", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("timeout")
+        self.assertIn(b"Timeout: ", lines[0])
 
-    # def test_timeout_get_handle_error(self):
-    #     """Test handling an error in getting teh timeout.
+    def test_timeout_get_handle_error(self):
+        """Test handling an error in getting teh timeout.
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.current = True
-    #     temp_stdout = StringIO()
-    #     with redirect_stdout(temp_stdout):
-    #         shell.do_timeout("")
-    #     output = temp_stdout.getvalue()
-    #     self.assertIn('no attribute', output)
+        """
+        shell = VisaShell()
+        shell.current = True
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_timeout("")
+        output = temp_stdout.getvalue()
+        self.assertIn('no attribute', output)
 
-    # def test_timeout_set(self):
-    #     """Test setting the timeout.
+    def test_timeout_set(self):
+        """Test setting the timeout.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"timeout 1000")
-    #     self.assertIn(b"Done", stdout)
-    #     stdout, stderr = self.shell.communicate(b"timeout")
-    #     self.assertIn("Timeout: 1000ms", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate(b"timeout 1000")
+        self.assertIn(b"Done", stdout)
+        stdout, stderr = self.shell.communicate(b"timeout")
+        self.assertIn("Timeout: 1000ms", stdout)
 
-    # def test_timeout_set_handle_error(self):
-    #     """Test handling an error in setting the timeout
+    def test_timeout_set_handle_error(self):
+        """Test handling an error in setting the timeout
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.current = True
-    #     temp_stdout = StringIO()
-    #     with redirect_stdout(temp_stdout):
-    #         shell.do_timeout("1000")
-    #     output = temp_stdout.getvalue()
-    #     self.assertIn('no attribute', output)
+        """
+        shell = VisaShell()
+        shell.current = True
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_timeout("1000")
+        output = temp_stdout.getvalue()
+        self.assertIn('no attribute', output)
 
-    # def test_attr_no_args(self):
-    #     """Test getting the list of attributes
+    def test_attr_no_args(self):
+        """Test getting the list of attributes
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"attr")
-    #     self.assertIn(b"VISA name", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("attr")
+        self.assertIn(b"VISA name", lines[0])
 
-    # def test_attr_too_many_args(self):
-    #     """Test handling wrong args to attr.
+    def test_attr_too_many_args(self):
+        """Test handling wrong args to attr.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"attr 1 2 3")
-    #     self.assertIn(b"Invalid syntax, use `attr <name>` to get;"
-    #                   b" or `attr <name> <value>` to set", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("attr 1 2 3")
+        self.assertIn(b"Invalid syntax, use `attr <name>` to get;"
+                      b" or `attr <name> <value>` to set", lines[0])
 
-    # def test_attr_get_set_by_VI_non_boolean(self):
-    #     """Test getting/setting an attr using the VI_ name (int value)
+    def test_attr_get_set_by_VI_non_boolean(self):
+        """Test getting/setting an attr using the VI_ name (int value)
 
-    #     """
-    #     self.open_resource()
-    #     msg = b"attr VI_ATTR_TERMCHAR {}".format(ord("\r"))
-    #     stdout, stderr = self.shell.communicate(msg.encode("ascii"))
-    #     self.assertIn(b"Done", stdout)
+        """
+        self.open_resource()
+        msg = "attr VI_ATTR_TERMCHAR {}".format(ord("\r"))
+        lines = self.communicate(msg)
+        self.assertIn(b"Done", lines[0])
 
-    #     stdout, stderr = self.shell.communicate(b"attr VI_ATTR_TERMCHAR")
-    #     self.assertIn(b"\r", stdout)
+        lines = self.communicate(b"attr VI_ATTR_TERMCHAR")
+        self.assertIn(rb"\r", lines[0])
 
-    # def test_attr_get_set_by_VI_boolean(self):
-    #     """Test getting/setting an attr using the VI_ name (bool value)
+    def test_attr_get_set_by_VI_boolean(self):
+        """Test getting/setting an attr using the VI_ name (bool value)
 
-    #     """
-    #     self.open_resource()
-    #     msg = f"attr VI_ATTR_TERMCHA_EN False"
-    #     stdout, stderr = self.shell.communicate(msg.encode("ascii"))
-    #     self.assertIn(b"Done", stdout)
+        """
+        self.open_resource()
+        msg = f"attr VI_ATTR_TERMCHA_EN False"
+        lines = self.communicate(msg)
+        self.assertIn(b"Done", lines[0])
 
-    #     stdout, stderr = self.shell.communicate(b"attr VI_ATTR_TERMCHAR")
-    #     self.assertIn(b"False", stdout)
+        stdout, stderr = self.shell.communicate(b"attr VI_ATTR_TERMCHAR")
+        self.assertIn(b"False", stdout)
 
-    # def test_attr_get_by_VI_handle_error(self):
-    #     """Test accessing an attr by an unknown VI name.
+    def test_attr_get_by_VI_handle_error(self):
+        """Test accessing an attr by an unknown VI name.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"attr VI_test")
-    #     self.assertIn(b"no attribute", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("attr VI_test")
+        self.assertIn(b"no attribute", lines[0])
 
-    # def test_attr_get_by_name(self):
-    #     """Test accessing an attr by Python name.
+    def test_attr_get_by_name(self):
+        """Test accessing an attr by Python name.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"attr allow_dma")
-    #     self.assertTrue(b"True" in stdout or b"False" in stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("attr allow_dma")
+        self.assertTrue(b"True" in lines[0] or b"False" in lines[0])
 
-    # def test_attr_get_by_name_handle_error(self):
-    #     """Test accessing an attr by an unknown Python name.
+    def test_attr_get_by_name_handle_error(self):
+        """Test accessing an attr by an unknown Python name.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"attr test")
-    #     self.assertIn(b"no attribute", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate(b"attr test")
+        self.assertIn(b"no attribute", lines[0])
 
-    # def test_attr_set_by_VI_handle_error_unknown_attr(self):
-    #     """Test handling issue in setting VI attr which does not exist.
+    def test_attr_set_by_VI_handle_error_unknown_attr(self):
+        """Test handling issue in setting VI attr which does not exist.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"attr VI_test test")
-    #     self.assertIn(b"no attribute", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("attr VI_test test")
+        self.assertIn(b"no attribute", lines[0])
 
-    # def test_attr_set_by_VI_handle_error_non_boolean(self):
-    #     """Test handling issue in setting VI attr. (non boolean value)
+    def test_attr_set_by_VI_handle_error_non_boolean(self):
+        """Test handling issue in setting VI attr. (non boolean value)
 
-    #     """
-    #     self.open_resource()
-    #     msg = f"attr VI_ATTR_TERMCHA_EN Test"
-    #     stdout, stderr = self.shell.communicate(msg.encode("ascii"))
-    #     self.assertIn(b"Error", stdout)
+        """
+        self.open_resource()
+        msg = f"attr VI_ATTR_TERMCHA_EN Test"
+        lines = self.communicate(msg)
+        self.assertIn(b"Error", lines[0])
 
-    # def test_attr_set_by_VI_handle_error_non_interger(self):
-    #     """Test handling issue in setting VI attr. (non integer value)
+    def test_attr_set_by_VI_handle_error_non_interger(self):
+        """Test handling issue in setting VI attr. (non integer value)
 
-    #     """
-    #     self.open_resource()
-    #     msg = f"attr VI_ATTR_TERMCHAR Test"
-    #     stdout, stderr = self.shell.communicate(msg.encode("ascii"))
-    #     self.assertIn(b"Error", stdout)
+        """
+        self.open_resource()
+        msg = f"attr VI_ATTR_TERMCHAR Test"
+        lines = self.communicate(msg)
+        self.assertIn(b"Error", lines[0])
 
-    # def test_attr_set_by_VI_handle_error_wrong_value(self):
-    #     """Test handling issue in setting VI attr by name. (wrong value)
+    def test_attr_set_by_VI_handle_error_wrong_value(self):
+        """Test handling issue in setting VI attr by name. (wrong value)
 
-    #     """
-    #     self.open_resource()
-    #     msg = f"attr VI_ATTR_TERMCHAR -1"
-    #     stdout, stderr = self.shell.communicate(msg.encode("ascii"))
-    #     self.assertIn(b"Error", stdout)
+        """
+        self.open_resource()
+        msg = f"attr VI_ATTR_TERMCHAR -1"
+        lines = self.communicate(msg)
+        self.assertIn(b"Error", lines[0])
 
-    # def test_attr_set_by_name_handle_error(self):
-    #     """Test handling attempt to set attr by name (which is not supported).
+    def test_attr_set_by_name_handle_error(self):
+        """Test handling attempt to set attr by name (which is not supported).
 
-    #     """
-    #     self.open_resource()
-    #     msg = f"attr allow_dma Test"
-    #     stdout, stderr = self.shell.communicate(msg.encode("ascii"))
-    #     self.assertIn(b"Setting Resource Attributes by python name is not yet "
-    #                   b"supported.", stdout)
+        """
+        self.open_resource()
+        msg = f"attr allow_dma Test"
+        lines = self.shell.communicate(msg)
+        self.assertIn(b"Setting Resource Attributes by python name is not yet "
+                      b"supported.", lines[0])
 
-    # def test_complete_attr(self):
-    #     """Test providing auto-completion for attrs.
+    def test_complete_attr(self):
+        """Test providing auto-completion for attrs.
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.current = shell.do_open(RESOURCE_ADDRESSES[0])
-    #     completions = shell.complete_attr("VI_ATTR_TERM", 0, 0, 0)
-    #     self.assertIn('VI_ATTR_TERMCHAR', completions)
-    #     self.assertIn('VI_ATTR_TERMCHAR_EN', completions)
+        """
+        shell = VisaShell()
+        shell.current = shell.do_open(RESOURCE_ADDRESSES[0])
+        completions = shell.complete_attr("VI_ATTR_TERM", 0, 0, 0)
+        self.assertIn('VI_ATTR_TERMCHAR', completions)
+        self.assertIn('VI_ATTR_TERMCHAR_EN', completions)
 
-    #     shell.complete_attr("allow_d", 0, 0, 0)
-    #     self.assertIn('allow_dma', completions)
+        shell.complete_attr("allow_d", 0, 0, 0)
+        self.assertIn('allow_dma', completions)
 
-    # def test_termchar_get_handle_error(self):
-    #     """Test handling error when getting the termchars.
+    def test_termchar_get_handle_error(self):
+        """Test handling error when getting the termchars.
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.current = True
-    #     temp_stdout = StringIO()
-    #     with redirect_stdout(temp_stdout):
-    #         shell.do_termchar("")
-    #     output = temp_stdout.getvalue()
-    #     self.assertIn('no attribute', output)
+        """
+        shell = VisaShell()
+        shell.current = True
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_termchar("")
+        output = temp_stdout.getvalue()
+        self.assertIn('no attribute', output)
 
-    # def test_termchar_get_set_both_identical(self):
-    #     """Test setting both termchars to the same value.
+    def test_termchar_get_set_both_identical(self):
+        """Test setting both termchars to the same value.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"termchar CR")
-    #     self.assertIn(b"Done", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("termchar CR")
+        self.assertIn(b"Done", lines[0])
 
-    #     stdout, stderr = self.shell.communicate(b"termchar")
-    #     self.assertIn(rb"Termchar read: \r write: \r", stdout)
+        lines = self.communicate("termchar")
+        self.assertIn(rb"Termchar read: \r write: \r", lines[0])
 
-    # def test_termchar_get_set_both_different(self):
-    #     """Test setting both termchars to different values.
+    def test_termchar_get_set_both_different(self):
+        """Test setting both termchars to different values.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"termchar CR NUL")
-    #     self.assertIn(b"Done", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("termchar CR NUL")
+        self.assertIn(b"Done", lines[0])
 
-    #     stdout, stderr = self.shell.communicate(b"termchar")
-    #     self.assertIn(rb"Termchar read: \r write: \0", stdout)
+        lines = self.communicate("termchar")
+        self.assertIn(rb"Termchar read: \r write: \0", lines[0])
 
-    # def test_termchar_set_too_many_args(self):
-    #     """Test handling to many termchars to termchar.
+    def test_termchar_set_too_many_args(self):
+        """Test handling to many termchars to termchar.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"termchar 1 2 3")
-    #     self.assertIn(b"Invalid syntax", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate(b"termchar 1 2 3")
+        self.assertIn(b"Invalid syntax", lines[0])
 
-    # def test_termchar_set_handle_error_wrong_value(self):
-    #     """Test handling wrong value in setting termchar.
+    def test_termchar_set_handle_error_wrong_value(self):
+        """Test handling wrong value in setting termchar.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"termchar tt")
-    #     self.assertIn(b"use CR, LF, CRLF, NUL or None to set termchar", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("termchar tt")
+        self.assertIn(b"use CR, LF, CRLF, NUL or None to set termchar", lines[0])
 
-    # def test_termchar_set_handle_error(self):
-    #     """Test handling an error in setting the termchars.
+    def test_termchar_set_handle_error(self):
+        """Test handling an error in setting the termchars.
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.current = True
-    #     temp_stdout = StringIO()
-    #     with redirect_stdout(temp_stdout):
-    #         shell.do_termchar("CR")
-    #     output = temp_stdout.getvalue()
-    #     self.assertIn('no attribute', output)
+        """
+        shell = VisaShell()
+        shell.current = True
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_termchar("CR")
+        output = temp_stdout.getvalue()
+        self.assertIn('no attribute', output)
