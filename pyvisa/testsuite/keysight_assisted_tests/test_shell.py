@@ -2,14 +2,75 @@
 """Test the shell.
 
 """
+import time
 from contextlib import redirect_stdout
 from io import StringIO
 from subprocess import Popen, PIPE
+from threading import Thread, Event, Lock
 
 from pyvisa.shell import VisaShell
 
 from .. import BaseTestCase
 from . import RESOURCE_ADDRESSES, ALIASES
+
+
+class SubprocessOutputPoller:
+    """Continuously check the stdout of a subprocess.
+
+    """
+    def __init__(self, process):
+        super().__init__()
+        self.process = process
+        self._lines = []
+        self._lines_lock = Lock()
+        self._last_seen = time.monotonic()
+        self.data_ready = Event()
+        self._polling_thread = Thread(target=self.poll_stdout)
+        self._ready_thread = Thread(target=self.check_ready)
+
+        # Start background threads
+        self._polling_thread.start()
+        self._ready_thread.start()
+
+    def poll_stdout(self):
+        """Continously read stdout and update the lines.
+
+        When no new data arrive after 1s consider that the data are ready.
+
+        """
+        for l in iter(self.process.stdout.readline, b''):
+            with self._lines_lock:
+                self._lines.append(l.rstrip())
+                self._last_seen = time.monotonic()
+
+    def check_ready(self):
+        """Check if we got complete data.
+
+        """
+        while True:
+            sleep(time.sleep(0.1))
+            if time.monotonic() - self._last_seen > 1:
+                self.data_ready.set()
+            if not self._polling_thread.is_alive():
+                break
+
+    def get_lines(self):
+        """Get the collected lines.
+
+        """
+        with self._lines_lock:
+            lines = self._lines
+            self._lines = []
+
+        self.data_ready.clear()
+        return lines
+
+    def shutdown(self):
+        """Wait for threads to die after the process is done.
+
+        """
+        self._polling_thread.join()
+        self._ready_thread.join()
 
 
 class TestVisaShell(BaseTestCase):
@@ -21,23 +82,23 @@ class TestVisaShell(BaseTestCase):
 
         """
         self.shell = Popen(["pyvisa-shell"], stdin=PIPE, stdout=PIPE)
-        self.termchar = self.shell.stdout.readline()
-        self.read_all_lines()
-
-    def read_all_lines(self):
-        """Read all the lines on the output of the shell.
-
-        """
-        lines = []
-        for line in iter(self.shell.stdout.readline, b''):
-            lines.append(line.rstrip(self.termchar))
-        return b"\n".join(lines)
+        self.reader = SubprocessOutputPoller()
+        self.reader.data_ready.wait()
+        self.reader.get_lines()
 
     def open_resource(self):
-        self.shell.stdin.write(
-            f"open {list(RESOURCE_ADDRESSES.values())[0]}\n".encode('ascii'))
+        lines = self.communicate(
+            f"open {list(RESOURCE_ADDRESSES.values())[0]}")
+        self.assertIn(b"has been opened.\n", lines[0])
+
+    def communicate(self, msg):
+        """Write a message on stdin and collect the answer.
+
+        """
+        self.shell.stdin.write(msg.encode("ascii") + b"\n")
         self.shell.stdin.flush()
-        self.assertIn(b"has been opened.\n", stdout)
+        self.reader.data_ready.wait()
+        returnself.reader.get_lines()
 
     def tearDown(self):
         if self.shell:
@@ -46,14 +107,13 @@ class TestVisaShell(BaseTestCase):
             self.shell.stdin.close()
             self.shell.terminate()
             self.shell.wait(0.1)
+            self.reader.shutdown()
 
     def test_list(self):
         """Test listing the connected resources.
 
         """
-        self.shell.stdin.write(b'list\n')
-        self.shell.stdin.flush()
-        stdout = self.shell.stdout.readline()
+        lines = self.communicate("list")
 
         msg = []
         for i, rsc in enumerate(RESOURCE_ADDRESSES.values()):
@@ -61,135 +121,137 @@ class TestVisaShell(BaseTestCase):
             if rsc in ALIASES:
                 msg.append(f"     alias: {ALIASES[rsc]}")
 
-        self.assertEqual("\n".join(msg).encode("ascii"), stdout)
+        for l, m in zip(lines, msg):
+            self.assertEqual(l, m.encode('ascii'))
 
-    # def test_list_handle_error(self):
-    #     """Test handling an error in listing resources.
+    def test_list_handle_error(self):
+        """Test handling an error in listing resources.
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.resource_manager = None
-    #     temp_stdout = StringIO()
-    #     with redirect_stdout(temp_stdout):
-    #         shell.do_list("")
-    #     output = temp_stdout.getvalue()
-    #     self.assertIn('AttributeError', output)
+        """
+        shell = VisaShell()
+        shell.resource_manager = None
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_list("")
+        output = temp_stdout.getvalue()
+        self.assertIn('AttributeError', output)
 
-    # def test_open_no_args(self):
-    #     """Test opening without any argument.
+    def test_open_no_args(self):
+        """Test opening without any argument.
 
-    #     """
-    #     stdout, stderr = self.shell.communicate(b'open')
-    #     self.assertEqual(b"A resource name must be specified.\n", stdout)
+        """
+        lines = self.communicate("open")
+        self.assertEqual(b"A resource name must be specified.\n", lines)
 
-    # def test_open_by_number(self):
-    #     """Test opening based on the index of the resource.
+    def test_open_by_number(self):
+        """Test opening based on the index of the resource.
 
-    #     """
-    #     stdout, stderr = self.shell.communicate(b'open 0')
-    #     self.assertEqual(b'Not a valid resource number. Use the command "list".\n',
-    #                      stdout)
+        """
+        lines = self.communicate("open 0")
+        self.assertEqual(b'Not a valid resource number. Use the command "list".',
+                         lines[0])
 
-    #     stdout, stderr = self.shell.communicate(b'list')
-    #     stdout, stderr = self.shell.communicate(b'open 0')
-    #     rsc = list(RESOURCE_ADDRESSES.values())[0]
-    #     self.assertIn(
-    #         f"{rsc} has been opened.\n".encode('ascii'),
-    #         stdout
-    #     )
+        lines = self.communicate("list")
+        lines = self.communicate("open 0")
+        rsc = list(RESOURCE_ADDRESSES.values())[0]
+        self.assertIn(
+            f"{rsc} has been opened.".encode('ascii'),
+            lines[0]
+        )
 
-    #     stdout, stderr = self.shell.communicate(b'open 0')
-    #     self.assertEqual(
-    #         (b'You can only open one resource at a time. '
-    #          b'Please close the current one first.\n'),
-    #         stdout)
+        lines = self.communicate("open 0")
+        self.assertEqual(
+            (b'You can only open one resource at a time. '
+             b'Please close the current one first.\n'),
+            lines[0])
 
-    # def test_open_by_address(self):
-    #     """Test opening based on the resource address.
+    def test_open_by_address(self):
+        """Test opening based on the resource address.
 
-    #     """
-    #     rsc = list(RESOURCE_ADDRESSES.values())[0]
-    #     stdout, stderr = self.shell.communicate(f'open {rsc}'.encode("ascii"))
-    #     self.assertIn(
-    #         f"{rsc} has been opened.\n".encode('ascii'),
-    #         stdout
-    #     )
+        """
+        rsc = list(RESOURCE_ADDRESSES.values())[0]
+        lines = self.communicate(f"open {rsc}")
+        self.assertIn(
+            f"{rsc} has been opened.\n".encode('ascii'),
+            lines[0]
+        )
 
-    # def test_open_handle_exception(self):
-    #     """Test handling an exception during opening.
+    def test_open_handle_exception(self):
+        """Test handling an exception during opening.
 
-    #     """
-    #     rsc = list(RESOURCE_ADDRESSES.values())[0]
-    #     stdout, stderr = self.shell.communicate(f'open ""'.encode("ascii"))
-    #     self.assertIn(b"VI_ERROR_INV_RSRC_NAME", stdout )
+        """
+        rsc = list(RESOURCE_ADDRESSES.values())[0]
+        lines = self.communicate('open ""')
+        self.assertIn(b"VI_ERROR_INV_RSRC_NAME", lines[0])
 
-    # def test_handle_double_open(self):
-    #     """Test handling before closing resource.
+    def test_handle_double_open(self):
+        """Test handling before closing resource.
 
-    #     """
-    #     rsc = list(RESOURCE_ADDRESSES.values())[0]
-    #     stdout, stderr = self.shell.communicate(f'open {rsc}'.encode("ascii"))
-    #     stdout, stderr = self.shell.communicate(f'open {rsc}'.encode("ascii"))
-    #     self.assertEqual(
-    #         (b'You can only open one resource at a time. '
-    #          b'Please close the current one first.\n'),
-    #         stdout)
+        """
+        rsc = list(RESOURCE_ADDRESSES.values())[0]
+        lines = self.communicate(f'open {rsc}')
+        lines = self.communicate(f'open {rsc}')
+        self.assertEqual(
+            (b'You can only open one resource at a time. '
+             b'Please close the current one first.\n'),
+            lines[0])
 
-    # def test_command_on_closed_resource(self):
-    #     """Test all the commands that cannot be run without opening a resource.
+    def test_command_on_closed_resource(self):
+        """Test all the commands that cannot be run without opening a resource.
 
-    #     """
-    #     for cmd in ("close" "write", "read", "query", "termchar", "timeout", "attr"):
-    #         stdout, stderr = self.shell.communicate(cmd.encode("ascii"))
-    #         self.assertEqual(
-    #             b'There are no resources in use. Use the command "open".\n',
-    #             stdout
-    #         )
+        """
+        for cmd in ("close" "write", "read", "query", "termchar", "timeout", "attr"):
+            lines = self.communicate(cmd)
+            self.assertEqual(
+                b'There are no resources in use. Use the command "open".\n',
+                lines[0]
+            )
 
-    # def test_close(self):
-    #     """Test closing a resource.
+    def test_close(self):
+        """Test closing a resource.
 
-    #     """
-    #     rsc = list(RESOURCE_ADDRESSES.values())[0]
-    #     stdout, stderr = self.shell.communicate(f'open {rsc}'.encode("ascii"))
-    #     stdout, stderr = self.shell.communicate(b"close")
-    #     self.assertEqual(b'The resource has been closed.\n', stdout)
+        """
+        rsc = list(RESOURCE_ADDRESSES.values())[0]
+        lines = self.communicate("open {rsc}")
+        lines = self.communicate("close")
+        self.assertEqual(b'The resource has been closed.', lines[0])
 
-    #     stdout, stderr = self.shell.communicate(f'open {rsc}'.encode("ascii"))
-    #     self.assertIn(b"has been opened.\n", stdout)
+        lines = self.communicate(f'open {rsc}')
+        self.assertIn(b"has been opened.\n", lines[0])
 
-    # def test_close_handle_error(self):
-    #     """Test handling an error while closing.
+    def test_close_handle_error(self):
+        """Test handling an error while closing.
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.current = True
-    #     temp_stdout = StringIO()
-    #     with redirect_stdout(temp_stdout):
-    #         shell.do_close("")
-    #     output = temp_stdout.getvalue()
-    #     self.assertIn('AttributeError', output)
+        """
+        shell = VisaShell()
+        shell.current = True
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_close("")
+        output = temp_stdout.getvalue()
+        self.assertIn('AttributeError', output)
 
-    # def test_query(self):
-    #     """querying a value from the instrument.
+    def test_query(self):
+        """querying a value from the instrument.
 
-    #     """
-    #     self.open_resource()
-    #     stdout, stderr = self.shell.communicate(b"query *IDN?")
-    #     self.assertIn(b"Response: ", stdout)
+        """
+        self.open_resource()
+        lines = self.communicate("query *IDN?")
+        self.assertIn(b"Response: ", lines[0])
 
-    # def test_query_handle_error(self):
-    #     """Test handling an error in query.
+    def test_query_handle_error(self):
+        """Test handling an error in query.
 
-    #     """
-    #     shell = VisaShell()
-    #     shell.current = True
-    #     temp_stdout = StringIO()
-    #     with redirect_stdout(temp_stdout):
-    #         shell.do_query("")
-    #     output = temp_stdout.getvalue()
-    #     self.assertIn('AttributeError', output)
+        """
+        shell = VisaShell()
+        shell.current = True
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_query("")
+        output = temp_stdout.getvalue()
+        self.assertIn('AttributeError', output)
 
+# XXX keep updating
     # def test_read_write(self):
     #     """Test writing/reading values from the resource.
 
