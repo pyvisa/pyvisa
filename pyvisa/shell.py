@@ -17,6 +17,9 @@ import sys
 from . import ResourceManager, attributes, constants, VisaIOError
 from .thirdparty import prettytable
 
+# XXX providing a way to list/use constants would be nice
+# XXX handling of the attributes could be done through descriptors rather than
+# low-level methods.
 
 class VisaShell(cmd.Cmd):
     """Shell for interactive testing.
@@ -321,12 +324,14 @@ class VisaShell(cmd.Cmd):
                 print('Termchar read: {} write: {}'.format(chr, chw))
             except Exception as e:
                 print(e)
+
+        args = args.split(" ")
+
         if len(args) > 2:
             print('Invalid syntax, use `termchar <termchar>` to set both '
                   'read_termination and write_termination to the same value, or '
-                  '`termchar <read_termchar> <read_termchar>` to use distinct values.')
+                  '`termchar <read_termchar> <write_termchar>` to use distinct values.')
         else:
-            args = args.split(' ')
             charmap = {'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0',
                        'None': None}
             chr = args[0]
@@ -360,4 +365,3 @@ class VisaShell(cmd.Cmd):
 
 def main(library_path=''):
     VisaShell(library_path).cmdloop()
-
