@@ -5,6 +5,7 @@
 import array
 import contextlib
 import os
+import subprocess
 import sys
 import tempfile
 from configparser import ConfigParser
@@ -302,3 +303,99 @@ class TestSystemDetailsAnalysis(BaseTestCase):
             util.get_debug_info()
         output = temp_stdout.getvalue()
         self.assertSequenceEqual(output.strip(), details.strip())
+
+
+class TestLibraryAnalysis(BaseTestCase):
+    """Test (through monkey patching) the analysis of binary libraries.
+
+    """
+
+    def test_get_shared_library_arch(self):
+        """Test analysing a library on Windows.
+
+        """
+        dirname = os.path.join(os.path.dirname(__file__), "fakelibs")
+        for f, a in zip(["_32", "_64", "_64_2"], ["I386", "IA64", "AMD64"]):
+            arch = util.get_shared_library_arch(os.path.join(dirname,
+                                                             "fakelib_good%s.dll" % f))
+            self.assertEqual(arch, a)
+
+        arch = util.get_shared_library_arch(os.path.join(dirname,
+                                            "fakelib_good_unknown.dll"))
+        self.assertEqual(arch, "UNKNOWN")
+
+        with self.assertRaises(Exception) as e:
+            util.get_shared_library_arch(os.path.join(dirname, "fakelib_bad_magic.dll"))
+        self.assertIn("Not an executable", e.exception.args[0])
+
+        with self.assertRaises(Exception) as e:
+            util.get_shared_library_arch(os.path.join(dirname, "fakelib_not_pe.dll"))
+        self.assertIn("Not a PE executable", e.exception.args[0])
+
+    def test_get_arch_windows(self):
+        """Test identifying the computer architecture on windows.
+
+        """
+        dirname = os.path.join(os.path.dirname(__file__), "fakelibs")
+
+        platform = sys.platform
+        sys.platform = "win32"
+        try:
+            for f, a in zip(["_32", "_64", "_64_2", "_unknown"],
+                            [(32,), (64,), (64,), ()]):
+                print(f, a)
+                path = os.path.join(dirname, "fakelib_good%s.dll" % f)
+                lib = util.LibraryPath(path)
+                self.assertEqual(lib.arch, a)
+                if f != "_unknown":
+                    self.assertTrue(lib.is_32bit if 32 in a else not lib.is_32bit)
+                    self.assertTrue(lib.is_64bit if 64 in a else not lib.is_64bit)
+                    self.assertEqual(lib.bitness, ", ".join(str(b) for b in a))
+                else:
+                    self.assertEqual(lib.is_32bit, "n/a")
+                    self.assertTrue(lib.is_64bit, "n/a")
+                    self.assertEqual(lib.bitness, "n/a")
+        finally:
+            sys.platform = platform
+
+    def test_get_arch_unix(self):
+        """Test identifying the computer architecture on linux and Mac.
+
+        """
+        platform = sys.platform
+        run = subprocess.run
+        try:
+            subprocess.run = lambda *args, **kwargs: run(["echo", args[0][1]],
+                                                         *args[1:], **kwargs)
+            for p, f, a in [("linux2", "32-bit", (32,)),
+                            ("linux2", "32-bit & 64-bit", (32, 64)),
+                            ("linux3", "64-bit", (64,)),
+                            ("darwin", "(for architecture i386)", (32,)),
+                            ("darwin", "(for architecture x86_64)", (64,)),
+                            ]:
+                sys.platform = p
+                lib = util.LibraryPath(f)
+                self.assertEqual(lib.arch, a)
+                self.assertTrue(lib.is_32bit if 32 in a else not lib.is_32bit)
+                self.assertTrue(lib.is_64bit if 64 in a else not lib.is_64bit)
+                self.assertEqual(lib.bitness, ", ".join(str(b) for b in a))
+
+        finally:
+            sys.platform = platform
+            subprocess.run = run
+
+    def test_get_arch_unknown(self):
+        """Test identifying the computer architecture on an unknown platform.
+
+        """
+        platform = sys.platform
+        run = subprocess.run
+        try:
+            lib = util.LibraryPath("")
+            self.assertEqual(lib.arch, ())
+            self.assertEqual(lib.is_32bit, "n/a")
+            self.assertTrue(lib.is_64bit, "n/a")
+            self.assertEqual(lib.bitness, "n/a")
+        finally:
+            sys.platform = platform
+            subprocess.run = run

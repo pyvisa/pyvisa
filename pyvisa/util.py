@@ -105,7 +105,7 @@ class LibraryPath(str):
         if self._arch is None:
             try:
                 self._arch = get_arch(self.path)
-            except:
+            except Exception:
                 self._arch = tuple()
 
         return self._arch
@@ -685,7 +685,7 @@ def get_shared_library_arch(filename):
         dos_headers = fp.read(64)
         _ = fp.read(4)
 
-        magic, skip, offset = struct.unpack(str('2s58sl'), dos_headers)
+        magic, skip, offset = struct.unpack("=2s58sl", dos_headers)
 
         if magic != b'MZ':
             raise Exception('Not an executable')
@@ -693,7 +693,7 @@ def get_shared_library_arch(filename):
         fp.seek(offset, io.SEEK_SET)
         pe_header = fp.read(6)
 
-        sig, skip, machine = struct.unpack(str('2s2sH'), pe_header)
+        sig, skip, machine = struct.unpack(str('=2s2sH'), pe_header)
 
         if sig != b'PE':
             raise Exception('Not a PE executable')
@@ -712,10 +712,10 @@ def get_arch(filename):
         else:
             return ()
     elif this_platform not in ('linux2', 'linux3', 'linux', 'darwin'):
-        raise OSError('')
+        raise OSError('Unsupported platform: %s' % this_platform)
 
-    out = check_output(["file", filename], stderr=subprocess.STDOUT)
-    out = out.decode('ascii')
+    out = subprocess.run(["file", filename], capture_output=True)
+    out = out.stdout.decode("ascii")
     ret = []
     if this_platform.startswith('linux'):
         if '32-bit' in out:

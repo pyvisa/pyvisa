@@ -481,4 +481,3 @@ class TestFilters(BaseTestCase):
         with self.assertRaises(errors.VisaIOError) as e:
             rname.filter2([], "?*{", lambda x: None)
         self.assertIn("VI_ERROR_INV_EXPR", e.exception.args[0])
-

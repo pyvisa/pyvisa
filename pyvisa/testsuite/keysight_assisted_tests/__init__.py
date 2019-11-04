@@ -7,6 +7,8 @@ Keysight Virtual Instrument IO Test software.
 For this part of the testsuite to be run, you need to set the
 PYVISA_KEYSIGHT_VIRTUAL_INSTR environment value.
 
+To enable coverage for the shell, one needs to edit XXX (look details on coverage doc)
+
 """
 import os
 import unittest

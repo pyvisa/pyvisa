@@ -5,9 +5,14 @@
 from pyvisa.testsuite import BaseTestCase
 
 
-# XXX system details and binary analysis
 class TestSystemDetailsAnalysis(BaseTestCase):
     """Test getting details about the VISA library architecture.
 
     """
 
+    def test_getting_system_details_with_backend(self):
+        """Test getting the system details with the backend details.
+
+        """
+        details = util.get_system_details(True)
+        self.assertTrue(details['backends'])

@@ -92,8 +92,8 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         return tuple(tmp)
 
-    @staticmethod
-    def get_debug_info():
+    @classmethod
+    def get_debug_info(cls):
         """Return a list of lines with backend info.
 
         """
@@ -101,14 +101,14 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         d = OrderedDict()
         d['Version'] = '%s (bundled with PyVISA)' % __version__
 
-        paths = IVIVisaLibrary.get_library_paths()
+        paths = cls.get_library_paths()
 
         for ndx, visalib in enumerate(paths, 1):
             nfo = OrderedDict()
             nfo['found by'] = visalib.found_by
             nfo['bitness'] = visalib.bitness
             try:
-                lib = IVIVisaLibrary(visalib)
+                lib = cls(visalib)
                 sess, _ = lib.open_default_resource_manager()
                 nfo['Vendor'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_MANF_NAME)[0])
                 nfo['Impl. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_IMPL_VERSION)[0])
