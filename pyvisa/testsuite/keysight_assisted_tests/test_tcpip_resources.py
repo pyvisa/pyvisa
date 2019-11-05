@@ -39,7 +39,7 @@ class TCPIPInstrTestCase(MessagebasedResourceTestCase,
             # XXX note sure what is the actual issue here
             with self.assertRaises(errors.VisaIOError):
                 self.instr.set_visa_attribute(constants.VI_ATTR_IO_PROT,
-                                            constants.IOProtocol.hs488)
+                                              constants.IOProtocol.hs488)
             # self.instr.read_stb()
             # self.assertEqual(
             #     self.instr.get_visa_attribute(constants.VI_ATTR_IO_PROT),

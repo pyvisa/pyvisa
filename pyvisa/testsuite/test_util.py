@@ -365,8 +365,13 @@ class TestLibraryAnalysis(BaseTestCase):
         platform = sys.platform
         run = subprocess.run
         try:
-            subprocess.run = lambda *args, **kwargs: run(["echo", args[0][1]],
-                                                         *args[1:], **kwargs)
+            def alt_run(*args, **kwargs):
+                if platform.startswith("win"):
+                    kwargs["shell"] = True
+                return run(["echo", args[0][1]], *args[1:], **kwargs)
+
+            subprocess.run = alt_run
+
             for p, f, a in [("linux2", "32-bit", (32,)),
                             ("linux2", "32-bit & 64-bit", (32, 64)),
                             ("linux3", "64-bit", (64,)),

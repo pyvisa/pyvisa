@@ -2,6 +2,9 @@
 """Common test case for all message based resources.
 
 """
+from pyvisa import ResourceManager, rname
+
+from .. import BaseTestCase
 from . import require_virtual_instr
 
 

@@ -2,6 +2,7 @@
 """Test the shell.
 
 """
+import os
 import time
 from contextlib import redirect_stdout
 from io import StringIO
@@ -83,6 +84,7 @@ class TestVisaShell(BaseTestCase):
         """Start the shell in a subprocess.
 
         """
+        os.environ["COVERAGE_PROCESS_START"] = ".coveragerc"
         self.shell = Popen(["pyvisa-shell"], stdin=PIPE, stdout=PIPE)
         self.reader = SubprocessOutputPoller(self.shell)
         self.reader.data_ready.wait(1)

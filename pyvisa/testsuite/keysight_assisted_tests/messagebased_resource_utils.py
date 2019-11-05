@@ -84,24 +84,24 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         self.instr.read_termination = "\r\0"
         self.assertEqual(self.instr.read_termination, "\r\0")
-        self.assertEqual(self.instr.VI_ATTR_TERMCHAR, ord("\0"))
+        # self.assertEqual(self.instr.VI_ATTR_TERMCHAR, ord("\0"))
         self.assertEqual(
             self.instr.get_visa_attribute(constants.VI_ATTR_TERMCHAR),
             ord("\0")
         )
-        self.assertTrue(self.instr.VI_ATTR_TERMCHAR_EN)
+        # self.assertTrue(self.instr.VI_ATTR_TERMCHAR_EN)
         self.assertTrue(
             self.instr.get_visa_attribute(constants.VI_ATTR_TERMCHAR_EN),
         )
 
         # Disable read termination
         self.instr.read_termination = None
-        self.assertEqual(self.instr.VI_ATTR_TERMCHAR, ord("\n"))
+        # self.assertEqual(self.instr.VI_ATTR_TERMCHAR, ord("\n"))
         self.assertEqual(
             self.instr.get_visa_attribute(constants.VI_ATTR_TERMCHAR),
             ord("\n")
         )
-        self.assertFalse(self.instr.VI_ATTR_TERMCHAR_EN)
+        # self.assertFalse(self.instr.VI_ATTR_TERMCHAR_EN)
         self.assertFalse(
             self.instr.get_visa_attribute(constants.VI_ATTR_TERMCHAR_EN),
         )
