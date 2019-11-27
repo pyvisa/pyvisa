@@ -287,13 +287,26 @@ class TestParser(BaseTestCase):
 
 
 class TestSystemDetailsAnalysis(BaseTestCase):
-    """Test geeting the system details.
+    """Test getting the system details.
 
     """
 
+    def setUpt(self):
+        self._unicode_size = sys.maxunicode
+
+    def tearDown(self):
+        sys.maxunicode = self._unicode_size
+
     def test_getting_system_details(self):
+        sys.maxunicode = 65535
         details = util.get_system_details(False)
         self.assertFalse(details['backends'])
+        self.assertEqual(details["unicode"], "UCS2")
+
+        sys.maxunicode = 1114111
+        details = util.get_system_details(False)
+        self.assertFalse(details['backends'])
+        self.assertEqual(details["unicode"], "UCS4")
 
     def test_get_debug_info(self):
         details = util.system_details_to_str(util.get_system_details())
@@ -303,6 +316,13 @@ class TestSystemDetailsAnalysis(BaseTestCase):
             util.get_debug_info()
         output = temp_stdout.getvalue()
         self.assertSequenceEqual(output.strip(), details.strip())
+
+    def test_system_details_for_plugins(self):
+        """Test reporting on plugins.
+
+        """
+        pass
+    # XXX test handling extensions (ie pyvisa-py) + all possible errors
 
 
 class TestLibraryAnalysis(BaseTestCase):
@@ -389,6 +409,23 @@ class TestLibraryAnalysis(BaseTestCase):
             sys.platform = platform
             subprocess.run = run
 
+    def test_get_arch_unix_unreported(self):
+        """Test identifying the computer architecture on an unknown platform.
+
+        """
+        platform = sys.platform
+        run = subprocess.run
+        try:
+            sys.platform = "darwin"
+            lib = util.LibraryPath("")
+            self.assertEqual(lib.arch, ())
+            self.assertEqual(lib.is_32bit, "n/a")
+            self.assertTrue(lib.is_64bit, "n/a")
+            self.assertEqual(lib.bitness, "n/a")
+        finally:
+            sys.platform = platform
+            subprocess.run = run
+
     def test_get_arch_unknown(self):
         """Test identifying the computer architecture on an unknown platform.
 
@@ -396,6 +433,7 @@ class TestLibraryAnalysis(BaseTestCase):
         platform = sys.platform
         run = subprocess.run
         try:
+            sys.platform = "test"
             lib = util.LibraryPath("")
             self.assertEqual(lib.arch, ())
             self.assertEqual(lib.is_32bit, "n/a")

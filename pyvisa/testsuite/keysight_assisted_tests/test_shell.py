@@ -128,6 +128,8 @@ class TestVisaShell(BaseTestCase):
         for l, m in zip(lines, msg):
             self.assertIn(m.encode('ascii'), l)
 
+    # XXX fix argument handling to allow filtering
+
     def test_list_handle_error(self):
         """Test handling an error in listing resources.
 
@@ -198,6 +200,8 @@ class TestVisaShell(BaseTestCase):
             (b'You can only open one resource at a time. '
              b'Please close the current one first.'),
             lines[0])
+
+    # XXX test complete open
 
     def test_command_on_closed_resource(self):
         """Test all the commands that cannot be run without opening a resource.
@@ -338,6 +342,8 @@ class TestVisaShell(BaseTestCase):
         lines = self.communicate("attr")
         self.assertIn(b"VISA name", lines[1])
 
+    # XXX test handle issues when printing (monkeypatch)
+
     def test_attr_too_many_args(self):
         """Test handling wrong args to attr.
 
@@ -363,13 +369,14 @@ class TestVisaShell(BaseTestCase):
         """Test getting/setting an attr using the VI_ name (bool value)
 
         """
-        self.open_resource()
-        msg = f"attr VI_ATTR_TERMCHAR_EN False"
-        lines = self.communicate(msg)
-        self.assertIn(b"Done", lines[0])
+        for v in (False, True):
+            self.open_resource()
+            msg = f"attr VI_ATTR_TERMCHAR_EN {v}"
+            lines = self.communicate(msg)
+            self.assertIn(b"Done", lines[0])
 
-        lines = self.communicate("attr VI_ATTR_TERMCHAR_EN")
-        self.assertIn(b"0", lines[0])
+            lines = self.communicate("attr VI_ATTR_TERMCHAR_EN")
+            self.assertIn(str(int(v)).encode("ascii"), lines[0])
 
     def test_attr_get_by_VI_handle_error(self):
         """Test accessing an attr by an unknown VI name.
@@ -465,6 +472,8 @@ class TestVisaShell(BaseTestCase):
         output = temp_stdout.getvalue()
         self.assertIn('no attribute', output)
 
+    # XXX test getting a termchar not in the mapping
+
     def test_termchar_get_set_both_identical(self):
         """Test setting both termchars to the same value.
 
@@ -514,3 +523,10 @@ class TestVisaShell(BaseTestCase):
             shell.do_termchar("CR")
         output = temp_stdout.getvalue()
         self.assertIn('no attribute', output)
+
+    def test_eof(self):
+        """Test handling an EOF.
+
+        """
+        shell = VisaShell()
+        self.assertTrue(shell.do_EOF())

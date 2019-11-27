@@ -32,6 +32,8 @@ class TestFilter2(BaseTestCase):
         self.assertSequenceEqual(filtered, ok)
 
     def test_filter2_optional_clause_with_connection(self):
-        self._test_filter2('?*::INSTR{VI_ATTR_TERMCHAR == 0)}')
+        self._test_filter2('?*::INSTR{VI_ATTR_TERMCHAR_EN == 1 && VI_ATTR_TERMCHAR == 0)}')
         # Linefeed \n is 10
         self._test_filter2('TCPIP::?*::INSTR{VI_ATTR_TERMCHAR == 10)}')
+
+        # XXX test handling error in the evaluation (monkeypatch)

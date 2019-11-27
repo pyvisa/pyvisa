@@ -619,6 +619,6 @@ def filter2(resources, query, open_resource):
                 if eval(optional, None, dict(res=getter)):
                     selected.append(rn)
             except Exception:
-                pass# logger.exception("Failed to evaluate %s on %s", optional, rn)
+                logger.exception("Failed to evaluate %s on %s", optional, rn)
 
     return selected

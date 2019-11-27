@@ -2,6 +2,7 @@
 """Common test case for all resources.
 
 """
+import gc
 import unittest
 
 from pyvisa import ResourceManager, InvalidSession, VisaIOError
@@ -42,8 +43,10 @@ class ResourceTestCase:
         """Close the resource at the end of the test.
 
         """
-        self.instr.close()
-        self.rm.close()
+        if self.instr:
+            self.instr.close()
+        if self.rm:
+            self.rm.close()
 
     def test_lifecycle(self):
         """Test the lifecyle of a resource and the use as a context manager.
@@ -58,9 +61,20 @@ class ResourceTestCase:
         with self.assertRaises(InvalidSession):
             self.instr.session
 
-        with self.rm.open_resource(str(self.rname)) as instr:
+        with self.rm.open_resource(str(self.rname), read_termination="\0") as instr:
             self.assertEqual(len(self.rm.list_opened_resources()), 1)
+            self.assertEqual(instr.read_termination, "\0")
         self.assertEqual(len(self.rm.list_opened_resources()), 0)
+
+    def test_close_on_del(self):
+        """Test the lifecyle of a resource and the use as a context manager.
+
+        """
+        with self.assertLogs(level="Debug") as cm:
+            self.instr = None
+            gc.collect()
+
+        self.assertIn("- closing", cm.output[1])
 
     def test_alias_bypassing(self):
         """Test that a resource that cannot normalize an alias keep the alias.

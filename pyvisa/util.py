@@ -722,7 +722,7 @@ def get_arch(filename):
             ret.append(32)
         if '64-bit' in out:
             ret.append(64)
-    elif this_platform == 'darwin':
+    else:  # darwin
         if '(for architecture i386)' in out:
             ret.append(32)
         if '(for architecture x86_64)' in out:

@@ -2,10 +2,12 @@
 """Test the capabilities of the ResourceManager.
 
 """
+import gc
 import os
 import unittest
 
 from pyvisa import ResourceManager, InvalidSession, VisaIOError
+from pyvisa.highlevel import VisaLibraryBase
 from pyvisa.constants import StatusCode, AccessModes, InterfaceType
 from pyvisa.rname import ResourceName
 
@@ -28,7 +30,8 @@ class TestResourceManager(unittest.TestCase):
         """Close the ResourceManager.
 
         """
-        self.rm.close()
+        del self.rm
+        gc.collect()
 
     def test_lifecycle(self):
         """Test creation and closing of the resource manager.
@@ -38,6 +41,8 @@ class TestResourceManager(unittest.TestCase):
         self.assertIsNotNone(self.rm.visalib)
         self.assertIs(self.rm, self.rm.visalib.resource_manager)
         self.assertFalse(self.rm.list_opened_resources())
+
+        self.assertIs(self.rm.visalib, ResourceManager(self.rm.visalib).visalib)
 
         self.rm.close()
 
@@ -75,6 +80,14 @@ class TestResourceManager(unittest.TestCase):
         """
         self.assertEqual(self.rm.last_status, StatusCode.success)
 
+        # Access the generic last status through the visalib
+        self.assertEqual(self.rm.last_status, self.rm.visalib.last_status)
+
+        # Test accessing the status for an invalid session
+        with self.assertRaises(errors.Error) as cm:
+            self.rm.visalib.last_status_in_session("_nonexisting_")
+        self.assertIn("The session", cm.output[1])
+
     def test_list_resource(self):
         """Test listing the available resources.
 
@@ -89,6 +102,12 @@ class TestResourceManager(unittest.TestCase):
         self.assertSequenceEqual(sorted(self.rm.list_resources("?*")),
                                  sorted([str(ResourceName.from_string(v))
                                         for v in RESOURCE_ADDRESSES.values()]))
+
+    def test_parsing_resources(self):
+        """Compare the VISA parsing to pyvisa builtin parsing.
+
+        """
+        pass  # XXX write
 
     def test_accessing_resource_infos(self):
         """Test accessing resource infos.

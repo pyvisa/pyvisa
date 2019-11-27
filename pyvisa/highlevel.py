@@ -1493,8 +1493,8 @@ def _get_default_wrapper():
     """
 
     from .ctwrapper import IVIVisaLibrary
-    ni_binary_found = bool(IVIVisaLibrary.get_library_paths())
-    if ni_binary_found:
+    ivi_binary_found = bool(IVIVisaLibrary.get_library_paths())
+    if ivi_binary_found:
         logger.debug('The IVI implementation available')
         return 'ivi'
     else:

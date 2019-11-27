@@ -78,6 +78,15 @@ class TestLibraryError(BaseTestCase):
             'visa.dll')
         self.assertIn('No matching architecture', str(exc))
 
+    def test_from_exception_random(self):
+        """Test handling a library for which the error is not a usual one.
+
+        """
+        exc = errors.LibraryError.from_exception(
+            ValueError('visa.dll'), 'visa.dll'
+            )
+        self.assertIn('Error while accessing', str(exc))
+
     def test_from_exception_decode_error(self):
         """Test handling an error that decode to string.
 

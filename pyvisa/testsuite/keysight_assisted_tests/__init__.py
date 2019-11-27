@@ -13,6 +13,8 @@ site-packages and add the following::
 import coverage
 coverage.process_startup()
 
+See https://coverage.readthedocs.io/en/v4.5.x/subprocess.html for details.
+
 """
 import os
 import unittest

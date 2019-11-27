@@ -2,6 +2,7 @@
 """Common test case for all message based resources.
 
 """
+import logging
 import time
 import unittest
 
@@ -14,6 +15,8 @@ try:
 except ImportError:
     np = None
 
+
+# XXX assert the return value of write_raw, write, etc
 
 class EventHandler:
     """Event handler.
@@ -137,6 +140,22 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertEqual(self.instr.read_bytes(100, break_on_termchar=True), b"st\r")
         self.assertEqual(self.instr.read_bytes(1), b"\n")
 
+    def test_handling_exception_in_read_bytes(self):
+        """Test handling exception in read_bytes (monkeypatching)
+
+        """
+        def false_read(self, session, size):
+            raise VisaIOError("")
+
+        try:
+            read = self.instr.visalib.read
+            self.instr.visalib.read = false_read
+            with self.assertLogs(level="DEBUG") as cm:
+                self.instr.read_bytes(1)
+            self.assertIn("- exception while reading:r", cm.output[1])
+        finally:
+            self.instr.visalib.read = read
+
     def test_write_raw_read_raw(self):
         """Test writing raw data and reading an answer.
 
@@ -156,9 +175,17 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write("SEND")
         self.assertEqual(self.instr.read(), "test")
 
+        # Missing termination chars
+        self.instr.read_termination = "\r\n"
+        self.instr.write("RECEIVE")
+        self.instr.write("test")
+        self.instr.write("SEND")
+        with self.assertWarns(Warning):
+            self.assertEqual(self.instr.read(), "test")
+
         # Dynamic termination
         self.instr.write_termination = "\r"
-        self.instr.write("RECEIVE", termination="\n")
+        self.instr.write("RECEIVE\n", termination=False)
         self.instr.write("test\r", termination="\n")
         self.instr.write("SEND", termination="\n")
         self.assertEqual(self.instr.read(termination="\r"), "test")
@@ -184,6 +211,22 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         # XXX not sure how to test encoding
 
+    def test_handling_exception_in_read_raw(self):
+        """Test handling exception in read_bytes (monkeypatching)
+
+        """
+        def false_read(self, session, size):
+            raise VisaIOError("")
+
+        try:
+            read = self.instr.visalib.read
+            self.instr.visalib.read = false_read
+            with self.assertLogs(level="DEBUG") as cm:
+                self.instr.read()
+            self.assertIn("- exception while reading:r", cm.output[1])
+        finally:
+            self.instr.visalib.read = read
+
     def test_write_ascii_values(self):
         """Test writing ascii values.
 
@@ -199,7 +242,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write_termination = "\r"
         self.instr.write("RECEIVE", termination="\n")
         self.instr.write_ascii_values("", l, "d", separator=";",
-                                      termination="\n")
+                                      termination=False)
+        self.instr.write("", termination="\n")
         self.instr.write("SEND", termination="\n")
         self.assertEqual(self.instr.read(), "1;2;3;4;5")
 
@@ -236,7 +280,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write_termination = "\r"
             self.instr.write("RECEIVE", termination="\n")
             self.instr.write_binary_values("", l, "h", is_big_endian=True,
-                                           termination="\n", header_fmt=hfmt)
+                                           termination=False, header_fmt=hfmt)
+            self.instr.write("", termination="\n")
             self.instr.write("SEND", termination="\n")
             self.assertEqual(self.instr.read_bytes(11 + len(prefix)),
                              prefix + b"\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05\n")
@@ -281,6 +326,17 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertIs(type(values[0]), int)
         self.assertEqual(values, [1, 2, 3, 4, 5])
 
+        # Test with delay = 0.0 and with no specified delay (can use query_delay=0.0)
+        self.instr.write("RECEIVE")
+        self.instr.write("1;2;3;4;5")
+        tic = time.time()
+        self.instr.query_delay = 0.0
+        values = self.instr.query_ascii_values("SEND", converter='d',
+                                               separator=';')
+        self.assertGreater(time.time()-tic, 0.5)
+        self.assertIs(type(values[0]), int)
+        self.assertEqual(values, [1, 2, 3, 4, 5])
+
         # Numpy container
         if np:
             self.instr.write("RECEIVE")
@@ -295,6 +351,9 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test reading binary data.
 
         """
+        # XXX test handling wrong format string
+        # XXX test handling missing length
+        # XXX test handling decoding issue
         self.instr.read_termination = '\r'
         # 3328 in binary short is \x00\r this way we can interrupt the
         # transmission midway to test some corner cases
@@ -319,6 +378,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write("RECEIVE")
             self.instr.write_binary_values("", data, "h", header_fmt=hfmt,
                                            is_big_endian=True)
+            # XXX test handling wrong format string
+            # XXX test with delay = 0.0 and with no specified delay (can use query_delay=0.0)
             new = self.instr.query_binary_values("SEND",
                                                  datatype='h',
                                                  header_fmt=hfmt,
@@ -432,6 +493,11 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test using visa handlers.
 
         """
+        # XXX test installing bad handler
+        # XXX test removing unknown handler
+        # XXX test removing handler when none exist
+        # XXX test removing handler on del
+        # XXX test uninstalling all handlers
         handler = EventHandler()
         event_type = constants.EventType.service_request
         event_mech = constants.EventMechanism.handler

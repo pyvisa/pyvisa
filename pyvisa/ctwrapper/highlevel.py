@@ -258,7 +258,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         return tuple(resource for resource in resources)
 
 
-class NIVisaLibrary(IVIVisaLibrary):
+class NIVisaLibrary(IVIVisaLibrary):  # pragma: no cover
     """Deprecated name for IVIVisaLibrary.
 
     This class will be removed in 1.12
@@ -274,8 +274,8 @@ class NIVisaLibrary(IVIVisaLibrary):
                       "Use IVIVisaLibrary instead.", FutureWarning)
         IVIVisaLibrary.get_library_paths()
 
-    @staticmethod
-    def get_debug_info():
+    @classmethod
+    def get_debug_info(cls):
         """Return a list of lines with backend info.
 
         """
