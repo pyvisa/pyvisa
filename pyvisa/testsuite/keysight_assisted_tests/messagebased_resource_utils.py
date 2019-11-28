@@ -2,6 +2,7 @@
 """Common test case for all message based resources.
 
 """
+import gc
 import logging
 import time
 import unittest
@@ -15,8 +16,6 @@ try:
 except ImportError:
     np = None
 
-
-# XXX assert the return value of write_raw, write, etc
 
 class EventHandler:
     """Event handler.
@@ -120,7 +119,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Reading all bytes at once
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"test\n")
-        self.instr.write_raw(b"SEND\n")
+        count = self.instr.write_raw(b"SEND\n")
+        self.assertEqual(count, 5)
         self.instr.flush(constants.VI_READ_BUF)
         self.assertEqual(self.instr.read_bytes(5, chunk_size=2), b"test\n")
 
@@ -144,17 +144,19 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test handling exception in read_bytes (monkeypatching)
 
         """
-        def false_read(self, session, size):
-            raise VisaIOError("")
+        def false_read(session, size):
+            raise errors.VisaIOError(constants.VI_ERROR_ABORT)
 
-        try:
-            read = self.instr.visalib.read
-            self.instr.visalib.read = false_read
-            with self.assertLogs(level="DEBUG") as cm:
+        read = self.instr.visalib.read
+        self.instr.visalib.read = false_read
+        with self.assertLogs(level="DEBUG") as cm:
+            try:
                 self.instr.read_bytes(1)
-            self.assertIn("- exception while reading:r", cm.output[1])
-        finally:
-            self.instr.visalib.read = read
+            except errors.VisaIOError:
+                pass
+            finally:
+             self.instr.visalib.read = read
+        self.assertIn("- exception while reading:", cm.output[1])
 
     def test_write_raw_read_raw(self):
         """Test writing raw data and reading an answer.
@@ -169,10 +171,13 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test writing and reading.
 
         """
+        self.instr.write_termination = "\n"
         self.instr.read_termination = "\r\n"
         self.instr.write("RECEIVE")
-        self.instr.write("test\r")
-        self.instr.write("SEND")
+        with self.assertWarns(UserWarning):
+            self.instr.write("test\r\n")
+        count = self.instr.write("SEND")
+        self.assertEqual(count, 5)
         self.assertEqual(self.instr.read(), "test")
 
         # Missing termination chars
@@ -181,7 +186,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write("test")
         self.instr.write("SEND")
         with self.assertWarns(Warning):
-            self.assertEqual(self.instr.read(), "test")
+            self.assertEqual(self.instr.read(), "test\n")
 
         # Dynamic termination
         self.instr.write_termination = "\r"
@@ -215,17 +220,18 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test handling exception in read_bytes (monkeypatching)
 
         """
-        def false_read(self, session, size):
-            raise VisaIOError("")
+        def false_read(session, size):
+            raise errors.VisaIOError(constants.VI_ERROR_ABORT)
 
-        try:
-            read = self.instr.visalib.read
-            self.instr.visalib.read = false_read
-            with self.assertLogs(level="DEBUG") as cm:
+        read = self.instr.visalib.read
+        self.instr.visalib.read = false_read
+        with self.assertLogs(level="DEBUG") as cm:
+            try:
                 self.instr.read()
-            self.assertIn("- exception while reading:r", cm.output[1])
-        finally:
-            self.instr.visalib.read = read
+            except errors.VisaIOError:
+                pass
+            finally:
+             self.instr.visalib.read = read
 
     def test_write_ascii_values(self):
         """Test writing ascii values.
@@ -234,7 +240,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Standard separator
         l = [1, 2, 3, 4, 5]
         self.instr.write("RECEIVE")
-        self.instr.write_ascii_values("", l, "d")
+        count = self.instr.write_ascii_values("", l, "d")
+        self.assertEqual(count, 10)
         self.instr.write("SEND")
         self.assertEqual(self.instr.read(), "1,2,3,4,5")
 
@@ -270,7 +277,9 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             l = [1, 2, 3, 4, 5]
             self.instr.write_termination = "\n"
             self.instr.write("RECEIVE")
-            self.instr.write_binary_values("", l, "h", header_fmt=hfmt)
+            count = self.instr.write_binary_values("", l, "h", header_fmt=hfmt)
+            # Each interger encoded as h uses 2 bytes
+            self.assertEqual(count, len(prefix) + 10 + 1)
             self.instr.write("SEND")
             self.assertEqual(self.instr.read_bytes(11 + len(prefix)),
                              prefix + b"\x01\x00\x02\x00\x03\x00\x04\x00\x05\x00\n")
@@ -326,17 +335,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertIs(type(values[0]), int)
         self.assertEqual(values, [1, 2, 3, 4, 5])
 
-        # Test with delay = 0.0 and with no specified delay (can use query_delay=0.0)
-        self.instr.write("RECEIVE")
-        self.instr.write("1;2;3;4;5")
-        tic = time.time()
-        self.instr.query_delay = 0.0
-        values = self.instr.query_ascii_values("SEND", converter='d',
-                                               separator=';')
-        self.assertGreater(time.time()-tic, 0.5)
-        self.assertIs(type(values[0]), int)
-        self.assertEqual(values, [1, 2, 3, 4, 5])
-
         # Numpy container
         if np:
             self.instr.write("RECEIVE")
@@ -351,9 +349,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test reading binary data.
 
         """
-        # XXX test handling wrong format string
-        # XXX test handling missing length
-        # XXX test handling decoding issue
+        # XXX test handling binary decoding issue
         self.instr.read_termination = '\r'
         # 3328 in binary short is \x00\r this way we can interrupt the
         # transmission midway to test some corner cases
@@ -378,8 +374,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write("RECEIVE")
             self.instr.write_binary_values("", data, "h", header_fmt=hfmt,
                                            is_big_endian=True)
-            # XXX test handling wrong format string
-            # XXX test with delay = 0.0 and with no specified delay (can use query_delay=0.0)
+
             new = self.instr.query_binary_values("SEND",
                                                  datatype='h',
                                                  header_fmt=hfmt,
@@ -394,6 +389,41 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                                               np.array(data, dtype=np.int16))
             else:
                 self.assertEqual(data, new)
+
+    def test_read_query_binary_values_invalid_header(self):
+        """Test we properly handle an invalid header.
+
+        """
+        data = [1, 2, 3328, 3, 4, 5, 6, 7]
+        self.instr.write("RECEIVE")
+        self.instr.write_binary_values("", data, "h", header_fmt="ieee",
+                                        is_big_endian=True)
+        self.instr.write("SEND")
+        with self.assertRaises(ValueError) as e:
+            self.instr.read_binary_values(datatype='h',
+                                          is_big_endian=False,
+                                          header_fmt="invalid",
+                                          expect_termination=True,
+                                          chunk_size=8,
+                                          )
+
+        self.instr.write("RECEIVE")
+        self.instr.write_binary_values("", data, "h", header_fmt="ieee",
+                                        is_big_endian=True)
+        with self.assertRaises(ValueError) as e:
+            self.instr.query_binary_values("*IDN",
+                                           datatype='h',
+                                           is_big_endian=False,
+                                           header_fmt="invalid",
+                                           expect_termination=True,
+                                           chunk_size=8,
+                                           )
+
+    def test_handling_malformed_binary(self):
+        """
+
+        """
+        pass
 
     def test_read_binary_values_unreported_length(self):
         """Test reading binary data.
@@ -438,6 +468,86 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                                               np.array(data, dtype=np.int16))
             else:
                 self.assertEqual(data, new)
+
+            # Check we do error on unreported/unspecified length
+            self.instr.write("RECEIVE")
+            self.instr.write(header + "\x01\x00\x02\x00\x00\r\x03\x00\x04\x00\x05\x00",
+                             termination='\r\n')
+            self.instr.write("SEND")
+            with self.assertRaises(ValueError):
+                self.instr.read_binary_values(datatype='h',
+                                              is_big_endian=False,
+                                              header_fmt=hfmt,
+                                              expect_termination=True,
+                                              chunk_size=6,
+                                              )
+
+    def test_delay_in_query_ascii(self):
+        """Test handling of the delay argument in query_ascii_values.
+
+        """
+        # Test using the instrument wide delay
+        self.instr.query_delay = 1.0
+        self.instr.write("RECEIVE")
+        l = [1, 2, 3, 4, 5]
+        self.instr.write("1,2,3,4,5")
+        tic = time.perf_counter()
+        values = self.instr.query_ascii_values("SEND")
+        self.assertGreater(time.perf_counter() - tic, 1.0)
+        self.assertIs(type(values[0]), float)
+        self.assertEqual(values, [1.0, 2.0, 3.0, 4.0, 5.0])
+
+        # Test specifying the delay
+        self.instr.query_delay = 0.0
+        self.instr.write("RECEIVE")
+        l = [1, 2, 3, 4, 5]
+        self.instr.write("1,2,3,4,5")
+        tic = time.perf_counter()
+        values = self.instr.query_ascii_values("SEND", delay=1.0)
+        self.assertGreater(time.perf_counter() - tic, 1.0)
+        self.assertIs(type(values[0]), float)
+        self.assertEqual(values, [1.0, 2.0, 3.0, 4.0, 5.0])
+
+    def test_delay_in_query_binary(self):
+        """Test handling of the delay argument in query_ascii_values.
+
+        """
+        header = "#10"
+        data = [1, 2, 3328, 3, 4, 5]
+        # Test using the instrument wide delay
+        self.instr.query_delay = 1.0
+        self.instr.write("RECEIVE")
+        self.instr.write(header + "\x00\x01\x00\x02\r\x00\x00\x03\x00\x04\x00\x05",
+                         termination='\r\n')
+        tic = time.perf_counter()
+        new = self.instr.query_binary_values("SEND",
+                                             datatype='h',
+                                             header_fmt="ieee",
+                                             is_big_endian=True,
+                                             expect_termination=False,
+                                             chunk_size=6,
+                                             data_points=6)
+
+        self.assertGreater(time.perf_counter() - tic, 1.0)
+        self.assertEqual(data, new)
+
+        # Test specifying the delay
+        self.instr.query_delay = 0.0
+        self.instr.write("RECEIVE")
+        self.instr.write(header + "\x00\x01\x00\x02\r\x00\x00\x03\x00\x04\x00\x05",
+                         termination='\r\n')
+        tic = time.perf_counter()
+        new = self.instr.query_binary_values("SEND",
+                                             datatype='h',
+                                             header_fmt="ieee",
+                                             is_big_endian=True,
+                                             expect_termination=False,
+                                             chunk_size=6,
+                                             data_points=6,
+                                             delay=1.0)
+
+        self.assertGreater(time.perf_counter() - tic, 1.0)
+        self.assertEqual(data, new)
 
     def test_stb(self):
         """Test reading the status byte.
@@ -493,15 +603,11 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test using visa handlers.
 
         """
-        # XXX test installing bad handler
-        # XXX test removing unknown handler
-        # XXX test removing handler when none exist
-        # XXX test removing handler on del
-        # XXX test uninstalling all handlers
         handler = EventHandler()
         event_type = constants.EventType.service_request
         event_mech = constants.EventMechanism.handler
-        self.instr.install_handler(event_type, handler.handle_event)
+        user_handle = self.instr.install_handler(event_type, handler.handle_event,
+                                                 user_handle=1)
         self.instr.enable_event(event_type, event_mech, None)
         self.instr.write("RCVSLOWSRQ")
         self.instr.write("1")
@@ -515,10 +621,62 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                 time.sleep(0.1)
         finally:
             self.instr.disable_event(event_type, event_mech)
-            self.instr.uninstall_handler(event_type, handler.handle_event)
+            self.instr.uninstall_handler(event_type, handler.handle_event,
+                                         user_handle)
 
         self.assertTrue(handler.srq_success)
         self.assertEqual(self.instr.read(), "1")
+
+    def test_handling_invalid_handler(self):
+        """Test handling an error related to a wrong handler type.
+
+        """
+        with self.assertRaises(errors.VisaTypeError):
+            event_type = constants.EventType.service_request
+            event_mech = constants.EventMechanism.handler
+            self.instr.install_handler(event_type, 1, object())
+
+    def test_uninstalling_missing_visa_handler(self):
+        """Test uninstalling a visa handler that was not registered.
+
+        """
+        handler1 = EventHandler()
+        handler2 = EventHandler()
+        event_type = constants.EventType.service_request
+        event_mech = constants.EventMechanism.handler
+        self.instr.install_handler(event_type, handler1.handle_event)
+        with self.assertRaises(errors.UnknownHandler):
+            self.instr.uninstall_handler(event_type, handler2.handle_event)
+
+        self.instr.uninstall_handler(event_type, handler1.handle_event)
+
+        with self.assertRaises(errors.UnknownHandler):
+            self.instr.uninstall_handler(event_type, handler2.handle_event)
+
+    def test_handler_clean_up_on_resource_del(self):
+        """Test that handlers are properly cleaned when a resource is deleted.
+
+        """
+        handler = EventHandler()
+        event_type = constants.EventType.service_request
+        event_mech = constants.EventMechanism.handler
+        self.instr.install_handler(event_type, handler.handle_event)
+
+        self.instr = None
+        gc.collect()
+        self.assertFalse(self.rm.visalib.handlers)
+
+    def test_uninstall_all_handlers(self):
+        """Test uninstall all handlers from all sessions.
+
+        """
+        handler = EventHandler()
+        event_type = constants.EventType.service_request
+        event_mech = constants.EventMechanism.handler
+        self.instr.install_handler(event_type, handler.handle_event)
+
+        self.rm.visalib.uninstall_all_visa_handlers(None)
+        self.assertFalse(self.rm.visalib.handlers)
 
     def test_shared_locking(self):
         """Test locking/unlocking a resource.

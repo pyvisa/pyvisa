@@ -291,7 +291,7 @@ class TestSystemDetailsAnalysis(BaseTestCase):
 
     """
 
-    def setUpt(self):
+    def setUp(self):
         self._unicode_size = sys.maxunicode
 
     def tearDown(self):

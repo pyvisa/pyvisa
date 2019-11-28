@@ -18,8 +18,6 @@ from . import ResourceManager, attributes, constants, VisaIOError
 from .thirdparty import prettytable
 
 # XXX providing a way to list/use constants would be nice
-# XXX handling of the attributes could be done through descriptors rather than
-# low-level methods.
 
 class VisaShell(cmd.Cmd):
     """Shell for interactive testing.

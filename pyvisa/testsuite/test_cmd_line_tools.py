@@ -27,7 +27,7 @@ class TestCmdLineTools(BaseTestCase):
 
         with Popen(["python", "-m", "visa", "shell"],
                    stdin=PIPE, stdout=PIPE) as p:
-            stdout, stderr = p.communicate(b'exit')
+            stdout, _ = p.communicate(b'exit')
         self.assertIn(b"Welcome to the VISA shell", stdout)
 
     def test_visa_info(self):

@@ -124,7 +124,7 @@ class MessageBasedResource(Resource):
         :return: number of bytes written.
         :rtype: int
         """
-        return self.visalib.write(self.session, message)
+        return self.visalib.write(self.session, message)[0]
 
     def write(self, message, termination=None, encoding=None):
         """Write a string message to the device.
@@ -327,8 +327,6 @@ class MessageBasedResource(Resource):
         is compared to the ending of the read string message.  If they don't
         match, a warning is issued.
 
-        All line-ending characters are stripped from the end of the string.
-
         :rtype: str
         """
         enco = self._encoding if encoding is None else encoding
@@ -346,6 +344,7 @@ class MessageBasedResource(Resource):
         if not message.endswith(termination):
             warnings.warn("read string doesn't end with "
                           "termination characters", stacklevel=2)
+            return message
 
         return message[:-len(termination)]
 

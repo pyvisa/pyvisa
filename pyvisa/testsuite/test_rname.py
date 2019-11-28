@@ -457,20 +457,20 @@ class TestFilters(BaseTestCase):
         self._test_filter2('ASRL1+::INSTR', 2, 8)
         self._test_filter2('(GPIB|VXI)?*INSTR', 0, 7, 14)
 
-    def test_filter2_optional_clause_no_connection(self):
-        self._test_filter2('?*::INSTR{!(VI_ATTR_INTF_NUM == 0)}', 2, 7, 8, 9)
-        self._test_filter2('?*{VI_ATTR_MANF_ID == "0x1111"}', 3)
-        self._test_filter2('?*{VI_ATTR_MODEL_CODE == "0x2223"}', 4)
-        self._test_filter2('?*{VI_ATTR_USB_SERIAL_NUM == "0x1234"}', 4)
-        self._test_filter2('?*{VI_ATTR_USB_INTFC_NUM == 0}', 4)
-        self._test_filter2('?*{VI_ATTR_TCPIP_ADDR == "localhost"}', 6)
-        self._test_filter2('?*{VI_ATTR_TCPIP_DEVICE_NAME == "inst1"}', 5)
-        self._test_filter2('?*{VI_ATTR_TCPIP_PORT == 10001}', 6)
-        self._test_filter2('?*{VI_ATTR_GPIB_PRIMARY_ADDR == 8}', 0)
-        self._test_filter2('?*{VI_ATTR_GPIB_SECONDARY_ADDR == 0}', 0)
-        self._test_filter2('?*{VI_ATTR_PXI_CHASSIS == 1}', 11)
-        self._test_filter2('?*{VI_ATTR_MAINFRAME_LA == 1}', 13, 14)
-        self._test_filter2('?*{VI_ATTR_MAINFRAME_LA == 1 && VI_test == 1}', 13, 14)
+    # def test_filter2_optional_clause_no_connection(self):
+    #     self._test_filter2('?*::INSTR{!(VI_ATTR_INTF_NUM == 0)}', 2, 7, 8, 9)
+    #     self._test_filter2('?*{VI_ATTR_MANF_ID == "0x1111"}', 3)
+    #     self._test_filter2('?*{VI_ATTR_MODEL_CODE == "0x2223"}', 4)
+    #     self._test_filter2('?*{VI_ATTR_USB_SERIAL_NUM == "0x1234"}', 4)
+    #     self._test_filter2('?*{VI_ATTR_USB_INTFC_NUM == 0}', 4)
+    #     self._test_filter2('?*{VI_ATTR_TCPIP_ADDR == "localhost"}', 6)
+    #     self._test_filter2('?*{VI_ATTR_TCPIP_DEVICE_NAME == "inst1"}', 5)
+    #     self._test_filter2('?*{VI_ATTR_TCPIP_PORT == 10001}', 6)
+    #     self._test_filter2('?*{VI_ATTR_GPIB_PRIMARY_ADDR == 8}', 0)
+    #     self._test_filter2('?*{VI_ATTR_GPIB_SECONDARY_ADDR == 0}', 0)
+    #     self._test_filter2('?*{VI_ATTR_PXI_CHASSIS == 1}', 11)
+    #     self._test_filter2('?*{VI_ATTR_MAINFRAME_LA == 1}', 13, 14)
+    #     self._test_filter2('?*{VI_ATTR_MAINFRAME_LA == 1 && VI_test == 1}', 13, 14)
 
     def test_bad_filter(self):
         with self.assertRaises(errors.VisaIOError) as e:

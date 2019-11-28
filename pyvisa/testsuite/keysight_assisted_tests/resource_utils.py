@@ -70,11 +70,12 @@ class ResourceTestCase:
         """Test the lifecyle of a resource and the use as a context manager.
 
         """
-        with self.assertLogs(level="Debug") as cm:
+        with self.assertLogs(level="DEBUG") as cm:
             self.instr = None
             gc.collect()
 
-        self.assertIn("- closing", cm.output[1])
+        self.assertIn("- closing", cm.output[0])
+        self.assertIn("- is closed", cm.output[-1])
 
     def test_alias_bypassing(self):
         """Test that a resource that cannot normalize an alias keep the alias.

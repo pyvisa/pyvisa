@@ -369,8 +369,8 @@ class TestVisaShell(BaseTestCase):
         """Test getting/setting an attr using the VI_ name (bool value)
 
         """
+        self.open_resource()
         for v in (False, True):
-            self.open_resource()
             msg = f"attr VI_ATTR_TERMCHAR_EN {v}"
             lines = self.communicate(msg)
             self.assertIn(b"Done", lines[0])
@@ -529,4 +529,4 @@ class TestVisaShell(BaseTestCase):
 
         """
         shell = VisaShell()
-        self.assertTrue(shell.do_EOF())
+        self.assertTrue(shell.do_EOF(None))

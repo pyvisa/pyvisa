@@ -6,10 +6,11 @@ import gc
 import os
 import unittest
 
-from pyvisa import ResourceManager, InvalidSession, VisaIOError
+from pyvisa import ResourceManager, InvalidSession, VisaIOError, errors
 from pyvisa.highlevel import VisaLibraryBase
 from pyvisa.constants import StatusCode, AccessModes, InterfaceType
 from pyvisa.rname import ResourceName
+from pyvisa.testsuite.test_rname import TestParsers
 
 from . import RESOURCE_ADDRESSES, require_virtual_instr
 
@@ -85,8 +86,8 @@ class TestResourceManager(unittest.TestCase):
 
         # Test accessing the status for an invalid session
         with self.assertRaises(errors.Error) as cm:
-            self.rm.visalib.last_status_in_session("_nonexisting_")
-        self.assertIn("The session", cm.output[1])
+            self.rm.visalib.get_last_status_in_session("_nonexisting_")
+        self.assertIn("The session", cm.exception.args[0])
 
     def test_list_resource(self):
         """Test listing the available resources.
@@ -102,12 +103,6 @@ class TestResourceManager(unittest.TestCase):
         self.assertSequenceEqual(sorted(self.rm.list_resources("?*")),
                                  sorted([str(ResourceName.from_string(v))
                                         for v in RESOURCE_ADDRESSES.values()]))
-
-    def test_parsing_resources(self):
-        """Compare the VISA parsing to pyvisa builtin parsing.
-
-        """
-        pass  # XXX write
 
     def test_accessing_resource_infos(self):
         """Test accessing resource infos.
@@ -209,3 +204,33 @@ class TestResourceManager(unittest.TestCase):
         rname = list(RESOURCE_ADDRESSES.values())[0]
         with self.assertWarns(FutureWarning):
             rsc = self.rm.get_instrument(rname)
+
+
+# XXX the visalib require actual interfaces to work...
+# @require_virtual_instr
+# class TestResourceParsing(TestParsers):
+#     """Test parsing resources using the builtin mechanism and the VISA lib.
+
+#     """
+
+#     def setUp(self):
+#         """Create a ResourceManager with the default backend library.
+
+#         """
+#         self.rm = ResourceManager()
+
+#     def tearDown(self):
+#         """Close the ResourceManager.
+
+#         """
+#         del self.rm
+#         gc.collect()
+
+#     def _parse_test(self, rn, **kwargs):
+#         # Visa lib
+#         p = self.rm.visalib.parse_resource_extended(self.rm.session, rn)
+
+#         # Internal
+#         pb = VisaLibraryBase.parse_resource_extended(self.rm.visalib,
+#                                                      self.rm.session, rn)
+#         self.assertEqual(p, pb)
