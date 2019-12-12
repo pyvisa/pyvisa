@@ -9,6 +9,7 @@ from io import StringIO
 from subprocess import Popen, PIPE
 from threading import Thread, Event, Lock
 
+from pyvisa.resources import Resource
 from pyvisa.shell import VisaShell
 from pyvisa.rname import to_canonical_name
 
@@ -16,7 +17,6 @@ from .. import BaseTestCase
 from . import RESOURCE_ADDRESSES, ALIASES, require_virtual_instr
 
 
-@require_virtual_instr
 class SubprocessOutputPoller:
     """Continuously check the stdout of a subprocess.
 
@@ -76,6 +76,7 @@ class SubprocessOutputPoller:
         self._ready_thread.join()
 
 
+@require_virtual_instr
 class TestVisaShell(BaseTestCase):
     """Test the VISA shell.
 
@@ -112,6 +113,18 @@ class TestVisaShell(BaseTestCase):
             self.shell.terminate()
             self.shell.wait(0.1)
             self.reader.shutdown()
+
+    def test_complete_open(self):
+        """Test providing auto-completion for open.
+
+        """
+        shell = VisaShell()
+        completions = shell.complete_open("TCPIP::", 0, 0, 0)
+        self.assertIn(RESOURCE_ADDRESSES["TCPIP::INSTR"], completions)
+
+        # Test getting an alias from the completion
+        completions = shell.complete_open("tcp", 0, 0, 0)
+        self.assertIn('tcpip', completions)
 
     def test_list(self):
         """Test listing the connected resources.
@@ -201,7 +214,17 @@ class TestVisaShell(BaseTestCase):
              b'Please close the current one first.'),
             lines[0])
 
-    # XXX test complete open
+    def test_complete_open(self):
+        """Test providing auto-completion for open.
+
+        """
+        shell = VisaShell()
+        completions = shell.complete_open("TCPIP::", 0, 0, 0)
+        self.assertIn(RESOURCE_ADDRESSES["TCPIP::INSTR"], completions)
+
+        # Test getting an alias from the completion
+        completions = shell.complete_open("tcp", 0, 0, 0)
+        self.assertIn('tcpip', completions)
 
     def test_command_on_closed_resource(self):
         """Test all the commands that cannot be run without opening a resource.
@@ -342,8 +365,6 @@ class TestVisaShell(BaseTestCase):
         lines = self.communicate("attr")
         self.assertIn(b"VISA name", lines[1])
 
-    # XXX test handle issues when printing (monkeypatch)
-
     def test_attr_too_many_args(self):
         """Test handling wrong args to attr.
 
@@ -352,6 +373,43 @@ class TestVisaShell(BaseTestCase):
         lines = self.communicate("attr 1 2 3")
         self.assertIn(b"Invalid syntax, use `attr <name>` to get;"
                       b" or `attr <name> <value>` to set", lines[0])
+
+    def test_issue_in_getting_attr(self):
+        """Test handling exception in getting an attribute.
+
+        """
+        shell = VisaShell()
+        shell.current = shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
+
+        def broken_get_visa_attribute(self, name):
+            raise Exception()
+
+        # Issue on VI_
+        old = Resource.get_visa_attribute
+        Resource.get_visa_attribute = broken_get_visa_attribute
+
+        temp_stdout = StringIO()
+        with contextlib.redirect_stdout(temp_stdout):
+            try:
+               shell.do_attr("VI_ATTR_TERMCHAR")
+            finally:
+                Resource.get_visa_attribute = old
+        output = temp_stdout.getvalue()
+        self.assertIn("Exception", details)
+
+        # Issue on aliased attr
+        old = type(shell.current).allow_dma
+        type(shell.current).allow_dma = property(broken_get_visa_attribute)
+
+        temp_stdout = StringIO()
+        with contextlib.redirect_stdout(temp_stdout):
+            try:
+               shell.do_attr("allow_dma")
+            finally:
+                Resource.get_visa_attribute = old
+        output = temp_stdout.getvalue()
+        self.assertIn("Exception", details)
+
 
     def test_attr_get_set_by_VI_non_boolean(self):
         """Test getting/setting an attr using the VI_ name (int value)
@@ -472,7 +530,18 @@ class TestVisaShell(BaseTestCase):
         output = temp_stdout.getvalue()
         self.assertIn('no attribute', output)
 
-    # XXX test getting a termchar not in the mapping
+    def test_getting_termchar_absent_mapping(self):
+        """Test getting a termchar that does not map to something with a representation.
+
+        """
+        shell = VisaShell()
+        shell.current = shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
+        shell.current.read_termination = "X"
+        shell.current.write_termination = "Z"
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.do_termchar("")
+        self.assertSequenceEqual('Termchar read: X write: Z', output)
 
     def test_termchar_get_set_both_identical(self):
         """Test setting both termchars to the same value.

@@ -5,12 +5,13 @@
 import gc
 import os
 import unittest
+import logging
 
 from pyvisa import ResourceManager, InvalidSession, VisaIOError, errors
 from pyvisa.highlevel import VisaLibraryBase
 from pyvisa.constants import StatusCode, AccessModes, InterfaceType
 from pyvisa.rname import ResourceName
-from pyvisa.testsuite.test_rname import TestParsers
+from pyvisa.testsuite import BaseTestCase
 
 from . import RESOURCE_ADDRESSES, require_virtual_instr
 
@@ -31,7 +32,8 @@ class TestResourceManager(unittest.TestCase):
         """Close the ResourceManager.
 
         """
-        del self.rm
+        self.rm.close()
+        del rm
         gc.collect()
 
     def test_lifecycle(self):
@@ -50,6 +52,17 @@ class TestResourceManager(unittest.TestCase):
         with self.assertRaises(InvalidSession):
             self.rm.session
         self.assertIsNone(self.rm.visalib.resource_manager)
+
+    def test_cleanup_on_del(self):
+        """Test that deleting the rm does clean the VISA session
+
+        """
+        rm = highlevel.ResourceManager()
+        with self.assertLogs(level=logging.DEBUG) as log:
+            del rm
+            gc.collect()
+
+        self.assertIn('Closing ResourceManager', log.output)
 
     def test_resource_manager_unicity(self):
         """Test the resource manager is unique per backend as expected.
@@ -177,8 +190,8 @@ class TestResourceManager(unittest.TestCase):
                                      access_mode=AccessModes.exclusive_lock)
         self.assertEqual(len(self.rm.list_opened_resources()), 2)
 
-    def test_opening_resource_unknown_resource_type(self):
-        """Test opening a resource while requesting an unknown resource type
+    def test_opening_resource_specific_class(self):
+        """Test opening a resource requesting a specific class.
 
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
@@ -186,6 +199,32 @@ class TestResourceManager(unittest.TestCase):
             rsc = self.rm.open_resource(rname, resource_pyclass=object)
 
         self.assertEqual(len(self.rm.list_opened_resources()), 0)
+
+    def test_open_resource_unknown_resource_type(self):
+        """Test opening a resource for which no registered class exist.
+
+        """
+        rc = highlevel.ResourceManager._resource_classes
+        old = rc.copy()
+
+        class FakeResource:
+
+            def __init__(self, *args):
+                raise RuntimeError()
+
+        rc[(constants.InterfaceType.unknown, "")] = FakeResource
+
+        rm = highlevel.ResourceManager()
+        try:
+            with self.assertLogs(level=logging.WARNING):
+                highlevel.ResourceManager.open_resource("TCPIP::192.168.0.1::INSTR")
+            self.assertIs(
+                highlevel.ResourceManager._resource_classes[
+                    (constants.InterfaceType.tcpip, "INSTR")],
+                object
+            )
+        finally:
+            highlevel.ResourceManager._resource_classes = old
 
     def test_opening_resource_unknown_attribute(self):
         """Test opening a resource and attempting to set an unknown attr.
@@ -206,31 +245,39 @@ class TestResourceManager(unittest.TestCase):
             rsc = self.rm.get_instrument(rname)
 
 
-# XXX the visalib require actual interfaces to work...
-# @require_virtual_instr
-# class TestResourceParsing(TestParsers):
-#     """Test parsing resources using the builtin mechanism and the VISA lib.
+@require_virtual_instr
+class TestResourceParsing(BaseTestCase):
+    """Test parsing resources using the builtin mechanism and the VISA lib.
 
-#     """
+    Those tests require that the interface exist (at least in Keysight
+    implementation) so we cannot test arbitrary interfaces (PXI for example).
 
-#     def setUp(self):
-#         """Create a ResourceManager with the default backend library.
+    """
 
-#         """
-#         self.rm = ResourceManager()
+    def setUp(self):
+        """Create a ResourceManager with the default backend library.
 
-#     def tearDown(self):
-#         """Close the ResourceManager.
+        """
+        self.rm = ResourceManager()
 
-#         """
-#         del self.rm
-#         gc.collect()
+    def tearDown(self):
+        """Close the ResourceManager.
 
-#     def _parse_test(self, rn, **kwargs):
-#         # Visa lib
-#         p = self.rm.visalib.parse_resource_extended(self.rm.session, rn)
+        """
+        del self.rm
+        gc.collect()
 
-#         # Internal
-#         pb = VisaLibraryBase.parse_resource_extended(self.rm.visalib,
-#                                                      self.rm.session, rn)
-#         self.assertEqual(p, pb)
+    def test_parse_tcpip_instr(self):
+        self._parse_test("TCPIP::192.168.200.200::INSTR")
+
+    def test_parse_tcpip_socket(self):
+        self._parse_test("TCPIP::192.168.200.200::7020::SOCKET")
+
+    def _parse_test(self, rn):
+        # Visa lib
+        p = self.rm.visalib.parse_resource_extended(self.rm.session, rn)
+
+        # Internal
+        pb = VisaLibraryBase.parse_resource_extended(self.rm.visalib,
+                                                     self.rm.session, rn)
+        self.assertEqual(p, pb)

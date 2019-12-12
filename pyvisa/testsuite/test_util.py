@@ -12,7 +12,8 @@ from configparser import ConfigParser
 from io import StringIO
 from functools import partial
 
-from pyvisa import util
+from pyvisa import util, highlevel
+from pyvisa.ctwrapper import IVIVisaLibrary
 from pyvisa.testsuite import BaseTestCase
 
 try:
@@ -321,8 +322,38 @@ class TestSystemDetailsAnalysis(BaseTestCase):
         """Test reporting on plugins.
 
         """
-        pass
-    # XXX test handling extensions (ie pyvisa-py) + all possible errors
+        def dummy_list_backends():
+            return ["test1", "test2", "test3"]
+
+        def dummy_get_wrapper_class(backend):
+            if backend == "test1":
+                return IVIVisaLibrary
+
+            elif backend == "test2":
+                class BrokenBackend:
+
+                    def get_debug_info(self):
+                        raise Exception()
+
+                return BrokenBackend
+
+            else:
+                raise Exception()
+
+        old_lb = highlevel.list_backends
+        old_gwc = highlevel.get_wrapper_class
+        highlevel.list_backends = dummy_list_backends
+        highlevel.get_wrapper_class = dummy_get_wrapper_class
+
+        try:
+            details = util.get_system_details()
+        finally:
+            highlevel.list_backends = old_lb
+            highlevel.get_wrapper_class = old_gwc
+
+        self.assertIn("Could not instantiate", details["backends"]["test3"][0])
+        self.assertIn("Could not obtain", details["backends"]["test2"][0])
+        self.assertIn("Version", details["backends"]["test1"])
 
 
 class TestLibraryAnalysis(BaseTestCase):

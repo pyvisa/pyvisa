@@ -17,6 +17,7 @@ import os
 import warnings
 from collections import defaultdict
 from weakref import WeakSet
+from importlib import import_module
 
 from . import logger
 from . import constants
@@ -1474,7 +1475,7 @@ def get_wrapper_class(backend_name):
             return IVIVisaLibrary
 
     try:
-        pkg = __import__('pyvisa-' + backend_name)
+        pkg = import_module('pyvisa-' + backend_name)
         _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
         return cls
     except ImportError:

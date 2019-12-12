@@ -2,7 +2,10 @@
 """Common test case for all message based resources.
 
 """
+import logging
+
 from pyvisa import ResourceManager, rname
+from pyvisa.resources import Resource
 
 from .. import BaseTestCase
 from . import require_virtual_instr
@@ -36,4 +39,14 @@ class TestFilter2(BaseTestCase):
         # Linefeed \n is 10
         self._test_filter2('TCPIP::?*::INSTR{VI_ATTR_TERMCHAR == 10)}')
 
-        # XXX test handling error in the evaluation (monkeypatch)
+        # test handling error in the evaluation of the attribute
+        def broken_get_visa_attribute(self, name):
+            raise Exception()
+        old = Resource.get_visa_attribute
+        Resource.get_visa_attribute = broken_get_visa_attribute
+
+        with self.assertLogs(level=logging.ERROR):
+            try:
+                self._test_filter2('TCPIP::?*::INSTR{VI_ATTR_TERMCHAR == 10)}')
+            finally:
+                Resource.get_visa_attribute = old
