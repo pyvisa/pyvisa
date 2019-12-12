@@ -1067,7 +1067,7 @@ class VisaLibraryBase(object):
             parsed = rname.parse_resource_name(resource_name)
 
             return (ResourceInfo(parsed.interface_type_const,
-                                 parsed.board,
+                                 int(parsed.board),  # match IVI-VISA
                                  parsed.resource_class,
                                  str(parsed), None),
                     constants.StatusCode.success)
