@@ -21,6 +21,8 @@
 
 .. |MessageBasedResource| replace:: :class:`~pyvisa.resources.MessageBasedResource`
 
+.. |query_delay| replace:: :attr:`~pyvisa.resources.MessageBasedResource.query_delay`
+
 .. |read_bytes| replace:: :meth:`~pyvisa.resources.MessageBasedResource.read_bytes`
 
 .. |read_ascii_values| replace:: :meth:`~pyvisa.resources.MessageBasedResource.read_ascii_values`
