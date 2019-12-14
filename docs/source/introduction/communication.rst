@@ -116,7 +116,7 @@ start communicating as follows::
 Here we use `'\n'` known as 'line feed'. This is a common value, another one is
 `'\r'` i.e. 'carriage return', and in some cases the null byte '\0' is used.
 
-In in an ideal world, this will work and you will be able to get an answer from
+In an ideal world, this will work and you will be able to get an answer from
 your instrument. If it does not, it means the settings are likely wrong (the
 documentation does not always shine by its clarity). In the following we will
 discuss common debugging tricks, if nothing works feel free to post on the
@@ -173,6 +173,13 @@ too fast for it, so you can try waiting a bit before reading (using
 `time.sleep` from Python standard library). Otherwise, you either use a command
 that does not cause any answer or actually your write does not work (go back
 up a couple of paragraph).
+
+.. note::
+
+    Some instruments may be slow in answering and may require you to either
+    increase the timeout or specify a delay between the write and read
+    operation. This can be done globally using |query_delay| or passing
+    ``query=0.1`` for example to wait 100 ms after writing before reading.
 
 The above focused on using only PyVISA,  if you are running Windows, or MacOS
 you are likely to have access to third party tools that can help. Some tips to
