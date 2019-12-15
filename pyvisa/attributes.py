@@ -757,11 +757,22 @@ class AttrVI_ATTR_ASRL_XON_CHAR(RangeAttribute):
     min_value, max_value, values = 0, 0xFF, []
 
 
-# Could not generate class for VI_ATTR_BUFFER.html
-# Exception:
-"""
-'list' object has no attribute 'startswith'
-"""
+# noinspection PyPep8Naming
+class AttrVI_ATTR_BUFFER(Attribute):
+    """VI_ATTR_BUFFER contains the address of a buffer that was used in an
+    asynchronous operation.
+    """
+    resources = [constants.EventType.io_completion]
+
+    py_name = 'buffer'
+
+    visa_name = 'VI_ATTR_BUFFER'
+
+    visa_type = 'ViBuf'
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
 
 
 # noinspection PyPep8Naming
@@ -908,11 +919,37 @@ class AttrVI_ATTR_DMA_ALLOW_EN(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# Could not generate class for VI_ATTR_EVENT_TYPE.html
-# Exception:
-"""
-Unknown type: ViEventType. Range: [u'0h to FFFFFFFFh']
-"""
+# noinspection PyPep8Naming
+class AttrVI_ATTR_EVENT_TYPE(RangeAttribute):
+    """VI_ATTR_EVENT_TYPE is the unique logical identifier for the event type
+    of the specified event.
+    """
+    resources = [(constants.InterfaceType.gpib, 'INSTR'),
+                 (constants.InterfaceType.gpib, 'INTFC'),
+                 (constants.InterfaceType.gpib, 'SERVANT'),
+                 (constants.InterfaceType.gpib_vxi, 'INSTR'),
+                 (constants.InterfaceType.gpib_vxi, 'MEMACC'),
+                 (constants.InterfaceType.gpib_vxi, 'BACKPLANE'),
+                 (constants.InterfaceType.pxi, 'INSTR'),
+                 (constants.InterfaceType.asrl, 'INSTR'),
+                 (constants.InterfaceType.tcpip, 'INSTR'),
+                 (constants.InterfaceType.tcpip, 'SOCKET'),
+                 (constants.InterfaceType.vxi, 'INSTR'),
+                 (constants.InterfaceType.vxi, 'MEMACC'),
+                 (constants.InterfaceType.vxi, 'BACKPLANE'),
+                 (constants.InterfaceType.vxi, 'SERVANT')]
+
+    py_name = 'event_type'
+
+    visa_name = 'VI_ATTR_EVENT_TYPE'
+
+    visa_type = 'ViEventType'
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 0, 0xFFFFFFFF, []
 
 
 # noinspection PyPep8Naming
@@ -1348,6 +1385,23 @@ class AttrVI_ATTR_IO_PROT(RangeAttribute):
 
 
 # noinspection PyPep8Naming
+class AttrVI_ATTR_JOB_ID(Attribute):
+    """VI_ATTR_JOB_ID contains the job ID of the asynchronous operation that has completed.
+    """
+    resources= [constants.EventType.io_completion]
+
+    py_name = 'job_id'
+
+    visa_name = 'VI_ATTR_JOB_ID'
+
+    visa_type = 'ViJobId'
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
+# noinspection PyPep8Naming
 class AttrVI_ATTR_MAINFRAME_LA(RangeAttribute):
     """VI_ATTR_MA.infRAME_LA specifies the lowest logical address in the
     mainframe. If the logical address is not known, VI_UNKNOWN_LA is
@@ -1523,6 +1577,25 @@ class AttrVI_ATTR_MODEL_NAME(Attribute):
     read, write, local = True, False, False
 
     # [u'N/A']
+
+
+# noinspection PyPep8Naming
+class AttrVI_ATTR_OPER_NAME(Attribute):
+    """VI_ATTR_OPER_NAME contains the name of the operation generating this
+    event.
+    """
+    resources = [constants.EventType.io_completion,
+                 constants.EventType.exception]
+
+    py_name = 'oper_name'
+
+    visa_name = 'VI_ATTR_OPER_NAME'
+
+    visa_type = 'ViString'
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
 
 
 # noinspection PyPep8Naming
@@ -2334,6 +2407,25 @@ class AttrVI_ATTR_SRC_INCREMENT(RangeAttribute):
 
 
 # noinspection PyPep8Naming
+class AttrVI_ATTR_STATUS(Attribute):
+    """VI_ATTR_STATUS contains the return code of the operation generating this
+    event.
+    """
+    resources = [constants.EventType.exception,
+                 constants.EventType.io_completion]
+
+    py_name = 'status'
+
+    visa_name = 'VI_ATTR_STATUS'
+
+    visa_type = 'ViStatus'
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
+# noinspection PyPep8Naming
 class AttrVI_ATTR_SUPPRESS_END_EN(BooleanAttribute):
     """VI_ATTR_SUPPRESS_END_EN is relevant only in viRead and related
     operations.
@@ -2586,6 +2678,26 @@ class AttrVI_ATTR_TRIG_ID(ValuesAttribute):
     read, write, local = True, True, True
 
     values = [] #TODO
+
+
+# noinspection PyPep8Naming
+class AttrVI_ATTR_RET_COUNT(RangeAttribute):
+    """VI_ATTR_RET_COUNT contains the actual number of elements that were
+    asynchronously transferred.
+    """
+    resources = [constants.EventType.io_completion]
+
+    py_name = 'ret_count'
+
+    visa_name = 'VI_ATTR_RET_COUNT'
+
+    visa_type = 'ViUInt32'
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 0, 0xFFFFFFFF, []
 
 
 # noinspection PyPep8Naming

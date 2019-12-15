@@ -18,6 +18,7 @@ import contextlib
 import struct
 import time
 import warnings
+from collections import OrderedDict
 
 from .. import logger
 from .. import constants
@@ -99,6 +100,8 @@ class MessageBasedResource(Resource):
     def __init__(self, *args, **kwargs):
         self._values_format = ValuesFormat()
         super(MessageBasedResource, self).__init__(*args, **kwargs)
+        self._io_events_enabled = False
+        self._jobs = OrderedDict()
 
     # This is done for backwards compatibility but will be removed in 1.10
     @property
@@ -777,3 +780,10 @@ class MessageBasedResource(Resource):
 # Rohde and Schwarz Device via Passport. Not sure which Resource should be.
 MessageBasedResource.register(constants.InterfaceType.rsnrp,
                               'INSTR')(MessageBasedResource)
+
+
+try:
+    from .async import patch_class
+    patch_class(MessageBasedResource)
+except (SyntaxError, ImportError):
+    pass
