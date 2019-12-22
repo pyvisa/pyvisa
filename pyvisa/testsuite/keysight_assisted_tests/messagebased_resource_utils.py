@@ -349,7 +349,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test reading binary data.
 
         """
-        # XXX test handling binary decoding issue
+        # XXX test handling binary decoding issue (troublesome)
         self.instr.read_termination = '\r'
         # 3328 in binary short is \x00\r this way we can interrupt the
         # transmission midway to test some corner cases
@@ -603,29 +603,33 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test using visa handlers.
 
         """
-        handler = EventHandler()
-        event_type = constants.EventType.service_request
-        event_mech = constants.EventMechanism.handler
-        user_handle = self.instr.install_handler(event_type, handler.handle_event,
-                                                 user_handle=1)
-        self.instr.enable_event(event_type, event_mech, None)
-        self.instr.write("RCVSLOWSRQ")
-        self.instr.write("1")
-        self.instr.write("SENDSLOWSRQ")
+        def _test(handle):
+            handler = EventHandler()
+            event_type = constants.EventType.service_request
+            event_mech = constants.EventMechanism.handler
+            user_handle = self.instr.install_handler(event_type, handler.handle_event,
+                                                    user_handle=handle)
+            self.instr.enable_event(event_type, event_mech, None)
+            self.instr.write("RCVSLOWSRQ")
+            self.instr.write("1")
+            self.instr.write("SENDSLOWSRQ")
 
-        try:
-            t1 = time.time()
-            while not handler.event_success:
-                if (time.time() - t1) > 2:
-                    break
-                time.sleep(0.1)
-        finally:
-            self.instr.disable_event(event_type, event_mech)
-            self.instr.uninstall_handler(event_type, handler.handle_event,
-                                         user_handle)
+            try:
+                t1 = time.time()
+                while not handler.event_success:
+                    if (time.time() - t1) > 2:
+                        break
+                    time.sleep(0.1)
+            finally:
+                self.instr.disable_event(event_type, event_mech)
+                self.instr.uninstall_handler(event_type, handler.handle_event,
+                                             user_handle)
 
-        self.assertTrue(handler.srq_success)
-        self.assertEqual(self.instr.read(), "1")
+            self.assertTrue(handler.srq_success)
+            self.assertEqual(self.instr.read(), "1")
+
+        for handle in (1, 1.0, "1", [1]):
+            _test(handle)
 
     def test_handling_invalid_handler(self):
         """Test handling an error related to a wrong handler type.

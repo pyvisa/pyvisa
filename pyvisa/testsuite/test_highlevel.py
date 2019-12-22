@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-from pyvisa import highlevel, constants
+from pyvisa import highlevel, constants, rname
 from pyvisa.ctwrapper import IVIVisaLibrary
 
 from . import BaseTestCase
@@ -17,6 +17,39 @@ class TestHighlevel(BaseTestCase):
 
     """
     CHECK_NO_WARNING = False
+
+    def test_base_class_parse_resource(self):
+        """Test the base class implementation of parse_resource.
+
+        """
+        lib = highlevel.VisaLibraryBase()
+        rsc_name = "TCPIP::192.168.0.1::INSTR"
+        info, ret_code = lib.parse_resource(None, rsc_name)
+
+        # interface_type interface_board_number resource_class resource_name alias
+        for parsed, value in zip(info, (constants.InterfaceType.tcpip,
+                                        0, None, None, None)):
+            self.assertEqual(parsed, value)
+
+        info, ret_code = lib.parse_resource_extended(None, rsc_name)
+        # interface_type interface_board_number resource_class resource_name alias
+        for parsed, value in zip(info, (constants.InterfaceType.tcpip,
+                                        0,
+                                        "INSTR",
+                                        rname.to_canonical_name(rsc_name),
+                                        None)):
+            self.assertEqual(parsed, value)
+
+    def test_specifying_path_open_visa_library(self):
+        """Test handling a specified path in open_visa_library.
+
+        """
+        with self.assertLogs(level=logging.DEBUG) as cm:
+            with self.assertRaises(Exception) as e:
+                highlevel.open_visa_library("non/existent/file")
+
+        self.assertIn("Could not open VISA wrapper", cm.output[0])
+        self.assertIn("non/existent/file", cm.output[0])
 
     def test_handling_error_in_opening_library(self):
         """Test handling errors when trying to open a Visa library.

@@ -621,6 +621,9 @@ def system_details_to_str(d, indent=''):
 
             return al
 
+        else:
+            return ["%s" % value]
+
     l.extend(_to_list('Backends', d['backends']))
 
     joiner = '\n' + indent

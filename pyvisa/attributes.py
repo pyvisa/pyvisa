@@ -51,6 +51,7 @@ class AttributeType(type):
 
 class Attribute(object, metaclass=AttributeType):
     """Base class for Attributes to be used as Properties.
+
     """
 
     #: List of resource types with this attribute.
@@ -139,11 +140,18 @@ class EnumAttribute(Attribute):
         return self.enum_type(value)
 
     def pre_set(self, value):
-        if value not in self.enum_type:
+        # Python 3.8 raise if a non-Enum is used for value
+        try:
+            if value not in self.enum_type:
+                raise ValueError('%r is an invalid value for attribute %s, '
+                                'should be a %r' % (value,
+                                                    self.visa_name,
+                                                    self.enum_type))
+        except TypeError:
             raise ValueError('%r is an invalid value for attribute %s, '
-                             'should be a %r' % (value,
-                                                 self.visa_name,
-                                                 self.enum_type))
+                                'should be a %r' % (value,
+                                                    self.visa_name,
+                                                    self.enum_type))
         return value
 
 

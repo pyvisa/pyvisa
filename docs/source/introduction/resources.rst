@@ -29,8 +29,8 @@ The following sections explore the most common attributes of ``Resource`` and
 often. For more information, refer to the :ref:`api`.
 
 
-Attributes Resource
--------------------
+Attributes of Resource
+----------------------
 
 session
 ~~~~~~~

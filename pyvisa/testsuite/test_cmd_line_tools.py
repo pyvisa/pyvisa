@@ -38,7 +38,7 @@ class TestCmdLineTools(BaseTestCase):
         details = util.system_details_to_str(util.get_system_details())
         self.assertMultiLineEqual(result.stdout.strip(), details.strip())
 
-    # XXX test backend selection: this not easy at all
+    # XXX test backend selection: this not easy at all to assert
     def test_visa_shell(self):
         """Test the visa shell function.
 

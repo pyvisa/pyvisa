@@ -9,6 +9,7 @@ from io import StringIO
 from subprocess import Popen, PIPE
 from threading import Thread, Event, Lock
 
+from pyvisa import constants, errors
 from pyvisa.resources import Resource
 from pyvisa.shell import VisaShell
 from pyvisa.rname import to_canonical_name
@@ -356,6 +357,33 @@ class TestVisaShell(BaseTestCase):
             shell.do_timeout("1000")
         output = temp_stdout.getvalue()
         self.assertIn('no attribute', output)
+
+    def test_print_attr_list(self):
+        """Test printing attribute list.
+
+        """
+        class FalseResource:
+
+            @classmethod
+            def get_visa_attribute(cls, id):
+                if id == constants.VI_ATTR_TMO_VALUE:
+                    raise errors.VisaIOError(constants.VI_ERROR_NSUP_ATTR)
+                elif id == constants.VI_ATTR_DMA_ALLOW_EN:
+                    raise Exception("Long text: aaaaaaaaaaaaaaaaaaaa")
+                else:
+                    raise Exception("Test")
+
+        FalseResource.visa_attributes_classes = Resource.visa_attribute_classes
+
+        shell = VisaShell()
+        shell.current = FalseResource
+
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            shell.print_attribute_list()
+
+        output = temp_stdout.getvalue()
+        self.assertIn('Long text:...', output)
 
     def test_attr_no_args(self):
         """Test getting the list of attributes

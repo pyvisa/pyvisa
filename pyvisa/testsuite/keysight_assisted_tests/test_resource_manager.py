@@ -57,6 +57,8 @@ class TestResourceManager(unittest.TestCase):
         """Test that deleting the rm does clean the VISA session
 
         """
+        # The test seems to assert what it should even though the coverage report
+        # seems wrong
         rm = highlevel.ResourceManager()
         with self.assertLogs(level=logging.DEBUG) as log:
             del rm
@@ -169,6 +171,18 @@ class TestResourceManager(unittest.TestCase):
         with self.assertRaises(InvalidSession):
             rsc.session
 
+    def test_opening_resource_bad_open_timeout(self):
+        """Test opening a resource with a non integer open_timeout.
+
+        """
+        rname = list(RESOURCE_ADDRESSES.values())[0]
+
+        with self.assertRaises(ValueError) as cm:
+            rsc = self.rm.open_resource(rname,
+                                        open_timeout="")
+
+        self.assertIn("integer (or compatible type)", str(cm.exception))
+
     def test_opening_resource_with_lock(self):
         """Test opening a locked resource
 
@@ -280,4 +294,13 @@ class TestResourceParsing(BaseTestCase):
         # Internal
         pb = VisaLibraryBase.parse_resource_extended(self.rm.visalib,
                                                      self.rm.session, rn)
+        self.assertEqual(p, pb)
+
+        # Non-extended parsing
+        # Visa lib
+        p = self.rm.visalib.parse_resource(self.rm.session, rn)
+
+        # Internal
+        pb = VisaLibraryBase.parse_resource(self.rm.visalib,
+                                            self.rm.session, rn)
         self.assertEqual(p, pb)

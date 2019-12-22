@@ -1050,7 +1050,16 @@ class VisaLibraryBase(object):
         :return: Resource information with interface type and board number, return value of the library call.
         :rtype: :class:`pyvisa.highlevel.ResourceInfo`, :class:`pyvisa.constants.StatusCode`
         """
-        return self.parse_resource_extended(session, resource_name)
+        ri, status = self.parse_resource_extended(session, resource_name)
+        if ri:
+            return (ResourceInfo(ri.interface_type,
+                                ri.interface_board_number,
+                                None,
+                                None,
+                                None),
+                    constants.StatusCode.success)
+        else:
+            return ri, status
 
     def parse_resource_extended(self, session, resource_name):
         """Parse a resource string to get extended interface information.

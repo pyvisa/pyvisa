@@ -300,8 +300,13 @@ class TestSystemDetailsAnalysis(BaseTestCase):
 
     def test_getting_system_details(self):
         sys.maxunicode = 65535
-        details = util.get_system_details(False)
-        self.assertFalse(details['backends'])
+        path = os.path.join(os.path.dirname(__file__), "fake-extensions")
+        sys.path.append(path)
+        try:
+            details = util.get_system_details(True)
+        finally:
+            sys.path.remove(path)
+        self.assertTrue(details['backends'])
         self.assertEqual(details["unicode"], "UCS2")
 
         sys.maxunicode = 1114111
@@ -323,7 +328,7 @@ class TestSystemDetailsAnalysis(BaseTestCase):
 
         """
         def dummy_list_backends():
-            return ["test1", "test2", "test3"]
+            return ["test1", "test2", "test3", "test4"]
 
         def dummy_get_wrapper_class(backend):
             if backend == "test1":
@@ -332,10 +337,20 @@ class TestSystemDetailsAnalysis(BaseTestCase):
             elif backend == "test2":
                 class BrokenBackend:
 
-                    def get_debug_info(self):
+                    @classmethod
+                    def get_debug_info(cls):
                         raise Exception()
 
                 return BrokenBackend
+
+            elif backend == "test4":
+                class WeirdBackend:
+
+                    @classmethod
+                    def get_debug_info(cls):
+                        return {"": {"": [object()]}}
+
+                return WeirdBackend
 
             else:
                 raise Exception()
@@ -354,6 +369,10 @@ class TestSystemDetailsAnalysis(BaseTestCase):
         self.assertIn("Could not instantiate", details["backends"]["test3"][0])
         self.assertIn("Could not obtain", details["backends"]["test2"][0])
         self.assertIn("Version", details["backends"]["test1"])
+        self.assertIn("", details["backends"]["test4"])
+
+        # Test converting the details to string
+        util.system_details_to_str(details)
 
 
 class TestLibraryAnalysis(BaseTestCase):

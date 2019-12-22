@@ -279,11 +279,6 @@ class VisaShell(cmd.Cmd):
             else:
                 print('Setting Resource Attributes by python name is not yet supported.')
                 return
-                try:
-                    print(getattr(self.current, attr_name))
-                    print('Done')
-                except Exception as e:
-                    print(e)
 
     def complete_attr(self, text, line, begidx, endidx):
         return [item for item in self.py_attr if item.startswith(text)] + \
