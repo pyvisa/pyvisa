@@ -21,10 +21,6 @@ long_description = '\n\n'.join([read('README.rst'),
 
 __doc__ = long_description
 
-requirements = []
-if sys.version_info < (3,):
-    requirements.append('enum34')
-
 setup(name='PyVISA',
       description='Python VISA bindings for GPIB, RS232, TCPIP and USB instruments',
       version='1.11.0.dev',
@@ -37,8 +33,8 @@ setup(name='PyVISA',
       test_suite='pyvisa.testsuite.testsuite',
       keywords='VISA GPIB USB serial RS232 measurement acquisition',
       license='MIT License',
-      python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
-      install_requires=requirements,
+      python_requires='>=3.6',
+      install_requires=[],
       classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -51,17 +47,16 @@ setup(name='PyVISA',
         'Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         ],
       packages=['pyvisa',
                 'pyvisa.ctwrapper',
                 'pyvisa.resources',
                 'pyvisa.thirdparty',
                 'pyvisa.testsuite'],
-      platforms="Linux, Windows,Mac",
+      platforms="Linux, Windows, Mac",
       entry_points={'console_scripts':
                     ['pyvisa-shell=pyvisa.cmd_line_tools:visa_shell',
                      'pyvisa-info=pyvisa.cmd_line_tools:visa_info']},
