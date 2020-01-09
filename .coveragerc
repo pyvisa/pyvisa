@@ -1,8 +1,10 @@
 [run]
 branch = True
+include =
+    */pyvisa/*
 omit =
-    */testsuite/*
-    */thirdparty/*
+    */pyvisa/testsuite/*
+    */pyvisa/thirdparty/*
 
 [report]
 # Regexes for lines to exclude from consideration

@@ -4,7 +4,7 @@
 import sys
 
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
     print('Please install or upgrade setuptools or pip to continue')
     sys.exit(1)
@@ -55,7 +55,11 @@ setup(name='PyVISA',
                 'pyvisa.ctwrapper',
                 'pyvisa.resources',
                 'pyvisa.thirdparty',
-                'pyvisa.testsuite'],
+                'pyvisa.testsuite',
+                'pyvisa.testsuite.fake-extensions',
+                'pyvisa.testsuite.fakelibs',
+                'pyvisa.testsuite.keysight_assisted_tests'],
+      package_data={'': ['*.dll']},
       platforms="Linux, Windows, Mac",
       entry_points={'console_scripts':
                     ['pyvisa-shell=pyvisa.cmd_line_tools:visa_shell',

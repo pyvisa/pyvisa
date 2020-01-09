@@ -16,12 +16,18 @@ python:
 
 install:
   - if [ $TRAVIS_PYTHON_VERSION == '3.6' ]; then pip install numpy; fi
-  - pip install coverage coveralls
+  - pip install pytest pytest-cov
+
+  # Install codecov report tools
+  - pip install codecov
+
+before_install:
+  - cd $TRAVIS_BUILD_DIR
+  - python setup.py develop
 
 script:
-  - coverage run -p --source=pyvisa --omit="*test*","*compat*" setup.py test
-  - coverage combine
-  - coverage report -m
+  - pytest pyvisa -v --cov pyvisa
 
-after_script:
-  - coveralls --verbose
+after_success:
+  - cd $TRAVIS_BUILD_DIR
+  - codecov

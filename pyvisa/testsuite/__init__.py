@@ -10,7 +10,20 @@ from contextlib import contextmanager
 
 from logging.handlers import BufferingHandler
 
-from pyvisa import logger
+from pyvisa import logger, ResourceManager
+
+try:
+    ResourceManager()
+except ValueError:
+    VISA_PRESENT = False
+else:
+    VISA_PRESENT = True
+
+require_visa_lib = (
+     unittest.skipUnless(VISA_PRESENT,
+                         "Requires an installed VISA library. Run on PyVISA "
+                         "buildbot.")
+)
 
 
 class TestHandler(BufferingHandler):

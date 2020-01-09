@@ -6,13 +6,15 @@ from subprocess import run, Popen, PIPE
 
 from pyvisa import util
 from pyvisa.cmd_line_tools import visa_main, visa_info, visa_shell
-from . import BaseTestCase
+from . import BaseTestCase, require_visa_lib
+
 
 class TestCmdLineTools(BaseTestCase):
     """Test the cmd line tools functions and scripts.
 
     """
 
+    @require_visa_lib
     def test_visa_main(self):
         """Test the visa scripts.
 
@@ -39,6 +41,7 @@ class TestCmdLineTools(BaseTestCase):
         self.assertMultiLineEqual(result.stdout.strip(), details.strip())
 
     # XXX test backend selection: this not easy at all to assert
+    @require_visa_lib
     def test_visa_shell(self):
         """Test the visa shell function.
 
