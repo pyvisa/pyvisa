@@ -1,10 +1,26 @@
 PyVISA
 ======
 
+
+.. image:: https://travis-ci.org/pyvisa/pyvisa.svg?branch=master
+    :target: https://travis-ci.org/pyvisa/pyvisa
+    :alt: Build Status
+.. image:: https://codecov.io/gh/pyvisa/pyvisa/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/pyvisa/pyvisa
+    :alt: Code Coverage
+.. image:: https://readthedocs.org/projects/pyvisa/badge/?version=latest
+    :target: https://pyvisa.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+.. image:: https://img.shields.io/pypi/l/PyVISA
+    :target: https://pypi.python.org/pypi/pyvisa
+    :alt: PyPI - License
+.. image:: https://img.shields.io/pypi/v/PyVISA
+    :target: https://pypi.python.org/pypi/pyvisa
+    :alt: PyPI
+
 A Python package for support of the "Virtual Instrument Software
 Architecture" (VISA), in order to control measurement devices and
 test equipment via GPIB, RS232, Ethernet or USB.
-
 
 Description
 -----------

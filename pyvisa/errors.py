@@ -10,9 +10,6 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, print_function, absolute_import
-
 from . import util, constants
 from .constants import *
 
@@ -436,9 +433,8 @@ class OSNotSupported(Error):
 class InvalidBinaryFormat(Error):
 
     def __init__(self, description=""):
-        if description:
-            description = ": " + description
-        super(InvalidBinaryFormat, self).__init__("Unrecognized binary data format" + description)
+        desc = ": " + description if description else ""
+        super(InvalidBinaryFormat, self).__init__("Unrecognized binary data format" + desc)
         self.description = description
 
     def __reduce__(self):
@@ -476,7 +472,7 @@ class LibraryError(OSError, Error):
             elif 'wrong ELF class' in msg:
                 return LibraryError.from_wrong_arch(filename)
         except UnicodeDecodeError:
-            return cls('Error while accessing %s:' % filename)
+            return cls('Error while accessing %s.' % filename)
 
         return cls('Error while accessing %s: %s' % (filename, msg))
 
@@ -494,14 +490,17 @@ class LibraryError(OSError, Error):
         return cls('Error while accessing %s: %s' % (filename, s))
 
 
-def _args_to_str(args, kwargs):
+# XXX remove when removing return handler
+def _args_to_str(args, kwargs):  # pragma: no cover
     return 'args=%s, kwargs=%s' % (args, kwargs)
 
 
-def return_handler(module_logger, first_is_session=True):
+def return_handler(module_logger, first_is_session=True):  # pragma: no cover
     """Decorator for VISA library classes.
-    """
 
+    """
+    warnings.warn('warn_for_invalid_kwargs will be removed in 1.12',
+                   FutureWarning)
     def _outer(visa_library_method):
 
         def _inner(self, session, *args, **kwargs):

@@ -10,9 +10,6 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import contextlib
 import copy
 import math
@@ -23,12 +20,14 @@ from .. import errors
 from .. import logger
 from .. import highlevel
 from .. import attributes
+from .. import rname
 
 
 class WaitResponse(object):
     """Class used in return of wait_on_event. It properly closes the context upon delete.
        A call with event_type of 0 (normally used when timed_out is True) will be
        recorded as None, otherwise it records the proper EventType enum.
+
     """
     def __init__(self, event_type, context, ret, visalib, timed_out=False):
         if event_type == 0:
@@ -42,7 +41,10 @@ class WaitResponse(object):
 
     def __del__(self):
         if self.context != None:
-            self._visalib.close(self.context)
+            try:
+                self._visalib.close(self.context)
+            except errors.VisaIOError:
+                pass
 
 
 class Resource(object):
@@ -82,10 +84,15 @@ class Resource(object):
         self.visalib = self._resource_manager.visalib
 
         # We store the resource name and use preferably the private attr over
-        # the public descriptor intyernally because the public descriptor
+        # the public descriptor internally because the public descriptor
         # requires a live instance the VISA library, which means it is much
-        # slower but also can cause issue in error reporting in th repr.
-        self._resource_name = resource_name
+        # slower but also can cause issue in error reporting when accessing the
+        # repr
+        try:
+            # Attempt to normalize the resource name. Can fail for aliases
+            self._resource_name = str(rname.ResourceName.from_string(resource_name))
+        except rname.InvalidResourceName:
+            self._resource_name = resource_name
 
         self._logging_extra = {'library_path': self.visalib.library_path,
                                'resource_manager.session': self._resource_manager.session,
@@ -191,6 +198,7 @@ class Resource(object):
     @property
     def interface_type(self):
         """The interface type of the resource as a number.
+
         """
         return self.visalib.parse_resource(self._resource_manager.session,
                                            self._resource_name)[0].interface_type
@@ -199,6 +207,7 @@ class Resource(object):
         """Ignoring warnings context manager for the current resource.
 
         :param warnings_constants: constants identifying the warnings to ignore.
+
         """
         return self.visalib.ignore_warning(self.session, *warnings_constants)
 
@@ -321,7 +330,7 @@ class Resource(object):
         """Discards event occurrences for specified event types and mechanisms in this resource.
 
         :param event_type: Logical event identifier.
-        :param mechanism: Specifies event handling mechanisms to be dicarded.
+        :param mechanism: Specifies event handling mechanisms to be discarded.
                           (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
         """
         self.visalib.discard_events(self.session, event_type, mechanism)
@@ -386,6 +395,7 @@ class Resource(object):
 
     def unlock(self):
         """Relinquishes a lock for the specified resource.
+
         """
         self.visalib.unlock(self.session)
 

@@ -9,8 +9,9 @@ build/
 dist/
 MANIFEST
 .tox
-.coveragerc
+.coverage
 # WebDAV file system cache files
 .DAV/
 _test/
 .vscode
+htmlcov/

@@ -10,29 +10,31 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import functools
+import inspect
 import io
 import os
 import platform
-import sys
+import struct
 import subprocess
+import sys
 import warnings
-import inspect
+from collections import OrderedDict
 from subprocess import check_output
 
-from .compat import (string_types, OrderedDict, struct,
-                     int_to_bytes, int_from_bytes, PYTHON3)
 from . import __version__, logger
-
 
 try:
     import numpy as np
 except ImportError:
     np = None
+
+
+#: Length of the header found before a binary block (ieee or hp) that will
+#: trigger a warning to alert the user of a possibly incorrect answer from the
+#: instrument. In general binary block are not prefixed by a header and finding
+#: a long one may mean that we picked up a # in the bulk of the message.
+DEFAULT_LENGTH_BEFORE_BLOCK = 25
 
 
 def _use_numpy_routines(container):
@@ -66,11 +68,7 @@ def read_user_library_path():
     Return `None` if  configuration files or keys are not present.
 
     """
-    try:
-        from ConfigParser import (SafeConfigParser as ConfigParser,
-                                  NoSectionError)
-    except ImportError:
-        from configparser import ConfigParser, NoSectionError
+    from configparser import ConfigParser, NoSectionError, NoOptionError
 
     config_parser = ConfigParser()
     files = config_parser.read([os.path.join(sys.prefix, "share", "pyvisa",
@@ -85,8 +83,8 @@ def read_user_library_path():
     logger.debug('User defined library files: %s' % files)
     try:
         return config_parser.get("Paths", "visa library")
-    except (KeyError, NoSectionError):
-        logger.debug('KeyError or NoSectionError while reading config file')
+    except (NoOptionError, NoSectionError):
+        logger.debug('NoOptionError or NoSectionError while reading config file')
         return None
 
 
@@ -107,7 +105,7 @@ class LibraryPath(str):
         if self._arch is None:
             try:
                 self._arch = get_arch(self.path)
-            except:
+            except Exception:
                 self._arch = tuple()
 
         return self._arch
@@ -131,13 +129,17 @@ class LibraryPath(str):
         return ', '.join(str(a) for a in self.arch)
 
 
-def warn_for_invalid_kwargs(keyw, allowed_keys):
+def warn_for_invalid_kwargs(keyw, allowed_keys):  # pragma: no cover
+    warnings.warn('warn_for_invalid_kwargs will be removed in 1.12',
+                   FutureWarning)
     for key in keyw.keys():
         if key not in allowed_keys:
             warnings.warn('Keyword argument "%s" unknown' % key, stacklevel=3)
 
 
-def filter_kwargs(keyw, selected_keys):
+def filter_kwargs(keyw, selected_keys):  # pragma: no cover
+    warnings.warn('warn_for_invalid_kwargs will be removed in 1.12',
+                   FutureWarning)
     result = {}
     for key, value in keyw.items():
         if key in selected_keys:
@@ -145,7 +147,9 @@ def filter_kwargs(keyw, selected_keys):
     return result
 
 
-def split_kwargs(keyw, self_keys, parent_keys, warn=True):
+def split_kwargs(keyw, self_keys, parent_keys, warn=True):  # pragma: no cover
+    warnings.warn('warn_for_invalid_kwargs will be removed in 1.12',
+                   FutureWarning)
     self_kwargs = dict()
     parent_kwargs = dict()
     self_keys = set(self_keys)
@@ -180,12 +184,12 @@ _converters = {
 
 _np_converters = {
     'd': 'i',
-    'e': 'f',
-    'E': 'f',
-    'f': 'f',
-    'F': 'f',
-    'g': 'f',
-    'G': 'f',
+    'e': 'd',
+    'E': 'd',
+    'f': 'd',
+    'F': 'd',
+    'g': 'd',
+    'G': 'd',
 }
 
 
@@ -203,20 +207,20 @@ def from_ascii_block(ascii_data, converter='f', separator=',', container=list):
     :param container: container type to use for the output data.
     """
     if (_use_numpy_routines(container) and
-            isinstance(converter, string_types) and
-            isinstance(separator, string_types) and
+            isinstance(converter, str) and
+            isinstance(separator, str) and
             converter in _np_converters):
         return np.fromstring(ascii_data, _np_converters[converter],
                              sep=separator)
 
-    if isinstance(converter, string_types):
+    if isinstance(converter, str):
         try:
             converter = _converters[converter]
         except KeyError:
             raise ValueError('Invalid code for converter: %s not in %s' %
                              (converter, str(tuple(_converters.keys()))))
 
-    if isinstance(separator, string_types):
+    if isinstance(separator, str):
         data = ascii_data.split(separator)
     else:
         data = separator(ascii_data)
@@ -240,10 +244,10 @@ def to_ascii_block(iterable, converter='f', separator=','):
     :rtype: str
     """
 
-    if isinstance(separator, string_types):
+    if isinstance(separator, str):
         separator = separator.join
 
-    if isinstance(converter, string_types):
+    if isinstance(converter, str):
         converter = '%' + converter
         block = separator(converter % val for val in iterable)
     else:
@@ -251,62 +255,8 @@ def to_ascii_block(iterable, converter='f', separator=','):
     return block
 
 
-def parse_binary(bytes_data, is_big_endian=False, is_single=False):
-    """Parse ascii data and return an iterable of numbers.
-
-    To be deprecated in 1.7
-
-    :param bytes_data: data to be parsed.
-    :param is_big_endian: boolean indicating the endianness.
-    :param is_single: boolean indicating the type (if not is double)
-    :return:
-    """
-    warnings.warn('parse_binary is deprecated and will be removed in '
-                  '1.10, use read_ascii_values or read_binary_values '
-                  'instead.', FutureWarning)
-    data = bytes_data
-
-    hash_sign_position = bytes_data.find(b"#")
-    if hash_sign_position == -1:
-        raise ValueError('Could not find valid hash position')
-
-    if hash_sign_position > 0:
-        data = data[hash_sign_position:]
-
-    data_1 = data[1:2].decode('ascii')
-
-    if data_1.isdigit() and int(data_1) > 0:
-        number_of_digits = int(data_1)
-        # I store data and data_length in two separate variables in case
-        # that data is too short.  FixMe: Maybe I should raise an error if
-        # it's too long and the trailing part is not just CR/LF.
-        data_length = int(data[2:2 + number_of_digits])
-        data = data[2 + number_of_digits:2 + number_of_digits + data_length]
-    else:
-        data = data[2:]
-        if data[-1:].decode('ascii') == "\n":
-            data = data[:-1]
-        data_length = len(data)
-
-    if is_big_endian:
-        endianess = ">"
-    else:
-        endianess = "<"
-
-    try:
-        if is_single:
-            fmt = endianess + str(data_length // 4) + 'f'
-        else:
-            fmt = endianess + str(data_length // 8) + 'd'
-
-        result = list(struct.unpack(fmt, data))
-    except struct.error:
-        raise ValueError("Binary data itself was malformed")
-
-    return result
-
-
-def parse_ieee_block_header(block):
+def parse_ieee_block_header(block, length_before_block=None,
+                            raise_on_late_block=False) -> (int, int):
     """Parse the header of a IEEE block.
 
     Definite Length Arbitrary Block:
@@ -325,11 +275,23 @@ def parse_ieee_block_header(block):
     :type block: bytes | bytearray
     :return: (offset, data_length)
     :rtype: (int, int)
+
     """
     begin = block.find(b'#')
     if begin < 0:
         raise ValueError("Could not find hash sign (#) indicating the start of"
                          " the block.")
+
+    length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK
+    if begin > length_before_block:
+        msg = ("The beginning of the block has been found at %d which "
+               "is an unexpectedly large value. The actual block may "
+               "have been missing a beginning marker but the block "
+               "contained one:\n%s") % (begin, repr(block))
+        if raise_on_late_block:
+            raise RuntimeError(msg)
+        else:
+            warnings.warn(msg, UserWarning)
 
     try:
         # int(block[begin+1]) != int(block[begin+1:begin+2]) in Python 3
@@ -350,7 +312,8 @@ def parse_ieee_block_header(block):
     return offset, data_length
 
 
-def parse_hp_block_header(block, is_big_endian):
+def parse_hp_block_header(block, is_big_endian, length_before_block=None,
+                          raise_on_late_block=False):
     """Parse the header of a HP block.
 
     Definite Length Arbitrary Block:
@@ -370,9 +333,21 @@ def parse_hp_block_header(block, is_big_endian):
     if begin < 0:
         raise ValueError("Could not find the standard block header (#A) "
                          "indicating the start of the block.")
+
+    length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK
+    if begin > length_before_block:
+        msg = ("The beginning of the block has been found at %d which "
+               "is an unexpectedly large value. The actual block may "
+               "have been missing a beginning marker but the block "
+               "contained one:\n%s") % (begin, repr(block))
+        if raise_on_late_block:
+            raise RuntimeError(msg)
+        else:
+            warnings.warn(msg, UserWarning)
+
     offset = begin + 4
 
-    data_length = int_from_bytes(block[begin+2:offset],
+    data_length = int.from_bytes(block[begin+2:offset],
                                  byteorder='big' if is_big_endian else 'little'
                                  )
 
@@ -398,11 +373,14 @@ def from_ieee_block(block, datatype='f', is_big_endian=False, container=list):
     :param container: container type to use for the output data.
     :return: items
     :rtype: type(container)
+
     """
     offset, data_length = parse_ieee_block_header(block)
 
+    # If the data length is not reported takes all the data and do not make
+    # any assumption about the termination character
     if data_length == 0:
-        data_length = len(block) - offset - 1
+        data_length = len(block) - offset
 
     if len(block) < offset + data_length:
         raise ValueError("Binary data is incomplete. The header states %d data"
@@ -431,6 +409,11 @@ def from_hp_block(block, datatype='f', is_big_endian=False, container=list):
     :rtype: type(container)
     """
     offset, data_length = parse_hp_block_header(block, is_big_endian)
+
+    # If the data length is not reported takes all the data and do not make
+    # any assumption about the termination character
+    if data_length == 0:
+        data_length = len(block) - offset
 
     if len(block) < offset + data_length:
         raise ValueError("Binary data is incomplete. The header states %d data"
@@ -490,8 +473,8 @@ def to_binary_block(iterable, header, datatype, is_big_endian):
     endianess = '>' if is_big_endian else '<'
     fullfmt = '%s%d%s' % (endianess, array_length, datatype)
 
-    if isinstance(header, string_types):
-        header = bytes(header, 'ascii') if PYTHON3 else str(header)
+    if isinstance(header, str):
+        header = bytes(header, 'ascii')
 
     return header + struct.pack(fullfmt, *iterable)
 
@@ -529,7 +512,7 @@ def to_hp_block(iterable, datatype='f', is_big_endian=False):
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
 
-    header = b'#A' + (int_to_bytes(data_length, 2,
+    header = b'#A' + (int.to_bytes(data_length, 2,
                                    'big' if is_big_endian else 'little'))
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
@@ -587,6 +570,7 @@ def get_system_details(backends=True):
 
 def system_details_to_str(d, indent=''):
     """Return a str with the system details.
+
     """
 
     l = ['Machine Details:',
@@ -610,7 +594,7 @@ def system_details_to_str(d, indent=''):
     def _to_list(key, value, indent_level=0):
         sp = ' ' * indent_level * 3
 
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             if key:
                 return ['%s%s: %s' % (sp, key, value)]
             else:
@@ -637,6 +621,9 @@ def system_details_to_str(d, indent=''):
 
             return al
 
+        else:
+            return ["%s" % value]
+
     l.extend(_to_list('Backends', d['backends']))
 
     joiner = '\n' + indent
@@ -650,7 +637,9 @@ def get_debug_info(to_screen=True):
     print(out)
 
 
-def pip_install(package):
+def pip_install(package):  # pragma: no cover
+    warnings.warn('warn_for_invalid_kwargs will be removed in 1.12',
+                   FutureWarning)
     try:
         # noinspection PyPackageRequirements,PyUnresolvedReferences
         import pip
@@ -699,7 +688,7 @@ def get_shared_library_arch(filename):
         dos_headers = fp.read(64)
         _ = fp.read(4)
 
-        magic, skip, offset = struct.unpack(str('2s58sl'), dos_headers)
+        magic, skip, offset = struct.unpack("=2s58sl", dos_headers)
 
         if magic != b'MZ':
             raise Exception('Not an executable')
@@ -707,7 +696,7 @@ def get_shared_library_arch(filename):
         fp.seek(offset, io.SEEK_SET)
         pe_header = fp.read(6)
 
-        sig, skip, machine = struct.unpack(str('2s2sH'), pe_header)
+        sig, skip, machine = struct.unpack(str('=2s2sH'), pe_header)
 
         if sig != b'PE':
             raise Exception('Not a PE executable')
@@ -726,17 +715,18 @@ def get_arch(filename):
         else:
             return ()
     elif this_platform not in ('linux2', 'linux3', 'linux', 'darwin'):
-        raise OSError('')
+        raise OSError('Unsupported platform: %s' % this_platform)
 
-    out = check_output(["file", filename], stderr=subprocess.STDOUT)
-    out = out.decode('ascii')
+    out = subprocess.run(["file", filename], capture_output=True)
+    out = out.stdout.decode("ascii")
+    print(out)
     ret = []
     if this_platform.startswith('linux'):
         if '32-bit' in out:
             ret.append(32)
         if '64-bit' in out:
             ret.append(64)
-    elif this_platform == 'darwin':
+    else:  # darwin
         if '(for architecture i386)' in out:
             ret.append(32)
         if '(for architecture x86_64)' in out:

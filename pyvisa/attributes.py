@@ -10,12 +10,8 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 from collections import defaultdict
 
-from .compat import with_metaclass
 from . import constants
 
 #: Not available value.
@@ -53,8 +49,9 @@ class AttributeType(type):
         AttributesByID[cls.attribute_id] = cls
 
 
-class Attribute(with_metaclass(AttributeType)):
+class Attribute(object, metaclass=AttributeType):
     """Base class for Attributes to be used as Properties.
+
     """
 
     #: List of resource types with this attribute.
@@ -143,11 +140,18 @@ class EnumAttribute(Attribute):
         return self.enum_type(value)
 
     def pre_set(self, value):
-        if value not in self.enum_type:
+        # Python 3.8 raise if a non-Enum is used for value
+        try:
+            if value not in self.enum_type:
+                raise ValueError('%r is an invalid value for attribute %s, '
+                                'should be a %r' % (value,
+                                                    self.visa_name,
+                                                    self.enum_type))
+        except TypeError:
             raise ValueError('%r is an invalid value for attribute %s, '
-                             'should be a %r' % (value,
-                                                 self.visa_name,
-                                                 self.enum_type))
+                                'should be a %r' % (value,
+                                                    self.visa_name,
+                                                    self.enum_type))
         return value
 
 
@@ -608,7 +612,7 @@ class AttrVI_ATTR_ASRL_PARITY(EnumAttribute):
 
 
 # noinspection PyPep8Naming
-class AttrVI_ATTR_ASRL_REPLACE_CHAR(RangeAttribute):
+class AttrVI_ATTR_ASRL_REPLACE_CHAR(CharAttribute):
     """VI_ATTR_ASRL_REPLACE_CHAR specifies the character to be used to
     replace incoming characters that arrive with errors (such as
     parity error).
@@ -624,8 +628,6 @@ class AttrVI_ATTR_ASRL_REPLACE_CHAR(RangeAttribute):
     default = 0
 
     read, write, local = True, True, True
-
-    min_value, max_value, values = 0, 0xFF, []
 
 
 # noinspection PyPep8Naming
@@ -714,7 +716,7 @@ class AttrVI_ATTR_ASRL_WIRE_MODE(RangeAttribute):
 
 
 # noinspection PyPep8Naming
-class AttrVI_ATTR_ASRL_XOFF_CHAR(RangeAttribute):
+class AttrVI_ATTR_ASRL_XOFF_CHAR(CharAttribute):
     """VI_ATTR_ASRL_XOFF_CHAR specifies the value of the XOFF character used
     for XON/XOFF flow control (both directions). If XON/XOFF flow
     control (software handshaking) is not being used, the value of
@@ -732,11 +734,9 @@ class AttrVI_ATTR_ASRL_XOFF_CHAR(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 0xFF, []
-
 
 # noinspection PyPep8Naming
-class AttrVI_ATTR_ASRL_XON_CHAR(RangeAttribute):
+class AttrVI_ATTR_ASRL_XON_CHAR(CharAttribute):
     """VI_ATTR_ASRL_XON_CHAR specifies the value of the XON character used
     for XON/XOFF flow control (both directions). If XON/XOFF flow
     control (software handshaking) is not being used, the value of
@@ -753,8 +753,6 @@ class AttrVI_ATTR_ASRL_XON_CHAR(RangeAttribute):
     default = 0x11
 
     read, write, local = True, True, True
-
-    min_value, max_value, values = 0, 0xFF, []
 
 
 # Could not generate class for VI_ATTR_BUFFER.html
@@ -860,7 +858,7 @@ class AttrVI_ATTR_DEST_INCREMENT(RangeAttribute):
 
 
 # noinspection PyPep8Naming
-class AttrVI_ATTR_DEV_STATUS_BYTE(RangeAttribute):
+class AttrVI_ATTR_DEV_STATUS_BYTE(CharAttribute):
     """This attribute specifies the 488-style status byte of the local
     controller or device associated with this session.
     """
@@ -876,8 +874,6 @@ class AttrVI_ATTR_DEV_STATUS_BYTE(RangeAttribute):
     default = NotAvailable
 
     read, write, local = True, True, False
-
-    min_value, max_value, values = 0, 0xFF, []
 
 
 # noinspection PyPep8Naming
@@ -2480,7 +2476,7 @@ class AttrVI_ATTR_TCPIP_PORT(RangeAttribute):
 
 
 # noinspection PyPep8Naming
-class AttrVI_ATTR_TERMCHAR(RangeAttribute):
+class AttrVI_ATTR_TERMCHAR(CharAttribute):
     """VI_ATTR_TERMCHAR is the termination character. When the termination
     character is read and VI_ATTR_TERMCHAR_EN is enabled during a read
     operation, the read operation terminates.
@@ -2504,8 +2500,6 @@ class AttrVI_ATTR_TERMCHAR(RangeAttribute):
     default = 0x0A # (linefeed)
 
     read, write, local = True, True, True
-
-    min_value, max_value, values = 0, 0xFF, []
 
 
 # noinspection PyPep8Naming

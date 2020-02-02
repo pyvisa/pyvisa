@@ -10,14 +10,11 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import logging
 import warnings
+from collections import OrderedDict
 
 from pyvisa import constants, errors, highlevel, logger
-from pyvisa.compat import integer_types, OrderedDict
 
 from .cthelper import Library, find_library
 from . import functions
@@ -95,8 +92,8 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         return tuple(tmp)
 
-    @staticmethod
-    def get_debug_info():
+    @classmethod
+    def get_debug_info(cls):
         """Return a list of lines with backend info.
 
         """
@@ -104,14 +101,14 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         d = OrderedDict()
         d['Version'] = '%s (bundled with PyVISA)' % __version__
 
-        paths = IVIVisaLibrary.get_library_paths()
+        paths = cls.get_library_paths()
 
         for ndx, visalib in enumerate(paths, 1):
             nfo = OrderedDict()
             nfo['found by'] = visalib.found_by
             nfo['bitness'] = visalib.bitness
             try:
-                lib = IVIVisaLibrary(visalib)
+                lib = cls(visalib)
                 sess, _ = lib.open_default_resource_manager()
                 nfo['Vendor'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_MANF_NAME)[0])
                 nfo['Impl. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_IMPL_VERSION)[0])
@@ -182,7 +179,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
                 # noinspection PyProtectedMember
                 session = session._obj.value
 
-            if isinstance(session, integer_types):
+            if isinstance(session, int):
                 self._last_status_in_session[session] = ret_value
             else:
                 # Functions that might or might have a session in the first argument.
@@ -261,7 +258,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         return tuple(resource for resource in resources)
 
 
-class NIVisaLibrary(IVIVisaLibrary):
+class NIVisaLibrary(IVIVisaLibrary):  # pragma: no cover
     """Deprecated name for IVIVisaLibrary.
 
     This class will be removed in 1.12
@@ -277,8 +274,8 @@ class NIVisaLibrary(IVIVisaLibrary):
                       "Use IVIVisaLibrary instead.", FutureWarning)
         IVIVisaLibrary.get_library_paths()
 
-    @staticmethod
-    def get_debug_info():
+    @classmethod
+    def get_debug_info(cls):
         """Return a list of lines with backend info.
 
         """

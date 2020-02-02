@@ -4,6 +4,20 @@ PyVISA Changelog
 1.11 (unreleased)
 -----------------
 
+- Drop Python 2 support PR #486
+- Limit support to Python 3.6+ PR #486
+- Improve the test suite and introduce tests relying on Keysight Virtual
+  instrument software PR #486
+- Add badges to the README PR #486
+- Improve ResourceManager.list_opened_resource to list only open resources.
+  Previously all resources created and not yet garbage collected were listed. PR #486
+- Always normalize resource names PR #486
+- Treat floating points number as double when parsing ASCII data blocks PR #486
+- Allow bound methods as handler function (the use of is in tests prevented it) PR #486
+- Deprecate some unused functions found in the util.py module PR #486
+- Warn or raise if the beginning of a binary block is not found among the first characters.
+  The default value is 25. PR #486
+-
 - Make the library less biased towards National Instrument by referring to IVI
   where relevant. In particular rename the @ni backend to @ivi PR #456
 - Deprecate the `visa` module that is causing issue with the VISA payment

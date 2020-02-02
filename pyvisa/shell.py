@@ -11,87 +11,17 @@
     :copyright: (c) 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import cmd
 import sys
 
-from .compat import input
 from . import ResourceManager, attributes, constants, VisaIOError
 from .thirdparty import prettytable
 
-if sys.platform == 'darwin':
+# XXX providing a way to list/use constants would be nice
 
-    class Cmd(cmd.Cmd):
-
-        # This has been patched to enable autocompletion on Mac OSX
-        def cmdloop(self, intro=None):
-            """Repeatedly issue a prompt, accept input, parse an initial prefix
-            off the received input, and dispatch to action methods, passing them
-            the remainder of the line as argument.
-            """
-
-            self.preloop()
-            if self.use_rawinput and self.completekey:
-                try:
-                    import readline
-                    self.old_completer = readline.get_completer()
-                    readline.set_completer(self.complete)
-
-                    if 'libedit' in readline.__doc__:
-                        # readline linked to BSD libedit
-                        if self.completekey == 'tab':
-                            key = '^I'
-                        else:
-                            key = self.completekey
-                        readline.parse_and_bind('bind %s rl_complete' % (key,))
-                    else:
-                        # readline linked to the real readline
-                        readline.parse_and_bind(self.completekey + ': complete')
-
-                except ImportError:
-                    pass
-            try:
-                if intro is not None:
-                    self.intro = intro
-                if self.intro:
-                    self.stdout.write(str(self.intro) + "\n")
-                stop = None
-                while not stop:
-                    if self.cmdqueue:
-                        line = self.cmdqueue.pop(0)
-                    else:
-                        if self.use_rawinput:
-                            try:
-                                line = input(self.prompt)
-                            except EOFError:
-                                line = 'EOF'
-                        else:
-                            self.stdout.write(self.prompt)
-                            self.stdout.flush()
-                            line = self.stdin.readline()
-                            if not len(line):
-                                line = 'EOF'
-                            else:
-                                line = line.rstrip('\r\n')
-                    line = self.precmd(line)
-                    stop = self.onecmd(line)
-                    stop = self.postcmd(stop, line)
-                self.postloop()
-            finally:
-                if self.use_rawinput and self.completekey:
-                    try:
-                        import readline
-                        readline.set_completer(self.old_completer)
-                    except ImportError:
-                        pass
-else:
-    Cmd = cmd.Cmd
-
-
-class VisaShell(Cmd):
+class VisaShell(cmd.Cmd):
     """Shell for interactive testing.
+
     """
 
     intro = '\nWelcome to the VISA shell. Type help or ? to list commands.\n'
@@ -100,7 +30,7 @@ class VisaShell(Cmd):
     use_rawinput = True
 
     def __init__(self, library_path=''):
-        Cmd.__init__(self)
+        super().__init__()
         self.resource_manager = ResourceManager(library_path)
         self.default_prompt = self.prompt
 
@@ -252,7 +182,7 @@ class VisaShell(Cmd):
                 print('Timeout: {}ms'.format(self.current.timeout))
             except Exception as e:
                 print(e)
-        else:        
+        else:
             args = args.split(' ')
             try:
                 self.current.timeout = float(args[0])
@@ -349,11 +279,6 @@ class VisaShell(Cmd):
             else:
                 print('Setting Resource Attributes by python name is not yet supported.')
                 return
-                try:
-                    print(getattr(self.current, attr_name))
-                    print('Done')
-                except Exception as e:
-                    print(e)
 
     def complete_attr(self, text, line, begidx, endidx):
         return [item for item in self.py_attr if item.startswith(text)] + \
@@ -363,7 +288,7 @@ class VisaShell(Cmd):
         """Get or set termination character for resource in use.
         <termchar> can be one of: CR, LF, CRLF, NUL or None.
         None is used to disable termination character
-        
+
         Get termination character:
 
             termchar
@@ -392,9 +317,16 @@ class VisaShell(Cmd):
                 print('Termchar read: {} write: {}'.format(chr, chw))
             except Exception as e:
                 print(e)
-        else:        
-            args = args.split(' ')
-            charmap = { 'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0', 'None': None }
+
+        args = args.split(" ")
+
+        if len(args) > 2:
+            print('Invalid syntax, use `termchar <termchar>` to set both '
+                  'read_termination and write_termination to the same value, or '
+                  '`termchar <read_termchar> <write_termchar>` to use distinct values.')
+        else:
+            charmap = {'CR': u'\r', 'LF': u'\n', 'CRLF': u'\r\n', 'NUL': u'\0',
+                       'None': None}
             chr = args[0]
             chw = args[0 if len(args) == 1 else 1]
             if chr in charmap and chw in charmap:
@@ -418,11 +350,11 @@ class VisaShell(Cmd):
         return True
 
     def do_EOF(self, arg):
-        """.
+        """Handle an EOF.
+
         """
         return True
 
 
 def main(library_path=''):
     VisaShell(library_path).cmdloop()
-

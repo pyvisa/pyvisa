@@ -10,15 +10,11 @@
     :copyright: 2014-2019 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import logging
 import pkg_resources
 
-from . import compat
 logger = logging.getLogger('pyvisa')
-logger.addHandler(compat.NullHandler())
+logger.addHandler(logging.NullHandler())
 
 
 def log_to_screen(level=logging.DEBUG):

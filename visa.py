@@ -7,11 +7,9 @@
 
     This file is part of PyVISA.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
+    :copyright: 2014-2019 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see COPYING for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
 
 import warnings
 warnings.warn(("The visa module provided by PyVISA is being deprecated. "

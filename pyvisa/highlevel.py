@@ -10,9 +10,6 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import contextlib
 import collections
 import pkgutil
@@ -20,6 +17,7 @@ import os
 import warnings
 from collections import defaultdict
 from weakref import WeakSet
+from importlib import import_module
 
 from . import logger
 from . import constants
@@ -201,7 +199,8 @@ class VisaLibraryBase(object):
         :param user_handle: The user handle (ctypes object or None) returned by install_visa_handler.
         """
         for ndx, element in enumerate(self.handlers[session]):
-            if element[0] is handler and element[1] is user_handle and element[4] == event_type:
+            # use == rather than is to allow bound methods as handlers
+            if element[0] == handler and element[1] is user_handle and element[4] == event_type:
                 del self.handlers[session][ndx]
                 break
         else:
@@ -1051,7 +1050,16 @@ class VisaLibraryBase(object):
         :return: Resource information with interface type and board number, return value of the library call.
         :rtype: :class:`pyvisa.highlevel.ResourceInfo`, :class:`pyvisa.constants.StatusCode`
         """
-        return self.parse_resource_extended(session, resource_name)
+        ri, status = self.parse_resource_extended(session, resource_name)
+        if ri:
+            return (ResourceInfo(ri.interface_type,
+                                ri.interface_board_number,
+                                None,
+                                None,
+                                None),
+                    constants.StatusCode.success)
+        else:
+            return ri, status
 
     def parse_resource_extended(self, session, resource_name):
         """Parse a resource string to get extended interface information.
@@ -1068,7 +1076,7 @@ class VisaLibraryBase(object):
             parsed = rname.parse_resource_name(resource_name)
 
             return (ResourceInfo(parsed.interface_type_const,
-                                 parsed.board,
+                                 int(parsed.board),  # match IVI-VISA
                                  parsed.resource_class,
                                  str(parsed), None),
                     constants.StatusCode.success)
@@ -1476,7 +1484,7 @@ def get_wrapper_class(backend_name):
             return IVIVisaLibrary
 
     try:
-        pkg = __import__('pyvisa-' + backend_name)
+        pkg = import_module('pyvisa-' + backend_name)
         _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
         return cls
     except ImportError:
@@ -1495,8 +1503,8 @@ def _get_default_wrapper():
     """
 
     from .ctwrapper import IVIVisaLibrary
-    ni_binary_found = bool(IVIVisaLibrary.get_library_paths())
-    if ni_binary_found:
+    ivi_binary_found = bool(IVIVisaLibrary.get_library_paths())
+    if ivi_binary_found:
         logger.debug('The IVI implementation available')
         return 'ivi'
     else:
@@ -1707,7 +1715,15 @@ class ResourceManager(object):
         :return: List of resources
         :rtype: list[:class:`pyvisa.resources.resource.Resource`]
         """
-        return list(self._created_resources)
+        opened = []
+        for resource in self._created_resources:
+            try:
+                resource.session
+            except errors.InvalidSession:
+                pass
+            else:
+                opened.append(resource)
+        return opened
 
     def resource_info(self, resource_name, extended=True):
         """Get the (extended) information of a particular resource.
@@ -1725,8 +1741,8 @@ class ResourceManager(object):
         return ret
 
     def open_bare_resource(self, resource_name,
-                          access_mode=constants.AccessModes.no_lock,
-                          open_timeout=constants.VI_TMO_IMMEDIATE):
+                           access_mode=constants.AccessModes.no_lock,
+                           open_timeout=constants.VI_TMO_IMMEDIATE):
         """Open the specified resource without wrapping into a class
 
         :param resource_name: Name or alias of the resource to open.
@@ -1787,12 +1803,32 @@ class ResourceManager(object):
 
         res.open(access_mode, open_timeout)
 
-        self._created_resources.add(res)
-
         for key, value in kwargs.items():
             setattr(res, key, value)
 
+        self._created_resources.add(res)
+
         return res
 
-    #: For backwards compatibility
-    get_instrument = open_resource
+    def get_instrument(self, resource_name,
+                       access_mode=constants.AccessModes.no_lock,
+                       open_timeout=constants.VI_TMO_IMMEDIATE,
+                       resource_pyclass=None,
+                       **kwargs):
+        """Return an instrument for the resource name.
+
+        :param resource_name: name or alias of the resource to open.
+        :param access_mode: access mode.
+        :type access_mode: :class:`pyvisa.constants.AccessModes`
+        :param open_timeout: time out to open.
+        :param resource_pyclass: resource python class to use to instantiate the Resource.
+                                 Defaults to None: select based on the resource name.
+        :param kwargs: keyword arguments to be used to change instrument attributes
+                       after construction.
+
+        :rtype: :class:`pyvisa.resources.Resource`
+        """
+        warnings.warn('get_instrument is deprecated and will be removed in '
+                      '1.12, use open_resource instead.', FutureWarning)
+        self.open_resource(resource_name, access_mode, open_timeout,
+                           resource_pyclass, **kwargs)
