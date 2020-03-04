@@ -179,7 +179,7 @@ up a couple of paragraph).
     Some instruments may be slow in answering and may require you to either
     increase the timeout or specify a delay between the write and read
     operation. This can be done globally using |query_delay| or passing
-    ``query=0.1`` for example to wait 100 ms after writing before reading.
+    ``delay=0.1`` for example to wait 100 ms after writing before reading.
 
 The above focused on using only PyVISA,  if you are running Windows, or MacOS
 you are likely to have access to third party tools that can help. Some tips to
