@@ -1,0 +1,3 @@
+status = ["formatting", "tests", "docs"]
+delete-merged-branches = true
+timeout_sec = 600

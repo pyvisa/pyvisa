@@ -1,0 +1,65 @@
+name: Continuous Integration
+on:
+  schedule:
+    - cron: '0 0 * * 2'
+  push:
+    branches:
+      - master
+      - staging
+      - trying
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/workflows/ci.yml
+      - pyvisa/*
+      - setup.py
+
+jobs:
+  formatting:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black
+      - name: Black
+        run: |
+          black --check .
+  tests:
+    name: Unit tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: [3.6, 3.7, 3.8]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+      - name: Install project
+        run: |
+          pip install -e .
+      - name: Test with pytest
+        run: |
+          pip install pytest-cov
+          pytest pyvisa/testsuite --cov pyvisa --cov-report xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unittests
+          name: codecov-umbrella
+          yml: ./codecov.yml
+          fail_ci_if_error: true
