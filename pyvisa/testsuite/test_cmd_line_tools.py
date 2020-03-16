@@ -22,21 +22,21 @@ class TestCmdLineTools(BaseTestCase):
         should be removed too.
 
         """
-        result = run(["python", "-m", "visa", "info"], stdout=PIPE,
-                     universal_newlines=True)
+        result = run(
+            ["python", "-m", "visa", "info"], stdout=PIPE, universal_newlines=True
+        )
         details = util.system_details_to_str(util.get_system_details())
         self.assertSequenceEqual(result.stdout.strip(), details.strip())
 
-        with Popen(["python", "-m", "visa", "shell"],
-                   stdin=PIPE, stdout=PIPE) as p:
-            stdout, _ = p.communicate(b'exit')
+        with Popen(["python", "-m", "visa", "shell"], stdin=PIPE, stdout=PIPE) as p:
+            stdout, _ = p.communicate(b"exit")
         self.assertIn(b"Welcome to the VISA shell", stdout)
 
     def test_visa_info(self):
         """Test the visa info command line tool.
 
         """
-        result = run('pyvisa-info', stdout=PIPE, universal_newlines=True)
+        result = run("pyvisa-info", stdout=PIPE, universal_newlines=True)
         details = util.system_details_to_str(util.get_system_details())
         self.assertMultiLineEqual(result.stdout.strip(), details.strip())
 
@@ -46,7 +46,6 @@ class TestCmdLineTools(BaseTestCase):
         """Test the visa shell function.
 
         """
-        with Popen(["pyvisa-shell"],
-                   stdin=PIPE, stdout=PIPE) as p:
-            stdout, stderr = p.communicate(b'exit')
+        with Popen(["pyvisa-shell"], stdin=PIPE, stdout=PIPE) as p:
+            stdout, stderr = p.communicate(b"exit")
         self.assertIn(b"Welcome to the VISA shell", stdout)

@@ -53,8 +53,7 @@ class InvalidResourceName(ValueError):
         return cls(msg)
 
     @classmethod
-    def subclass_notfound(cls, interface_type_resource_class,
-                          resource_name=None):
+    def subclass_notfound(cls, interface_type_resource_class, resource_name=None):
         """Exception used when the subclass for a given interface type / resource class pair
         cannot be found.
 
@@ -73,7 +72,9 @@ class InvalidResourceName(ValueError):
 
         """
 
-        msg = "Resource class for %s not provided and default not found." % interface_type
+        msg = (
+            "Resource class for %s not provided and default not found." % interface_type
+        )
 
         if resource_name:
             msg = "Could not parse '%s'. %s" % (resource_name, msg)
@@ -92,7 +93,7 @@ def register_subclass(cls):
     key = cls.interface_type, cls.resource_class
 
     if key in _SUBCLASSES:
-        raise ValueError('Class already registered for %s and %s' % key)
+        raise ValueError("Class already registered for %s and %s" % key)
 
     _SUBCLASSES[(cls.interface_type, cls.resource_class)] = cls
 
@@ -101,8 +102,7 @@ def register_subclass(cls):
 
     if cls.is_rc_optional:
         if cls.interface_type in _DEFAULT_RC:
-            raise ValueError('Default already specified for %s' %
-                             cls.interface_type)
+            raise ValueError("Default already specified for %s" % cls.interface_type)
         _DEFAULT_RC[cls.interface_type] = cls.resource_class
 
     return cls
@@ -114,22 +114,22 @@ class ResourceName(object):
     """
 
     # Interface type string
-    interface_type = ''
+    interface_type = ""
 
     # Resource class string
-    resource_class = ''
+    resource_class = ""
 
     # Specifices if the resource class part of the string is optional.
     is_rc_optional = False
 
     # Formatting string for canonical
-    _canonical_fmt = ''
+    _canonical_fmt = ""
 
     # VISA syntax for resource
-    _visa_syntax = ''
+    _visa_syntax = ""
 
     # Resource name provided by the user (not empty only when parsing)
-    user = ''
+    user = ""
 
     @property
     def interface_type_const(self):
@@ -162,7 +162,7 @@ class ResourceName(object):
             if len(resource_name) == len(interface_type):
                 parts = ()
             else:
-                parts = resource_name[len(interface_type):].split('::')
+                parts = resource_name[len(interface_type) :].split("::")
 
             # Try to match the last part of the resource name to
             # one of the known resource classes for the given interface type.
@@ -174,15 +174,15 @@ class ResourceName(object):
                 try:
                     resource_class = _DEFAULT_RC[interface_type]
                 except KeyError:
-                    raise InvalidResourceName.rc_notfound(interface_type,
-                                                          resource_name)
+                    raise InvalidResourceName.rc_notfound(interface_type, resource_name)
 
             # Look for the subclass
             try:
                 subclass = _SUBCLASSES[(interface_type, resource_class)]
             except KeyError:
                 raise InvalidResourceName.subclass_notfound(
-                    (interface_type, resource_class), resource_name)
+                    (interface_type, resource_class), resource_name
+                )
 
             # And create the object
             try:
@@ -190,22 +190,23 @@ class ResourceName(object):
                 rn.user = resource_name
                 return rn
             except ValueError as ex:
-                raise InvalidResourceName.bad_syntax(subclass._visa_syntax,
-                                                     resource_name, ex)
+                raise InvalidResourceName.bad_syntax(
+                    subclass._visa_syntax, resource_name, ex
+                )
 
-        raise InvalidResourceName('Could not parse %s: unknown interface type'
-                                  % resource_name)
+        raise InvalidResourceName(
+            "Could not parse %s: unknown interface type" % resource_name
+        )
 
     @classmethod
     def from_kwargs(cls, **kwargs):
-        interface_type = kwargs.pop('interface_type')
+        interface_type = kwargs.pop("interface_type")
 
         if interface_type not in _INTERFACE_TYPES:
-            raise InvalidResourceName('Unknown interface type: %s' % interface_type)
+            raise InvalidResourceName("Unknown interface type: %s" % interface_type)
 
         try:
-            resource_class = kwargs.pop('resource_class',
-                                        _DEFAULT_RC[interface_type])
+            resource_class = kwargs.pop("resource_class", _DEFAULT_RC[interface_type])
         except KeyError:
             raise InvalidResourceName.rc_notfound(interface_type)
 
@@ -214,7 +215,8 @@ class ResourceName(object):
             subclass = _SUBCLASSES[(interface_type, resource_class)]
         except KeyError:
             raise InvalidResourceName.subclass_notfound(
-                (interface_type, resource_class))
+                (interface_type, resource_class)
+            )
 
         # And create the object
         try:
@@ -226,8 +228,7 @@ class ResourceName(object):
         return self._canonical_fmt.format(self)
 
 
-def build_rn_class(interface_type, resource_parts, resource_class,
-                   is_rc_optional=True):
+def build_rn_class(interface_type, resource_parts, resource_class, is_rc_optional=True):
     """Builds a resource name class by mixing a named tuple and ResourceName.
 
     It also registers the class.
@@ -263,30 +264,32 @@ def build_rn_class(interface_type, resource_parts, resource_class,
 
     # Assemble the syntax and format string based on the resource parts
     for ndx, (name, default_value) in enumerate(resource_parts):
-        pname = name.lower().replace(' ', '_')
+        pname = name.lower().replace(" ", "_")
         fields.append(pname)
         p_resource_parts.append((pname, default_value))
 
-        sep = '::' if ndx else ''
+        sep = "::" if ndx else ""
 
-        fmt += sep + '{0.%s}' % pname
+        fmt += sep + "{0.%s}" % pname
 
         if default_value is None:
             syntax += sep + name
         else:
-            syntax += '[' + sep + name + ']'
+            syntax += "[" + sep + name + "]"
 
-        kwdoc.append('- %s (%s)' % (pname, 'required' if default_value is None
-                                    else default_value))
+        kwdoc.append(
+            "- %s (%s)"
+            % (pname, "required" if default_value is None else default_value)
+        )
 
-    fmt += '::' + resource_class
+    fmt += "::" + resource_class
 
     if not is_rc_optional:
-        syntax += '::' + resource_class
+        syntax += "::" + resource_class
     else:
-        syntax += '[' + '::' + resource_class + ']'
+        syntax += "[" + "::" + resource_class + "]"
 
-    class _C(namedtuple('Internal', ' '.join(fields)), ResourceName):
+    class _C(namedtuple("Internal", " ".join(fields)), ResourceName):
         """%s %s"
 
         Can be created with the following keyword only arguments:
@@ -295,25 +298,29 @@ def build_rn_class(interface_type, resource_parts, resource_class,
         Format :
             %s
 
-        """ % (resource_class, interface_type, '    \n'.join(kwdoc), syntax)
+        """ % (
+            resource_class,
+            interface_type,
+            "    \n".join(kwdoc),
+            syntax,
+        )
 
         def __new__(cls, **kwargs):
             new_kwargs = dict(p_resource_parts, **kwargs)
 
             for key, value in new_kwargs.items():
                 if value is None:
-                    raise ValueError(key + ' is a required parameter')
+                    raise ValueError(key + " is a required parameter")
 
             return super(_C, cls).__new__(cls, **new_kwargs)
 
         @classmethod
         def from_parts(cls, *parts):
 
-            if len(parts) < sum(1 for _, v in p_resource_parts
-                                if v is not None):
-                raise ValueError('not enough parts')
+            if len(parts) < sum(1 for _, v in p_resource_parts if v is not None):
+                raise ValueError("not enough parts")
             elif len(parts) > len(p_resource_parts):
-                raise ValueError('too many parts')
+                raise ValueError("too many parts")
 
             (k, default), rp = p_resource_parts[0], p_resource_parts[1:]
 
@@ -321,7 +328,7 @@ def build_rn_class(interface_type, resource_parts, resource_class,
             # optional part which can be empty and therefore the
             # default value should be used.
             p, pending = parts[0], parts[1:]
-            kwargs = {k: default if p == '' else p}
+            kwargs = {k: default if p == "" else p}
 
             # The rest of the parts are consumed when mandatory elements are required.
             while len(pending) < len(rp):
@@ -330,10 +337,10 @@ def build_rn_class(interface_type, resource_parts, resource_class,
                     # This is impossible as far as I can tell for currently implemented
                     # resource names
                     if not parts:
-                        raise ValueError(k + ' part is mandatory')  # pragma: no cover
+                        raise ValueError(k + " part is mandatory")  # pragma: no cover
                     p, pending = pending[0], pending[1:]
                     if not p:
-                        raise ValueError(k + ' part is mandatory')
+                        raise ValueError(k + " part is mandatory")
                     kwargs[k] = p
                 else:
                     kwargs[k] = default
@@ -354,51 +361,73 @@ def build_rn_class(interface_type, resource_parts, resource_class,
 
     return register_subclass(_C)
 
+
 # Build subclasses for each resource
 
 # Reference for the GPIB secondary address
 # https://www.mathworks.com/help/instrument/secondaryaddress.html
-GPIBInstr = build_rn_class('GPIB',
-                           (('board', '0'), ('primary address', None),
-                            ('secondary address', '0')),
-                           'INSTR')
+GPIBInstr = build_rn_class(
+    "GPIB",
+    (("board", "0"), ("primary address", None), ("secondary address", "0")),
+    "INSTR",
+)
 
-GPIBIntfc = build_rn_class('GPIB', (('board', '0'), ), 'INTFC', False)
+GPIBIntfc = build_rn_class("GPIB", (("board", "0"),), "INTFC", False)
 
-ASRLInstr = build_rn_class('ASRL', (('board', '0'), ), 'INSTR')
+ASRLInstr = build_rn_class("ASRL", (("board", "0"),), "INSTR")
 
-TCPIPInstr = build_rn_class('TCPIP', (('board', '0'), ('host address', None),
-                                      ('LAN device name', 'inst0'), ), 'INSTR')
+TCPIPInstr = build_rn_class(
+    "TCPIP",
+    (("board", "0"), ("host address", None), ("LAN device name", "inst0"),),
+    "INSTR",
+)
 
-TCPIPSocket = build_rn_class('TCPIP', (('board', '0'), ('host address', None),
-                                       ('port', None), ), 'SOCKET', False)
+TCPIPSocket = build_rn_class(
+    "TCPIP", (("board", "0"), ("host address", None), ("port", None),), "SOCKET", False
+)
 
-USBInstr = build_rn_class('USB',
-                          (('board', '0'), ('manufacturer ID', None),
-                           ('model code', None), ('serial number', None),
-                           ('USB interface number', '0')), 'INSTR')
+USBInstr = build_rn_class(
+    "USB",
+    (
+        ("board", "0"),
+        ("manufacturer ID", None),
+        ("model code", None),
+        ("serial number", None),
+        ("USB interface number", "0"),
+    ),
+    "INSTR",
+)
 
-USBRaw = build_rn_class('USB', (('board', '0'), ('manufacturer ID', None),
-                                ('model code', None), ('serial number', None),
-                                ('USB interface number', '0')), 'RAW', False)
+USBRaw = build_rn_class(
+    "USB",
+    (
+        ("board", "0"),
+        ("manufacturer ID", None),
+        ("model code", None),
+        ("serial number", None),
+        ("USB interface number", "0"),
+    ),
+    "RAW",
+    False,
+)
 
-PXIBackplane = build_rn_class('PXI', (('interface', '0'),
-                                      ('chassis number', None)), 'BACKPLANE',
-                              False)
+PXIBackplane = build_rn_class(
+    "PXI", (("interface", "0"), ("chassis number", None)), "BACKPLANE", False
+)
 
-PXIMemacc = build_rn_class('PXI', (('interface', '0'), ), 'MEMACC', False)
+PXIMemacc = build_rn_class("PXI", (("interface", "0"),), "MEMACC", False)
 
-VXIBackplane = build_rn_class('VXI', (('board', '0'),
-                                      ('VXI logical address', '0')),
-                              'BACKPLANE', False)
+VXIBackplane = build_rn_class(
+    "VXI", (("board", "0"), ("VXI logical address", "0")), "BACKPLANE", False
+)
 
-VXIInstr = build_rn_class('VXI', (('board', '0'),
-                                  ('VXI logical address', None)), 'INSTR',
-                          True)
+VXIInstr = build_rn_class(
+    "VXI", (("board", "0"), ("VXI logical address", None)), "INSTR", True
+)
 
-VXIMemacc = build_rn_class('VXI', (('board', '0'), ), 'MEMACC', False)
+VXIMemacc = build_rn_class("VXI", (("board", "0"),), "MEMACC", False)
 
-VXIServant = build_rn_class('VXI', (('board', '0'), ), 'SERVANT', False)
+VXIServant = build_rn_class("VXI", (("board", "0"),), "SERVANT", False)
 
 # TODO 3 types of PXI INSTR
 # TODO ENET-Serial INSTR
@@ -486,13 +515,14 @@ def filter(resources, query):
 
     """
 
-    if '{' in query:
-        query, _ = query.split('{')
-        logger.warning('optional part of the query expression not supported. '
-                       'See filter2')
+    if "{" in query:
+        query, _ = query.split("{")
+        logger.warning(
+            "optional part of the query expression not supported. " "See filter2"
+        )
 
     try:
-        query = query.replace('?', '.')
+        query = query.replace("?", ".")
         matcher = re.compile(query, re.IGNORECASE)
     except re.error:
         raise errors.VisaIOError(constants.VI_ERROR_INV_EXPR)
@@ -514,10 +544,10 @@ def filter2(resources, query, open_resource):
 
     """
 
-    if '{' in query:
+    if "{" in query:
         try:
-            query, optional = query.split('{')
-            optional, _ = optional.split('}')
+            query, optional = query.split("{")
+            optional, _ = optional.split("}")
         except ValueError:
             raise errors.VisaIOError(constants.VI_ERROR_INV_EXPR)
     else:
@@ -528,70 +558,69 @@ def filter2(resources, query, open_resource):
     if not optional:
         return filtered
 
-    optional = optional.replace('&&', 'and').replace('||', 'or').replace('!', 'not ')
-    optional = optional.replace('VI_', 'res.VI_')
+    optional = optional.replace("&&", "and").replace("||", "or").replace("!", "not ")
+    optional = optional.replace("VI_", "res.VI_")
 
-    class AttrGetter():
-
+    class AttrGetter:
         def __init__(self, resource_name):
             self.resource_name = resource_name
             self.parsed = parse_resource_name(resource_name)
             self.resource = None
 
         def __getattr__(self, item):
-            if item == 'VI_ATTR_INTF_NUM':
+            if item == "VI_ATTR_INTF_NUM":
                 return int(self.parsed.board)
-            elif item == 'VI_ATTR_MANF_ID':
+            elif item == "VI_ATTR_MANF_ID":
                 if not isinstance(self.parsed, (USBInstr, USBRaw)):
                     raise self.raise_missing_attr(item)
                 else:
                     return self.parsed.manufacturer_id
-            elif item == 'VI_ATTR_MODEL_CODE':
+            elif item == "VI_ATTR_MODEL_CODE":
                 if not isinstance(self.parsed, (USBInstr, USBRaw)):
                     raise self.raise_missing_attr(item)
                 else:
                     return self.parsed.model_code
-            elif item == 'VI_ATTR_USB_SERIAL_NUM':
+            elif item == "VI_ATTR_USB_SERIAL_NUM":
                 if not isinstance(self.parsed, (USBInstr, USBRaw)):
                     raise self.raise_missing_attr(item)
                 else:
                     return self.parsed.serial_number
-            elif item == 'VI_ATTR_USB_INTFC_NUM':
+            elif item == "VI_ATTR_USB_INTFC_NUM":
                 if not isinstance(self.parsed, (USBInstr, USBRaw)):
                     raise self.raise_missing_attr(item)
                 else:
                     return int(self.parsed.board)
-            elif item == 'VI_ATTR_TCPIP_ADDR':
+            elif item == "VI_ATTR_TCPIP_ADDR":
                 if not isinstance(self.parsed, (TCPIPInstr, TCPIPSocket)):
                     raise self.raise_missing_attr(item)
                 else:
                     return self.parsed.host_address
-            elif item == 'VI_ATTR_TCPIP_DEVICE_NAME':
+            elif item == "VI_ATTR_TCPIP_DEVICE_NAME":
                 if not isinstance(self.parsed, TCPIPInstr):
                     raise self.raise_missing_attr(item)
                 else:
                     return self.parsed.lan_device_name
-            elif item == 'VI_ATTR_TCPIP_PORT':
+            elif item == "VI_ATTR_TCPIP_PORT":
                 if not isinstance(self.parsed, TCPIPSocket):
                     raise self.raise_missing_attr(item)
                 else:
                     return int(self.parsed.port)
-            elif item == 'VI_ATTR_GPIB_PRIMARY_ADDR':
+            elif item == "VI_ATTR_GPIB_PRIMARY_ADDR":
                 if not isinstance(self.parsed, GPIBInstr):
                     raise self.raise_missing_attr(item)
                 else:
                     return int(self.parsed.primary_address)
-            elif item == 'VI_ATTR_GPIB_SECONDARY_ADDR':
+            elif item == "VI_ATTR_GPIB_SECONDARY_ADDR":
                 if not isinstance(self.parsed, GPIBInstr):
                     raise self.raise_missing_attr(item)
                 else:
                     return int(self.parsed.secondary_address)
-            elif item == 'VI_ATTR_PXI_CHASSIS':
+            elif item == "VI_ATTR_PXI_CHASSIS":
                 if not isinstance(self.parsed, PXIBackplane):
                     raise self.raise_missing_attr(item)
                 else:
                     return int(self.parsed.chassis_number)
-            elif item == 'VI_ATTR_MAINFRAME_LA':
+            elif item == "VI_ATTR_MAINFRAME_LA":
                 if not isinstance(self.parsed, (VXIInstr, VXIBackplane)):
                     raise self.raise_missing_attr(item)
                 else:

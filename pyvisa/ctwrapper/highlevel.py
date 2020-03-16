@@ -20,7 +20,7 @@ from .cthelper import Library, find_library
 from . import functions
 
 
-logger = logging.LoggerAdapter(logger, {'backend': 'ivi'})
+logger = logging.LoggerAdapter(logger, {"backend": "ivi"})
 
 
 def add_visa_methods(aclass):
@@ -78,10 +78,12 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         add_user_dll_extra_paths()
 
         # Try to find IVI libraries using known names.
-        tmp = [find_library(library_path)
-               for library_path in ('visa', 'visa32', 'visa32.dll', 'visa64', 'visa64.dll')]
+        tmp = [
+            find_library(library_path)
+            for library_path in ("visa", "visa32", "visa32.dll", "visa64", "visa64.dll")
+        ]
 
-        logger.debug('Automatically found library files: %s' % tmp)
+        logger.debug("Automatically found library files: %s" % tmp)
 
         # Prepend the path provided by the user in configuration files (if any).
         user_lib = read_user_library_path()
@@ -89,9 +91,11 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
             tmp.insert(0, user_lib)
 
         # Deduplicate and convert string paths to LibraryPath objects
-        tmp = [LibraryPath(library_path)
-               for library_path in unique(tmp)
-               if library_path is not None]
+        tmp = [
+            LibraryPath(library_path)
+            for library_path in unique(tmp)
+            if library_path is not None
+        ]
 
         return tuple(tmp)
 
@@ -101,33 +105,42 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         """
         from pyvisa import __version__
+
         d = OrderedDict()
-        d['Version'] = '%s (bundled with PyVISA)' % __version__
+        d["Version"] = "%s (bundled with PyVISA)" % __version__
 
         paths = cls.get_library_paths()
 
         for ndx, visalib in enumerate(paths, 1):
             nfo = OrderedDict()
-            nfo['found by'] = visalib.found_by
-            nfo['bitness'] = visalib.bitness
+            nfo["found by"] = visalib.found_by
+            nfo["bitness"] = visalib.bitness
             try:
                 lib = cls(visalib)
                 sess, _ = lib.open_default_resource_manager()
-                nfo['Vendor'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_MANF_NAME)[0])
-                nfo['Impl. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_IMPL_VERSION)[0])
-                nfo['Spec. Version'] = str(lib.get_attribute(sess, constants.VI_ATTR_RSRC_SPEC_VERSION)[0])
+                nfo["Vendor"] = str(
+                    lib.get_attribute(sess, constants.VI_ATTR_RSRC_MANF_NAME)[0]
+                )
+                nfo["Impl. Version"] = str(
+                    lib.get_attribute(sess, constants.VI_ATTR_RSRC_IMPL_VERSION)[0]
+                )
+                nfo["Spec. Version"] = str(
+                    lib.get_attribute(sess, constants.VI_ATTR_RSRC_SPEC_VERSION)[0]
+                )
                 lib.close(sess)
             except Exception as e:
                 e = str(e)
-                if 'No matching architecture' in e:
-                    nfo['Could not get more info'] = 'Interpreter and library have different bitness.'
+                if "No matching architecture" in e:
+                    nfo[
+                        "Could not get more info"
+                    ] = "Interpreter and library have different bitness."
                 else:
-                    nfo['Could not get more info'] = str(e).split('\n')
+                    nfo["Could not get more info"] = str(e).split("\n")
 
-            d['#%d: %s' % (ndx, visalib)] = nfo
+            d["#%d: %s" % (ndx, visalib)] = nfo
 
         if not paths:
-            d['Binary library'] = 'Not found'
+            d["Binary library"] = "Not found"
 
         return d
 
@@ -144,21 +157,27 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         # name of the functions.
         functions.set_signatures(self.lib, errcheck=self._return_handler)
 
-        logger.debug('Library signatures: %d ok, %d failed',
-                     len(getattr(self.lib, '_functions', [])),
-                     len(getattr(self.lib, '_functions_failed', [])))
+        logger.debug(
+            "Library signatures: %d ok, %d failed",
+            len(getattr(self.lib, "_functions", [])),
+            len(getattr(self.lib, "_functions_failed", [])),
+        )
 
         # Set the library functions as attributes of the object.
-        for method_name in getattr(self.lib, '_functions', []):
+        for method_name in getattr(self.lib, "_functions", []):
             setattr(self, method_name, getattr(self.lib, method_name))
 
     def _return_handler(self, ret_value, func, arguments):
         """Check return values for errors and warnings.
         """
 
-        logger.debug('%s%s -> %r',
-                     func.__name__, _args_to_str(arguments), ret_value,
-                     extra=self._logging_extra)
+        logger.debug(
+            "%s%s -> %r",
+            func.__name__,
+            _args_to_str(arguments),
+            ret_value,
+            extra=self._logging_extra,
+        )
 
         try:
             ret_value = constants.StatusCode(ret_value)
@@ -170,15 +189,17 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         # The first argument of almost all registered visa functions is a session.
         # We store the error code per session
         session = None
-        if func.__name__ not in ('viFindNext', ):
+        if func.__name__ not in ("viFindNext",):
             try:
                 session = arguments[0]
             except KeyError:
-                raise Exception('Function %r does not seem to be a valid '
-                                'visa function (len args %d)' % (func, len(arguments)))
+                raise Exception(
+                    "Function %r does not seem to be a valid "
+                    "visa function (len args %d)" % (func, len(arguments))
+                )
 
             # Functions that use the first parameter to get a session value.
-            if func.__name__ in ('viOpenDefaultRM', ):
+            if func.__name__ in ("viOpenDefaultRM",):
                 # noinspection PyProtectedMember
                 session = session._obj.value
 
@@ -186,9 +207,16 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
                 self._last_status_in_session[session] = ret_value
             else:
                 # Functions that might or might have a session in the first argument.
-                if func.__name__ not in ('viClose', 'viGetAttribute', 'viSetAttribute', 'viStatusDesc'):
-                    raise Exception('Function %r does not seem to be a valid '
-                                    'visa function (type args[0] %r)' % (func, type(session)))
+                if func.__name__ not in (
+                    "viClose",
+                    "viGetAttribute",
+                    "viSetAttribute",
+                    "viStatusDesc",
+                ):
+                    raise Exception(
+                        "Function %r does not seem to be a valid "
+                        "visa function (type args[0] %r)" % (func, type(session))
+                    )
 
         if ret_value < 0:
             raise errors.VisaIOError(ret_value)
@@ -199,7 +227,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         return ret_value
 
-    def list_resources(self, session, query='?*::INSTR'):
+    def list_resources(self, session, query="?*::INSTR"):
         """Returns a tuple of all connected devices matching query.
 
         note: The query uses the VISA Resource Regular Expression syntax - which is not the same
@@ -246,7 +274,12 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         resources = []
 
         try:
-            find_list, return_counter, instrument_description, err = self.find_resources(session, query)
+            (
+                find_list,
+                return_counter,
+                instrument_description,
+                err,
+            ) = self.find_resources(session, query)
         except errors.VisaIOError as e:
             if e.error_code == constants.StatusCode.error_resource_not_found:
                 return tuple()
@@ -267,14 +300,18 @@ class NIVisaLibrary(IVIVisaLibrary):  # pragma: no cover
     This class will be removed in 1.12
 
     """
+
     @staticmethod
     def get_library_paths():
         """Return a tuple of possible library paths.
 
         :rtype: tuple
         """
-        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12. "
-                      "Use IVIVisaLibrary instead.", FutureWarning)
+        warnings.warn(
+            "NIVisaLibrary is deprecated and will be removed in 1.12. "
+            "Use IVIVisaLibrary instead.",
+            FutureWarning,
+        )
         IVIVisaLibrary.get_library_paths()
 
     @classmethod
@@ -282,11 +319,17 @@ class NIVisaLibrary(IVIVisaLibrary):  # pragma: no cover
         """Return a list of lines with backend info.
 
         """
-        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12. "
-                      "Use IVIVisaLibrary instead.", FutureWarning)
+        warnings.warn(
+            "NIVisaLibrary is deprecated and will be removed in 1.12. "
+            "Use IVIVisaLibrary instead.",
+            FutureWarning,
+        )
         IVIVisaLibrary.get_debug_info()
 
-    def __new__(cls, library_path=''):
-        warnings.warn("NIVisaLibrary is deprecated and will be removed in 1.12. "
-                      "Use IVIVisaLibrary instead.", FutureWarning)
+    def __new__(cls, library_path=""):
+        warnings.warn(
+            "NIVisaLibrary is deprecated and will be removed in 1.12. "
+            "Use IVIVisaLibrary instead.",
+            FutureWarning,
+        )
         IVIVisaLibrary.__new__(cls, library_path)

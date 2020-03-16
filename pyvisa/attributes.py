@@ -34,7 +34,7 @@ class AttributeType(type):
 
     def __init__(cls, name, bases, dct):
         super(AttributeType, cls).__init__(name, bases, dct)
-        if not name.startswith('AttrVI_'):
+        if not name.startswith("AttrVI_"):
             return
         cls.attribute_id = getattr(constants, cls.visa_name)
         # Check that the docstring are populated before extending them
@@ -59,24 +59,23 @@ class Attribute(object, metaclass=AttributeType):
     resources = []
 
     #: Name of the Python property to be matched to this attribute.
-    py_name = 'To be specified'
+    py_name = "To be specified"
 
     #: Name of the VISA Attribute
-    visa_name = 'To be specified'
+    visa_name = "To be specified"
 
     #: Numeric constant of the VISA Attribute
     attribute_id = 0
 
     #: Default value fo the VISA Attribute
-    default = 'N/A'
+    default = "N/A"
 
     #: Access
     read, write, local = False, False, False
 
     @classmethod
     def redoc(cls):
-        cls.__doc__ += '\n:VISA Attribute: %s (%s)' % (cls.visa_name,
-                                                       cls.attribute_id)
+        cls.__doc__ += "\n:VISA Attribute: %s (%s)" % (cls.visa_name, cls.attribute_id)
 
     def post_get(self, value):
         """Override this method to check or modify the value returned by the VISA function.
@@ -133,8 +132,10 @@ class EnumAttribute(Attribute):
     @classmethod
     def redoc(cls):
         super(EnumAttribute, cls).redoc()
-        cls.__doc__ += '\n:type: :class:%s.%s' % (cls.enum_type.__module__,
-                                                  cls.enum_type.__name__)
+        cls.__doc__ += "\n:type: :class:%s.%s" % (
+            cls.enum_type.__module__,
+            cls.enum_type.__name__,
+        )
 
     def post_get(self, value):
         return self.enum_type(value)
@@ -143,15 +144,15 @@ class EnumAttribute(Attribute):
         # Python 3.8 raise if a non-Enum is used for value
         try:
             if value not in self.enum_type:
-                raise ValueError('%r is an invalid value for attribute %s, '
-                                'should be a %r' % (value,
-                                                    self.visa_name,
-                                                    self.enum_type))
+                raise ValueError(
+                    "%r is an invalid value for attribute %s, "
+                    "should be a %r" % (value, self.visa_name, self.enum_type)
+                )
         except TypeError:
-            raise ValueError('%r is an invalid value for attribute %s, '
-                                'should be a %r' % (value,
-                                                    self.visa_name,
-                                                    self.enum_type))
+            raise ValueError(
+                "%r is an invalid value for attribute %s, "
+                "should be a %r" % (value, self.visa_name, self.enum_type)
+            )
         return value
 
 
@@ -162,7 +163,7 @@ class IntAttribute(Attribute):
     @classmethod
     def redoc(cls):
         super(IntAttribute, cls).redoc()
-        cls.__doc__ += '\n:type: int'
+        cls.__doc__ += "\n:type: int"
 
     def post_get(self, value):
         return int(value)
@@ -178,28 +179,30 @@ class RangeAttribute(IntAttribute):
     @classmethod
     def redoc(cls):
         super(RangeAttribute, cls).redoc()
-        cls.__doc__ += '\n:range: %s <= value <= %s' % (cls.min_value,
-                                                        cls.max_value)
+        cls.__doc__ += "\n:range: %s <= value <= %s" % (cls.min_value, cls.max_value)
         if cls.values:
-            cls.__doc__ += ' or in %s' % cls.values
+            cls.__doc__ += " or in %s" % cls.values
 
     def pre_set(self, value):
         if not self.min_value <= value <= self.max_value:
             if not self.values:
-                raise ValueError('%r is an invalid value for attribute %s, '
-                                 'should be between %r and %r' % (
-                                                            value,
-                                                            self.visa_name,
-                                                            self.min_value,
-                                                            self.max_value))
+                raise ValueError(
+                    "%r is an invalid value for attribute %s, "
+                    "should be between %r and %r"
+                    % (value, self.visa_name, self.min_value, self.max_value)
+                )
             elif value not in self.values:
-                raise ValueError('%r is an invalid value for attribute %s, '
-                                 'should be between %r and %r or %r' % (
-                                                            value,
-                                                            self.visa_name,
-                                                            self.min_value,
-                                                            self.max_value,
-                                                            self.values))
+                raise ValueError(
+                    "%r is an invalid value for attribute %s, "
+                    "should be between %r and %r or %r"
+                    % (
+                        value,
+                        self.visa_name,
+                        self.min_value,
+                        self.max_value,
+                        self.values,
+                    )
+                )
         return value
 
 
@@ -213,14 +216,14 @@ class ValuesAttribute(Attribute):
     @classmethod
     def redoc(cls):
         super(ValuesAttribute, cls).redoc()
-        cls.__doc__ += '\n:values: %s' % cls.values
+        cls.__doc__ += "\n:values: %s" % cls.values
 
     def pre_set(self, value):
         if value not in self.values:
-            raise ValueError('%r is an invalid value for attribute %s, '
-                             'should be in %s' % (value,
-                                                  self.visa_name,
-                                                  self.values))
+            raise ValueError(
+                "%r is an invalid value for attribute %s, "
+                "should be in %s" % (value, self.visa_name, self.values)
+            )
         return value
 
 
@@ -231,7 +234,7 @@ class BooleanAttribute(Attribute):
     @classmethod
     def redoc(cls):
         super(BooleanAttribute, cls).redoc()
-        cls.__doc__ += '\n:type: bool'
+        cls.__doc__ += "\n:type: bool"
 
     def post_get(self, value):
         return value == constants.VI_TRUE
@@ -247,7 +250,7 @@ class CharAttribute(Attribute):
     @classmethod
     def redoc(cls):
         super(CharAttribute, cls).redoc()
-        cls.__doc__ += '\n:range: 0 <= x <= 255\n:type: int'
+        cls.__doc__ += "\n:range: 0 <= x <= 255\n:type: int"
 
     def post_get(self, value):
         return chr(value)
@@ -261,14 +264,17 @@ class AttrVI_ATTR_4882_COMPLIANT(BooleanAttribute):
     """VI_ATTR_4882_COMPLIANT specifies whether the device is 488.2
     compliant.
     """
-    resources = [(constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = 'is_4882_compliant'
+    resources = [
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.vxi, "INSTR"),
+    ]
 
-    visa_name = 'VI_ATTR_4882_COMPLIANT'
+    py_name = "is_4882_compliant"
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_4882_COMPLIANT"
+
+    visa_type = "ViBoolean"
 
     default = NotAvailable
 
@@ -281,13 +287,14 @@ class AttrVI_ATTR_ASRL_ALLOW_TRANSMIT(BooleanAttribute):
     has been received. If set to VI_TRUE, it resumes transmission as
     if an XON character has been received.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'allow_transmit'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_ALLOW_TRANSMIT'
+    py_name = "allow_transmit"
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_ASRL_ALLOW_TRANSMIT"
+
+    visa_type = "ViBoolean"
 
     default = True
 
@@ -299,13 +306,14 @@ class AttrVI_ATTR_ASRL_AVAIL_NUM(RangeAttribute):
     """VI_ATTR_ASRL_AVAIL_NUM shows the number of bytes available in the low-
     level I/O receive buffer.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'bytes_in_buffer'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_AVAIL_NUM'
+    py_name = "bytes_in_buffer"
 
-    visa_type = 'ViUInt32'
+    visa_name = "VI_ATTR_ASRL_AVAIL_NUM"
+
+    visa_type = "ViUInt32"
 
     default = NotAvailable
 
@@ -321,13 +329,14 @@ class AttrVI_ATTR_ASRL_BAUD(RangeAttribute):
     but it usually requires a commonly used rate such as 300, 1200,
     2400, or 9600 baud.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'baud_rate'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_BAUD'
+    py_name = "baud_rate"
 
-    visa_type = 'ViUInt32'
+    visa_name = "VI_ATTR_ASRL_BAUD"
+
+    visa_type = "ViUInt32"
 
     default = 9600
 
@@ -344,13 +353,14 @@ class AttrVI_ATTR_ASRL_BREAK_LEN(RangeAttribute):
     signal manually, use the VI_ATTR_ASRL_BREAK_STATE attribute
     instead.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'break_length'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_BREAK_LEN'
+    py_name = "break_length"
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_ASRL_BREAK_LEN"
+
+    visa_type = "ViInt16"
 
     default = 250
 
@@ -369,13 +379,14 @@ class AttrVI_ATTR_ASRL_BREAK_STATE(EnumAttribute):
     automatically, use the VI_ATTR_ASRL_BREAK_LEN and
     VI_ATTR_ASRL_END_OUT attributes instead.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'break_state'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_BREAK_STATE'
+    py_name = "break_state"
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_ASRL_BREAK_STATE"
+
+    visa_type = "ViInt16"
 
     default = constants.LineState.unasserted
 
@@ -392,13 +403,14 @@ class AttrVI_ATTR_ASRL_CONNECTED(BooleanAttribute):
     documented to support this feature with the corresponding National
     Instruments hardware.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_CONNECTED'
+    py_name = ""
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_ASRL_CONNECTED"
+
+    visa_type = "ViBoolean"
 
     default = NotAvailable
 
@@ -410,13 +422,14 @@ class AttrVI_ATTR_ASRL_CTS_STATE(EnumAttribute):
     """VI_ATTR_ASRL_CTS_STATE shows the current state of the Clear To Send
     (CTS) input signal.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_CTS_STATE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_ASRL_CTS_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -431,13 +444,14 @@ class AttrVI_ATTR_ASRL_DATA_BITS(RangeAttribute):
     frame (from 5 to 8). The data bits for each frame are located in
     the low-order bits of every byte stored in memory.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'data_bits'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_DATA_BITS'
+    py_name = "data_bits"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_ASRL_DATA_BITS"
+
+    visa_type = "ViUInt16"
 
     default = 8
 
@@ -457,13 +471,14 @@ class AttrVI_ATTR_ASRL_DCD_STATE(EnumAttribute):
     or VI_ASRL_WIRE_232_AUTO with the hardware currently in the DCE
     state.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_DCD_STATE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_ASRL_DCD_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -478,13 +493,14 @@ class AttrVI_ATTR_ASRL_DISCARD_NULL(BooleanAttribute):
     treated as normal data characters. For binary transfers, set this
     attribute to VI_FALSE.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'discard_null'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_DISCARD_NULL'
+    py_name = "discard_null"
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_ASRL_DISCARD_NULL"
+
+    visa_type = "ViBoolean"
 
     default = False
 
@@ -496,13 +512,14 @@ class AttrVI_ATTR_ASRL_DSR_STATE(EnumAttribute):
     """VI_ATTR_ASRL_DSR_STATE shows the current state of the Data Set Ready
     (DSR) input signal.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_DSR_STATE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_ASRL_DSR_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -516,13 +533,14 @@ class AttrVI_ATTR_ASRL_DTR_STATE(EnumAttribute):
     """VI_ATTR_ASRL_DTR_STATE shows the current state of the Data Terminal
     Ready (DTR) input signal.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_DTR_STATE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_ASRL_DTR_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -536,13 +554,14 @@ class AttrVI_ATTR_ASRL_END_IN(EnumAttribute):
     """VI_ATTR_ASRL_END_IN indicates the method used to terminate read
     operations.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'end_input'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_END_IN'
+    py_name = "end_input"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_ASRL_END_IN"
+
+    visa_type = "ViUInt16"
 
     default = constants.SerialTermination.termination_char
 
@@ -556,13 +575,14 @@ class AttrVI_ATTR_ASRL_END_OUT(EnumAttribute):
     """VI_ATTR_ASRL_END_OUT indicates the method used to terminate write
     operations.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_END_OUT'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_ASRL_END_OUT"
+
+    visa_type = "ViUInt16"
 
     default = constants.SerialTermination.none
 
@@ -576,13 +596,14 @@ class AttrVI_ATTR_ASRL_FLOW_CNTRL(RangeAttribute):
     """VI_ATTR_ASRL_FLOW_CNTRL indicates the type of flow control used by the
     transfer mechanism.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'flow_control'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_FLOW_CNTRL'
+    py_name = "flow_control"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_ASRL_FLOW_CNTRL"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_ASRL_FLOW_NONE
 
@@ -596,13 +617,14 @@ class AttrVI_ATTR_ASRL_PARITY(EnumAttribute):
     """VI_ATTR_ASRL_PARITY is the parity used with every frame transmitted
     and received.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'parity'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_PARITY'
+    py_name = "parity"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_ASRL_PARITY"
+
+    visa_type = "ViUInt16"
 
     default = constants.Parity.none
 
@@ -617,13 +639,14 @@ class AttrVI_ATTR_ASRL_REPLACE_CHAR(CharAttribute):
     replace incoming characters that arrive with errors (such as
     parity error).
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'replace_char'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_REPLACE_CHAR'
+    py_name = "replace_char"
 
-    visa_type = 'ViUInt8'
+    visa_name = "VI_ATTR_ASRL_REPLACE_CHAR"
+
+    visa_type = "ViUInt8"
 
     default = 0
 
@@ -639,13 +662,14 @@ class AttrVI_ATTR_ASRL_RI_STATE(EnumAttribute):
     to VI_ASRL_WIRE_232_DCE, or VI_ASRL_WIRE_232_AUTO with the
     hardware currently in the DCE state.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_RI_STATE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_ASRL_RI_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -659,13 +683,14 @@ class AttrVI_ATTR_ASRL_RTS_STATE(EnumAttribute):
     """VI_ATTR_ASRL_RTS_STATE is used to manually assert or unassert the
     Request To Send (RTS) output signal.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_RTS_STATE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_ASRL_RTS_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -680,13 +705,14 @@ class AttrVI_ATTR_ASRL_STOP_BITS(EnumAttribute):
     end of a frame. The value VI_ASRL_STOP_ONE5 indicates one-and-one-
     half (1.5) stop bits.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'stop_bits'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_STOP_BITS'
+    py_name = "stop_bits"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_ASRL_STOP_BITS"
+
+    visa_type = "ViUInt16"
 
     default = constants.StopBits.one
 
@@ -700,13 +726,14 @@ class AttrVI_ATTR_ASRL_WIRE_MODE(RangeAttribute):
     """
 
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_WIRE_MODE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_ASRL_WIRE_MODE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -722,13 +749,14 @@ class AttrVI_ATTR_ASRL_XOFF_CHAR(CharAttribute):
     control (software handshaking) is not being used, the value of
     this attribute is ignored.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'xoff_char'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_XOFF_CHAR'
+    py_name = "xoff_char"
 
-    visa_type = 'ViUInt8'
+    visa_name = "VI_ATTR_ASRL_XOFF_CHAR"
+
+    visa_type = "ViUInt8"
 
     default = 0x13
 
@@ -742,13 +770,14 @@ class AttrVI_ATTR_ASRL_XON_CHAR(CharAttribute):
     control (software handshaking) is not being used, the value of
     this attribute is ignored.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR')]
 
-    py_name = 'xon_char'
+    resources = [(constants.InterfaceType.asrl, "INSTR")]
 
-    visa_name = 'VI_ATTR_ASRL_XON_CHAR'
+    py_name = "xon_char"
 
-    visa_type = 'ViUInt8'
+    visa_name = "VI_ATTR_ASRL_XON_CHAR"
+
+    visa_type = "ViUInt8"
 
     default = 0x11
 
@@ -767,14 +796,17 @@ class AttrVI_ATTR_CMDR_LA(RangeAttribute):
     """VI_ATTR_CMDR_LA is the unique logical address of the commander of the
     VXI device used by the given session.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_CMDR_LA'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_CMDR_LA"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -789,14 +821,17 @@ class AttrVI_ATTR_DEST_ACCESS_PRIV(RangeAttribute):
     high-level access operations, such as viOutXX() and viMoveOutXX(),
     when writing to the destination.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+    ]
 
-    visa_name = 'VI_ATTR_DEST_ACCESS_PRIV'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_DEST_ACCESS_PRIV"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_DATA_PRIV
 
@@ -811,14 +846,17 @@ class AttrVI_ATTR_DEST_BYTE_ORDER(RangeAttribute):
     level access operations, such as viOutXX() and viMoveOutXX(), when
     writing to the destination.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+    ]
 
-    visa_name = 'VI_ATTR_DEST_BYTE_ORDER'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_DEST_BYTE_ORDER"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_BIG_ENDIAN
 
@@ -839,16 +877,19 @@ class AttrVI_ATTR_DEST_INCREMENT(RangeAttribute):
     same element, essentially treating the destination as a FIFO
     register.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.pxi, 'MEMACC'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC')]
 
-    py_name = 'destination_increment'
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.pxi, "MEMACC"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+    ]
 
-    visa_name = 'VI_ATTR_DEST_INCREMENT'
+    py_name = "destination_increment"
 
-    visa_type = 'ViInt32'
+    visa_name = "VI_ATTR_DEST_INCREMENT"
+
+    visa_type = "ViInt32"
 
     default = 1
 
@@ -862,14 +903,17 @@ class AttrVI_ATTR_DEV_STATUS_BYTE(CharAttribute):
     """This attribute specifies the 488-style status byte of the local
     controller or device associated with this session.
     """
-    resources = [(constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_DEV_STATUS_BYTE'
+    py_name = ""
 
-    visa_type = 'ViUInt8'
+    visa_name = "VI_ATTR_DEV_STATUS_BYTE"
+
+    visa_type = "ViUInt8"
 
     default = NotAvailable
 
@@ -884,20 +928,23 @@ class AttrVI_ATTR_DMA_ALLOW_EN(BooleanAttribute):
     be a local attribute. Since this affects performance and not
     functionality, that behavior is acceptable.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = 'allow_dma'
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_DMA_ALLOW_EN'
+    py_name = "allow_dma"
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_DMA_ALLOW_EN"
+
+    visa_type = "ViBoolean"
 
     default = NotAvailable
 
@@ -916,13 +963,14 @@ class AttrVI_ATTR_FDC_CHNL(RangeAttribute):
     """VI_ATTR_FDC_CHNL determines which Fast Data Channel (FDC) will be used
     to transfer the buffer.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_FDC_CHNL'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_FDC_CHNL"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -936,13 +984,14 @@ class AttrVI_ATTR_FDC_MODE(RangeAttribute):
     """VI_ATTR_FDC_MODE specifies which Fast Data Channel (FDC) mode to use
     (either normal or stream mode).
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_FDC_MODE'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_FDC_MODE"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_FDC_NORMAL
 
@@ -957,13 +1006,14 @@ class AttrVI_ATTR_FDC_USE_PAIR(BooleanAttribute):
     pair for transferring data. Otherwise, only one channel will be
     used.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_FDC_USE_PAIR'
+    py_name = ""
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_FDC_USE_PAIR"
+
+    visa_type = "ViBoolean"
 
     default = False
 
@@ -975,21 +1025,24 @@ class AttrVI_ATTR_FILE_APPEND_EN(BooleanAttribute):
     """This attribute specifies whether viReadToFile() will overwrite
     (truncate) or append when opening a file.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_FILE_APPEND_EN'
+    py_name = ""
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_FILE_APPEND_EN"
+
+    visa_type = "ViBoolean"
 
     default = False
 
@@ -1001,13 +1054,14 @@ class AttrVI_ATTR_GPIB_ADDR_STATE(EnumAttribute):
     """This attribute shows whether the specified GPIB interface is currently
     addressed to talk or listen, or is not addressed.
     """
-    resources = [(constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = 'address_state'
+    resources = [(constants.InterfaceType.gpib, "INTFC")]
 
-    visa_name = 'VI_ATTR_GPIB_ADDR_STATE'
+    py_name = "address_state"
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_GPIB_ADDR_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1021,13 +1075,14 @@ class AttrVI_ATTR_GPIB_ATN_STATE(EnumAttribute):
     """This attribute shows the current state of the GPIB ATN (ATtentioN)
     interface line.
     """
-    resources = [(constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = 'atn_state'
+    resources = [(constants.InterfaceType.gpib, "INTFC")]
 
-    visa_name = 'VI_ATTR_GPIB_ATN_STATE'
+    py_name = "atn_state"
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_GPIB_ATN_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1041,13 +1096,14 @@ class AttrVI_ATTR_GPIB_CIC_STATE(BooleanAttribute):
     """This attribute shows whether the specified GPIB interface is currently
     CIC (Controller In Charge).
     """
-    resources = [(constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = 'is_controller_in_charge'
+    resources = [(constants.InterfaceType.gpib, "INTFC")]
 
-    visa_name = 'VI_ATTR_GPIB_CIC_STATE'
+    py_name = "is_controller_in_charge"
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_GPIB_CIC_STATE"
+
+    visa_type = "ViBoolean"
 
     default = NotAvailable
 
@@ -1059,13 +1115,14 @@ class AttrVI_ATTR_GPIB_HS488_CBL_LEN(RangeAttribute):
     """This attribute specifies the total number of meters of GPIB cable used
     in the specified GPIB interface.
     """
-    resources = [(constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.gpib, "INTFC")]
 
-    visa_name = 'VI_ATTR_GPIB_HS488_CBL_LEN'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_GPIB_HS488_CBL_LEN"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1079,13 +1136,14 @@ class AttrVI_ATTR_GPIB_NDAC_STATE(EnumAttribute):
     """This attribute shows the current state of the GPIB NDAC (Not Data
     ACcepted) interface line.
     """
-    resources = [(constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = 'ndac_state'
+    resources = [(constants.InterfaceType.gpib, "INTFC")]
 
-    visa_name = 'VI_ATTR_GPIB_NDAC_STATE'
+    py_name = "ndac_state"
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_GPIB_NDAC_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1100,14 +1158,17 @@ class AttrVI_ATTR_GPIB_PRIMARY_ADDR(RangeAttribute):
     device used by the given session. For the GPIB INTFC Resource,
     this attribute is Read-Write.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = 'primary_address'
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+    ]
 
-    visa_name = 'VI_ATTR_GPIB_PRIMARY_ADDR'
+    py_name = "primary_address"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_GPIB_PRIMARY_ADDR"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -1121,13 +1182,14 @@ class AttrVI_ATTR_GPIB_READDR_EN(BooleanAttribute):
     """VI_ATTR_GPIB_READDR_EN specifies whether to use repeat addressing
     before each read or write operation.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR')]
 
-    py_name = 'enable_repeat_addressing'
+    resources = [(constants.InterfaceType.gpib, "INSTR")]
 
-    visa_name = 'VI_ATTR_GPIB_READDR_EN'
+    py_name = "enable_repeat_addressing"
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_GPIB_READDR_EN"
+
+    visa_type = "ViBoolean"
 
     default = True
 
@@ -1139,14 +1201,17 @@ class AttrVI_ATTR_GPIB_REN_STATE(EnumAttribute):
     """VI_ATTR_GPIB_REN_STATE returns the current state of the GPIB REN
     (Remote ENable) interface line.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = 'remote_enabled'
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+    ]
 
-    visa_name = 'VI_ATTR_GPIB_REN_STATE'
+    py_name = "remote_enabled"
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_GPIB_REN_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1161,14 +1226,17 @@ class AttrVI_ATTR_GPIB_SECONDARY_ADDR(RangeAttribute):
     GPIB device used by the given session. For the GPIB INTFC
     Resource, this attribute is Read-Write.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = 'secondary_address'
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+    ]
 
-    visa_name = 'VI_ATTR_GPIB_SECONDARY_ADDR'
+    py_name = "secondary_address"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_GPIB_SECONDARY_ADDR"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -1182,13 +1250,14 @@ class AttrVI_ATTR_GPIB_SRQ_STATE(EnumAttribute):
     """This attribute shows the current state of the GPIB SRQ (Service
     ReQuest) interface line.
     """
-    resources = [(constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.gpib, "INTFC")]
 
-    visa_name = 'VI_ATTR_GPIB_SRQ_STATE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_GPIB_SRQ_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1204,13 +1273,14 @@ class AttrVI_ATTR_GPIB_SYS_CNTRL_STATE(BooleanAttribute):
     be modified only through a configuration utility. On these systems
     this attribute is read-only (RO).
     """
-    resources = [(constants.InterfaceType.gpib, 'INTFC')]
 
-    py_name = 'is_system_controller'
+    resources = [(constants.InterfaceType.gpib, "INTFC")]
 
-    visa_name = 'VI_ATTR_GPIB_SYS_CNTRL_STATE'
+    py_name = "is_system_controller"
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_GPIB_SYS_CNTRL_STATE"
+
+    visa_type = "ViBoolean"
 
     default = NotAvailable
 
@@ -1222,13 +1292,14 @@ class AttrVI_ATTR_GPIB_UNADDR_EN(BooleanAttribute):
     """VI_ATTR_GPIB_UNADDR_EN specifies whether to unaddress the device (UNT
     and UNL) after each read or write operation.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR')]
 
-    py_name = 'enable_unaddressing'
+    resources = [(constants.InterfaceType.gpib, "INSTR")]
 
-    visa_name = 'VI_ATTR_GPIB_UNADDR_EN'
+    py_name = "enable_unaddressing"
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_GPIB_UNADDR_EN"
+
+    visa_type = "ViBoolean"
 
     default = False
 
@@ -1241,13 +1312,14 @@ class AttrVI_ATTR_IMMEDIATE_SERV(BooleanAttribute):
     this session is an immediate servant of the controller running
     VISA.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_IMMEDIATE_SERV'
+    py_name = ""
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_IMMEDIATE_SERV"
+
+    visa_type = "ViBoolean"
 
     default = NotAvailable
 
@@ -1259,13 +1331,14 @@ class AttrVI_ATTR_INTF_INST_NAME(Attribute):
     """VI_ATTR_INTF_INST_NAME specifies human-readable text that describes
     the given interface.
     """
+
     resources = AllSessionTypes
 
-    py_name = ''
+    py_name = ""
 
-    visa_name = 'VI_ATTR_INTF_INST_NAME'
+    visa_name = "VI_ATTR_INTF_INST_NAME"
 
-    visa_type = 'ViString'
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -1278,13 +1351,14 @@ class AttrVI_ATTR_INTF_INST_NAME(Attribute):
 class AttrVI_ATTR_INTF_NUM(RangeAttribute):
     """VI_ATTR_INTF_NUM specifies the board number for the given interface.
     """
+
     resources = AllSessionTypes
 
-    py_name = 'interface_number'
+    py_name = "interface_number"
 
-    visa_name = 'VI_ATTR_INTF_NUM'
+    visa_name = "VI_ATTR_INTF_NUM"
 
-    visa_type = 'ViUInt16'
+    visa_type = "ViUInt16"
 
     default = 0
 
@@ -1297,13 +1371,14 @@ class AttrVI_ATTR_INTF_NUM(RangeAttribute):
 class AttrVI_ATTR_INTF_TYPE(RangeAttribute):
     """VI_ATTR_INTF_TYPE specifies the interface type of the given session.
     """
+
     resources = AllSessionTypes
 
-    py_name = ''
+    py_name = ""
 
-    visa_name = 'VI_ATTR_INTF_TYPE'
+    visa_name = "VI_ATTR_INTF_TYPE"
 
-    visa_type = 'ViUInt16'
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -1321,20 +1396,23 @@ class AttrVI_ATTR_IO_PROT(RangeAttribute):
     488.2-defined strings. In USB INSTR, you can choose normal or
     vendor-specific transfers.
     """
-    resources = [(constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = 'io_protocol'
+    resources = [
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_IO_PROT'
+    py_name = "io_protocol"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_IO_PROT"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_PROT_NORMAL
 
@@ -1349,14 +1427,17 @@ class AttrVI_ATTR_MAINFRAME_LA(RangeAttribute):
     mainframe. If the logical address is not known, VI_UNKNOWN_LA is
     returned.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'BACKPLANE')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "BACKPLANE"),
+    ]
 
-    visa_name = 'VI_ATTR_MAINFRAME_LA'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_MAINFRAME_LA"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1370,16 +1451,19 @@ class AttrVI_ATTR_MANF_ID(RangeAttribute):
     """VI_ATTR_MANF_ID is the manufacturer identification number of the
     device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = 'manufacturer_id'
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+    ]
 
-    visa_name = 'VI_ATTR_MANF_ID'
+    py_name = "manufacturer_id"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_MANF_ID"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -1392,17 +1476,20 @@ class AttrVI_ATTR_MANF_ID(RangeAttribute):
 class AttrVI_ATTR_MANF_NAME(Attribute):
     """This string attribute is the manufacturer name.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.pxi, 'BACKPLANE'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = 'manufacturer_name'
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.pxi, "BACKPLANE"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+    ]
 
-    visa_name = 'VI_ATTR_MANF_NAME'
+    py_name = "manufacturer_name"
 
-    visa_type = 'ViString'
+    visa_name = "VI_ATTR_MANF_NAME"
+
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -1417,13 +1504,14 @@ class AttrVI_ATTR_MAX_QUEUE_LENGTH(RangeAttribute):
     can be queued at any time on the given session. Events that occur
     after the queue has become full will be discarded.
     """
+
     resources = AllSessionTypes
 
-    py_name = ''
+    py_name = ""
 
-    visa_name = 'VI_ATTR_MAX_QUEUE_LENGTH'
+    visa_name = "VI_ATTR_MAX_QUEUE_LENGTH"
 
-    visa_type = 'ViUInt32'
+    visa_type = "ViUInt32"
 
     default = 50
 
@@ -1461,13 +1549,14 @@ class AttrVI_ATTR_MEM_SPACE(RangeAttribute):
     """VI_ATTR_MEM_SPACE specifies the VXIbus address space used by the
     device. The three types are A16, A24, or A32 memory address space.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_MEM_SPACE'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_MEM_SPACE"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_A16_SPACE
 
@@ -1480,16 +1569,19 @@ class AttrVI_ATTR_MEM_SPACE(RangeAttribute):
 class AttrVI_ATTR_MODEL_CODE(RangeAttribute):
     """VI_ATTR_MODEL_CODE specifies the model code for the device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = 'model_code'
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+    ]
 
-    visa_name = 'VI_ATTR_MODEL_CODE'
+    py_name = "model_code"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_MODEL_CODE"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -1502,17 +1594,20 @@ class AttrVI_ATTR_MODEL_CODE(RangeAttribute):
 class AttrVI_ATTR_MODEL_NAME(Attribute):
     """This string attribute is the model name of the device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.pxi, 'BACKPLANE'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = 'model_name'
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.pxi, "BACKPLANE"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+    ]
 
-    visa_name = 'VI_ATTR_MODEL_NAME'
+    py_name = "model_name"
 
-    visa_type = 'ViString'
+    visa_name = "VI_ATTR_MODEL_NAME"
+
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -1528,13 +1623,14 @@ class AttrVI_ATTR_PXI_ACTUAL_LWIDTH(ValuesAttribute):
     A value of –1 indicates that the device is not a PXI/PCI Express
     device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_ACTUAL_LWIDTH'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_ACTUAL_LWIDTH"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1547,13 +1643,14 @@ class AttrVI_ATTR_PXI_ACTUAL_LWIDTH(ValuesAttribute):
 class AttrVI_ATTR_PXI_BUS_NUM(RangeAttribute):
     """VI_ATTR_PXI_BUS_NUM specifies the PCI bus number of this device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_BUS_NUM'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_PXI_BUS_NUM"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -1567,14 +1664,17 @@ class AttrVI_ATTR_PXI_CHASSIS(RangeAttribute):
     """VI_ATTR_PXI_CHASSIS specifies the PXI chassis number of this device. A
     value of –1 means the chassis number is unknown.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.pxi, 'BACKPLANE')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.pxi, "BACKPLANE"),
+    ]
 
-    visa_name = 'VI_ATTR_PXI_CHASSIS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_CHASSIS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1588,13 +1688,14 @@ class AttrVI_ATTR_PXI_DEST_TRIG_BUS(RangeAttribute):
     """VI_ATTR_PXI_DEST_TRIG_BUS specifies the segment to use to qualify
     trigDest in viMapTrigger.
     """
-    resources = [(constants.InterfaceType.pxi, 'BACKPLANE')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "BACKPLANE")]
 
-    visa_name = 'VI_ATTR_PXI_DEST_TRIG_BUS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_DEST_TRIG_BUS"
+
+    visa_type = "ViInt16"
 
     default = -1
 
@@ -1607,13 +1708,14 @@ class AttrVI_ATTR_PXI_DEST_TRIG_BUS(RangeAttribute):
 class AttrVI_ATTR_PXI_DEV_NUM(RangeAttribute):
     """This is the PXI device number.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_DEV_NUM'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_PXI_DEV_NUM"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -1628,13 +1730,14 @@ class AttrVI_ATTR_PXI_DSTAR_BUS(RangeAttribute):
     this device. A value of –1 means the chassis is unidentified or
     does not have a timing slot.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_DSTAR_BUS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_DSTAR_BUS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1648,13 +1751,14 @@ class AttrVI_ATTR_PXI_DSTAR_SET(RangeAttribute):
     """
 
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_DSTAR_SET'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_DSTAR_SET"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1670,13 +1774,14 @@ class AttrVI_ATTR_PXI_FUNC_NUM(RangeAttribute):
     have a function number up to 7. The meaning of a function number
     other than 0 is device specific.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_FUNC_NUM'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_PXI_FUNC_NUM"
+
+    visa_type = "ViUInt16"
 
     default = 0
 
@@ -1690,13 +1795,14 @@ class AttrVI_ATTR_PXI_IS_EXPRESS(BooleanAttribute):
     """VI_ATTR_PXI_IS_EXPRESS specifies whether the device is PXI/PCI or
     PXI/PCI Express.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_IS_EXPRESS'
+    py_name = ""
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_PXI_IS_EXPRESS"
+
+    visa_type = "ViBoolean"
 
     default = NotAvailable
 
@@ -1709,13 +1815,14 @@ class AttrVI_ATTR_PXI_MAX_LWIDTH(ValuesAttribute):
     the device. A value of –1 indicates that the device is not a
     PXI/PCI Express device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_MAX_LWIDTH'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_MAX_LWIDTH"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1731,13 +1838,14 @@ class AttrVI_ATTR_PXI_MEM_BASE_BARX(RangeAttribute):
     the value of this attribute is meaningless for the given PXI
     device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_MEM_BASE_BARX'
+    py_name = ""
 
-    visa_type = 'ViUInt32'
+    visa_name = "VI_ATTR_PXI_MEM_BASE_BARX"
+
+    visa_type = "ViUInt32"
 
     default = NotAvailable
 
@@ -1753,13 +1861,14 @@ class AttrVI_ATTR_PXI_MEM_SIZE_BARX(RangeAttribute):
     the value of this attribute is meaningless for the given PXI
     device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_MEM_SIZE_BARX'
+    py_name = ""
 
-    visa_type = 'ViUInt32'
+    visa_name = "VI_ATTR_PXI_MEM_SIZE_BARX"
+
+    visa_type = "ViUInt32"
 
     default = NotAvailable
 
@@ -1772,13 +1881,14 @@ class AttrVI_ATTR_PXI_MEM_SIZE_BARX(RangeAttribute):
 class AttrVI_ATTR_PXI_MEM_TYPE_BARX(RangeAttribute):
     """Memory type used by the device in the specified BAR (if applicable).
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_MEM_TYPE_BARX'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_PXI_MEM_TYPE_BARX"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -1792,32 +1902,39 @@ class AttrVI_ATTR_PXI_SLOT_LBUS_LEFT(RangeAttribute):
     """VI_ATTR_PXI_SLOT_LBUS_LEFT specifies the slot number or special
     feature connected to the local bus left lines of this device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_SLOT_LBUS_LEFT'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_SLOT_LBUS_LEFT"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 1, 18, [constants.VI_PXI_LBUS_UNKNOWN,
-                                           constants.VI_PXI_LBUS_NONE,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_0,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_1,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_2,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_3,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_4,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_5,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_6,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_7,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_8,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_9,
-                                           constants.VI_PXI_STAR_TRIG_CONTROLLER,
-                                           constants.VI_PXI_LBUS_SCXI]
+    min_value, max_value, values = (
+        1,
+        18,
+        [
+            constants.VI_PXI_LBUS_UNKNOWN,
+            constants.VI_PXI_LBUS_NONE,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_0,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_1,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_2,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_3,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_4,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_5,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_6,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_7,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_8,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_9,
+            constants.VI_PXI_STAR_TRIG_CONTROLLER,
+            constants.VI_PXI_LBUS_SCXI,
+        ],
+    )
 
 
 # noinspection PyPep8Naming
@@ -1825,32 +1942,40 @@ class AttrVI_ATTR_PXI_SLOT_LBUS_RIGHT(RangeAttribute):
     """VI_ATTR_PXI_SLOT_LBUS_RIGHT specifies the slot number or special
     feature connected to the local bus right lines of this device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_SLOT_LBUS_RIGHT'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_SLOT_LBUS_RIGHT"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 1, 18, [constants.VI_PXI_LBUS_UNKNOWN,
-                                           constants.VI_PXI_LBUS_NONE,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_0,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_1,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_2,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_3,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_4,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_5,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_6,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_7,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_8,
-                                           constants.VI_PXI_LBUS_STAR_TRIG_BUS_9,
-                                           constants.VI_PXI_STAR_TRIG_CONTROLLER,
-                                           constants.VI_PXI_LBUS_SCXI]
+    min_value, max_value, values = (
+        1,
+        18,
+        [
+            constants.VI_PXI_LBUS_UNKNOWN,
+            constants.VI_PXI_LBUS_NONE,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_0,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_1,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_2,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_3,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_4,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_5,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_6,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_7,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_8,
+            constants.VI_PXI_LBUS_STAR_TRIG_BUS_9,
+            constants.VI_PXI_STAR_TRIG_CONTROLLER,
+            constants.VI_PXI_LBUS_SCXI,
+        ],
+    )
+
 
 # noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_SLOT_LWIDTH(ValuesAttribute):
@@ -1858,13 +1983,14 @@ class AttrVI_ATTR_PXI_SLOT_LWIDTH(ValuesAttribute):
     PXI Express peripheral slot in which the device resides. A value
     of –1 indicates that the device is not a PXI Express device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_SLOT_LWIDTH'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_SLOT_LWIDTH"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1877,13 +2003,14 @@ class AttrVI_ATTR_PXI_SLOT_LWIDTH(ValuesAttribute):
 class AttrVI_ATTR_PXI_SLOTPATH(Attribute):
     """VI_ATTR_PXI_SLOTPATH specifies the slot path of this device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_SLOTPATH'
+    py_name = ""
 
-    visa_type = 'ViString'
+    visa_name = "VI_ATTR_PXI_SLOTPATH"
+
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -1897,13 +2024,14 @@ class AttrVI_ATTR_PXI_SRC_TRIG_BUS(RangeAttribute):
     """VI_ATTR_PXI_SRC_TRIG_BUS specifies the segment to use to qualify
     trigSrc in viMapTrigger.
     """
-    resources = [(constants.InterfaceType.pxi, 'BACKPLANE')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "BACKPLANE")]
 
-    visa_name = 'VI_ATTR_PXI_SRC_TRIG_BUS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_SRC_TRIG_BUS"
+
+    visa_type = "ViInt16"
 
     default = -1
 
@@ -1917,13 +2045,14 @@ class AttrVI_ATTR_PXI_STAR_TRIG_BUS(RangeAttribute):
     """VI_ATTR_PXI_STAR_TRIG_BUS specifies the star trigger bus number of
     this device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_STAR_TRIG_BUS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_STAR_TRIG_BUS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1937,13 +2066,14 @@ class AttrVI_ATTR_PXI_STAR_TRIG_LINE(RangeAttribute):
     """VI_ATTR_PXI_STAR_TRIG_LINE specifies the PXI_STAR line connected to
     this device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.pxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_PXI_STAR_TRIG_LINE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_STAR_TRIG_LINE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1956,14 +2086,17 @@ class AttrVI_ATTR_PXI_STAR_TRIG_LINE(RangeAttribute):
 class AttrVI_ATTR_PXI_TRIG_BUS(RangeAttribute):
     """VI_ATTR_PXI_TRIG_BUS specifies the trigger bus number of this device.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.pxi, 'BACKPLANE')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.pxi, "BACKPLANE"),
+    ]
 
-    visa_name = 'VI_ATTR_PXI_TRIG_BUS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_PXI_TRIG_BUS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -1981,21 +2114,24 @@ class AttrVI_ATTR_RD_BUF_OPER_MODE(RangeAttribute):
     VI_FLUSH_ON_ACCESS, the read buffer is flushed every time a
     viScanf() (or related) operation completes.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_RD_BUF_OPER_MODE'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_RD_BUF_OPER_MODE"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_FLUSH_DISABLE
 
@@ -2009,21 +2145,24 @@ class AttrVI_ATTR_RD_BUF_SIZE(RangeAttribute):
     """This is the current size of the formatted I/O input buffer for this
     session. The user can modify this value by calling viSetBuf().
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_RD_BUF_SIZE'
+    py_name = ""
 
-    visa_type = 'ViUInt32'
+    visa_name = "VI_ATTR_RD_BUF_SIZE"
+
+    visa_type = "ViUInt32"
 
     default = NotAvailable
 
@@ -2039,14 +2178,15 @@ class AttrVI_ATTR_RM_SESSION(RangeAttribute):
 
     Not implemented as resource property, use .resource_manager.session
     """
+
     resources = AllSessionTypes
 
     # See docstring
-    py_name = ''
+    py_name = ""
 
-    visa_name = 'VI_ATTR_RM_SESSION'
+    visa_name = "VI_ATTR_RM_SESSION"
 
-    visa_type = 'ViUInt32'
+    visa_type = "ViUInt32"
 
     default = NotAvailable
 
@@ -2060,13 +2200,14 @@ class AttrVI_ATTR_RSRC_CLASS(Attribute):
     """VI_ATTR_RSRC_CLASS specifies the resource class (for example, "INSTR")
     as defined by the canonical resource name.
     """
+
     resources = AllSessionTypes
 
-    py_name = 'resource_class'
+    py_name = "resource_class"
 
-    visa_name = 'VI_ATTR_RSRC_CLASS'
+    visa_name = "VI_ATTR_RSRC_CLASS"
 
-    visa_type = 'ViString'
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -2084,13 +2225,14 @@ class AttrVI_ATTR_RSRC_IMPL_VERSION(RangeAttribute):
     the major number of the version, the next lower 12 bits as the minor number
     of the version, and the lowest 8 bits as the sub-minor number of the version.
     """
+
     resources = AllSessionTypes
 
-    py_name = 'implementation_version'
+    py_name = "implementation_version"
 
-    visa_name = 'VI_ATTR_RSRC_IMPL_VERSION'
+    visa_name = "VI_ATTR_RSRC_IMPL_VERSION"
 
-    visa_type = 'ViVersion'
+    visa_type = "ViVersion"
 
     default = NotAvailable
 
@@ -2105,13 +2247,14 @@ class AttrVI_ATTR_RSRC_LOCK_STATE(EnumAttribute):
     resource. The resource can be unlocked, locked with an exclusive
     lock, or locked with a shared lock.
     """
+
     resources = AllSessionTypes
 
-    py_name = 'lock_state'
+    py_name = "lock_state"
 
-    visa_name = 'VI_ATTR_RSRC_LOCK_STATE'
+    visa_name = "VI_ATTR_RSRC_LOCK_STATE"
 
-    visa_type = 'ViAccessMode'
+    visa_type = "ViAccessMode"
 
     default = constants.VI_NO_LOCK
 
@@ -2126,13 +2269,14 @@ class AttrVI_ATTR_RSRC_MANF_ID(RangeAttribute):
     ID of the vendor that implemented the VISA library. This attribute is not
     related to the device manufacturer attributes.
     """
+
     resources = AllSessionTypes
 
-    py_name = ''
+    py_name = ""
 
-    visa_name = 'VI_ATTR_RSRC_MANF_ID'
+    visa_name = "VI_ATTR_RSRC_MANF_ID"
 
-    visa_type = 'ViUInt16'
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -2151,13 +2295,14 @@ class AttrVI_ATTR_RSRC_MANF_NAME(Attribute):
     programmatic decisions, as the value can differ between VISA implementations
     and/or revisions.
     """
+
     resources = AllSessionTypes
 
-    py_name = 'resource_manufacturer_name'
+    py_name = "resource_manufacturer_name"
 
-    visa_name = 'VI_ATTR_RSRC_MANF_NAME'
+    visa_name = "VI_ATTR_RSRC_MANF_NAME"
 
-    visa_type = 'ViString'
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -2174,13 +2319,14 @@ class AttrVI_ATTR_RSRC_NAME(Attribute):
     programmatic decisions, as the value can differ between VISA implementations
     and/or revisions.
     """
+
     resources = AllSessionTypes
 
-    py_name = 'resource_name'
+    py_name = "resource_name"
 
-    visa_name = 'VI_ATTR_RSRC_NAME'
+    visa_name = "VI_ATTR_RSRC_NAME"
 
-    visa_type = 'ViRsrc'
+    visa_type = "ViRsrc"
 
     default = NotAvailable
 
@@ -2196,13 +2342,14 @@ class AttrVI_ATTR_RSRC_SPEC_VERSION(RangeAttribute):
     as the sub-minor number of the version. The current VISA specification defines
     the value to be 00300000h.
     """
+
     resources = AllSessionTypes
 
-    py_name = 'spec_version'
+    py_name = "spec_version"
 
-    visa_name = 'VI_ATTR_RSRC_SPEC_VERSION'
+    visa_name = "VI_ATTR_RSRC_SPEC_VERSION"
 
-    visa_type = 'ViVersion'
+    visa_type = "ViVersion"
 
     default = 0x00300000
 
@@ -2216,19 +2363,22 @@ class AttrVI_ATTR_SEND_END_EN(BooleanAttribute):
     """VI_ATTR_SEND_END_EN specifies whether to assert END during the
     transfer of the last byte of the buffer.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = 'send_end'
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_SEND_END_EN'
+    py_name = "send_end"
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_SEND_END_EN"
+
+    visa_type = "ViBoolean"
 
     default = True
 
@@ -2240,14 +2390,17 @@ class AttrVI_ATTR_SLOT(RangeAttribute):
     """VI_ATTR_SLOT specifies the physical slot location of the device. If
     the slot number is not known, VI_UNKNOWN_SLOT is returned.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.vxi, "INSTR"),
+    ]
 
-    visa_name = 'VI_ATTR_SLOT'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_SLOT"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2262,14 +2415,17 @@ class AttrVI_ATTR_SRC_ACCESS_PRIV(RangeAttribute):
     high-level access operations, such as viInXX() and viMoveInXX(),
     when reading from the source.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+    ]
 
-    visa_name = 'VI_ATTR_SRC_ACCESS_PRIV'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_SRC_ACCESS_PRIV"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_DATA_PRIV
 
@@ -2284,14 +2440,17 @@ class AttrVI_ATTR_SRC_BYTE_ORDER(RangeAttribute):
     level access operations, such as viInXX() and viMoveInXX(), when
     reading from the source.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+    ]
 
-    visa_name = 'VI_ATTR_SRC_BYTE_ORDER'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_SRC_BYTE_ORDER"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_BIG_ENDIAN
 
@@ -2311,16 +2470,19 @@ class AttrVI_ATTR_SRC_INCREMENT(RangeAttribute):
     viMoveInXX() operations will always read from the same element,
     essentially treating the source as a FIFO register.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.pxi, 'MEMACC'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC')]
 
-    py_name = 'source_increment'
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.pxi, "MEMACC"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+    ]
 
-    visa_name = 'VI_ATTR_SRC_INCREMENT'
+    py_name = "source_increment"
 
-    visa_type = 'ViInt32'
+    visa_name = "VI_ATTR_SRC_INCREMENT"
+
+    visa_type = "ViInt32"
 
     default = 1
 
@@ -2334,16 +2496,19 @@ class AttrVI_ATTR_SUPPRESS_END_EN(BooleanAttribute):
     """VI_ATTR_SUPPRESS_END_EN is relevant only in viRead and related
     operations.
     """
-    resources = [(constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+    ]
 
-    visa_name = 'VI_ATTR_SUPPRESS_END_EN'
+    py_name = ""
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_SUPPRESS_END_EN"
+
+    visa_type = "ViBoolean"
 
     default = False
 
@@ -2355,14 +2520,17 @@ class AttrVI_ATTR_TCPIP_ADDR(Attribute):
     """This is the TCPIP address of the device to which the session is
     connected. This string is formatted in dot notation.
     """
-    resources = [(constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+    ]
 
-    visa_name = 'VI_ATTR_TCPIP_ADDR'
+    py_name = ""
 
-    visa_type = 'ViString'
+    visa_name = "VI_ATTR_TCPIP_ADDR"
+
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -2376,13 +2544,14 @@ class AttrVI_ATTR_TCPIP_DEVICE_NAME(Attribute):
     """This specifies the LAN device name used by the VXI-11 or LXI protocol
     during connection.
     """
-    resources = [(constants.InterfaceType.tcpip, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.tcpip, "INSTR")]
 
-    visa_name = 'VI_ATTR_TCPIP_DEVICE_NAME'
+    py_name = ""
 
-    visa_type = 'ViString'
+    visa_name = "VI_ATTR_TCPIP_DEVICE_NAME"
+
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -2396,14 +2565,17 @@ class AttrVI_ATTR_TCPIP_HOSTNAME(Attribute):
     """This specifies the host name of the device. If no host name is
     available, this attribute returns an empty string.
     """
-    resources = [(constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+    ]
 
-    visa_name = 'VI_ATTR_TCPIP_HOSTNAME'
+    py_name = ""
 
-    visa_type = 'ViString'
+    visa_name = "VI_ATTR_TCPIP_HOSTNAME"
+
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -2421,13 +2593,14 @@ class AttrVI_ATTR_TCPIP_KEEPALIVE(BooleanAttribute):
     time required for the system to detect that the connection was
     dropped is dependent on the system and is not settable.
     """
-    resources = [(constants.InterfaceType.tcpip, 'SOCKET')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.tcpip, "SOCKET")]
 
-    visa_name = 'VI_ATTR_TCPIP_KEEPALIVE'
+    py_name = ""
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_TCPIP_KEEPALIVE"
+
+    visa_type = "ViBoolean"
 
     default = False
 
@@ -2442,13 +2615,14 @@ class AttrVI_ATTR_TCPIP_NODELAY(BooleanAttribute):
     attribute is enabled by default in VISA to verify that synchronous
     writes get flushed immediately.
     """
-    resources = [(constants.InterfaceType.tcpip, 'SOCKET')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.tcpip, "SOCKET")]
 
-    visa_name = 'VI_ATTR_TCPIP_NODELAY'
+    py_name = ""
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_TCPIP_NODELAY"
+
+    visa_type = "ViBoolean"
 
     default = True
 
@@ -2460,13 +2634,14 @@ class AttrVI_ATTR_TCPIP_PORT(RangeAttribute):
     """This specifies the port number for a given TCPIP address. For a TCPIP
     SOCKET Resource, this is a required part of the address string.
     """
-    resources = [(constants.InterfaceType.tcpip, 'SOCKET')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.tcpip, "SOCKET")]
 
-    visa_name = 'VI_ATTR_TCPIP_PORT'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_TCPIP_PORT"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -2481,23 +2656,26 @@ class AttrVI_ATTR_TERMCHAR(CharAttribute):
     character is read and VI_ATTR_TERMCHAR_EN is enabled during a read
     operation, the read operation terminates.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_TERMCHAR'
+    py_name = ""
 
-    visa_type = 'ViUInt8'
+    visa_name = "VI_ATTR_TERMCHAR"
 
-    default = 0x0A # (linefeed)
+    visa_type = "ViUInt8"
+
+    default = 0x0A  # (linefeed)
 
     read, write, local = True, True, True
 
@@ -2510,21 +2688,24 @@ class AttrVI_ATTR_TERMCHAR_EN(BooleanAttribute):
     to VI_ASRL_END_TERMCHAR. This attribute is valid for both raw I/O
     (viRead) and formatted I/O (viScanf).
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_TERMCHAR_EN'
+    py_name = ""
 
-    visa_type = 'ViBoolean'
+    visa_name = "VI_ATTR_TERMCHAR_EN"
+
+    visa_type = "ViBoolean"
 
     default = False
 
@@ -2539,13 +2720,14 @@ class AttrVI_ATTR_TMO_VALUE(RangeAttribute):
     should never wait for the device to respond. A timeout value of
     VI_TMO_INFINITE disables the timeout mechanism.
     """
+
     resources = AllSessionTypes
 
-    py_name = ''
+    py_name = ""
 
-    visa_name = 'VI_ATTR_TMO_VALUE'
+    visa_name = "VI_ATTR_TMO_VALUE"
 
-    visa_type = 'ViUInt32'
+    visa_type = "ViUInt32"
 
     default = 2000
 
@@ -2559,27 +2741,30 @@ class AttrVI_ATTR_TRIG_ID(ValuesAttribute):
     """VI_ATTR_TRIG_ID is the identifier for the current triggering
     mechanism.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.pxi, 'BACKPLANE'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'BACKPLANE'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.pxi, "BACKPLANE"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.vxi, "BACKPLANE"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_TRIG_ID'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_TRIG_ID"
+
+    visa_type = "ViInt16"
 
     default = constants.VI_TRIG_SW
 
     read, write, local = True, True, True
 
-    values = [] #TODO
+    values = []  # TODO
 
 
 # noinspection PyPep8Naming
@@ -2587,13 +2772,14 @@ class AttrVI_ATTR_USB_ALT_SETTING(RangeAttribute):
     """VI_ATTR_USB_ALT_SETTING specifies the USB alternate setting used by
     this USB interface.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_ALT_SETTING'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_ALT_SETTING"
+
+    visa_type = "ViInt16"
 
     default = 0
 
@@ -2609,13 +2795,14 @@ class AttrVI_ATTR_USB_BULK_IN_PIPE(RangeAttribute):
     signifies that this resource does not have any bulk-in pipes. This
     endpoint is used in viRead and related operations.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_BULK_IN_PIPE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_BULK_IN_PIPE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2630,13 +2817,14 @@ class AttrVI_ATTR_USB_BULK_IN_STATUS(RangeAttribute):
     by the given session is stalled or ready. This attribute can be
     set to only VI_USB_PIPE_READY.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_BULK_IN_STATUS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_BULK_IN_STATUS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2653,13 +2841,14 @@ class AttrVI_ATTR_USB_BULK_OUT_PIPE(RangeAttribute):
     bulk-out or interrupt-out pipes. This endpoint is used in viWrite
     and related operations.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_BULK_OUT_PIPE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_BULK_OUT_PIPE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2674,13 +2863,14 @@ class AttrVI_ATTR_USB_BULK_OUT_STATUS(RangeAttribute):
     interrupt-out pipe used by the given session is stalled or ready.
     This attribute can be set to only VI_USB_PIPE_READY.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_BULK_OUT_STATUS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_BULK_OUT_STATUS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2693,13 +2883,14 @@ class AttrVI_ATTR_USB_BULK_OUT_STATUS(RangeAttribute):
 class AttrVI_ATTR_USB_CLASS(RangeAttribute):
     """VI_ATTR_USB_CLASS specifies the USB class used by this USB interface.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_CLASS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_CLASS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2716,13 +2907,14 @@ class AttrVI_ATTR_USB_CTRL_PIPE(RangeAttribute):
     in viUsbControlIn and viUsbControlOut operations. Nonzero values
     may not be supported on all platforms.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_CTRL_PIPE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_CTRL_PIPE"
+
+    visa_type = "ViInt16"
 
     default = 0x00
 
@@ -2736,21 +2928,24 @@ class AttrVI_ATTR_USB_END_IN(ValuesAttribute):
     """VI_ATTR_USB_END_IN indicates the method used to terminate read
     operations.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_END_IN'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_USB_END_IN"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_USB_END_SHORT_OR_COUNT
 
     read, write, local = True, True, True
 
-    values = [constants.VI_USB_END_NONE,
-              constants.VI_USB_END_SHORT,
-              constants.VI_USB_END_SHORT_OR_COUNT]
+    values = [
+        constants.VI_USB_END_NONE,
+        constants.VI_USB_END_SHORT,
+        constants.VI_USB_END_SHORT_OR_COUNT,
+    ]
 
 
 # noinspection PyPep8Naming
@@ -2758,14 +2953,17 @@ class AttrVI_ATTR_USB_INTFC_NUM(RangeAttribute):
     """VI_ATTR_USB_INTFC_NUM specifies the USB interface number used by the
     given session.
     """
-    resources = [(constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW')]
 
-    py_name = 'interface_number'
+    resources = [
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+    ]
 
-    visa_name = 'VI_ATTR_USB_INTFC_NUM'
+    py_name = "interface_number"
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_INTFC_NUM"
+
+    visa_type = "ViInt16"
 
     default = 0
 
@@ -2782,13 +2980,14 @@ class AttrVI_ATTR_USB_INTR_IN_PIPE(RangeAttribute):
     pipes. This endpoint is used in viEnableEvent for
     VI_EVENT_USB_INTR.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_INTR_IN_PIPE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_INTR_IN_PIPE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2803,13 +3002,14 @@ class AttrVI_ATTR_USB_INTR_IN_STATUS(RangeAttribute):
     used by the given session is stalled or ready. This attribute can
     be set to only VI_USB_PIPE_READY.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_INTR_IN_STATUS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_INTR_IN_STATUS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2825,14 +3025,17 @@ class AttrVI_ATTR_USB_MAX_INTR_SIZE(RangeAttribute):
     more data than this size, the data in excess of this size will be
     lost.
     """
-    resources = [(constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW')]
 
-    py_name = 'maximum_interrupt_size'
+    resources = [
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+    ]
 
-    visa_name = 'VI_ATTR_USB_MAX_INTR_SIZE'
+    py_name = "maximum_interrupt_size"
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_USB_MAX_INTR_SIZE"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -2846,13 +3049,14 @@ class AttrVI_ATTR_USB_NUM_INTFCS(RangeAttribute):
     """VI_ATTR_USB_NUM_INTFCS specifies the number of interfaces supported by
     this USB device.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_NUM_INTFCS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_NUM_INTFCS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2866,13 +3070,14 @@ class AttrVI_ATTR_USB_NUM_PIPES(RangeAttribute):
     """VI_ATTR_USB_NUM_PIPES specifies the number of pipes supported by this
     USB interface. This does not include the default control pipe.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_NUM_PIPES'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_NUM_PIPES"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2886,14 +3091,17 @@ class AttrVI_ATTR_USB_PROTOCOL(RangeAttribute):
     """VI_ATTR_USB_PROTOCOL specifies the USB protocol used by this USB
     interface.
     """
-    resources = [(constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW')]
 
-    py_name = 'usb_protocol'
+    resources = [
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+    ]
 
-    visa_name = 'VI_ATTR_USB_PROTOCOL'
+    py_name = "usb_protocol"
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_PROTOCOL"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2906,14 +3114,17 @@ class AttrVI_ATTR_USB_PROTOCOL(RangeAttribute):
 class AttrVI_ATTR_USB_SERIAL_NUM(Attribute):
     """VI_ATTR_USB_SERIAL_NUM specifies the USB serial number of this device.
     """
-    resources = [(constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW')]
 
-    py_name = 'serial_number'
+    resources = [
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+    ]
 
-    visa_name = 'VI_ATTR_USB_SERIAL_NUM'
+    py_name = "serial_number"
 
-    visa_type = 'ViString'
+    visa_name = "VI_ATTR_USB_SERIAL_NUM"
+
+    visa_type = "ViString"
 
     default = NotAvailable
 
@@ -2927,13 +3138,14 @@ class AttrVI_ATTR_USB_SUBCLASS(RangeAttribute):
     """VI_ATTR_USB_SUBCLASS specifies the USB subclass used by this USB
     interface.
     """
-    resources = [(constants.InterfaceType.usb, 'RAW')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.usb, "RAW")]
 
-    visa_name = 'VI_ATTR_USB_SUBCLASS'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_USB_SUBCLASS"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -2963,13 +3175,14 @@ class AttrVI_ATTR_VXI_DEV_CLASS(RangeAttribute):
     devices are usually either register based or belong to a
     miscellaneous class (VI_VXI_CLASS_OTHER).
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_VXI_DEV_CLASS'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_VXI_DEV_CLASS"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -2985,15 +3198,18 @@ class AttrVI_ATTR_VXI_LA(RangeAttribute):
     SERVANT session, this attribute specifies the logical address of
     the local controller.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_VXI_LA'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_VXI_LA"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -3011,13 +3227,14 @@ class AttrVI_ATTR_VXI_TRIG_DIR(RangeAttribute):
     set, the line must also be enabled using
     VI_ATTR_VXI_TRIG_LINES_EN.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_VXI_TRIG_DIR'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_VXI_TRIG_DIR"
+
+    visa_type = "ViUInt16"
 
     default = 0
 
@@ -3034,13 +3251,14 @@ class AttrVI_ATTR_VXI_TRIG_LINES_EN(RangeAttribute):
     mapping exists. Use VI_ATTR_VXI_TRIG_DIR to set an enabled line's
     direction.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "INSTR")]
 
-    visa_name = 'VI_ATTR_VXI_TRIG_LINES_EN'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_VXI_TRIG_LINES_EN"
+
+    visa_type = "ViUInt16"
 
     default = 0
 
@@ -3055,13 +3273,14 @@ class AttrVI_ATTR_VXI_TRIG_STATUS(RangeAttribute):
     is a bit vector with bits 0-9 corresponding to VI_TRIG_TTL0
     through VI_TRIG_ECL1.
     """
-    resources = [(constants.InterfaceType.vxi, 'BACKPLANE')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "BACKPLANE")]
 
-    visa_name = 'VI_ATTR_VXI_TRIG_STATUS'
+    py_name = ""
 
-    visa_type = 'ViUInt32'
+    visa_name = "VI_ATTR_VXI_TRIG_STATUS"
+
+    visa_type = "ViUInt32"
 
     default = NotAvailable
 
@@ -3076,14 +3295,17 @@ class AttrVI_ATTR_VXI_TRIG_SUPPORT(RangeAttribute):
     supports. This is a bit vector with bits 0-9 corresponding to
     VI_TRIG_TTL0 through VI_TRIG_ECL1.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'BACKPLANE')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "BACKPLANE"),
+    ]
 
-    visa_name = 'VI_ATTR_VXI_TRIG_SUPPORT'
+    py_name = ""
 
-    visa_type = 'ViUInt32'
+    visa_name = "VI_ATTR_VXI_TRIG_SUPPORT"
+
+    visa_type = "ViUInt32"
 
     default = NotAvailable
 
@@ -3098,13 +3320,14 @@ class AttrVI_ATTR_VXI_VME_INTR_STATUS(RangeAttribute):
     This is a bit vector with bits 0-6 corresponding to interrupt
     lines 1-7.
     """
-    resources = [(constants.InterfaceType.vxi, 'BACKPLANE')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "BACKPLANE")]
 
-    visa_name = 'VI_ATTR_VXI_VME_INTR_STATUS'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_VXI_VME_INTR_STATUS"
+
+    visa_type = "ViUInt16"
 
     default = NotAvailable
 
@@ -3118,13 +3341,14 @@ class AttrVI_ATTR_VXI_VME_SYSFAIL_STATE(EnumAttribute):
     """This attribute shows the current state of the VXI/VME SYSFAIL (SYStem
     FAILure) backplane line.
     """
-    resources = [(constants.InterfaceType.vxi, 'BACKPLANE')]
 
-    py_name = ''
+    resources = [(constants.InterfaceType.vxi, "BACKPLANE")]
 
-    visa_name = 'VI_ATTR_VXI_VME_SYSFAIL_STATE'
+    py_name = ""
 
-    visa_type = 'ViInt16'
+    visa_name = "VI_ATTR_VXI_VME_SYSFAIL_STATE"
+
+    visa_type = "ViInt16"
 
     default = NotAvailable
 
@@ -3138,16 +3362,19 @@ class AttrVI_ATTR_WIN_ACCESS(RangeAttribute):
     """VI_ATTR_WIN_ACCESS specifies the modes in which the current window may
     be accessed.
     """
-    resources = [(constants.InterfaceType.pxi, 'INSTR'),
-                 (constants.InterfaceType.pxi, 'MEMACC'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.pxi, "INSTR"),
+        (constants.InterfaceType.pxi, "MEMACC"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+    ]
 
-    visa_name = 'VI_ATTR_WIN_ACCESS'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_WIN_ACCESS"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_NMAPPED
 
@@ -3162,14 +3389,17 @@ class AttrVI_ATTR_WIN_ACCESS_PRIV(RangeAttribute):
     low-level access operations, such as viMapAddress(), viPeekXX(),
     and viPokeXX(), when accessing the mapped window.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+    ]
 
-    visa_name = 'VI_ATTR_WIN_ACCESS_PRIV'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_WIN_ACCESS_PRIV"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_DATA_PRIV
 
@@ -3196,14 +3426,17 @@ class AttrVI_ATTR_WIN_BYTE_ORDER(RangeAttribute):
     level access operations, such as viMapAddress(), viPeekXX(), and
     viPokeXX(), when accessing the mapped window.
     """
-    resources = [(constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'MEMACC')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "MEMACC"),
+    ]
 
-    visa_name = 'VI_ATTR_WIN_BYTE_ORDER'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_WIN_BYTE_ORDER"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_BIG_ENDIAN
 
@@ -3234,21 +3467,24 @@ class AttrVI_ATTR_WR_BUF_OPER_MODE(RangeAttribute):
     buffer is flushed under the same conditions, and also every time a
     viPrintf() (or related) operation completes.
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_WR_BUF_OPER_MODE'
+    py_name = ""
 
-    visa_type = 'ViUInt16'
+    visa_name = "VI_ATTR_WR_BUF_OPER_MODE"
+
+    visa_type = "ViUInt16"
 
     default = constants.VI_FLUSH_WHEN_FULL
 
@@ -3262,25 +3498,27 @@ class AttrVI_ATTR_WR_BUF_SIZE(RangeAttribute):
     """This is the current size of the formatted I/O output buffer for this
     session. The user can modify this value by calling viSetBuf().
     """
-    resources = [(constants.InterfaceType.gpib, 'INSTR'),
-                 (constants.InterfaceType.gpib, 'INTFC'),
-                 (constants.InterfaceType.asrl, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'INSTR'),
-                 (constants.InterfaceType.tcpip, 'SOCKET'),
-                 (constants.InterfaceType.usb, 'INSTR'),
-                 (constants.InterfaceType.usb, 'RAW'),
-                 (constants.InterfaceType.vxi, 'INSTR'),
-                 (constants.InterfaceType.vxi, 'SERVANT')]
 
-    py_name = ''
+    resources = [
+        (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.tcpip, "INSTR"),
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.usb, "INSTR"),
+        (constants.InterfaceType.usb, "RAW"),
+        (constants.InterfaceType.vxi, "INSTR"),
+        (constants.InterfaceType.vxi, "SERVANT"),
+    ]
 
-    visa_name = 'VI_ATTR_WR_BUF_SIZE'
+    py_name = ""
 
-    visa_type = 'ViUInt32'
+    visa_name = "VI_ATTR_WR_BUF_SIZE"
+
+    visa_type = "ViUInt32"
 
     default = NotAvailable
 
     read, write, local = True, False, True
 
     min_value, max_value, values = 0, 4294967295, []
-

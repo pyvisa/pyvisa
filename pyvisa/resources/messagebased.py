@@ -27,6 +27,7 @@ class ControlRenMixin(object):
     """Common control_ren method of some messaged based resources.
 
     """
+
     # It should work for GPIB, USB and some TCPIP
     # For TCPIP I found some (all?) NI's VISA library do not handle
     # control_ren, but it works for Agilent's VISA library (at least some of
@@ -50,12 +51,12 @@ class MessageBasedResource(Resource):
 
     """
 
-    CR = '\r'
-    LF = '\n'
+    CR = "\r"
+    LF = "\n"
 
     _read_termination = None
     _write_termination = CR + LF
-    _encoding = 'ascii'
+    _encoding = "ascii"
 
     chunk_size = 20 * 1024
     query_delay = 0.0
@@ -69,7 +70,7 @@ class MessageBasedResource(Resource):
     @encoding.setter
     def encoding(self, encoding):
         # Test that the encoding specified makes sense.
-        'test encoding'.encode(encoding).decode(encoding)
+        "test encoding".encode(encoding).decode(encoding)
         self._encoding = encoding
 
     @property
@@ -94,14 +95,12 @@ class MessageBasedResource(Resource):
                 raise ValueError("ambiguous ending in termination characters")
 
             self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(last_char))
-            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN,
-                                    constants.VI_TRUE)
+            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_TRUE)
         else:
             # The termchar is also used in VI_ATTR_ASRL_END_IN (for serial
             # termination) so return it to its default.
             self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(self.LF))
-            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN,
-                                    constants.VI_FALSE)
+            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_FALSE)
 
         self._read_termination = value
 
@@ -146,16 +145,25 @@ class MessageBasedResource(Resource):
 
         if term:
             if message.endswith(term):
-                warnings.warn("write message already ends with "
-                              "termination characters", stacklevel=2)
+                warnings.warn(
+                    "write message already ends with " "termination characters",
+                    stacklevel=2,
+                )
             message += term
 
         count = self.write_raw(message.encode(enco))
 
         return count
 
-    def write_ascii_values(self, message, values, converter='f', separator=',',
-                           termination=None, encoding=None):
+    def write_ascii_values(
+        self,
+        message,
+        values,
+        converter="f",
+        separator=",",
+        termination=None,
+        encoding=None,
+    ):
         """Write a string message to the device followed by values in ascii
         format.
 
@@ -179,8 +187,10 @@ class MessageBasedResource(Resource):
         enco = self._encoding if encoding is None else encoding
 
         if term and message.endswith(term):
-            warnings.warn("write message already ends with "
-                            "termination characters", stacklevel=2)
+            warnings.warn(
+                "write message already ends with " "termination characters",
+                stacklevel=2,
+            )
 
         block = util.to_ascii_block(values, converter, separator)
 
@@ -193,9 +203,16 @@ class MessageBasedResource(Resource):
 
         return count
 
-    def write_binary_values(self, message, values, datatype='f',
-                            is_big_endian=False, termination=None,
-                            encoding=None, header_fmt='ieee'):
+    def write_binary_values(
+        self,
+        message,
+        values,
+        datatype="f",
+        is_big_endian=False,
+        termination=None,
+        encoding=None,
+        header_fmt="ieee",
+    ):
         """Write a string message to the device followed by values in binary
         format.
 
@@ -216,14 +233,16 @@ class MessageBasedResource(Resource):
         enco = self._encoding if encoding is None else encoding
 
         if term and message.endswith(term):
-                warnings.warn("write message already ends with "
-                              "termination characters", stacklevel=2)
+            warnings.warn(
+                "write message already ends with " "termination characters",
+                stacklevel=2,
+            )
 
         if header_fmt == "ieee":
-           block = util.to_ieee_block(values, datatype, is_big_endian)
+            block = util.to_ieee_block(values, datatype, is_big_endian)
         elif header_fmt == "hp":
             block = util.to_hp_block(values, datatype, is_big_endian)
-        elif header_fmt =="empty":
+        elif header_fmt == "empty":
             block = util.to_binary_block(values, b"", datatype, is_big_endian)
         else:
             raise ValueError("Unsupported header_fmt: %s" % header_fmt)
@@ -256,23 +275,31 @@ class MessageBasedResource(Resource):
         left_to_read = count
         termchar_read = constants.StatusCode.success_termination_character_read
 
-        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT,
-                                 constants.VI_SUCCESS_MAX_CNT):
+        with self.ignore_warning(
+            constants.VI_SUCCESS_DEV_NPRESENT, constants.VI_SUCCESS_MAX_CNT
+        ):
             try:
                 status = None
                 while len(ret) < count:
                     size = min(chunk_size, left_to_read)
-                    logger.debug('%s - reading %d bytes (last status %r)',
-                                 self._resource_name, size, status)
+                    logger.debug(
+                        "%s - reading %d bytes (last status %r)",
+                        self._resource_name,
+                        size,
+                        status,
+                    )
                     chunk, status = self.visalib.read(self.session, size)
                     ret.extend(chunk)
                     left_to_read -= len(chunk)
                     if break_on_termchar and status == termchar_read:
                         break
             except errors.VisaIOError as e:
-                logger.debug('%s - exception while reading: %s\n'
-                             'Buffer content: %r',  self._resource_name, e,
-                             ret)
+                logger.debug(
+                    "%s - exception while reading: %s\n" "Buffer content: %r",
+                    self._resource_name,
+                    e,
+                    ret,
+                )
                 raise
         return bytes(ret)
 
@@ -301,18 +328,27 @@ class MessageBasedResource(Resource):
         loop_status = constants.StatusCode.success_max_count_read
 
         ret = bytearray()
-        with self.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT,
-                                 constants.VI_SUCCESS_MAX_CNT):
+        with self.ignore_warning(
+            constants.VI_SUCCESS_DEV_NPRESENT, constants.VI_SUCCESS_MAX_CNT
+        ):
             try:
                 status = loop_status
                 while status == loop_status:
-                    logger.debug('%s - reading %d bytes (last status %r)',
-                                 self._resource_name, size, status)
+                    logger.debug(
+                        "%s - reading %d bytes (last status %r)",
+                        self._resource_name,
+                        size,
+                        status,
+                    )
                     chunk, status = self.visalib.read(self.session, size)
                     ret.extend(chunk)
             except errors.VisaIOError as e:
-                logger.debug('%s - exception while reading: %s\nBuffer '
-                             'content: %r', self._resource_name, e, ret)
+                logger.debug(
+                    "%s - exception while reading: %s\nBuffer " "content: %r",
+                    self._resource_name,
+                    e,
+                    ret,
+                )
                 raise
 
         return ret
@@ -342,13 +378,14 @@ class MessageBasedResource(Resource):
             return message
 
         if not message.endswith(termination):
-            warnings.warn("read string doesn't end with "
-                          "termination characters", stacklevel=2)
+            warnings.warn(
+                "read string doesn't end with " "termination characters", stacklevel=2
+            )
             return message
 
-        return message[:-len(termination)]
+        return message[: -len(termination)]
 
-    def read_ascii_values(self, converter='f', separator=',', container=list):
+    def read_ascii_values(self, converter="f", separator=",", container=list):
         """Read values from the device in ascii format returning an iterable of
         values.
 
@@ -371,10 +408,16 @@ class MessageBasedResource(Resource):
 
         return util.from_ascii_block(block, converter, separator, container)
 
-    def read_binary_values(self, datatype='f', is_big_endian=False,
-                           container=list, header_fmt='ieee',
-                           expect_termination=True, data_points=0,
-                           chunk_size=None):
+    def read_binary_values(
+        self,
+        datatype="f",
+        is_big_endian=False,
+        container=list,
+        header_fmt="ieee",
+        expect_termination=True,
+        data_points=0,
+        chunk_size=None,
+    ):
         """Read values from the device in binary format returning an iterable
         of values.
 
@@ -402,22 +445,22 @@ class MessageBasedResource(Resource):
         """
         block = self._read_raw(chunk_size)
 
-        if header_fmt == 'ieee':
+        if header_fmt == "ieee":
             offset, data_length = util.parse_ieee_block_header(block)
 
-        elif header_fmt == 'hp':
-            offset, data_length = util.parse_hp_block_header(block,
-                                                             is_big_endian)
-        elif header_fmt == 'empty':
+        elif header_fmt == "hp":
+            offset, data_length = util.parse_hp_block_header(block, is_big_endian)
+        elif header_fmt == "empty":
             offset = 0
             data_length = 0
         else:
-            raise ValueError("Invalid header format. Valid options are 'ieee',"
-                             " 'empty', 'hp'")
+            raise ValueError(
+                "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
+            )
 
         # Allow to support instrument such as the Keithley 2000 that do not
         # report the length of the block
-        data_length = data_length or data_points*struct.calcsize(datatype)
+        data_length = data_length or data_points * struct.calcsize(datatype)
 
         expected_length = offset + data_length
 
@@ -426,20 +469,23 @@ class MessageBasedResource(Resource):
 
         # Read all the data if we know what to expect.
         if data_length != 0:
-            block.extend(self.read_bytes(expected_length - len(block),
-                                         chunk_size=chunk_size))
+            block.extend(
+                self.read_bytes(expected_length - len(block), chunk_size=chunk_size)
+            )
         else:
-            raise ValueError("The length of the data to receive could not be "
-                             "determined. You should provide the number of "
-                             "points you expect using the data_points keyword "
-                             "argument.")
+            raise ValueError(
+                "The length of the data to receive could not be "
+                "determined. You should provide the number of "
+                "points you expect using the data_points keyword "
+                "argument."
+            )
 
         try:
             # Do not reparse the headers since it was already done and since
             # this allows for custom data length
-            return util.from_binary_block(block, offset, data_length,
-                                          datatype, is_big_endian,
-                                          container)
+            return util.from_binary_block(
+                block, offset, data_length, datatype, is_big_endian, container
+            )
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args)
 
@@ -462,8 +508,9 @@ class MessageBasedResource(Resource):
             time.sleep(delay)
         return self.read()
 
-    def query_ascii_values(self, message, converter='f', separator=',',
-                           container=list, delay=None):
+    def query_ascii_values(
+        self, message, converter="f", separator=",", container=list, delay=None
+    ):
         """Query the device for values in ascii format returning an iterable of
         values.
 
@@ -491,10 +538,18 @@ class MessageBasedResource(Resource):
 
         return self.read_ascii_values(converter, separator, container)
 
-    def query_binary_values(self, message, datatype='f', is_big_endian=False,
-                            container=list, delay=None, header_fmt='ieee',
-                            expect_termination=True, data_points=0,
-                            chunk_size=None):
+    def query_binary_values(
+        self,
+        message,
+        datatype="f",
+        is_big_endian=False,
+        container=list,
+        delay=None,
+        header_fmt="ieee",
+        expect_termination=True,
+        data_points=0,
+        chunk_size=None,
+    ):
         """Query the device for values in binary format returning an iterable
         of values.
 
@@ -520,9 +575,10 @@ class MessageBasedResource(Resource):
         :returns: the answer from the device.
         :rtype: list
         """
-        if header_fmt not in ('ieee', 'empty', 'hp'):
-            raise ValueError("Invalid header format. Valid options are 'ieee',"
-                             " 'empty', 'hp'")
+        if header_fmt not in ("ieee", "empty", "hp"):
+            raise ValueError(
+                "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
+            )
 
         self.write(message)
         if delay is None:
@@ -530,16 +586,21 @@ class MessageBasedResource(Resource):
         if delay > 0.0:
             time.sleep(delay)
 
-        return self.read_binary_values(datatype, is_big_endian, container,
-                                       header_fmt, expect_termination,
-                                       data_points, chunk_size)
+        return self.read_binary_values(
+            datatype,
+            is_big_endian,
+            container,
+            header_fmt,
+            expect_termination,
+            data_points,
+            chunk_size,
+        )
 
     def assert_trigger(self):
         """Sends a software trigger to the device.
         """
 
-        self.visalib.assert_trigger(self.session,
-                                    constants.VI_TRIG_PROT_DEFAULT)
+        self.visalib.assert_trigger(self.session, constants.VI_TRIG_PROT_DEFAULT)
 
     @property
     def stb(self):
@@ -556,8 +617,7 @@ class MessageBasedResource(Resource):
     @contextlib.contextmanager
     def read_termination_context(self, new_termination):
         term = self.get_visa_attribute(constants.VI_ATTR_TERMCHAR)
-        self.set_visa_attribute(constants.VI_ATTR_TERMCHAR,
-                                ord(new_termination[-1]))
+        self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(new_termination[-1]))
         yield
         self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, term)
 
@@ -575,5 +635,6 @@ class MessageBasedResource(Resource):
 
 
 # Rohde and Schwarz Device via Passport. Not sure which Resource should be.
-MessageBasedResource.register(constants.InterfaceType.rsnrp,
-                              'INSTR')(MessageBasedResource)
+MessageBasedResource.register(constants.InterfaceType.rsnrp, "INSTR")(
+    MessageBasedResource
+)

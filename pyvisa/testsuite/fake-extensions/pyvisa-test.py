@@ -4,6 +4,7 @@
 """
 from pyvisa.highlevel import VisaLibraryBase
 
+
 class FalseVISALib(VisaLibraryBase):
     pass
 

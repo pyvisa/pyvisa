@@ -6,9 +6,9 @@
 #    Copyright © 2005, 2006, 2007, 2008
 #                Torsten Bronger <bronger@physik.rwth-aachen.de>,
 #                Gregor Thalhammer <gth@users.sourceforge.net>.
-#                     
+#
 #    This file is part of PyVISA.
-#  
+#
 #    PyVISA is free software; you can redistribute it and/or modify it under
 #    the terms of the MIT licence:
 #
@@ -34,6 +34,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import visa
+
 
 def test_itc4():
     print("Test start")

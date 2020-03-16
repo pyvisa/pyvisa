@@ -64,7 +64,7 @@ class TestResourceManager(unittest.TestCase):
             del rm
             gc.collect()
 
-        self.assertIn('Closing ResourceManager', log.output)
+        self.assertIn("Closing ResourceManager", log.output)
 
     def test_resource_manager_unicity(self):
         """Test the resource manager is unique per backend as expected.
@@ -109,15 +109,24 @@ class TestResourceManager(unittest.TestCase):
 
         """
         # Default settings
-        self.assertSequenceEqual(sorted(self.rm.list_resources()),
-                                 sorted([str(ResourceName.from_string(v))
-                                       for v in RESOURCE_ADDRESSES.values()
-                                         if v.endswith("INSTR")]))
+        self.assertSequenceEqual(
+            sorted(self.rm.list_resources()),
+            sorted(
+                [
+                    str(ResourceName.from_string(v))
+                    for v in RESOURCE_ADDRESSES.values()
+                    if v.endswith("INSTR")
+                ]
+            ),
+        )
 
         # All resources
-        self.assertSequenceEqual(sorted(self.rm.list_resources("?*")),
-                                 sorted([str(ResourceName.from_string(v))
-                                        for v in RESOURCE_ADDRESSES.values()]))
+        self.assertSequenceEqual(
+            sorted(self.rm.list_resources("?*")),
+            sorted(
+                [str(ResourceName.from_string(v)) for v in RESOURCE_ADDRESSES.values()]
+            ),
+        )
 
     def test_accessing_resource_infos(self):
         """Test accessing resource infos.
@@ -128,14 +137,17 @@ class TestResourceManager(unittest.TestCase):
         rinfo = self.rm.resource_info(rname, extended=False)
 
         rname = ResourceName().from_string(rname)
-        self.assertEqual(rinfo_ext.interface_type,
-                         getattr(InterfaceType, rname.interface_type.lower()))
+        self.assertEqual(
+            rinfo_ext.interface_type,
+            getattr(InterfaceType, rname.interface_type.lower()),
+        )
         self.assertEqual(rinfo_ext.interface_board_number, int(rname.board))
         self.assertEqual(rinfo_ext.resource_class, rname.resource_class)
         self.assertEqual(rinfo_ext.resource_name, str(rname))
 
-        self.assertEqual(rinfo.interface_type,
-                         getattr(InterfaceType, rname.interface_type.lower()))
+        self.assertEqual(
+            rinfo.interface_type, getattr(InterfaceType, rname.interface_type.lower())
+        )
         self.assertEqual(rinfo.interface_board_number, int(rname.board))
 
     def test_listing_resource_infos(self):
@@ -146,8 +158,10 @@ class TestResourceManager(unittest.TestCase):
 
         for rname, rinfo_ext in infos.items():
             rname = ResourceName().from_string(rname)
-            self.assertEqual(rinfo_ext.interface_type,
-                             getattr(InterfaceType, rname.interface_type.lower()))
+            self.assertEqual(
+                rinfo_ext.interface_type,
+                getattr(InterfaceType, rname.interface_type.lower()),
+            )
             self.assertEqual(rinfo_ext.interface_board_number, int(rname.board))
             self.assertEqual(rinfo_ext.resource_class, rname.resource_class)
             self.assertEqual(rinfo_ext.resource_name, str(rname))
@@ -157,8 +171,7 @@ class TestResourceManager(unittest.TestCase):
 
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
-        rsc = self.rm.open_resource(rname,
-                                    timeout=1234)
+        rsc = self.rm.open_resource(rname, timeout=1234)
 
         # Check the resource is listed as opened and the attributes are right.
         self.assertIn(rsc, self.rm.list_opened_resources())
@@ -178,8 +191,7 @@ class TestResourceManager(unittest.TestCase):
         rname = list(RESOURCE_ADDRESSES.values())[0]
 
         with self.assertRaises(ValueError) as cm:
-            rsc = self.rm.open_resource(rname,
-                                        open_timeout="")
+            rsc = self.rm.open_resource(rname, open_timeout="")
 
         self.assertIn("integer (or compatible type)", str(cm.exception))
 
@@ -188,20 +200,17 @@ class TestResourceManager(unittest.TestCase):
 
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
-        rsc = self.rm.open_resource(rname,
-                                    access_mode=AccessModes.exclusive_lock)
+        rsc = self.rm.open_resource(rname, access_mode=AccessModes.exclusive_lock)
         self.assertEqual(len(self.rm.list_opened_resources()), 1)
 
         # Timeout when accessing a locked resource
         with self.assertRaises(VisaIOError):
-            self.rm.open_resource(rname,
-                                  access_mode=AccessModes.exclusive_lock)
+            self.rm.open_resource(rname, access_mode=AccessModes.exclusive_lock)
         self.assertEqual(len(self.rm.list_opened_resources()), 1)
 
         # Success to access an unlocked resource.
         rsc.unlock()
-        rsc2 = self.rm.open_resource(rname,
-                                     access_mode=AccessModes.exclusive_lock)
+        rsc2 = self.rm.open_resource(rname, access_mode=AccessModes.exclusive_lock)
         self.assertEqual(len(self.rm.list_opened_resources()), 2)
 
     def test_opening_resource_specific_class(self):
@@ -222,7 +231,6 @@ class TestResourceManager(unittest.TestCase):
         old = rc.copy()
 
         class FakeResource:
-
             def __init__(self, *args):
                 raise RuntimeError()
 
@@ -234,8 +242,9 @@ class TestResourceManager(unittest.TestCase):
                 highlevel.ResourceManager.open_resource("TCPIP::192.168.0.1::INSTR")
             self.assertIs(
                 highlevel.ResourceManager._resource_classes[
-                    (constants.InterfaceType.tcpip, "INSTR")],
-                object
+                    (constants.InterfaceType.tcpip, "INSTR")
+                ],
+                object,
             )
         finally:
             highlevel.ResourceManager._resource_classes = old
@@ -292,8 +301,9 @@ class TestResourceParsing(BaseTestCase):
         p = self.rm.visalib.parse_resource_extended(self.rm.session, rn)
 
         # Internal
-        pb = VisaLibraryBase.parse_resource_extended(self.rm.visalib,
-                                                     self.rm.session, rn)
+        pb = VisaLibraryBase.parse_resource_extended(
+            self.rm.visalib, self.rm.session, rn
+        )
         self.assertEqual(p, pb)
 
         # Non-extended parsing
@@ -301,6 +311,5 @@ class TestResourceParsing(BaseTestCase):
         p = self.rm.visalib.parse_resource(self.rm.session, rn)
 
         # Internal
-        pb = VisaLibraryBase.parse_resource(self.rm.visalib,
-                                            self.rm.session, rn)
+        pb = VisaLibraryBase.parse_resource(self.rm.visalib, self.rm.session, rn)
         self.assertEqual(p, pb)

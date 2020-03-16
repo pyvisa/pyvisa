@@ -16,7 +16,7 @@ from .. import constants
 from .messagebased import MessageBasedResource, ControlRenMixin
 
 
-@MessageBasedResource.register(constants.InterfaceType.usb, 'INSTR')
+@MessageBasedResource.register(constants.InterfaceType.usb, "INSTR")
 class USBInstrument(ControlRenMixin, MessageBasedResource):
     """Communicates with devices of type USB::manufacturer ID::model code::serial number
 
@@ -26,7 +26,9 @@ class USBInstrument(ControlRenMixin, MessageBasedResource):
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
-    def control_in(self, request_type_bitmap_field, request_id, request_value, index, length=0):
+    def control_in(
+        self, request_type_bitmap_field, request_id, request_value, index, length=0
+    ):
         """Performs a USB control pipe transfer from the device.
 
         :param request_type_bitmap_field: bmRequestType parameter of the setup stage of a USB control transfer.
@@ -40,10 +42,18 @@ class USBInstrument(ControlRenMixin, MessageBasedResource):
         :return: The data buffer that receives the data from the optional data stage of the control transfer.
         :rtype: bytes
         """
-        return self.visalib.usb_control_in(self.session, request_type_bitmap_field,
-                                           request_id, request_value, index, length)
+        return self.visalib.usb_control_in(
+            self.session,
+            request_type_bitmap_field,
+            request_id,
+            request_value,
+            index,
+            length,
+        )
 
-    def control_out(self, request_type_bitmap_field, request_id, request_value, index, data=""):
+    def control_out(
+        self, request_type_bitmap_field, request_id, request_value, index, data=""
+    ):
         """Performs a USB control pipe transfer to the device.
 
         :param request_type_bitmap_field: bmRequestType parameter of the setup stage of a USB control transfer.
@@ -53,11 +63,17 @@ class USBInstrument(ControlRenMixin, MessageBasedResource):
                       This is usually the index of the interface or endpoint.
         :param data: The data buffer that sends the data in the optional data stage of the control transfer.
         """
-        return self.visalib.usb_control_out(self.session, request_type_bitmap_field,
-                                            request_id, request_value, index, data)
+        return self.visalib.usb_control_out(
+            self.session,
+            request_type_bitmap_field,
+            request_id,
+            request_value,
+            index,
+            data,
+        )
 
 
-@MessageBasedResource.register(constants.InterfaceType.usb, 'RAW')
+@MessageBasedResource.register(constants.InterfaceType.usb, "RAW")
 class USBRaw(MessageBasedResource):
     """Communicates with to devices of type USB::manufacturer ID::model code::serial number::RAW
 

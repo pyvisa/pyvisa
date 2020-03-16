@@ -41,7 +41,9 @@ class RegisterBasedResource(Resource):
 
         Corresponds to viOut* functions of the visa library.
         """
-        return self.visalib.write_memory(self.session, space, offset, data, width, extended)
+        return self.visalib.write_memory(
+            self.session, space, offset, data, width, extended
+        )
 
     def move_in(self, space, offset, length, width, extended=False):
         """Moves a block of data to local memory from the specified address space and offset.
@@ -53,7 +55,9 @@ class RegisterBasedResource(Resource):
         :param width: Number of bits to read per element.
         :param extended: Use 64 bits offset independent of the platform.
         """
-        return self.visalib.move_in(self.session, space, offset, length, width, extended)
+        return self.visalib.move_in(
+            self.session, space, offset, length, width, extended
+        )
 
     def move_out(self, space, offset, length, data, width, extended=False):
         """Moves a block of data from local memory to the specified address space and offset.

@@ -29,6 +29,7 @@ class WaitResponse(object):
        recorded as None, otherwise it records the proper EventType enum.
 
     """
+
     def __init__(self, event_type, context, ret, visalib, timed_out=False):
         if event_type == 0:
             self.event_type = None
@@ -59,24 +60,29 @@ class Resource(object):
     @classmethod
     def register(cls, interface_type, resource_class):
         def _internal(python_class):
-            highlevel.ResourceManager.register_resource_class(interface_type, resource_class, python_class)
+            highlevel.ResourceManager.register_resource_class(
+                interface_type, resource_class, python_class
+            )
 
             # If the class already has this attribute,
             # it means that a parent class was registered first.
             # We need to copy the current list and extended it.
-            attrs = copy.copy(getattr(python_class, 'visa_attributes_classes', []))
+            attrs = copy.copy(getattr(python_class, "visa_attributes_classes", []))
 
-            for attr in attributes.AttributesPerResource[(interface_type, resource_class)]:
+            for attr in attributes.AttributesPerResource[
+                (interface_type, resource_class)
+            ]:
                 attrs.append(attr)
-                if not hasattr(python_class, attr.py_name) and attr.py_name != '':
+                if not hasattr(python_class, attr.py_name) and attr.py_name != "":
                     setattr(python_class, attr.py_name, attr())
             for attr in attributes.AttributesPerResource[attributes.AllSessionTypes]:
                 attrs.append(attr)
-                if not hasattr(python_class, attr.py_name) and attr.py_name != '':
+                if not hasattr(python_class, attr.py_name) and attr.py_name != "":
                     setattr(python_class, attr.py_name, attr())
 
-            setattr(python_class, 'visa_attributes_classes', attrs)
+            setattr(python_class, "visa_attributes_classes", attrs)
             return python_class
+
         return _internal
 
     def __init__(self, resource_manager, resource_name):
@@ -94,10 +100,12 @@ class Resource(object):
         except rname.InvalidResourceName:
             self._resource_name = resource_name
 
-        self._logging_extra = {'library_path': self.visalib.library_path,
-                               'resource_manager.session': self._resource_manager.session,
-                               'resource_name': self._resource_name,
-                               'session': None}
+        self._logging_extra = {
+            "library_path": self.visalib.library_path,
+            "resource_manager.session": self._resource_manager.session,
+            "resource_name": self._resource_name,
+            "session": None,
+        }
 
         #: Session handle.
         self._session = None
@@ -173,7 +181,7 @@ class Resource(object):
         """
         timeout = self.get_visa_attribute(constants.VI_ATTR_TMO_VALUE)
         if timeout == constants.VI_TMO_INFINITE:
-            return float('+inf')
+            return float("+inf")
         return timeout
 
     @timeout.setter
@@ -193,15 +201,18 @@ class Resource(object):
 
         :rtype: :class:`pyvisa.highlevel.ResourceInfo`
         """
-        return self.visalib.parse_resource_extended(self._resource_manager.session, self._resource_name)
+        return self.visalib.parse_resource_extended(
+            self._resource_manager.session, self._resource_name
+        )
 
     @property
     def interface_type(self):
         """The interface type of the resource as a number.
 
         """
-        return self.visalib.parse_resource(self._resource_manager.session,
-                                           self._resource_name)[0].interface_type
+        return self.visalib.parse_resource(
+            self._resource_manager.session, self._resource_name
+        )[0].interface_type
 
     def ignore_warning(self, *warnings_constants):
         """Ignoring warnings context manager for the current resource.
@@ -222,9 +233,11 @@ class Resource(object):
         :type open_timeout: int
         """
 
-        logger.debug('%s - opening ...', self._resource_name, extra=self._logging_extra)
+        logger.debug("%s - opening ...", self._resource_name, extra=self._logging_extra)
         with self._resource_manager.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT):
-            self.session, status = self._resource_manager.open_bare_resource(self._resource_name, access_mode, open_timeout)
+            self.session, status = self._resource_manager.open_bare_resource(
+                self._resource_name, access_mode, open_timeout
+            )
 
             if status == constants.VI_SUCCESS_DEV_NPRESENT:
                 # The device was not ready when we opened the session.
@@ -242,10 +255,13 @@ class Resource(object):
                         if error.error_code != constants.VI_ERROR_NLISTENERS:
                             raise
 
-        self._logging_extra['session'] = self.session
-        logger.debug('%s - is open with session %s',
-                     self._resource_name, self.session,
-                     extra=self._logging_extra)
+        self._logging_extra["session"] = self.session
+        logger.debug(
+            "%s - is open with session %s",
+            self._resource_name,
+            self.session,
+            extra=self._logging_extra,
+        )
 
     def before_close(self):
         """Called just before closing an instrument.
@@ -256,12 +272,12 @@ class Resource(object):
         """Closes the VISA session and marks the handle as invalid.
         """
         try:
-            logger.debug('%s - closing', self._resource_name,
-                         extra=self._logging_extra)
+            logger.debug("%s - closing", self._resource_name, extra=self._logging_extra)
             self.before_close()
             self.visalib.close(self.session)
-            logger.debug('%s - is closed', self._resource_name,
-                         extra=self._logging_extra)
+            logger.debug(
+                "%s - is closed", self._resource_name, extra=self._logging_extra
+            )
             self.session = None
         except errors.InvalidSession:
             pass
@@ -305,7 +321,9 @@ class Resource(object):
         :returns: user handle (a ctypes object)
         """
 
-        return self.visalib.install_visa_handler(self.session, event_type, handler, user_handle)
+        return self.visalib.install_visa_handler(
+            self.session, event_type, handler, user_handle
+        )
 
     def uninstall_handler(self, event_type, handler, user_handle=None):
         """Uninstalls handlers for events in this resource.
@@ -315,7 +333,9 @@ class Resource(object):
         :param user_handle: The user handle (ctypes object or None) returned by install_handler.
         """
 
-        self.visalib.uninstall_visa_handler(self.session, event_type, handler, user_handle)
+        self.visalib.uninstall_visa_handler(
+            self.session, event_type, handler, user_handle
+        )
 
     def disable_event(self, event_type, mechanism):
         """Disables notification of the specified event type(s) via the specified mechanism(s).
@@ -357,14 +377,18 @@ class Resource(object):
         :return: A WaitResponse object that contains event_type, context and ret value.
         """
         try:
-            event_type, context, ret = self.visalib.wait_on_event(self.session, in_event_type, timeout)
+            event_type, context, ret = self.visalib.wait_on_event(
+                self.session, in_event_type, timeout
+            )
         except errors.VisaIOError as exc:
             if capture_timeout and exc.error_code == constants.StatusCode.error_timeout:
-                return WaitResponse(in_event_type, None, exc.error_code, self.visalib, timed_out=True)
+                return WaitResponse(
+                    in_event_type, None, exc.error_code, self.visalib, timed_out=True
+                )
             raise
         return WaitResponse(event_type, context, ret, self.visalib)
 
-    def lock(self, timeout='default', requested_key=None):
+    def lock(self, timeout="default", requested_key=None):
         """Establish a shared lock to the resource.
 
         :param timeout: Absolute time period (in milliseconds) that a resource
@@ -377,11 +401,13 @@ class Resource(object):
                   otherwise, same value as the requested_key
 
         """
-        timeout = self.timeout if timeout == 'default' else timeout
+        timeout = self.timeout if timeout == "default" else timeout
         timeout = self._cleanup_timeout(timeout)
-        return self.visalib.lock(self.session, constants.AccessModes.shared_lock, timeout, requested_key)[0]
+        return self.visalib.lock(
+            self.session, constants.AccessModes.shared_lock, timeout, requested_key
+        )[0]
 
-    def lock_excl(self, timeout='default'):
+    def lock_excl(self, timeout="default"):
         """Establish an exclusive lock to the resource.
 
         :param timeout: Absolute time period (in milliseconds) that a resource
@@ -389,9 +415,11 @@ class Resource(object):
                         returning an error. (Defaults to self.timeout)
 
         """
-        timeout = self.timeout if timeout == 'default' else timeout
+        timeout = self.timeout if timeout == "default" else timeout
         timeout = self._cleanup_timeout(timeout)
-        self.visalib.lock(self.session, constants.AccessModes.exclusive_lock, timeout, None)
+        self.visalib.lock(
+            self.session, constants.AccessModes.exclusive_lock, timeout, None
+        )
 
     def unlock(self):
         """Relinquishes a lock for the specified resource.
@@ -400,7 +428,7 @@ class Resource(object):
         self.visalib.unlock(self.session)
 
     @contextlib.contextmanager
-    def lock_context(self, timeout='default', requested_key='exclusive'):
+    def lock_context(self, timeout="default", requested_key="exclusive"):
         """A context that locks
 
         :param timeout: Absolute time period (in milliseconds) that a resource
@@ -414,7 +442,7 @@ class Resource(object):
         The returned context is the access_key if applicable.
 
         """
-        if requested_key == 'exclusive':
+        if requested_key == "exclusive":
             self.lock_excl(timeout)
             access_key = None
         else:
@@ -425,4 +453,4 @@ class Resource(object):
             self.unlock()
 
 
-Resource.register(constants.InterfaceType.unknown, '')(Resource)
+Resource.register(constants.InterfaceType.unknown, "")(Resource)

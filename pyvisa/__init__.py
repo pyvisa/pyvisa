@@ -13,19 +13,22 @@
 import logging
 import pkg_resources
 
-logger = logging.getLogger('pyvisa')
+logger = logging.getLogger("pyvisa")
 logger.addHandler(logging.NullHandler())
 
 
 def log_to_screen(level=logging.DEBUG):
-    log_to_stream(None, level) # sys.stderr by default
+    log_to_stream(None, level)  # sys.stderr by default
+
 
 def log_to_stream(stream_output, level=logging.DEBUG):
     logger.setLevel(level)
     ch = logging.StreamHandler(stream_output)
     ch.setLevel(level)
 
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
 
     ch.setFormatter(formatter)
 
@@ -33,17 +36,26 @@ def log_to_stream(stream_output, level=logging.DEBUG):
 
 
 __version__ = "unknown"
-try:                # pragma: no cover
-    __version__ = pkg_resources.get_distribution('pyvisa').version
-except:             # pragma: no cover
+try:  # pragma: no cover
+    __version__ = pkg_resources.get_distribution("pyvisa").version
+except:  # pragma: no cover
     pass  # we seem to have a local copy without any repository control or installed without setuptools
-          # so the reported version will be __unknown__
+    # so the reported version will be __unknown__
 
 
 from .highlevel import ResourceManager
-from .errors import (Error, VisaIOError, VisaIOWarning, VisaTypeError,
-                     UnknownHandler, OSNotSupported, InvalidBinaryFormat,
-                     InvalidSession, LibraryError)
+from .errors import (
+    Error,
+    VisaIOError,
+    VisaIOWarning,
+    VisaTypeError,
+    UnknownHandler,
+    OSNotSupported,
+    InvalidBinaryFormat,
+    InvalidSession,
+    LibraryError,
+)
+
 # This is needed to registry all resources.
 from .resources import Resource
 from . import ctwrapper

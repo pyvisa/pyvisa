@@ -13,4 +13,3 @@
 from .highlevel import IVIVisaLibrary
 
 WRAPPER_CLASS = IVIVisaLibrary
-

@@ -16,7 +16,7 @@ from .resource import Resource
 from .messagebased import MessageBasedResource, ControlRenMixin
 
 
-@Resource.register(constants.InterfaceType.tcpip, 'INSTR')
+@Resource.register(constants.InterfaceType.tcpip, "INSTR")
 class TCPIPInstrument(ControlRenMixin, MessageBasedResource):
     """Communicates with to devices of type TCPIP::host address[::INSTR]
 
@@ -25,10 +25,11 @@ class TCPIPInstrument(ControlRenMixin, MessageBasedResource):
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
+
     pass
 
 
-@Resource.register(constants.InterfaceType.tcpip, 'SOCKET')
+@Resource.register(constants.InterfaceType.tcpip, "SOCKET")
 class TCPIPSocket(MessageBasedResource):
     """Communicates with to devices of type TCPIP::host address::port::SOCKET
 
@@ -37,4 +38,5 @@ class TCPIPSocket(MessageBasedResource):
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
+
     pass

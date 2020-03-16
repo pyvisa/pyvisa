@@ -13,7 +13,7 @@
 import time
 import sys
 
-if sys.version_info > (3,2):
+if sys.version_info > (3, 2):
     perf_counter = time.perf_counter
 else:
     perf_counter = time.clock
@@ -63,7 +63,9 @@ class _GPIBMixin(ControlRenMixin):
         :return: return value of the library call.
         :rtype: VISAStatus
         """
-        return self.visalib.gpib_pass_control(self.session, primary_address, secondary_address)
+        return self.visalib.gpib_pass_control(
+            self.session, primary_address, secondary_address
+        )
 
     def send_ifc(self):
         """Pulse the interface clear line (IFC) for at least 100 microseconds.
@@ -76,7 +78,7 @@ class _GPIBMixin(ControlRenMixin):
         return self.visalib.gpib_send_ifc(self.session)
 
 
-@Resource.register(constants.InterfaceType.gpib, 'INSTR')
+@Resource.register(constants.InterfaceType.gpib, "INSTR")
 class GPIBInstrument(_GPIBMixin, MessageBasedResource):
     """Communicates with to devices of type GPIB::<primary address>[::INSTR]
 
@@ -98,7 +100,7 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
         """
         self.enable_event(constants.VI_EVENT_SERVICE_REQ, constants.VI_QUEUE)
 
-        if timeout and not(0 <= timeout <= 4294967295):
+        if timeout and not (0 <= timeout <= 4294967295):
             raise ValueError("timeout value is invalid")
 
         starting_time = perf_counter()
@@ -107,9 +109,9 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
             if timeout is None:
                 adjusted_timeout = constants.VI_TMO_INFINITE
             else:
-                adjusted_timeout = int((starting_time +
-                                        timeout/1e3 -
-                                        perf_counter())*1e3)
+                adjusted_timeout = int(
+                    (starting_time + timeout / 1e3 - perf_counter()) * 1e3
+                )
                 if adjusted_timeout < 0:
                     adjusted_timeout = 0
 
@@ -120,7 +122,7 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
         self.discard_events(constants.VI_EVENT_SERVICE_REQ, constants.VI_QUEUE)
 
 
-@Resource.register(constants.InterfaceType.gpib, 'INTFC')
+@Resource.register(constants.InterfaceType.gpib, "INTFC")
 class GPIBInterface(_GPIBMixin, Resource):
     """Communicates with to devices of type GPIB::INTFC
 
@@ -134,14 +136,17 @@ class GPIBInterface(_GPIBMixin, Resource):
 
         for resource in resources:
             if not isinstance(resource, GPIBInstrument):
-                raise ValueError('%r is not a GPIBInstrument', resource)
+                raise ValueError("%r is not a GPIBInstrument", resource)
 
             # TODO: check that all resources are in the same board.
 
         if not self.is_controller_in_charge:
             self.send_ifc()
 
-        command = [0x40, 0x20+31, ] # broadcast TAD#0 and "UNL" (don't listen) to all devices
+        command = [
+            0x40,
+            0x20 + 31,
+        ]  # broadcast TAD#0 and "UNL" (don't listen) to all devices
 
         for resource in resources:
             # tell device GPIB::11 to listen

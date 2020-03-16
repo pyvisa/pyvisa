@@ -16,6 +16,7 @@ class TestHighlevel(BaseTestCase):
     """Test highlevel functionalities.
 
     """
+
     CHECK_NO_WARNING = False
 
     def test_base_class_parse_resource(self):
@@ -27,17 +28,23 @@ class TestHighlevel(BaseTestCase):
         info, ret_code = lib.parse_resource(None, rsc_name)
 
         # interface_type interface_board_number resource_class resource_name alias
-        for parsed, value in zip(info, (constants.InterfaceType.tcpip,
-                                        0, None, None, None)):
+        for parsed, value in zip(
+            info, (constants.InterfaceType.tcpip, 0, None, None, None)
+        ):
             self.assertEqual(parsed, value)
 
         info, ret_code = lib.parse_resource_extended(None, rsc_name)
         # interface_type interface_board_number resource_class resource_name alias
-        for parsed, value in zip(info, (constants.InterfaceType.tcpip,
-                                        0,
-                                        "INSTR",
-                                        rname.to_canonical_name(rsc_name),
-                                        None)):
+        for parsed, value in zip(
+            info,
+            (
+                constants.InterfaceType.tcpip,
+                0,
+                "INSTR",
+                rname.to_canonical_name(rsc_name),
+                None,
+            ),
+        ):
             self.assertEqual(parsed, value)
 
     def test_specifying_path_open_visa_library(self):
@@ -55,8 +62,8 @@ class TestHighlevel(BaseTestCase):
         """Test handling errors when trying to open a Visa library.
 
         """
-        class FakeLibrary(highlevel.VisaLibraryBase):
 
+        class FakeLibrary(highlevel.VisaLibraryBase):
             @classmethod
             def get_library_paths(cls):
                 return ["oserror", "error"]
@@ -111,7 +118,7 @@ class TestHighlevel(BaseTestCase):
             return []
 
         def visa_found():
-            return ['']
+            return [""]
 
         def py_wrapper_class(backend):
             return True
@@ -161,14 +168,13 @@ class TestHighlevel(BaseTestCase):
         try:
             with self.assertLogs(level=logging.WARNING):
                 highlevel.ResourceManager.register_resource_class(
-                    constants.InterfaceType.tcpip,
-                    "INSTR",
-                    object
+                    constants.InterfaceType.tcpip, "INSTR", object
                 )
             self.assertIs(
                 highlevel.ResourceManager._resource_classes[
-                    (constants.InterfaceType.tcpip, "INSTR")],
-                object
+                    (constants.InterfaceType.tcpip, "INSTR")
+                ],
+                object,
             )
         finally:
             highlevel.ResourceManager._resource_classes = old
@@ -177,8 +183,7 @@ class TestHighlevel(BaseTestCase):
         """Test the base class implementation of get_library_paths.
 
         """
-        self.assertEqual(("unset",),
-                         highlevel.VisaLibraryBase.get_library_paths())
+        self.assertEqual(("unset",), highlevel.VisaLibraryBase.get_library_paths())
 
     def test_base_get_debug_info(self):
         """Test the base class implementation of get_debug_info.

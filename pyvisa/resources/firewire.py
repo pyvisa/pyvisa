@@ -15,7 +15,7 @@ from .. import constants
 from .registerbased import RegisterBasedResource
 
 
-@RegisterBasedResource.register(constants.InterfaceType.firewire, 'INSTR')
+@RegisterBasedResource.register(constants.InterfaceType.firewire, "INSTR")
 class FirewireInstrument(RegisterBasedResource):
     """Communicates with to devices of type VXI::VXI logical address[::INSTR]
 

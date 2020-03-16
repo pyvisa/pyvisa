@@ -20,28 +20,83 @@ from .types import *
 from ctypes import byref, c_void_p, c_double, c_long, POINTER, create_string_buffer
 
 visa_functions = [
-    "assert_interrupt_signal", "assert_trigger", "assert_utility_signal",
-    "buffer_read", "buffer_write", "clear", "close", "disable_event",
-    "discard_events", "enable_event", "find_next", "find_resources", "flush",
-    "get_attribute", "gpib_command",
-    "gpib_control_atn", "gpib_control_ren", "gpib_pass_control",
-    "gpib_send_ifc", "in_16", "in_32", "in_8", "install_handler", "lock",
-    "map_address", "map_trigger", "memory_allocation", "memory_free", "move",
-    "move_asynchronously", "move_in_16", "move_in_32", "move_in_8",
-    "move_out_16", "move_out_32", "move_out_8", "open",
-    "open_default_resource_manager", "out_16", "out_32", "out_8",
-    "parse_resource", "parse_resource_extended", "peek_16", "peek_32",
-    "peek_8", "poke_16", "poke_32", "poke_8", "read",
-    "read_asynchronously", "read_to_file", "read_stb",
-    "set_attribute", "set_buffer", "status_description",
-    "terminate", "uninstall_handler", "unlock", "unmap_address",
-    "unmap_trigger", "usb_control_in", "usb_control_out",
-    "vxi_command_query", "wait_on_event",
-    "write", "write_asynchronously", "write_from_file",
-    "in_64", "move_in_64", "out_64", "move_out_64", "poke_64",
-    "peek_64"]
+    "assert_interrupt_signal",
+    "assert_trigger",
+    "assert_utility_signal",
+    "buffer_read",
+    "buffer_write",
+    "clear",
+    "close",
+    "disable_event",
+    "discard_events",
+    "enable_event",
+    "find_next",
+    "find_resources",
+    "flush",
+    "get_attribute",
+    "gpib_command",
+    "gpib_control_atn",
+    "gpib_control_ren",
+    "gpib_pass_control",
+    "gpib_send_ifc",
+    "in_16",
+    "in_32",
+    "in_8",
+    "install_handler",
+    "lock",
+    "map_address",
+    "map_trigger",
+    "memory_allocation",
+    "memory_free",
+    "move",
+    "move_asynchronously",
+    "move_in_16",
+    "move_in_32",
+    "move_in_8",
+    "move_out_16",
+    "move_out_32",
+    "move_out_8",
+    "open",
+    "open_default_resource_manager",
+    "out_16",
+    "out_32",
+    "out_8",
+    "parse_resource",
+    "parse_resource_extended",
+    "peek_16",
+    "peek_32",
+    "peek_8",
+    "poke_16",
+    "poke_32",
+    "poke_8",
+    "read",
+    "read_asynchronously",
+    "read_to_file",
+    "read_stb",
+    "set_attribute",
+    "set_buffer",
+    "status_description",
+    "terminate",
+    "uninstall_handler",
+    "unlock",
+    "unmap_address",
+    "unmap_trigger",
+    "usb_control_in",
+    "usb_control_out",
+    "vxi_command_query",
+    "wait_on_event",
+    "write",
+    "write_asynchronously",
+    "write_from_file",
+    "in_64",
+    "move_in_64",
+    "out_64",
+    "move_out_64",
+    "poke_64",
+    "peek_64",
+]
 
-__all__ = ["visa_functions", 'set_signatures'] + visa_functions
+__all__ = ["visa_functions", "set_signatures"] + visa_functions
 
 VI_SPEC_VERSION = 0x00300000
 
@@ -65,7 +120,12 @@ def set_user_handle_type(library, user_handle):
 
     ViHndlr = FUNCTYPE(ViStatus, ViSession, ViEventType, ViEvent, user_handle_p)
     library.viInstallHandler.argtypes = [ViSession, ViEventType, ViHndlr, user_handle_p]
-    library.viUninstallHandler.argtypes = [ViSession, ViEventType, ViHndlr, user_handle_p]
+    library.viUninstallHandler.argtypes = [
+        ViSession,
+        ViEventType,
+        ViHndlr,
+        user_handle_p,
+    ]
 
 
 def set_signatures(library, errcheck=None):
@@ -82,7 +142,7 @@ def set_signatures(library, errcheck=None):
     """
 
     # Somehow hasattr(library, '_functions') segfaults in cygwin (See #131)
-    if '_functions' not in dir(library):
+    if "_functions" not in dir(library):
         library._functions = []
         library._functions_failed = []
 
@@ -96,6 +156,7 @@ def set_signatures(library, errcheck=None):
                 library._functions_failed.append(function_name)
                 if required:
                     raise
+
         return _internal
 
     # Visa functions with ViStatus return code
@@ -132,15 +193,40 @@ def set_signatures(library, errcheck=None):
 
     apply("viInstallHandler", [ViSession, ViEventType, ViHndlr, ViAddr])
     apply("viLock", [ViSession, ViAccessMode, ViUInt32, ViKeyId, ViAChar])
-    apply("viMapAddress", [ViSession, ViUInt16, ViBusAddress, ViBusSize, ViBoolean, ViAddr, ViPAddr])
+    apply(
+        "viMapAddress",
+        [ViSession, ViUInt16, ViBusAddress, ViBusSize, ViBoolean, ViAddr, ViPAddr],
+    )
     apply("viMapTrigger", [ViSession, ViInt16, ViInt16, ViUInt16])
     apply("viMemAlloc", [ViSession, ViBusSize, ViPBusAddress])
     apply("viMemFree", [ViSession, ViBusAddress])
-    apply("viMove", [ViSession, ViUInt16, ViBusAddress, ViUInt16,
-                     ViUInt16, ViBusAddress, ViUInt16, ViBusSize])
-    apply("viMoveAsync", [ViSession, ViUInt16, ViBusAddress, ViUInt16,
-                          ViUInt16, ViBusAddress, ViUInt16, ViBusSize,
-                          ViPJobId])
+    apply(
+        "viMove",
+        [
+            ViSession,
+            ViUInt16,
+            ViBusAddress,
+            ViUInt16,
+            ViUInt16,
+            ViBusAddress,
+            ViUInt16,
+            ViBusSize,
+        ],
+    )
+    apply(
+        "viMoveAsync",
+        [
+            ViSession,
+            ViUInt16,
+            ViBusAddress,
+            ViUInt16,
+            ViUInt16,
+            ViBusAddress,
+            ViUInt16,
+            ViBusSize,
+            ViPJobId,
+        ],
+    )
 
     apply("viMoveIn8", [ViSession, ViUInt16, ViBusAddress, ViBusSize, ViAUInt8])
     apply("viMoveIn16", [ViSession, ViUInt16, ViBusAddress, ViBusSize, ViAUInt16])
@@ -162,7 +248,9 @@ def set_signatures(library, errcheck=None):
     apply("viMoveOut32Ex", [ViSession, ViUInt16, ViBusAddress64, ViBusSize, ViAUInt32])
     apply("viMoveOut64Ex", [ViSession, ViUInt16, ViBusAddress64, ViBusSize, ViAUInt64])
 
-    apply("viOpen", [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession], required=True)
+    apply(
+        "viOpen", [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession], required=True
+    )
 
     apply("viOpenDefaultRM", [ViPSession], required=True)
 
@@ -177,7 +265,10 @@ def set_signatures(library, errcheck=None):
     apply("viOut64Ex", [ViSession, ViUInt16, ViBusAddress64, ViUInt64])
 
     apply("viParseRsrc", [ViSession, ViRsrc, ViPUInt16, ViPUInt16])
-    apply("viParseRsrcEx", [ViSession, ViRsrc, ViPUInt16, ViPUInt16, ViAChar, ViAChar, ViAChar])
+    apply(
+        "viParseRsrcEx",
+        [ViSession, ViRsrc, ViPUInt16, ViPUInt16, ViAChar, ViAChar, ViAChar],
+    )
 
     apply("viRead", [ViSession, ViPBuf, ViUInt32, ViPUInt32])
     apply("viReadAsync", [ViSession, ViPBuf, ViUInt32, ViPJobId])
@@ -193,10 +284,14 @@ def set_signatures(library, errcheck=None):
     apply("viUnlock", [ViSession])
     apply("viUnmapAddress", [ViSession])
     apply("viUnmapTrigger", [ViSession, ViInt16, ViInt16])
-    apply("viUsbControlIn", [ViSession, ViInt16, ViInt16, ViUInt16,
-                             ViUInt16, ViUInt16, ViPBuf, ViPUInt16])
-    apply("viUsbControlOut", [ViSession, ViInt16, ViInt16, ViUInt16,
-                              ViUInt16, ViUInt16, ViPBuf])
+    apply(
+        "viUsbControlIn",
+        [ViSession, ViInt16, ViInt16, ViUInt16, ViUInt16, ViUInt16, ViPBuf, ViPUInt16],
+    )
+    apply(
+        "viUsbControlOut",
+        [ViSession, ViInt16, ViInt16, ViUInt16, ViUInt16, ViUInt16, ViPBuf],
+    )
 
     # The following "V" routines are *not* implemented in PyVISA, and will
     # never be: viVPrintf, viVQueryf, viVScanf, viVSPrintf, viVSScanf
@@ -343,7 +438,7 @@ def buffer_read(library, session, count):
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
     ret = library.viBufRead(session, buffer, count, byref(return_count))
-    return buffer.raw[:return_count.value], ret
+    return buffer.raw[: return_count.value], ret
 
 
 def buffer_write(library, session, data):
@@ -440,7 +535,7 @@ def enable_event(library, session, event_type, mechanism, context=None):
     if context is None:
         context = constants.VI_NULL
     elif context != constants.VI_NULL:
-        warnings.warn('In enable_event, context will be set VI_NULL.')
+        warnings.warn("In enable_event, context will be set VI_NULL.")
         context = constants.VI_NULL  # according to spec VPP-4.3, section 3.7.3.1
     return library.viEnableEvent(session, event_type, mechanism, context)
 
@@ -477,9 +572,9 @@ def find_resources(library, session, query):
 
     # [ViSession, ViString, ViPFindList, ViPUInt32, ViAChar]
     # ViString converts from (str, unicode, bytes) to bytes
-    ret = library.viFindRsrc(session, query,
-                             byref(find_list), byref(return_counter),
-                             instrument_description)
+    ret = library.viFindRsrc(
+        session, query, byref(find_list), byref(return_counter), instrument_description
+    )
     return find_list, return_counter.value, buffer_to_text(instrument_description), ret
 
 
@@ -631,7 +726,7 @@ def read_memory(library, session, space, offset, width, extended=False):
     elif width == 64:
         return in_64(library, session, space, offset, extended)
 
-    raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
+    raise ValueError("%s is not a valid size. Valid values are 8, 16, 32 or 64" % width)
 
 
 def in_8(library, session, space, offset, extended=False):
@@ -749,27 +844,30 @@ def install_handler(library, session, event_type, handler, user_handle):
         elif isinstance(user_handle, list):
             for element in user_handle:
                 if not isinstance(element, int):
-                    converted_user_handle = \
-                        (c_double * len(user_handle))(tuple(user_handle))
+                    converted_user_handle = (c_double * len(user_handle))(
+                        tuple(user_handle)
+                    )
                     break
             else:
-                converted_user_handle = \
-                    (c_long * len(user_handle))(*tuple(user_handle))
+                converted_user_handle = (c_long * len(user_handle))(*tuple(user_handle))
         else:
             try:
                 # check if it is already a ctypes
                 byref(user_handle)
                 converted_user_handle = user_handle
             except TypeError:
-                raise TypeError("Type not allowed as user handle: %s" % type(user_handle))
+                raise TypeError(
+                    "Type not allowed as user handle: %s" % type(user_handle)
+                )
 
     set_user_handle_type(library, converted_user_handle)
     converted_handler = ViHndlr(handler)
     if user_handle is None:
         ret = library.viInstallHandler(session, event_type, converted_handler, None)
     else:
-        ret = library.viInstallHandler(session, event_type, converted_handler,
-                                       byref(converted_user_handle))
+        ret = library.viInstallHandler(
+            session, event_type, converted_handler, byref(converted_user_handle)
+        )
 
     return handler, converted_user_handle, converted_handler, ret
 
@@ -801,8 +899,9 @@ def lock(library, session, lock_type, timeout, requested_key=None):
         return access_key.value, ret
 
 
-def map_address(library, session, map_space, map_base, map_size,
-                access=False, suggested=None):
+def map_address(
+    library, session, map_space, map_base, map_size, access=False, suggested=None
+):
     """Maps the specified memory space into the process's address space.
 
     Corresponds to viMapAddress function of the VISA library.
@@ -824,11 +923,12 @@ def map_address(library, session, map_space, map_base, map_size,
     if access is False:
         access = constants.VI_FALSE
     elif access != constants.VI_FALSE:
-        warnings.warn('In enable_event, context will be set VI_NULL.')
+        warnings.warn("In enable_event, context will be set VI_NULL.")
         access = constants.VI_FALSE
     address = ViAddr()
-    ret = library.viMapAddress(session, map_space, map_base, map_size, access,
-                               suggested, byref(address))
+    ret = library.viMapAddress(
+        session, map_space, map_base, map_size, access, suggested, byref(address)
+    )
     return address, ret
 
 
@@ -886,8 +986,17 @@ def memory_free(library, session, offset, extended=False):
         return library.viMemFree(session, offset)
 
 
-def move(library, session, source_space, source_offset, source_width, destination_space,
-         destination_offset, destination_width, length):
+def move(
+    library,
+    session,
+    source_space,
+    source_offset,
+    source_width,
+    destination_space,
+    destination_offset,
+    destination_width,
+    length,
+):
     """Moves a block of data.
 
     Corresponds to viMove function of the VISA library.
@@ -905,14 +1014,29 @@ def move(library, session, source_space, source_offset, source_width, destinatio
     :return: return value of the library call.
     :rtype: :class:`pyvisa.constants.StatusCode`
     """
-    return library.viMove(session, source_space, source_offset, source_width,
-                          destination_space, destination_offset,
-                          destination_width, length)
+    return library.viMove(
+        session,
+        source_space,
+        source_offset,
+        source_width,
+        destination_space,
+        destination_offset,
+        destination_width,
+        length,
+    )
 
 
-def move_asynchronously(library, session, source_space, source_offset, source_width,
-                        destination_space, destination_offset,
-                        destination_width, length):
+def move_asynchronously(
+    library,
+    session,
+    source_space,
+    source_offset,
+    source_width,
+    destination_space,
+    destination_offset,
+    destination_width,
+    length,
+):
     """Moves a block of data asynchronously.
 
     Corresponds to viMoveAsync function of the VISA library.
@@ -931,9 +1055,17 @@ def move_asynchronously(library, session, source_space, source_offset, source_wi
     :rtype: jobid, :class:`pyvisa.constants.StatusCode`
     """
     job_id = ViJobId()
-    ret = library.viMoveAsync(session, source_space, source_offset, source_width,
-                              destination_space, destination_offset,
-                              destination_width, length, byref(job_id))
+    ret = library.viMoveAsync(
+        session,
+        source_space,
+        source_offset,
+        source_width,
+        destination_space,
+        destination_offset,
+        destination_width,
+        length,
+        byref(job_id),
+    )
     return job_id, ret
 
 
@@ -962,7 +1094,7 @@ def move_in(library, session, space, offset, length, width, extended=False):
     elif width == 64:
         return move_in_64(library, session, space, offset, length, extended)
 
-    raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
+    raise ValueError("%s is not a valid size. Valid values are 8, 16, 32 or 64" % width)
 
 
 def move_in_8(library, session, space, offset, length, extended=False):
@@ -1086,7 +1218,7 @@ def move_out(library, session, space, offset, length, data, width, extended=Fals
     elif width == 64:
         return move_out_64(library, session, space, offset, length, data, extended)
 
-    raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
+    raise ValueError("%s is not a valid size. Valid values are 8, 16, 32 or 64" % width)
 
 
 def move_out_8(library, session, space, offset, length, data, extended=False):
@@ -1184,8 +1316,13 @@ def move_out_64(library, session, space, offset, length, data, extended=False):
 
 
 # noinspection PyShadowingBuiltins
-def open(library, session, resource_name,
-         access_mode=constants.AccessModes.no_lock, open_timeout=constants.VI_TMO_IMMEDIATE):
+def open(
+    library,
+    session,
+    resource_name,
+    access_mode=constants.AccessModes.no_lock,
+    open_timeout=constants.VI_TMO_IMMEDIATE,
+):
     """Opens a session to the specified resource.
 
     Corresponds to viOpen function of the VISA library.
@@ -1202,12 +1339,16 @@ def open(library, session, resource_name,
     try:
         open_timeout = int(open_timeout)
     except ValueError:
-        raise ValueError('open_timeout (%r) must be an integer (or compatible type)' % open_timeout)
+        raise ValueError(
+            "open_timeout (%r) must be an integer (or compatible type)" % open_timeout
+        )
     out_session = ViSession()
 
     # [ViSession, ViRsrc, ViAccessMode, ViUInt32, ViPSession]
     # ViRsrc converts from (str, unicode, bytes) to bytes
-    ret = library.viOpen(session, resource_name, access_mode, open_timeout, byref(out_session))
+    ret = library.viOpen(
+        session, resource_name, access_mode, open_timeout, byref(out_session)
+    )
     return out_session.value, ret
 
 
@@ -1247,7 +1388,7 @@ def write_memory(library, session, space, offset, data, width, extended=False):
     elif width == 32:
         return out_32(library, session, space, offset, data, extended)
 
-    raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+    raise ValueError("%s is not a valid size. Valid values are 8, 16 or 32" % width)
 
 
 def out_8(library, session, space, offset, data, extended=False):
@@ -1347,11 +1488,19 @@ def parse_resource(library, session, resource_name):
 
     # [ViSession, ViRsrc, ViPUInt16, ViPUInt16]
     # ViRsrc converts from (str, unicode, bytes) to bytes
-    ret = library.viParseRsrc(session, resource_name, byref(interface_type),
-                              byref(interface_board_number))
-    return ResourceInfo(constants.InterfaceType(interface_type.value),
-                        interface_board_number.value,
-                        None, None, None), ret
+    ret = library.viParseRsrc(
+        session, resource_name, byref(interface_type), byref(interface_board_number)
+    )
+    return (
+        ResourceInfo(
+            constants.InterfaceType(interface_type.value),
+            interface_board_number.value,
+            None,
+            None,
+            None,
+        ),
+        ret,
+    )
 
 
 def parse_resource_extended(library, session, resource_name):
@@ -1374,21 +1523,32 @@ def parse_resource_extended(library, session, resource_name):
 
     # [ViSession, ViRsrc, ViPUInt16, ViPUInt16, ViAChar, ViAChar, ViAChar]
     # ViRsrc converts from (str, unicode, bytes) to bytes
-    ret = library.viParseRsrcEx(session, resource_name, byref(interface_type),
-                                byref(interface_board_number), resource_class,
-                                unaliased_expanded_resource_name,
-                                alias_if_exists)
+    ret = library.viParseRsrcEx(
+        session,
+        resource_name,
+        byref(interface_type),
+        byref(interface_board_number),
+        resource_class,
+        unaliased_expanded_resource_name,
+        alias_if_exists,
+    )
 
-    res = [buffer_to_text(val)
-           for val in (resource_class,
-                       unaliased_expanded_resource_name,
-                       alias_if_exists)]
+    res = [
+        buffer_to_text(val)
+        for val in (resource_class, unaliased_expanded_resource_name, alias_if_exists)
+    ]
 
-    if res[-1] == '':
+    if res[-1] == "":
         res[-1] = None
 
-    return ResourceInfo(constants.InterfaceType(interface_type.value),
-                        interface_board_number.value, *res), ret
+    return (
+        ResourceInfo(
+            constants.InterfaceType(interface_type.value),
+            interface_board_number.value,
+            *res
+        ),
+        ret,
+    )
 
 
 def peek(library, session, address, width):
@@ -1413,7 +1573,7 @@ def peek(library, session, address, width):
     elif width == 64:
         return peek_64(library, session, address)
 
-    raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
+    raise ValueError("%s is not a valid size. Valid values are 8, 16, 32 or 64" % width)
 
 
 def peek_8(library, session, address):
@@ -1501,7 +1661,7 @@ def poke(library, session, address, width, data):
     elif width == 32:
         return poke_32(library, session, address, data)
 
-    raise ValueError('%s is not a valid size. Valid values are 8, 16 or 32' % width)
+    raise ValueError("%s is not a valid size. Valid values are 8, 16 or 32" % width)
 
 
 def poke_8(library, session, address, data):
@@ -1579,7 +1739,7 @@ def read(library, session, count):
     buffer = create_string_buffer(count)
     return_count = ViUInt32()
     ret = library.viRead(session, buffer, count, byref(return_count))
-    return buffer.raw[:return_count.value], ret
+    return buffer.raw[: return_count.value], ret
 
 
 def read_asynchronously(library, session, count):
@@ -1709,7 +1869,7 @@ def uninstall_handler(library, session, event_type, handler, user_handle=None):
     """
     set_user_handle_type(library, user_handle)
     if user_handle != None:
-         user_handle = byref(user_handle)
+        user_handle = byref(user_handle)
     return library.viUninstallHandler(session, event_type, handler, user_handle)
 
 
@@ -1754,8 +1914,15 @@ def unmap_trigger(library, session, trigger_source, trigger_destination):
     return library.viUnmapTrigger(session, trigger_source, trigger_destination)
 
 
-def usb_control_in(library, session, request_type_bitmap_field, request_id, request_value,
-                   index, length=0):
+def usb_control_in(
+    library,
+    session,
+    request_type_bitmap_field,
+    request_id,
+    request_value,
+    index,
+    length=0,
+):
     """Performs a USB control pipe transfer from the device.
 
     Corresponds to viUsbControlIn function of the VISA library.
@@ -1777,14 +1944,28 @@ def usb_control_in(library, session, request_type_bitmap_field, request_id, requ
     """
     buffer = create_string_buffer(length)
     return_count = ViUInt16()
-    ret = library.viUsbControlIn(session, request_type_bitmap_field, request_id,
-                                 request_value, index, length, buffer,
-                                 byref(return_count))
-    return buffer.raw[:return_count.value], ret
+    ret = library.viUsbControlIn(
+        session,
+        request_type_bitmap_field,
+        request_id,
+        request_value,
+        index,
+        length,
+        buffer,
+        byref(return_count),
+    )
+    return buffer.raw[: return_count.value], ret
 
 
-def usb_control_out(library, session, request_type_bitmap_field, request_id, request_value,
-                    index, data=""):
+def usb_control_out(
+    library,
+    session,
+    request_type_bitmap_field,
+    request_id,
+    request_value,
+    index,
+    data="",
+):
     """Performs a USB control pipe transfer to the device.
 
     Corresponds to viUsbControlOut function of the VISA library.
@@ -1801,8 +1982,15 @@ def usb_control_out(library, session, request_type_bitmap_field, request_id, req
     :rtype: :class:`pyvisa.constants.StatusCode`
     """
     length = len(data)
-    return library.viUsbControlOut(session, request_type_bitmap_field, request_id,
-                                   request_value, index, length, data)
+    return library.viUsbControlOut(
+        session,
+        request_type_bitmap_field,
+        request_id,
+        request_value,
+        index,
+        length,
+        data,
+    )
 
 
 def vxi_command_query(library, session, mode, command):
@@ -1841,8 +2029,9 @@ def wait_on_event(library, session, in_event_type, timeout):
     """
     out_event_type = ViEventType()
     out_context = ViEvent()
-    ret = library.viWaitOnEvent(session, in_event_type, timeout,
-                                byref(out_event_type), byref(out_context))
+    ret = library.viWaitOnEvent(
+        session, in_event_type, timeout, byref(out_event_type), byref(out_context)
+    )
     return out_event_type.value, out_context, ret
 
 

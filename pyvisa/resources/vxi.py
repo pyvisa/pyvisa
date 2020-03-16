@@ -16,7 +16,7 @@ from .resource import Resource
 from .registerbased import RegisterBasedResource
 
 
-@Resource.register(constants.InterfaceType.vxi, 'BACKPLANE')
+@Resource.register(constants.InterfaceType.vxi, "BACKPLANE")
 class VXIBackplane(Resource):
     """Communicates with to devices of type VXI::BACKPLANE
 
@@ -27,7 +27,7 @@ class VXIBackplane(Resource):
     """
 
 
-@Resource.register(constants.InterfaceType.vxi, 'INSTR')
+@Resource.register(constants.InterfaceType.vxi, "INSTR")
 class VXIInstrument(Resource):
     """Communicates with to devices of type VXI::VXI logical address[::INSTR]
 
@@ -38,7 +38,7 @@ class VXIInstrument(Resource):
     """
 
 
-@Resource.register(constants.InterfaceType.vxi, 'MEMACC')
+@Resource.register(constants.InterfaceType.vxi, "MEMACC")
 class VXIMemory(RegisterBasedResource):
     """Communicates with to devices of type VXI[board]::MEMACC
 

@@ -6,8 +6,13 @@ import gc
 import unittest
 
 from pyvisa import ResourceManager, InvalidSession, VisaIOError
-from pyvisa.constants import (StatusCode, InterfaceType, VI_ATTR_TMO_VALUE,
-                              VI_TMO_IMMEDIATE, VI_TMO_INFINITE)
+from pyvisa.constants import (
+    StatusCode,
+    InterfaceType,
+    VI_ATTR_TMO_VALUE,
+    VI_TMO_IMMEDIATE,
+    VI_TMO_INFINITE,
+)
 from pyvisa.rname import ResourceName
 from pyvisa.resources.resource import Resource
 
@@ -22,7 +27,7 @@ class ResourceTestCase:
     #: Type of resource being tested in this test case.
     #: See RESOURCE_ADDRESSES in the __init__.py file of this package for
     #: acceptable values
-    RESOURCE_TYPE = ''
+    RESOURCE_TYPE = ""
 
     #: Minimal timeout value accepted by the resource. When setting the timeout
     #: to VI_TMO_IMMEDIATE, Visa (Keysight at least) may actually use a
@@ -106,34 +111,38 @@ class ResourceTestCase:
         """
         self.instr.timeout = None
         self.assertEqual(self.instr.timeout, float("+inf"))
-        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-                         VI_TMO_INFINITE)
+        self.assertEqual(
+            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), VI_TMO_INFINITE
+        )
 
         self.instr.timeout = 0.1
         self.assertEqual(self.instr.timeout, 1)
-        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-                         self.MINIMAL_TIMEOUT)
+        self.assertEqual(
+            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), self.MINIMAL_TIMEOUT
+        )
 
         self.instr.timeout = 10
         self.assertEqual(self.instr.timeout, 10)
-        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-                         10)
+        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), 10)
 
         with self.assertRaises(ValueError):
             self.instr.timeout = 10000000000
 
         del self.instr.timeout
         self.assertEqual(self.instr.timeout, float("+inf"))
-        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-                         VI_TMO_INFINITE)
+        self.assertEqual(
+            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), VI_TMO_INFINITE
+        )
 
     def test_resource_info(self):
         """Test accessing the resource info.
 
         """
         rinfo, status = self.instr.resource_info
-        self.assertEqual(rinfo.interface_type,
-                         getattr(InterfaceType, self.rname.interface_type.lower()))
+        self.assertEqual(
+            rinfo.interface_type,
+            getattr(InterfaceType, self.rname.interface_type.lower()),
+        )
         self.assertEqual(rinfo.interface_board_number, int(self.rname.board))
         self.assertEqual(rinfo.resource_class, self.rname.resource_class)
         self.assertEqual(rinfo.resource_name, str(self.rname))
@@ -142,8 +151,10 @@ class ResourceTestCase:
         """Test accessing the resource interface_type.
 
         """
-        self.assertEqual(self.instr.interface_type,
-                         getattr(InterfaceType, self.rname.interface_type.lower()))
+        self.assertEqual(
+            self.instr.interface_type,
+            getattr(InterfaceType, self.rname.interface_type.lower()),
+        )
 
     def test_attribute_handling(self):
         """Test directly manipulating attributes ie not using descriptors.
@@ -157,13 +168,15 @@ class ResourceTestCase:
         self.assertEqual(self.instr.timeout, 10)
 
         self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_IMMEDIATE)
-        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-                         self.MINIMAL_TIMEOUT)
+        self.assertEqual(
+            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), self.MINIMAL_TIMEOUT
+        )
         self.assertEqual(self.instr.timeout, 1)
 
         self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
-        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE),
-                         VI_TMO_INFINITE)
+        self.assertEqual(
+            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), VI_TMO_INFINITE
+        )
         self.assertEqual(self.instr.timeout, float("+inf"))
 
     def test_wait_on_event(self):

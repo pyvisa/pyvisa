@@ -34,9 +34,10 @@ from . import rname
 #: :resource_name: This is the expanded version of the given resource string.
 #:                       The format should be similar to the VISA-defined canonical resource name.
 #: :alias: Specifies the user-defined alias for the given resource string.
-ResourceInfo = collections.namedtuple('ResourceInfo',
-                                      'interface_type interface_board_number '
-                                      'resource_class resource_name alias')
+ResourceInfo = collections.namedtuple(
+    "ResourceInfo",
+    "interface_type interface_board_number " "resource_class resource_name alias",
+)
 
 
 class VisaLibraryBase(object):
@@ -83,19 +84,19 @@ class VisaLibraryBase(object):
     #: Set error codes on which to issue a warning. set
     issue_warning_on = None
 
-    def __new__(cls, library_path=''):
-        if library_path == '':
+    def __new__(cls, library_path=""):
+        if library_path == "":
             errs = []
             for path in cls.get_library_paths():
                 try:
                     return cls(path)
                 except OSError as e:
-                    logger.debug('Could not open VISA library %s: %s', path, str(e))
+                    logger.debug("Could not open VISA library %s: %s", path, str(e))
                     errs.append(str(e))
                 except Exception as e:
                     errs.append(str(e))
             else:
-                raise OSError('Could not open VISA library:\n' + '\n'.join(errs))
+                raise OSError("Could not open VISA library:\n" + "\n".join(errs))
 
         if (cls, library_path) in cls._registry:
             return cls._registry[(cls, library_path)]
@@ -104,7 +105,7 @@ class VisaLibraryBase(object):
 
         obj.library_path = library_path
 
-        obj._logging_extra = {'library_path': obj.library_path}
+        obj._logging_extra = {"library_path": obj.library_path}
 
         obj._init()
 
@@ -115,7 +116,7 @@ class VisaLibraryBase(object):
         obj._ignore_warning_in_session = defaultdict(set)
         obj.handlers = defaultdict(list)
 
-        logger.debug('Created library wrapper for %s', library_path)
+        logger.debug("Created library wrapper for %s", library_path)
 
         cls._registry[(cls, library_path)] = obj
 
@@ -126,13 +127,13 @@ class VisaLibraryBase(object):
         """Override this method to return an iterable of possible library_paths
         to try in case that no argument is given.
         """
-        return 'unset',
+        return ("unset",)
 
     @staticmethod
     def get_debug_info():
         """Override this method to return an iterable of lines with the backend debug details.
         """
-        return ['Does not provide debug info']
+        return ["Does not provide debug info"]
 
     def _init(self):
         """Override this method to customize VisaLibrary initialization.
@@ -140,10 +141,10 @@ class VisaLibraryBase(object):
         pass
 
     def __str__(self):
-        return 'Visa Library at %s' % self.library_path
+        return "Visa Library at %s" % self.library_path
 
     def __repr__(self):
-        return '<VisaLibrary(%r)>' % self.library_path
+        return "<VisaLibrary(%r)>" % self.library_path
 
     @property
     def last_status(self):
@@ -159,7 +160,10 @@ class VisaLibraryBase(object):
         try:
             return self._last_status_in_session[session]
         except KeyError:
-            raise errors.Error('The session %r does not seem to be valid as it does not have any last status' % session)
+            raise errors.Error(
+                "The session %r does not seem to be valid as it does not have any last status"
+                % session
+            )
 
     @contextlib.contextmanager
     def ignore_warning(self, session, *warnings_constants):
@@ -183,7 +187,9 @@ class VisaLibraryBase(object):
         :returns: user handle (a ctypes object)
         """
         try:
-            new_handler = self.install_handler(session, event_type, handler, user_handle)
+            new_handler = self.install_handler(
+                session, event_type, handler, user_handle
+            )
         except TypeError as e:
             raise errors.VisaTypeError(str(e))
 
@@ -200,16 +206,20 @@ class VisaLibraryBase(object):
         """
         for ndx, element in enumerate(self.handlers[session]):
             # use == rather than is to allow bound methods as handlers
-            if element[0] == handler and element[1] is user_handle and element[4] == event_type:
+            if (
+                element[0] == handler
+                and element[1] is user_handle
+                and element[4] == event_type
+            ):
                 del self.handlers[session][ndx]
                 break
         else:
             raise errors.UnknownHandler(event_type, handler, user_handle)
-        self.uninstall_handler(session, event_type,  element[2], user_handle)
+        self.uninstall_handler(session, event_type, element[2], user_handle)
 
     def __uninstall_all_handlers_helper(self, session):
         for element in self.handlers[session]:
-            self.uninstall_handler(session, element[4],  element[2], element[1])
+            self.uninstall_handler(session, element[4], element[2], element[1])
         del self.handlers[session]
 
     def uninstall_all_visa_handlers(self, session):
@@ -246,7 +256,9 @@ class VisaLibraryBase(object):
         elif width == 64:
             return self.in_64(session, space, offset, extended)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
+        raise ValueError(
+            "%s is not a valid size. Valid values are 8, 16, 32 or 64" % width
+        )
 
     def write_memory(self, session, space, offset, data, width, extended=False):
         """Write in an 8-bit, 16-bit, 32-bit, 64-bit value to the specified memory space and offset.
@@ -271,7 +283,9 @@ class VisaLibraryBase(object):
         elif width == 64:
             return self.out_64(session, space, offset, data, extended)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32, or 64' % width)
+        raise ValueError(
+            "%s is not a valid size. Valid values are 8, 16, 32, or 64" % width
+        )
 
     def move_in(self, session, space, offset, length, width, extended=False):
         """Moves a block of data to local memory from the specified address space and offset.
@@ -297,7 +311,9 @@ class VisaLibraryBase(object):
         elif width == 64:
             return self.move_in_64(session, space, offset, length, extended)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
+        raise ValueError(
+            "%s is not a valid size. Valid values are 8, 16, 32 or 64" % width
+        )
 
     def move_out(self, session, space, offset, length, data, width, extended=False):
         """Moves a block of data from local memory to the specified address space and offset.
@@ -324,7 +340,9 @@ class VisaLibraryBase(object):
         elif width == 64:
             return self.move_out_64(session, space, offset, length, data, extended)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
+        raise ValueError(
+            "%s is not a valid size. Valid values are 8, 16, 32 or 64" % width
+        )
 
     def peek(self, session, address, width):
         """Read an 8, 16, 32, or 64-bit value from the specified address.
@@ -347,7 +365,9 @@ class VisaLibraryBase(object):
         elif width == 64:
             return self.peek_64(session, address)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32 or 64' % width)
+        raise ValueError(
+            "%s is not a valid size. Valid values are 8, 16, 32 or 64" % width
+        )
 
     def poke(self, session, address, width, data):
         """Writes an 8, 16, 32, or 64-bit value from the specified address.
@@ -371,7 +391,9 @@ class VisaLibraryBase(object):
         elif width == 64:
             return self.poke_64(session, address, data)
 
-        raise ValueError('%s is not a valid size. Valid values are 8, 16, 32, or 64' % width)
+        raise ValueError(
+            "%s is not a valid size. Valid values are 8, 16, 32, or 64" % width
+        )
 
     # Methods that VISA Library implementations must implement
 
@@ -692,7 +714,7 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def list_resources(self, session, query='?*::INSTR'):
+    def list_resources(self, session, query="?*::INSTR"):
         """Returns a tuple of all connected devices matching query.
 
         :param query: regular expression used to match devices.
@@ -714,8 +736,9 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def map_address(self, session, map_space, map_base, map_size,
-                    access=False, suggested=None):
+    def map_address(
+        self, session, map_space, map_base, map_size, access=False, suggested=None
+    ):
         """Maps the specified memory space into the process's address space.
 
         Corresponds to viMapAddress function of the VISA library.
@@ -775,8 +798,17 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def move(self, session, source_space, source_offset, source_width, destination_space,
-             destination_offset, destination_width, length):
+    def move(
+        self,
+        session,
+        source_space,
+        source_offset,
+        source_width,
+        destination_space,
+        destination_offset,
+        destination_width,
+        length,
+    ):
         """Moves a block of data.
 
         Corresponds to viMove function of the VISA library.
@@ -795,9 +827,17 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def move_asynchronously(self, session, source_space, source_offset, source_width,
-                            destination_space, destination_offset,
-                            destination_width, length):
+    def move_asynchronously(
+        self,
+        session,
+        source_space,
+        source_offset,
+        source_width,
+        destination_space,
+        destination_offset,
+        destination_width,
+        length,
+    ):
         """Moves a block of data asynchronously.
 
         Corresponds to viMoveAsync function of the VISA library.
@@ -950,8 +990,13 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def open(self, session, resource_name,
-             access_mode=constants.AccessModes.no_lock, open_timeout=constants.VI_TMO_IMMEDIATE):
+    def open(
+        self,
+        session,
+        resource_name,
+        access_mode=constants.AccessModes.no_lock,
+        open_timeout=constants.VI_TMO_IMMEDIATE,
+    ):
         """Opens a session to the specified resource.
 
         Corresponds to viOpen function of the VISA library.
@@ -1052,12 +1097,12 @@ class VisaLibraryBase(object):
         """
         ri, status = self.parse_resource_extended(session, resource_name)
         if ri:
-            return (ResourceInfo(ri.interface_type,
-                                ri.interface_board_number,
-                                None,
-                                None,
-                                None),
-                    constants.StatusCode.success)
+            return (
+                ResourceInfo(
+                    ri.interface_type, ri.interface_board_number, None, None, None
+                ),
+                constants.StatusCode.success,
+            )
         else:
             return ri, status
 
@@ -1075,11 +1120,16 @@ class VisaLibraryBase(object):
         try:
             parsed = rname.parse_resource_name(resource_name)
 
-            return (ResourceInfo(parsed.interface_type_const,
-                                 int(parsed.board),  # match IVI-VISA
-                                 parsed.resource_class,
-                                 str(parsed), None),
-                    constants.StatusCode.success)
+            return (
+                ResourceInfo(
+                    parsed.interface_type_const,
+                    int(parsed.board),  # match IVI-VISA
+                    parsed.resource_class,
+                    str(parsed),
+                    None,
+                ),
+                constants.StatusCode.success,
+            )
         except ValueError:
             return 0, constants.StatusCode.error_invalid_resource_name
 
@@ -1335,8 +1385,15 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def usb_control_in(self, session, request_type_bitmap_field, request_id, request_value,
-                       index, length=0):
+    def usb_control_in(
+        self,
+        session,
+        request_type_bitmap_field,
+        request_id,
+        request_value,
+        index,
+        length=0,
+    ):
         """Performs a USB control pipe transfer from the device.
 
         Corresponds to viUsbControlIn function of the VISA library.
@@ -1357,8 +1414,15 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def usb_control_out(self, session, request_type_bitmap_field, request_id, request_value,
-                        index, data=""):
+    def usb_control_out(
+        self,
+        session,
+        request_type_bitmap_field,
+        request_id,
+        request_value,
+        index,
+        data="",
+    ):
         """Performs a USB control pipe transfer to the device.
 
         Corresponds to viUsbControlOut function of the VISA library.
@@ -1453,8 +1517,12 @@ def list_backends():
 
     :rtype: list
     """
-    return ['ivi'] + [name for (loader, name, ispkg) in pkgutil.iter_modules()
-                      if name.startswith('pyvisa-') and not name.endswith('-script')]
+    return ["ivi"] + [
+        name
+        for (loader, name, ispkg) in pkgutil.iter_modules()
+        if name.startswith("pyvisa-") and not name.endswith("-script")
+    ]
+
 
 #: Maps backend name to VisaLibraryBase derived class
 #: dict[str, :class:`pyvisa.highlevel.VisaLibraryBase`]
@@ -1472,23 +1540,25 @@ def get_wrapper_class(backend_name):
     try:
         return _WRAPPERS[backend_name]
     except KeyError:
-        if backend_name == 'ivi' or backend_name == 'ni':
+        if backend_name == "ivi" or backend_name == "ni":
             from .ctwrapper import IVIVisaLibrary
-            _WRAPPERS['ivi'] = IVIVisaLibrary
-            if backend_name == 'ni':
+
+            _WRAPPERS["ivi"] = IVIVisaLibrary
+            if backend_name == "ni":
                 warnings.warn(
-                    '@ni backend name is deprecated and will be '
-                    'removed in 1.12. Use @ivi instead. '
-                    'Check the documentation for details',
-                    FutureWarning)
+                    "@ni backend name is deprecated and will be "
+                    "removed in 1.12. Use @ivi instead. "
+                    "Check the documentation for details",
+                    FutureWarning,
+                )
             return IVIVisaLibrary
 
     try:
-        pkg = import_module('pyvisa-' + backend_name)
+        pkg = import_module("pyvisa-" + backend_name)
         _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
         return cls
     except ImportError:
-        raise ValueError('Wrapper not found: No package named pyvisa-%s' % backend_name)
+        raise ValueError("Wrapper not found: No package named pyvisa-%s" % backend_name)
 
 
 def _get_default_wrapper():
@@ -1503,20 +1573,23 @@ def _get_default_wrapper():
     """
 
     from .ctwrapper import IVIVisaLibrary
+
     ivi_binary_found = bool(IVIVisaLibrary.get_library_paths())
     if ivi_binary_found:
-        logger.debug('The IVI implementation available')
-        return 'ivi'
+        logger.debug("The IVI implementation available")
+        return "ivi"
     else:
-        logger.debug('Did not find IVI binary')
+        logger.debug("Did not find IVI binary")
 
     try:
-        get_wrapper_class('py')  # check for pyvisa-py availability
-        logger.debug('pyvisa-py is available.')
-        return 'py'
+        get_wrapper_class("py")  # check for pyvisa-py availability
+        logger.debug("pyvisa-py is available.")
+        return "py"
     except ValueError:
-        logger.debug('Did not find pyvisa-py package')
-    raise ValueError('Could not locate a VISA implementation. Install either the IVI binary or pyvisa-py.')
+        logger.debug("Did not find pyvisa-py package")
+    raise ValueError(
+        "Could not locate a VISA implementation. Install either the IVI binary or pyvisa-py."
+    )
 
 
 def open_visa_library(specification):
@@ -1527,20 +1600,20 @@ def open_visa_library(specification):
     """
 
     if not specification:
-        logger.debug('No visa library specified, trying to find alternatives.')
+        logger.debug("No visa library specified, trying to find alternatives.")
         try:
-            specification = os.environ['PYVISA_LIBRARY']
+            specification = os.environ["PYVISA_LIBRARY"]
         except KeyError:
-            logger.debug('Environment variable PYVISA_LIBRARY is unset.')
+            logger.debug("Environment variable PYVISA_LIBRARY is unset.")
 
     try:
-        argument, wrapper = specification.split('@')
+        argument, wrapper = specification.split("@")
     except ValueError:
         argument = specification
         wrapper = None  # Flag that we need a fallback, but avoid nested exceptions
     if wrapper is None:
-        if argument: # some filename given
-            wrapper = 'ivi'
+        if argument:  # some filename given
+            wrapper = "ivi"
         else:
             wrapper = _get_default_wrapper()
 
@@ -1549,7 +1622,7 @@ def open_visa_library(specification):
     try:
         return cls(argument)
     except Exception as e:
-        logger.debug('Could not open VISA wrapper %s: %s\n%s', cls, str(argument), e)
+        logger.debug("Could not open VISA wrapper %s: %s\n%s", cls, str(argument), e)
         raise
 
 
@@ -1569,17 +1642,19 @@ class ResourceManager(object):
     @classmethod
     def register_resource_class(cls, interface_type, resource_class, python_class):
         if (interface_type, resource_class) in cls._resource_classes:
-            logger.warning('%s is already registered in the ResourceManager. '
-                           'Overwriting with %s' % ((interface_type, resource_class), python_class))
+            logger.warning(
+                "%s is already registered in the ResourceManager. "
+                "Overwriting with %s" % ((interface_type, resource_class), python_class)
+            )
         cls._resource_classes[(interface_type, resource_class)] = python_class
 
-    def __new__(cls, visa_library=''):
+    def __new__(cls, visa_library=""):
         if not isinstance(visa_library, VisaLibraryBase):
             visa_library = open_visa_library(visa_library)
 
         if visa_library.resource_manager is not None:
             obj = visa_library.resource_manager
-            logger.debug('Reusing ResourceManager with session %s',  obj.session)
+            logger.debug("Reusing ResourceManager with session %s", obj.session)
             return obj
 
         obj = super(ResourceManager, cls).__new__(cls)
@@ -1590,7 +1665,7 @@ class ResourceManager(object):
         obj.visalib.resource_manager = obj
         obj._created_resources = WeakSet()
 
-        logger.debug('Created ResourceManager with session %s',  obj.session)
+        logger.debug("Created ResourceManager with session %s", obj.session)
         return obj
 
     @property
@@ -1608,10 +1683,10 @@ class ResourceManager(object):
         self._session = value
 
     def __str__(self):
-        return 'Resource Manager of %s' % self.visalib
+        return "Resource Manager of %s" % self.visalib
 
     def __repr__(self):
-        return '<ResourceManager(%r)>' % self.visalib
+        return "<ResourceManager(%r)>" % self.visalib
 
     def __del__(self):
         if self._session is not None:
@@ -1637,7 +1712,7 @@ class ResourceManager(object):
 
         """
         try:
-            logger.debug('Closing ResourceManager (session: %s)', self.session)
+            logger.debug("Closing ResourceManager (session: %s)", self.session)
             # Cleanly close all resources when closing the manager.
             for resource in self._created_resources:
                 resource.close()
@@ -1647,7 +1722,7 @@ class ResourceManager(object):
         except errors.InvalidSession:
             pass
 
-    def list_resources(self, query='?*::INSTR'):
+    def list_resources(self, query="?*::INSTR"):
         """Returns a tuple of all connected devices matching query.
 
         note: The query uses the VISA Resource Regular Expression syntax - which is not the same
@@ -1694,7 +1769,7 @@ class ResourceManager(object):
 
         return self.visalib.list_resources(self.session, query)
 
-    def list_resources_info(self, query='?*::INSTR'):
+    def list_resources_info(self, query="?*::INSTR"):
         """Returns a dictionary mapping resource names to resource extended
         information of all connected devices matching query.
 
@@ -1706,8 +1781,10 @@ class ResourceManager(object):
         :rtype: dict[str, :class:`pyvisa.highlevel.ResourceInfo`]
         """
 
-        return dict((resource, self.resource_info(resource))
-                    for resource in self.list_resources(query))
+        return dict(
+            (resource, self.resource_info(resource))
+            for resource in self.list_resources(query)
+        )
 
     def list_opened_resources(self):
         """Returns a list of all the opened resources.
@@ -1740,9 +1817,12 @@ class ResourceManager(object):
 
         return ret
 
-    def open_bare_resource(self, resource_name,
-                           access_mode=constants.AccessModes.no_lock,
-                           open_timeout=constants.VI_TMO_IMMEDIATE):
+    def open_bare_resource(
+        self,
+        resource_name,
+        access_mode=constants.AccessModes.no_lock,
+        open_timeout=constants.VI_TMO_IMMEDIATE,
+    ):
         """Open the specified resource without wrapping into a class
 
         :param resource_name: Name or alias of the resource to open.
@@ -1757,11 +1837,14 @@ class ResourceManager(object):
         """
         return self.visalib.open(self.session, resource_name, access_mode, open_timeout)
 
-    def open_resource(self, resource_name,
-                      access_mode=constants.AccessModes.no_lock,
-                      open_timeout=constants.VI_TMO_IMMEDIATE,
-                      resource_pyclass=None,
-                      **kwargs):
+    def open_resource(
+        self,
+        resource_name,
+        access_mode=constants.AccessModes.no_lock,
+        open_timeout=constants.VI_TMO_IMMEDIATE,
+        resource_pyclass=None,
+        **kwargs
+    ):
         """Return an instrument for the resource name.
 
         :param resource_name: Name or alias of the resource to open.
@@ -1783,10 +1866,17 @@ class ResourceManager(object):
             info = self.resource_info(resource_name, extended=True)
 
             try:
-                resource_pyclass = self._resource_classes[(info.interface_type, info.resource_class)]
+                resource_pyclass = self._resource_classes[
+                    (info.interface_type, info.resource_class)
+                ]
             except KeyError:
-                resource_pyclass = self._resource_classes[(constants.InterfaceType.unknown, '')]
-                logger.warning('There is no class defined for %r. Using Resource', (info.interface_type, info.resource_class))
+                resource_pyclass = self._resource_classes[
+                    (constants.InterfaceType.unknown, "")
+                ]
+                logger.warning(
+                    "There is no class defined for %r. Using Resource",
+                    (info.interface_type, info.resource_class),
+                )
 
         res = resource_pyclass(self, resource_name)
         for key in kwargs.keys():
@@ -1799,7 +1889,10 @@ class ResourceManager(object):
                 present = True
 
             if not present:
-                raise ValueError('%r is not a valid attribute for type %s' % (key, res.__class__.__name__))
+                raise ValueError(
+                    "%r is not a valid attribute for type %s"
+                    % (key, res.__class__.__name__)
+                )
 
         res.open(access_mode, open_timeout)
 
@@ -1810,11 +1903,14 @@ class ResourceManager(object):
 
         return res
 
-    def get_instrument(self, resource_name,
-                       access_mode=constants.AccessModes.no_lock,
-                       open_timeout=constants.VI_TMO_IMMEDIATE,
-                       resource_pyclass=None,
-                       **kwargs):
+    def get_instrument(
+        self,
+        resource_name,
+        access_mode=constants.AccessModes.no_lock,
+        open_timeout=constants.VI_TMO_IMMEDIATE,
+        resource_pyclass=None,
+        **kwargs
+    ):
         """Return an instrument for the resource name.
 
         :param resource_name: name or alias of the resource to open.
@@ -1828,7 +1924,11 @@ class ResourceManager(object):
 
         :rtype: :class:`pyvisa.resources.Resource`
         """
-        warnings.warn('get_instrument is deprecated and will be removed in '
-                      '1.12, use open_resource instead.', FutureWarning)
-        self.open_resource(resource_name, access_mode, open_timeout,
-                           resource_pyclass, **kwargs)
+        warnings.warn(
+            "get_instrument is deprecated and will be removed in "
+            "1.12, use open_resource instead.",
+            FutureWarning,
+        )
+        self.open_resource(
+            resource_name, access_mode, open_timeout, resource_pyclass, **kwargs
+        )

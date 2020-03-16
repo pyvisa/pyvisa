@@ -19,15 +19,12 @@ except ValueError:
 else:
     VISA_PRESENT = True
 
-require_visa_lib = (
-     unittest.skipUnless(VISA_PRESENT,
-                         "Requires an installed VISA library. Run on PyVISA "
-                         "buildbot.")
+require_visa_lib = unittest.skipUnless(
+    VISA_PRESENT, "Requires an installed VISA library. Run on PyVISA " "buildbot."
 )
 
 
 class TestHandler(BufferingHandler):
-
     def __init__(self, only_warnings=False):
         # BufferingHandler takes a "capacity" argument
         # so as to know when to flush. As we're overriding
@@ -73,8 +70,9 @@ class BaseTestCase(unittest.TestCase):
         if self._test_handler is not None:
             buf = self._test_handler.buffer
             l = len(buf)
-            msg = '\n'.join(record.get('msg', str(record)) for record in buf)
-            self.assertEqual(l, 0, msg='%d warnings raised.\n%s' % (l, msg))
+            msg = "\n".join(record.get("msg", str(record)) for record in buf)
+            self.assertEqual(l, 0, msg="%d warnings raised.\n%s" % (l, msg))
+
 
 def testsuite():
     """A testsuite that has all the pyvisa tests.
@@ -90,7 +88,7 @@ def main():
     try:
         unittest.main()
     except Exception as e:
-        print('Error: %s' % e)
+        print("Error: %s" % e)
 
 
 def run():
