@@ -10,7 +10,9 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-from . import util, constants
+from typing import Any, Callable, Tuple
+
+from . import constants, typing, util
 from .constants import *
 
 completion_and_error_messages = {
@@ -449,16 +451,17 @@ completion_and_error_messages = {
 
 default_warnings = frozenset(
     [
-        VI_SUCCESS_MAX_CNT,
-        VI_SUCCESS_DEV_NPRESENT,
-        VI_SUCCESS_SYNC,
-        VI_WARN_QUEUE_OVERFLOW,
-        VI_WARN_CONFIG_NLOADED,
-        VI_WARN_NULL_OBJECT,
-        VI_WARN_NSUP_ATTR_STATE,
-        VI_WARN_UNKNOWN_STATUS,
-        VI_WARN_NSUP_BUF,
-        VI_WARN_EXT_FUNC_NIMPL,
+        constants.StatusCode.success_max_count_read,
+        constants.StatusCode.success_device_not_present,
+        constants.StatusCode.success_synchronous,
+        constants.StatusCode.warning_queue_overflow,
+        constants.StatusCode.warning_configuration_not_loaded,
+        constants.StatusCode.warning_null_object,
+        constants.StatusCode.warning_nonsupported_attribute_state,
+        constants.StatusCode.warning_unknown_status,
+        constants.StatusCode.warning_unknown_status,
+        constants.StatusCode.warning_nonsupported_buffer,
+        constants.StatusCode.warning_ext_function_not_implemented,
     ]
 )
 
@@ -477,7 +480,7 @@ class VisaIOError(Error):
 
     """
 
-    def __init__(self, error_code):
+    def __init__(self, error_code: int) -> None:
         abbreviation, description = completion_and_error_messages.get(
             error_code, ("?", "Unknown code.")
         )
@@ -488,7 +491,7 @@ class VisaIOError(Error):
         self.abbreviation = abbreviation
         self.description = description
 
-    def __reduce__(self):
+    def __reduce__(self) -> Tuple[type, Tuple[int]]:
         return (VisaIOError, (self.error_code,))
 
 
@@ -499,7 +502,7 @@ class VisaIOWarning(Warning):
 
     """
 
-    def __init__(self, error_code):
+    def __init__(self, error_code: int) -> None:
         abbreviation, description = completion_and_error_messages.get(
             error_code, ("?", "Unknown code.")
         )
@@ -510,7 +513,7 @@ class VisaIOWarning(Warning):
         self.abbreviation = abbreviation
         self.description = description
 
-    def __reduce__(self):
+    def __reduce__(self) -> Tuple[type, Tuple[int]]:
         return (VisaIOWarning, (self.error_code,))
 
 
@@ -536,7 +539,13 @@ class UnknownHandler(Error):
 
     """
 
-    def __init__(self, event_type, handler, user_handle):
+    # XXX improve handler signature
+    def __init__(
+        self,
+        event_type: constants.EventType,
+        handler: typing.VISAHandler,
+        user_handle: Any,
+    ) -> None:
         super(UnknownHandler, self).__init__(
             "%s, %s, %s" % (event_type, handler, user_handle)
         )
@@ -544,28 +553,28 @@ class UnknownHandler(Error):
         self.handler = handler
         self.user_handle = user_handle
 
-    def __reduce__(self):
+    def __reduce__(self) -> Tuple[type, tuple]:
         return (UnknownHandler, (self.event_type, self.handler, self.user_handle))
 
 
 class OSNotSupported(Error):
-    def __init__(self, os):
+    def __init__(self, os: str) -> None:
         super(OSNotSupported, self).__init__(os + " is not yet supported by PyVISA")
         self.os = os
 
-    def __reduce__(self):
+    def __reduce__(self) -> Tuple[type, Tuple[str]]:
         return (OSNotSupported, (self.os,))
 
 
 class InvalidBinaryFormat(Error):
-    def __init__(self, description=""):
+    def __init__(self, description: str = "") -> None:
         desc = ": " + description if description else ""
         super(InvalidBinaryFormat, self).__init__(
             "Unrecognized binary data format" + desc
         )
         self.description = description
 
-    def __reduce__(self):
+    def __reduce__(self) -> Tuple[type, tuple]:
         return (InvalidBinaryFormat, (self.description,))
 
 
@@ -573,18 +582,18 @@ class InvalidSession(Error):
     """Exception raised when an invalid session is requested.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super(InvalidSession, self).__init__(
             "Invalid session handle. The resource might be closed."
         )
 
-    def __reduce__(self):
+    def __reduce__(self) -> Tuple[type, tuple]:
         return (InvalidSession, ())
 
 
 class LibraryError(OSError, Error):
     @classmethod
-    def from_exception(cls, exc, filename):
+    def from_exception(cls, exc: Exception, filename: str) -> "LibraryError":
 
         try:
             msg = str(exc)
@@ -606,7 +615,7 @@ class LibraryError(OSError, Error):
         return cls("Error while accessing %s: %s" % (filename, msg))
 
     @classmethod
-    def from_wrong_arch(cls, filename):
+    def from_wrong_arch(cls, filename: str) -> "LibraryError":
         s = ""
         details = util.get_system_details(backends=False)
         visalib = util.LibraryPath(
@@ -622,7 +631,7 @@ class LibraryError(OSError, Error):
 
 
 # XXX remove when removing return handler
-def _args_to_str(args, kwargs):  # pragma: no cover
+def _args_to_str(args: tuple, kwargs: dict) -> str:  # pragma: no cover
     return "args=%s, kwargs=%s" % (args, kwargs)
 
 
@@ -630,7 +639,7 @@ def return_handler(module_logger, first_is_session=True):  # pragma: no cover
     """Decorator for VISA library classes.
 
     """
-    warnings.warn("warn_for_invalid_kwargs will be removed in 1.12", FutureWarning)
+    warnings.warn("return_handler will be removed in 1.12", FutureWarning)
 
     def _outer(visa_library_method):
         def _inner(self, session, *args, **kwargs):

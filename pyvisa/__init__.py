@@ -17,11 +17,11 @@ logger = logging.getLogger("pyvisa")
 logger.addHandler(logging.NullHandler())
 
 
-def log_to_screen(level=logging.DEBUG):
+def log_to_screen(level=logging.DEBUG) -> None:
     log_to_stream(None, level)  # sys.stderr by default
 
 
-def log_to_stream(stream_output, level=logging.DEBUG):
+def log_to_stream(stream_output, level=logging.DEBUG) -> None:
     logger.setLevel(level)
     ch = logging.StreamHandler(stream_output)
     ch.setLevel(level)

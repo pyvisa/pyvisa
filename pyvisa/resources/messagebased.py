@@ -14,12 +14,13 @@ import contextlib
 import struct
 import time
 import warnings
+from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, TypeVar, Union
 
-from .. import logger
-from .. import constants
-from .. import errors
-from .. import util
+from typing_extensions import Literal
 
+from .. import constants, errors, logger, util
+from ..highlevel import VisaLibraryBase
+from ..typing import VISASession
 from .resource import Resource
 
 
@@ -28,18 +29,30 @@ class ControlRenMixin(object):
 
     """
 
+    #: Will be present when used as a mixin with Resource
+    visalib: VisaLibraryBase
+
+    #: Will be present when used as a mixin with Resource
+    session: VISASession
+
     # It should work for GPIB, USB and some TCPIP
     # For TCPIP I found some (all?) NI's VISA library do not handle
     # control_ren, but it works for Agilent's VISA library (at least some of
     # them)
-    def control_ren(self, mode):
+    def control_ren(self, mode: constants.RENLineOperation) -> constants.StatusCode:
         """Controls the state of the GPIB Remote Enable (REN) interface line,
         and optionally the remote/local state of the device.
 
         Corresponds to viGpibControlREN function of the VISA library.
 
         :param mode: Specifies the state of the REN line and optionally the
-                     device remote/local state. (Constants.GPIB_REN*)
+                     device remote/local state, valid values are:
+                     constants.VI_GPIB_REN_ADDRESS_GTL,
+            constants.VI_GPIB_REN_ASSERT,
+            constants.VI_GPIB_REN_ASSERT_ADDRESS,
+            constants.VI_GPIB_REN_ASSERT_ADDRESS_LLO,
+            constants.VI_GPIB_REN_DEASSERT,
+            constants.VI_GPIB_REN_DEASSERT_GTL
         :return: return value of the library call.
         :rtype: VISAStatus
         """
@@ -51,37 +64,37 @@ class MessageBasedResource(Resource):
 
     """
 
-    CR = "\r"
-    LF = "\n"
+    CR: str = "\r"
+    LF: str = "\n"
 
-    _read_termination = None
-    _write_termination = CR + LF
-    _encoding = "ascii"
+    _read_termination: Optional[str] = None
+    _write_termination: str = CR + LF
+    _encoding: str = "ascii"
 
-    chunk_size = 20 * 1024
-    query_delay = 0.0
+    chunk_size: int = 20 * 1024
+    query_delay: float = 0.0
 
     @property
-    def encoding(self):
+    def encoding(self) -> str:
         """Encoding used for read and write operations.
         """
         return self._encoding
 
     @encoding.setter
-    def encoding(self, encoding):
+    def encoding(self, encoding: str) -> None:
         # Test that the encoding specified makes sense.
         "test encoding".encode(encoding).decode(encoding)
         self._encoding = encoding
 
     @property
-    def read_termination(self):
+    def read_termination(self) -> Optional[str]:
         """Read termination character.
 
         """
         return self._read_termination
 
     @read_termination.setter
-    def read_termination(self, value):
+    def read_termination(self, value: str) -> None:
 
         if value:
             # termination character, the rest is just used for verification
@@ -105,17 +118,17 @@ class MessageBasedResource(Resource):
         self._read_termination = value
 
     @property
-    def write_termination(self):
+    def write_termination(self) -> str:
         """Write termination character.
 
         """
         return self._write_termination
 
     @write_termination.setter
-    def write_termination(self, value):
+    def write_termination(self, value: str) -> None:
         self._write_termination = value
 
-    def write_raw(self, message):
+    def write_raw(self, message: bytes) -> int:
         """Write a byte message to the device.
 
         :param message: the message to be sent.
@@ -125,7 +138,7 @@ class MessageBasedResource(Resource):
         """
         return self.visalib.write(self.session, message)[0]
 
-    def write(self, message, termination=None, encoding=None):
+    def write(self, message: str, termination: str = None, encoding: str = None) -> int:
         """Write a string message to the device.
 
         The write_termination is always appended to it.
@@ -157,12 +170,12 @@ class MessageBasedResource(Resource):
 
     def write_ascii_values(
         self,
-        message,
-        values,
-        converter="f",
-        separator=",",
-        termination=None,
-        encoding=None,
+        message: str,
+        values: Sequence[Any],
+        converter: Union[str, Callable[[Any], str]] = "f",
+        separator: Union[str, Callable[[Iterable[str]], str]] = ",",
+        termination: Optional[str] = None,
+        encoding: Optional[str] = None,
     ):
         """Write a string message to the device followed by values in ascii
         format.
@@ -194,24 +207,24 @@ class MessageBasedResource(Resource):
 
         block = util.to_ascii_block(values, converter, separator)
 
-        message = message.encode(enco) + block.encode(enco)
+        msg = message.encode(enco) + block.encode(enco)
 
         if term:
-            message += term.encode(enco)
+            msg += term.encode(enco)
 
-        count = self.write_raw(message)
+        count = self.write_raw(msg)
 
         return count
 
     def write_binary_values(
         self,
-        message,
-        values,
-        datatype="f",
-        is_big_endian=False,
-        termination=None,
-        encoding=None,
-        header_fmt="ieee",
+        message: str,
+        values: Sequence[Any],
+        datatype: util.BINARY_DATATYPES = "f",
+        is_big_endian: bool = False,
+        termination: Optional[str] = None,
+        encoding: Optional[str] = None,
+        header_fmt: util.BINARY_HEADERS = "ieee",
     ):
         """Write a string message to the device followed by values in binary
         format.
@@ -247,16 +260,18 @@ class MessageBasedResource(Resource):
         else:
             raise ValueError("Unsupported header_fmt: %s" % header_fmt)
 
-        message = message.encode(enco) + block
+        msg = message.encode(enco) + block
 
         if term:
-            message += term.encode(enco)
+            msg += term.encode(enco)
 
-        count = self.write_raw(message)
+        count = self.write_raw(msg)
 
         return count
 
-    def read_bytes(self, count, chunk_size=None, break_on_termchar=False):
+    def read_bytes(
+        self, count: int, chunk_size: int = None, break_on_termchar: bool = False
+    ) -> bytes:
         """Read a certain number of bytes from the instrument.
 
         :param count: The number of bytes to read from the instrument.
@@ -303,7 +318,7 @@ class MessageBasedResource(Resource):
                 raise
         return bytes(ret)
 
-    def read_raw(self, size=None):
+    def read_raw(self, size: int = None) -> bytes:
         """Read the unmodified string sent from the instrument to the computer.
 
         In contrast to read(), no termination characters are stripped.
@@ -314,7 +329,7 @@ class MessageBasedResource(Resource):
         """
         return bytes(self._read_raw(size))
 
-    def _read_raw(self, size=None):
+    def _read_raw(self, size: int = None):
         """Read the unmodified string sent from the instrument to the computer.
 
         In contrast to read(), no termination characters are stripped.
@@ -353,7 +368,9 @@ class MessageBasedResource(Resource):
 
         return ret
 
-    def read(self, termination=None, encoding=None):
+    def read(
+        self, termination: Optional[str] = None, encoding: Optional[str] = None
+    ) -> str:
         """Read a string from the device.
 
         Reading stops when the device stops sending (e.g. by setting
@@ -385,7 +402,12 @@ class MessageBasedResource(Resource):
 
         return message[: -len(termination)]
 
-    def read_ascii_values(self, converter="f", separator=",", container=list):
+    def read_ascii_values(
+        self,
+        converter: util.ASCII_CONVERTER = "f",
+        separator: Union[str, Callable[[str], Iterable[str]]] = ",",
+        container: type = list,
+    ):
         """Read values from the device in ascii format returning an iterable of
         values.
 
@@ -410,13 +432,13 @@ class MessageBasedResource(Resource):
 
     def read_binary_values(
         self,
-        datatype="f",
-        is_big_endian=False,
+        datatype: util.BINARY_DATATYPES = "f",
+        is_big_endian: bool = False,
         container=list,
-        header_fmt="ieee",
-        expect_termination=True,
-        data_points=0,
-        chunk_size=None,
+        header_fmt: util.BINARY_HEADERS = "ieee",
+        expect_termination: bool = True,
+        data_points: int = 0,
+        chunk_size: Optional[int] = None,
     ):
         """Read values from the device in binary format returning an iterable
         of values.
@@ -487,9 +509,9 @@ class MessageBasedResource(Resource):
                 block, offset, data_length, datatype, is_big_endian, container
             )
         except ValueError as e:
-            raise errors.InvalidBinaryFormat(e.args)
+            raise errors.InvalidBinaryFormat(e.args[0])
 
-    def query(self, message, delay=None):
+    def query(self, message: str, delay: Optional[float] = None) -> str:
         """A combination of write(message) and read()
 
         :param message: the message to send.
@@ -509,8 +531,13 @@ class MessageBasedResource(Resource):
         return self.read()
 
     def query_ascii_values(
-        self, message, converter="f", separator=",", container=list, delay=None
-    ):
+        self,
+        message: str,
+        converter: util.ASCII_CONVERTER = "f",
+        separator: Union[str, Callable[[str], Iterable[str]]] = ",",
+        container=list,
+        delay: Optional[float] = None,
+    ) -> Sequence[Any]:
         """Query the device for values in ascii format returning an iterable of
         values.
 
@@ -540,15 +567,15 @@ class MessageBasedResource(Resource):
 
     def query_binary_values(
         self,
-        message,
-        datatype="f",
-        is_big_endian=False,
+        message: str,
+        datatype: util.BINARY_DATATYPES = "f",
+        is_big_endian: bool = False,
         container=list,
-        delay=None,
-        header_fmt="ieee",
-        expect_termination=True,
-        data_points=0,
-        chunk_size=None,
+        delay: Optional[float] = None,
+        header_fmt: util.BINARY_HEADERS = "ieee",
+        expect_termination: bool = True,
+        data_points: int = 0,
+        chunk_size: Optional[int] = None,
     ):
         """Query the device for values in binary format returning an iterable
         of values.
@@ -596,32 +623,33 @@ class MessageBasedResource(Resource):
             chunk_size,
         )
 
-    def assert_trigger(self):
+    def assert_trigger(self) -> None:
         """Sends a software trigger to the device.
-        """
 
-        self.visalib.assert_trigger(self.session, constants.VI_TRIG_PROT_DEFAULT)
+        """
+        self.visalib.assert_trigger(self.session, constants.TriggerProtocol.default)
 
     @property
-    def stb(self):
+    def stb(self) -> int:
         """Service request status register."""
 
         return self.read_stb()
 
-    def read_stb(self):
+    def read_stb(self) -> int:
         """Service request status register.
+
         """
         value, retcode = self.visalib.read_stb(self.session)
         return value
 
     @contextlib.contextmanager
-    def read_termination_context(self, new_termination):
+    def read_termination_context(self, new_termination: str) -> Iterator:
         term = self.get_visa_attribute(constants.VI_ATTR_TERMCHAR)
         self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(new_termination[-1]))
         yield
         self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, term)
 
-    def flush(self, mask):
+    def flush(self, mask: constants.BufferOperation) -> None:
         """Manually clears the specified buffers.
 
         Depending on the value of the mask this can cause the buffer data

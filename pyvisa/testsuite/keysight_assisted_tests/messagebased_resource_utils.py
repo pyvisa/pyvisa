@@ -2,6 +2,7 @@
 """Common test case for all message based resources.
 
 """
+import ctypes
 import gc
 import logging
 import time
@@ -26,11 +27,13 @@ class EventHandler:
         self.event_success = False
         self.srq_success = False
         self.io_completed = False
+        self.handle = None
 
     def handle_event(self, instr, event_type, event, handle=None):
         """Event handler
 
         """
+        self.handle = handle
         if event_type == constants.EventType.service_request:
             self.event_success = True
             self.srq_success = True
@@ -654,10 +657,14 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                     event_type, handler.handle_event, user_handle
                 )
 
+            self.assertEqual(handler.handle, handle)
             self.assertTrue(handler.srq_success)
             self.assertEqual(self.instr.read(), "1")
 
-        for handle in (1, 1.0, "1", [1]):
+        class Point(ctypes.Structure):
+            _fields_ = [("x", ctypes.c_int), ("y", ctypes.c_int)]
+
+        for handle in (1, 1.0, "1", [1], [1.0], Point(1, 2)):
             _test(handle)
 
     def test_handling_invalid_handler(self):

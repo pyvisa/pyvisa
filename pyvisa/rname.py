@@ -8,25 +8,23 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-import re
 import contextlib
-from collections import namedtuple, defaultdict
+import re
+from collections import defaultdict, namedtuple
+from typing import Callable, Dict, Iterable, List, NewType, Optional, Set, Tuple, Type
 
-from . import constants, errors, logger
+from . import constants, errors, logger, resources
 
-# :type: set[str]
-_INTERFACE_TYPES = set()
+#:
+_INTERFACE_TYPES: Set[str] = set()
 
-# Resource Class for Interface type
-# :type: dict[str, set[str]]
-_RESOURCE_CLASSES = defaultdict(set)
+#: Resource Class for Interface type
+_RESOURCE_CLASSES: Dict[str, Set[str]] = defaultdict(set)
 
-# :type: dict[(str, str), ResourceName]
-_SUBCLASSES = {}
+_SUBCLASSES: Dict[Tuple[str, str], Type["ResourceName"]] = {}
 
 # DEFAULT Resource Class for a given interface type.
-# :type: dict[str, str]
-_DEFAULT_RC = {}
+_DEFAULT_RC: Dict[str, str] = {}
 
 
 class InvalidResourceName(ValueError):
@@ -34,15 +32,16 @@ class InvalidResourceName(ValueError):
 
     """
 
-    def __init__(self, msg):
+    def __init__(self, msg: str) -> None:
         self.msg = msg
 
     @classmethod
-    def bad_syntax(cls, syntax, resource_name, ex=None):
+    def bad_syntax(
+        cls, syntax: str, resource_name: str, ex: Exception = None
+    ) -> "InvalidResourceName":
         """Exception used when the resource name cannot be parsed.
 
         """
-
         if ex:
             msg = "The syntax is '%s' (%s)." % (syntax, ex)
         else:
@@ -53,9 +52,11 @@ class InvalidResourceName(ValueError):
         return cls(msg)
 
     @classmethod
-    def subclass_notfound(cls, interface_type_resource_class, resource_name=None):
-        """Exception used when the subclass for a given interface type / resource class pair
-        cannot be found.
+    def subclass_notfound(
+        cls, interface_type_resource_class: Tuple[str, str], resource_name: str = None,
+    ) -> "InvalidResourceName":
+        """Exception used when the subclass for a given interface type / resource class
+        pair cannot be found.
 
         """
 
@@ -67,7 +68,9 @@ class InvalidResourceName(ValueError):
         return cls(msg)
 
     @classmethod
-    def rc_notfound(cls, interface_type, resource_name=None):
+    def rc_notfound(
+        cls, interface_type: str, resource_name: str = None
+    ) -> "InvalidResourceName":
         """Exception used when no resource class is provided and no default is found.
 
         """
@@ -81,11 +84,11 @@ class InvalidResourceName(ValueError):
 
         return cls(msg)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.msg
 
 
-def register_subclass(cls):
+def register_subclass(cls: Type["ResourceName"]) -> Type["ResourceName"]:
     """Register a subclass for a given interface type and resource class.
 
     """
@@ -113,33 +116,40 @@ class ResourceName(object):
 
     """
 
-    # Interface type string
-    interface_type = ""
+    #: Interface type string
+    interface_type: str = ""
 
-    # Resource class string
-    resource_class = ""
+    #: Resource class string
+    resource_class: str = ""
 
-    # Specifices if the resource class part of the string is optional.
-    is_rc_optional = False
+    #: Specifices if the resource class part of the string is optional.
+    is_rc_optional: bool = False
 
-    # Formatting string for canonical
-    _canonical_fmt = ""
+    #: Formatting string for canonical
+    _canonical_fmt: str = ""
 
-    # VISA syntax for resource
-    _visa_syntax = ""
+    #: VISA syntax for resource
+    _visa_syntax: str = ""
 
-    # Resource name provided by the user (not empty only when parsing)
-    user = ""
+    #: Resource name provided by the user (not empty only when parsing)
+    user: str = ""
+
+    #: Common field to all resources
+    board: str
+
+    # Implemented when building concrete subclass in build_rn_class
+    def __new__(cls, **kwargs):
+        ...
 
     @property
-    def interface_type_const(self):
+    def interface_type_const(self) -> constants.InterfaceType:
         try:
             return getattr(constants.InterfaceType, self.interface_type.lower())
         except:
             return constants.InterfaceType.unknown
 
     @classmethod
-    def from_string(cls, resource_name):
+    def from_string(cls, resource_name: str) -> "ResourceName":
         """Parse a resource name and return a ResourceName
 
         :type resource_name: str
@@ -159,8 +169,9 @@ class ResourceName(object):
             if not uname.startswith(interface_type):
                 continue
 
+            parts: List[str]
             if len(resource_name) == len(interface_type):
-                parts = ()
+                parts = []
             else:
                 parts = resource_name[len(interface_type) :].split("::")
 
@@ -199,7 +210,7 @@ class ResourceName(object):
         )
 
     @classmethod
-    def from_kwargs(cls, **kwargs):
+    def from_kwargs(cls, **kwargs) -> "ResourceName":
         interface_type = kwargs.pop("interface_type")
 
         if interface_type not in _INTERFACE_TYPES:
@@ -224,11 +235,21 @@ class ResourceName(object):
         except ValueError as ex:
             raise InvalidResourceName(str(ex))
 
+    # Implemented when building concrete subclass in build_rn_class
+    @classmethod
+    def from_parts(cls, *parts):
+        ...
+
     def __str__(self):
         return self._canonical_fmt.format(self)
 
 
-def build_rn_class(interface_type, resource_parts, resource_class, is_rc_optional=True):
+def build_rn_class(
+    interface_type: str,
+    resource_parts: Tuple[Tuple[str, Optional[str]], ...],
+    resource_class: str,
+    is_rc_optional: bool = True,
+) -> Type[ResourceName]:
     """Builds a resource name class by mixing a named tuple and ResourceName.
 
     It also registers the class.
@@ -254,7 +275,7 @@ def build_rn_class(interface_type, resource_parts, resource_class, is_rc_optiona
 
     syntax = interface_type
     fmt = interface_type
-    fields = []
+    fields: List[str] = []
 
     # Contains the resource parts but using python friendly names
     # (all lower case and replacing spaces by underscores)
@@ -289,7 +310,8 @@ def build_rn_class(interface_type, resource_parts, resource_class, is_rc_optiona
     else:
         syntax += "[" + "::" + resource_class + "]"
 
-    class _C(namedtuple("Internal", " ".join(fields)), ResourceName):
+    # too dynamic for Mypy
+    class _C(namedtuple("Internal", fields), ResourceName):  # type: ignore
         """%s %s"
 
         Can be created with the following keyword only arguments:
@@ -434,14 +456,14 @@ VXIServant = build_rn_class("VXI", (("board", "0"),), "SERVANT", False)
 # TODO Remote NI-VISA
 
 
-def assemble_canonical_name(**kwargs):
+def assemble_canonical_name(**kwargs) -> str:
     """Given a set of keyword arguments defining a resource name,
     return the canonical resource name.
     """
     return str(ResourceName.from_kwargs(**kwargs))
 
 
-def to_canonical_name(resource_name):
+def to_canonical_name(resource_name: str) -> str:
     """Parse a resource name and return the canonical version.
 
     :type resource_name: str
@@ -453,7 +475,7 @@ def to_canonical_name(resource_name):
 parse_resource_name = ResourceName.from_string
 
 
-def filter(resources, query):
+def filter(resources: Iterable[str], query: str) -> Tuple[str, ...]:
     """Filter a list of resources according to a query expression.
 
     The search criteria specified in the query parameter has two parts:
@@ -530,7 +552,11 @@ def filter(resources, query):
     return tuple(res for res in resources if matcher.match(res))
 
 
-def filter2(resources, query, open_resource):
+def filter2(
+    resources: Iterable[str],
+    query: str,
+    open_resource: Callable[[str], "resources.Resource"],
+) -> List[str]:
     """Filter a list of resources according to a query expression.
 
     It accepts the optional part of the expression.
@@ -543,7 +569,7 @@ def filter2(resources, query, open_resource):
     :param open_resource: function to open the resource.
 
     """
-
+    optional: Optional[str]
     if "{" in query:
         try:
             query, optional = query.split("{")
@@ -556,7 +582,7 @@ def filter2(resources, query, open_resource):
     filtered = filter(resources, query)
 
     if not optional:
-        return filtered
+        return list(filtered)
 
     optional = optional.replace("&&", "and").replace("||", "or").replace("!", "not ")
     optional = optional.replace("VI_", "res.VI_")

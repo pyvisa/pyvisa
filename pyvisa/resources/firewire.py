@@ -24,3 +24,4 @@ class FirewireInstrument(RegisterBasedResource):
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
+

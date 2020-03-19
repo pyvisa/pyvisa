@@ -10,29 +10,47 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
+import enum
 from collections import defaultdict
+from typing import Any, Dict, List, Optional, SupportsInt, Tuple, Type, Union, Set
+
+from typing_extensions import DefaultDict, Literal
 
 from . import constants
+
+# XXX add missing attributes (hislip at least)
 
 #: Not available value.
 NotAvailable = object()
 
 #: Attribute for all session types.
-AllSessionTypes = object()
+class AllSessionTypes:  # We use a class to simplify typing
+    ...
 
 
 #: Map resource to attribute
-AttributesPerResource = defaultdict(set)
-AttributesByID = dict()
+AttributesPerResource: DefaultDict[
+    Union[
+        Tuple[constants.InterfaceType, str], Type[AllSessionTypes], constants.EventType
+    ],
+    Set[Type["Attribute"]],
+] = defaultdict(set)
+
+#: Map id to attribute
+AttributesByID: Dict[int, Type["Attribute"]] = dict()
 
 
+# XXX Use init_subclass instead
 class AttributeType(type):
     """Base Type for Attributes
 
     Assigns the `attribute_id` and improves the documentation.
+
     """
 
-    def __init__(cls, name, bases, dct):
+    def __init__(
+        cls: Type["Attribute"], name: str, bases: Tuple[type], dct: Dict[str, Any]
+    ) -> None:
         super(AttributeType, cls).__init__(name, bases, dct)
         if not name.startswith("AttrVI_"):
             return
@@ -54,30 +72,35 @@ class Attribute(object, metaclass=AttributeType):
 
     """
 
-    #: List of resource types with this attribute.
+    #: List of resource or event types with this attribute.
     #: each element is a tuple (constants.InterfaceType, str)
-    resources = []
+    resources: Union[
+        List[Union[Tuple[constants.InterfaceType, str], constants.EventType,]],
+        Type[AllSessionTypes],
+    ] = []
 
     #: Name of the Python property to be matched to this attribute.
-    py_name = "To be specified"
+    py_name: str = "To be specified"
 
     #: Name of the VISA Attribute
-    visa_name = "To be specified"
+    visa_name: str = "To be specified"
 
     #: Numeric constant of the VISA Attribute
-    attribute_id = 0
+    attribute_id: int = 0
 
     #: Default value fo the VISA Attribute
-    default = "N/A"
+    default: Any = "N/A"
 
     #: Access
     read, write, local = False, False, False
 
+    __doc__: str
+
     @classmethod
-    def redoc(cls):
+    def redoc(cls) -> None:
         cls.__doc__ += "\n:VISA Attribute: %s (%s)" % (cls.visa_name, cls.attribute_id)
 
-    def post_get(self, value):
+    def post_get(self, value: Any) -> Any:
         """Override this method to check or modify the value returned by the VISA function.
 
         :param value: the value returned by the VISA library.
@@ -85,7 +108,7 @@ class Attribute(object, metaclass=AttributeType):
         """
         return value
 
-    def pre_set(self, value):
+    def pre_set(self, value: Any) -> Any:
         """Override this method to check or modify the value to be passed to the VISA function.
 
         :param value: the python value to be passed to VISA library.
@@ -93,7 +116,7 @@ class Attribute(object, metaclass=AttributeType):
         """
         return value
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, owner) -> Any:
         if instance is None:
             return self
 
@@ -102,14 +125,14 @@ class Attribute(object, metaclass=AttributeType):
 
         return self.post_get(instance.get_visa_attribute(self.attribute_id))
 
-    def __set__(self, instance, value):
+    def __set__(self, instance, value) -> None:
         if not self.write:
             raise AttributeError("can't write attribute")
 
         instance.set_visa_attribute(self.attribute_id, self.pre_set(value))
 
     @classmethod
-    def in_resource(cls, session_type):
+    def in_resource(cls, session_type: Tuple[constants.InterfaceType, str]) -> bool:
         """Returns True if the attribute is part of a given session type.
 
         The session_type is a tuple with the interface type and resource_class
@@ -119,28 +142,29 @@ class Attribute(object, metaclass=AttributeType):
         """
         if cls.resources is AllSessionTypes:
             return True
-        return session_type in cls.resources
+        return session_type in cls.resources  # type: ignore
 
 
 class EnumAttribute(Attribute):
     """Class for attributes with values that map to a PyVISA Enum.
+
     """
 
     #: Enum type with valid values.
-    enum_type = None
+    enum_type: Type[enum.IntEnum]
 
     @classmethod
-    def redoc(cls):
+    def redoc(cls) -> None:
         super(EnumAttribute, cls).redoc()
         cls.__doc__ += "\n:type: :class:%s.%s" % (
             cls.enum_type.__module__,
             cls.enum_type.__name__,
         )
 
-    def post_get(self, value):
+    def post_get(self, value: Any) -> Any:
         return self.enum_type(value)
 
-    def pre_set(self, value):
+    def pre_set(self, value: Any) -> Any:
         # Python 3.8 raise if a non-Enum is used for value
         try:
             if value not in self.enum_type:
@@ -161,29 +185,32 @@ class IntAttribute(Attribute):
     """
 
     @classmethod
-    def redoc(cls):
+    def redoc(cls) -> None:
         super(IntAttribute, cls).redoc()
         cls.__doc__ += "\n:type: int"
 
-    def post_get(self, value):
+    def post_get(self, value: SupportsInt) -> int:
         return int(value)
 
 
 class RangeAttribute(IntAttribute):
     """Class for integer attributes with values within a range.
+
     """
 
     #: Range for the value, and iterable of extra values.
-    min_value, max_value, values = None, None, []
+    min_value: int
+    max_value: int
+    values: Optional[List[int]]
 
     @classmethod
-    def redoc(cls):
+    def redoc(cls) -> None:
         super(RangeAttribute, cls).redoc()
         cls.__doc__ += "\n:range: %s <= value <= %s" % (cls.min_value, cls.max_value)
         if cls.values:
             cls.__doc__ += " or in %s" % cls.values
 
-    def pre_set(self, value):
+    def pre_set(self, value: int) -> int:
         if not self.min_value <= value <= self.max_value:
             if not self.values:
                 raise ValueError(
@@ -208,17 +235,18 @@ class RangeAttribute(IntAttribute):
 
 class ValuesAttribute(Attribute):
     """Class for attributes with values in a list.
+
     """
 
     #: Valid values
-    values = []
+    values: list = []
 
     @classmethod
-    def redoc(cls):
+    def redoc(cls) -> None:
         super(ValuesAttribute, cls).redoc()
         cls.__doc__ += "\n:values: %s" % cls.values
 
-    def pre_set(self, value):
+    def pre_set(self, value: Any) -> Any:
         if value not in self.values:
             raise ValueError(
                 "%r is an invalid value for attribute %s, "
@@ -232,34 +260,35 @@ class BooleanAttribute(Attribute):
     """
 
     @classmethod
-    def redoc(cls):
+    def redoc(cls) -> None:
         super(BooleanAttribute, cls).redoc()
         cls.__doc__ += "\n:type: bool"
 
-    def post_get(self, value):
+    # XXX need a new enum
+    def post_get(self, value: Literal[constants.VI_TRUE, constants.VI_FALSE]) -> bool:
         return value == constants.VI_TRUE
 
-    def pre_set(self, value):
+    def pre_set(self, value: bool) -> Literal[constants.VI_TRUE, constants.VI_FALSE]:
         return constants.VI_TRUE if value else constants.VI_FALSE
 
 
 class CharAttribute(Attribute):
     """Class for attributes with char values.
+
     """
 
     @classmethod
-    def redoc(cls):
+    def redoc(cls) -> None:
         super(CharAttribute, cls).redoc()
         cls.__doc__ += "\n:range: 0 <= x <= 255\n:type: int"
 
-    def post_get(self, value):
+    def post_get(self, value: int) -> str:
         return chr(value)
 
-    def pre_set(self, value):
+    def pre_set(self, value: Union[str, bytes]) -> int:
         return ord(value)
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_4882_COMPLIANT(BooleanAttribute):
     """VI_ATTR_4882_COMPLIANT specifies whether the device is 488.2
     compliant.
@@ -281,7 +310,6 @@ class AttrVI_ATTR_4882_COMPLIANT(BooleanAttribute):
     read, write, local = True, False, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_ALLOW_TRANSMIT(BooleanAttribute):
     """If set to VI_FALSE, it suspends transmission as if an XOFF character
     has been received. If set to VI_TRUE, it resumes transmission as
@@ -301,7 +329,6 @@ class AttrVI_ATTR_ASRL_ALLOW_TRANSMIT(BooleanAttribute):
     read, write, local = True, True, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_AVAIL_NUM(RangeAttribute):
     """VI_ATTR_ASRL_AVAIL_NUM shows the number of bytes available in the low-
     level I/O receive buffer.
@@ -319,10 +346,9 @@ class AttrVI_ATTR_ASRL_AVAIL_NUM(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 0xFFFFFFFF, []
+    min_value, max_value, values = 0, 0xFFFFFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_BAUD(RangeAttribute):
     """VI_ATTR_ASRL_BAUD is the baud rate of the interface. It is represented
     as an unsigned 32-bit integer so that any baud rate can be used,
@@ -342,10 +368,9 @@ class AttrVI_ATTR_ASRL_BAUD(RangeAttribute):
 
     read, write, local = True, True, False
 
-    min_value, max_value, values = 0, 0xFFFFFFFF, []
+    min_value, max_value, values = 0, 0xFFFFFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_BREAK_LEN(RangeAttribute):
     """This controls the duration (in milliseconds) of the break signal
     asserted when VI_ATTR_ASRL_END_OUT is set to VI_ASRL_END_BREAK. If
@@ -366,10 +391,9 @@ class AttrVI_ATTR_ASRL_BREAK_LEN(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_BREAK_STATE(EnumAttribute):
     """If set to VI_STATE_ASSERTED, it suspends character transmission and
     places the transmission line in a break state until this attribute
@@ -395,7 +419,6 @@ class AttrVI_ATTR_ASRL_BREAK_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_CONNECTED(BooleanAttribute):
     """VI_ATTR_ASRL_CONNECTED indicates whether the port is properly
     connected to another port or device. This attribute is valid only
@@ -417,7 +440,6 @@ class AttrVI_ATTR_ASRL_CONNECTED(BooleanAttribute):
     read, write, local = True, False, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_CTS_STATE(EnumAttribute):
     """VI_ATTR_ASRL_CTS_STATE shows the current state of the Clear To Send
     (CTS) input signal.
@@ -438,7 +460,6 @@ class AttrVI_ATTR_ASRL_CTS_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_DATA_BITS(RangeAttribute):
     """VI_ATTR_ASRL_DATA_BITS is the number of data bits contained in each
     frame (from 5 to 8). The data bits for each frame are located in
@@ -457,10 +478,9 @@ class AttrVI_ATTR_ASRL_DATA_BITS(RangeAttribute):
 
     read, write, local = True, True, False
 
-    min_value, max_value, values = 5, 8, []
+    min_value, max_value, values = 5, 8, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_DCD_STATE(EnumAttribute):
     """VI_ATTR_ASRL_DCD_STATE represents the current state of the Data
     Carrier Detect (DCD) input signal. The DCD signal is often used by
@@ -487,7 +507,6 @@ class AttrVI_ATTR_ASRL_DCD_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_DISCARD_NULL(BooleanAttribute):
     """If set to VI_TRUE, NUL characters are discarded. Otherwise, they are
     treated as normal data characters. For binary transfers, set this
@@ -507,7 +526,6 @@ class AttrVI_ATTR_ASRL_DISCARD_NULL(BooleanAttribute):
     read, write, local = True, True, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_DSR_STATE(EnumAttribute):
     """VI_ATTR_ASRL_DSR_STATE shows the current state of the Data Set Ready
     (DSR) input signal.
@@ -528,7 +546,6 @@ class AttrVI_ATTR_ASRL_DSR_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_DTR_STATE(EnumAttribute):
     """VI_ATTR_ASRL_DTR_STATE shows the current state of the Data Terminal
     Ready (DTR) input signal.
@@ -549,7 +566,6 @@ class AttrVI_ATTR_ASRL_DTR_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_END_IN(EnumAttribute):
     """VI_ATTR_ASRL_END_IN indicates the method used to terminate read
     operations.
@@ -570,7 +586,6 @@ class AttrVI_ATTR_ASRL_END_IN(EnumAttribute):
     enum_type = constants.SerialTermination
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_END_OUT(EnumAttribute):
     """VI_ATTR_ASRL_END_OUT indicates the method used to terminate write
     operations.
@@ -591,7 +606,6 @@ class AttrVI_ATTR_ASRL_END_OUT(EnumAttribute):
     enum_type = constants.SerialTermination
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_FLOW_CNTRL(RangeAttribute):
     """VI_ATTR_ASRL_FLOW_CNTRL indicates the type of flow control used by the
     transfer mechanism.
@@ -609,10 +623,9 @@ class AttrVI_ATTR_ASRL_FLOW_CNTRL(RangeAttribute):
 
     read, write, local = True, True, False
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_PARITY(EnumAttribute):
     """VI_ATTR_ASRL_PARITY is the parity used with every frame transmitted
     and received.
@@ -633,7 +646,6 @@ class AttrVI_ATTR_ASRL_PARITY(EnumAttribute):
     enum_type = constants.Parity
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_REPLACE_CHAR(CharAttribute):
     """VI_ATTR_ASRL_REPLACE_CHAR specifies the character to be used to
     replace incoming characters that arrive with errors (such as
@@ -653,7 +665,6 @@ class AttrVI_ATTR_ASRL_REPLACE_CHAR(CharAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_RI_STATE(EnumAttribute):
     """VI_ATTR_ASRL_RI_STATE represents the current state of the Ring
     Indicator (RI) input signal. The RI signal is often used by modems
@@ -678,7 +689,6 @@ class AttrVI_ATTR_ASRL_RI_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_RTS_STATE(EnumAttribute):
     """VI_ATTR_ASRL_RTS_STATE is used to manually assert or unassert the
     Request To Send (RTS) output signal.
@@ -699,7 +709,6 @@ class AttrVI_ATTR_ASRL_RTS_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_STOP_BITS(EnumAttribute):
     """VI_ATTR_ASRL_STOP_BITS is the number of stop bits used to indicate the
     end of a frame. The value VI_ASRL_STOP_ONE5 indicates one-and-one-
@@ -721,7 +730,6 @@ class AttrVI_ATTR_ASRL_STOP_BITS(EnumAttribute):
     enum_type = constants.StopBits
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_WIRE_MODE(RangeAttribute):
     """
 
@@ -739,10 +747,9 @@ class AttrVI_ATTR_ASRL_WIRE_MODE(RangeAttribute):
 
     read, write, local = True, True, False
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_XOFF_CHAR(CharAttribute):
     """VI_ATTR_ASRL_XOFF_CHAR specifies the value of the XOFF character used
     for XON/XOFF flow control (both directions). If XON/XOFF flow
@@ -763,7 +770,6 @@ class AttrVI_ATTR_ASRL_XOFF_CHAR(CharAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_ASRL_XON_CHAR(CharAttribute):
     """VI_ATTR_ASRL_XON_CHAR specifies the value of the XON character used
     for XON/XOFF flow control (both directions). If XON/XOFF flow
@@ -784,14 +790,24 @@ class AttrVI_ATTR_ASRL_XON_CHAR(CharAttribute):
     read, write, local = True, True, True
 
 
-# Could not generate class for VI_ATTR_BUFFER.html
-# Exception:
-"""
-'list' object has no attribute 'startswith'
-"""
+class AttrVI_ATTR_BUFFER(Attribute):
+    """VI_ATTR_BUFFER contains the address of a buffer that was used in an
+    asynchronous operation.
+    """
+
+    resources = [constants.EventType.io_completion]
+
+    py_name = "buffer"
+
+    visa_name = "VI_ATTR_BUFFER"
+
+    visa_type = "ViBuf"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_CMDR_LA(RangeAttribute):
     """VI_ATTR_CMDR_LA is the unique logical address of the commander of the
     VXI device used by the given session.
@@ -815,7 +831,6 @@ class AttrVI_ATTR_CMDR_LA(RangeAttribute):
     min_value, max_value, values = 0, 255, [constants.VI_UNKNOWN_LA]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_DEST_ACCESS_PRIV(RangeAttribute):
     """VI_ATTR_DEST_ACCESS_PRIV specifies the address modifier to be used in
     high-level access operations, such as viOutXX() and viMoveOutXX(),
@@ -837,10 +852,9 @@ class AttrVI_ATTR_DEST_ACCESS_PRIV(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_DEST_BYTE_ORDER(RangeAttribute):
     """VI_ATTR_DEST_BYTE_ORDER specifies the byte order to be used in high-
     level access operations, such as viOutXX() and viMoveOutXX(), when
@@ -862,10 +876,9 @@ class AttrVI_ATTR_DEST_BYTE_ORDER(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_DEST_INCREMENT(RangeAttribute):
     """VI_ATTR_DEST_INCREMENT is used in the viMoveOutXX() operations to
     specify by how many elements the destination offset is to be
@@ -895,10 +908,9 @@ class AttrVI_ATTR_DEST_INCREMENT(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 1, []
+    min_value, max_value, values = 0, 1, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_DEV_STATUS_BYTE(CharAttribute):
     """This attribute specifies the 488-style status byte of the local
     controller or device associated with this session.
@@ -920,7 +932,6 @@ class AttrVI_ATTR_DEV_STATUS_BYTE(CharAttribute):
     read, write, local = True, True, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_DMA_ALLOW_EN(BooleanAttribute):
     """This attribute specifies whether I/O accesses should use DMA (VI_TRUE)
     or Programmed I/O (VI_FALSE). In some implementations, this
@@ -958,7 +969,6 @@ Unknown type: ViEventType. Range: [u'0h to FFFFFFFFh']
 """
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_FDC_CHNL(RangeAttribute):
     """VI_ATTR_FDC_CHNL determines which Fast Data Channel (FDC) will be used
     to transfer the buffer.
@@ -976,10 +986,9 @@ class AttrVI_ATTR_FDC_CHNL(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 7, []
+    min_value, max_value, values = 0, 7, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_FDC_MODE(RangeAttribute):
     """VI_ATTR_FDC_MODE specifies which Fast Data Channel (FDC) mode to use
     (either normal or stream mode).
@@ -997,10 +1006,9 @@ class AttrVI_ATTR_FDC_MODE(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_FDC_USE_PAIR(BooleanAttribute):
     """Setting VI_ATTR_FDC_USE_PAIR to VI_TRUE specifies to use a channel
     pair for transferring data. Otherwise, only one channel will be
@@ -1020,7 +1028,6 @@ class AttrVI_ATTR_FDC_USE_PAIR(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_FILE_APPEND_EN(BooleanAttribute):
     """This attribute specifies whether viReadToFile() will overwrite
     (truncate) or append when opening a file.
@@ -1049,7 +1056,6 @@ class AttrVI_ATTR_FILE_APPEND_EN(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_ADDR_STATE(EnumAttribute):
     """This attribute shows whether the specified GPIB interface is currently
     addressed to talk or listen, or is not addressed.
@@ -1070,7 +1076,6 @@ class AttrVI_ATTR_GPIB_ADDR_STATE(EnumAttribute):
     enum_type = constants.AddressState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_ATN_STATE(EnumAttribute):
     """This attribute shows the current state of the GPIB ATN (ATtentioN)
     interface line.
@@ -1091,7 +1096,6 @@ class AttrVI_ATTR_GPIB_ATN_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_CIC_STATE(BooleanAttribute):
     """This attribute shows whether the specified GPIB interface is currently
     CIC (Controller In Charge).
@@ -1110,7 +1114,6 @@ class AttrVI_ATTR_GPIB_CIC_STATE(BooleanAttribute):
     read, write, local = True, False, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_HS488_CBL_LEN(RangeAttribute):
     """This attribute specifies the total number of meters of GPIB cable used
     in the specified GPIB interface.
@@ -1128,10 +1131,9 @@ class AttrVI_ATTR_GPIB_HS488_CBL_LEN(RangeAttribute):
 
     read, write, local = True, True, False
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_NDAC_STATE(EnumAttribute):
     """This attribute shows the current state of the GPIB NDAC (Not Data
     ACcepted) interface line.
@@ -1152,7 +1154,6 @@ class AttrVI_ATTR_GPIB_NDAC_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_PRIMARY_ADDR(RangeAttribute):
     """VI_ATTR_GPIB_PRIMARY_ADDR specifies the primary address of the GPIB
     device used by the given session. For the GPIB INTFC Resource,
@@ -1174,10 +1175,9 @@ class AttrVI_ATTR_GPIB_PRIMARY_ADDR(RangeAttribute):
 
     read, write, local = True, True, False
 
-    min_value, max_value, values = 0, 30, []
+    min_value, max_value, values = 0, 30, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_READDR_EN(BooleanAttribute):
     """VI_ATTR_GPIB_READDR_EN specifies whether to use repeat addressing
     before each read or write operation.
@@ -1196,7 +1196,6 @@ class AttrVI_ATTR_GPIB_READDR_EN(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_REN_STATE(EnumAttribute):
     """VI_ATTR_GPIB_REN_STATE returns the current state of the GPIB REN
     (Remote ENable) interface line.
@@ -1220,7 +1219,6 @@ class AttrVI_ATTR_GPIB_REN_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_SECONDARY_ADDR(RangeAttribute):
     """VI_ATTR_GPIB_SECONDARY_ADDR specifies the secondary address of the
     GPIB device used by the given session. For the GPIB INTFC
@@ -1245,7 +1243,6 @@ class AttrVI_ATTR_GPIB_SECONDARY_ADDR(RangeAttribute):
     min_value, max_value, values = 0, 30, [constants.VI_NO_SEC_ADDR]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_SRQ_STATE(EnumAttribute):
     """This attribute shows the current state of the GPIB SRQ (Service
     ReQuest) interface line.
@@ -1266,7 +1263,6 @@ class AttrVI_ATTR_GPIB_SRQ_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_SYS_CNTRL_STATE(BooleanAttribute):
     """This attribute shows whether the specified GPIB interface is currently
     the system controller. In some implementations, this attribute may
@@ -1287,7 +1283,6 @@ class AttrVI_ATTR_GPIB_SYS_CNTRL_STATE(BooleanAttribute):
     read, write, local = True, True, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_GPIB_UNADDR_EN(BooleanAttribute):
     """VI_ATTR_GPIB_UNADDR_EN specifies whether to unaddress the device (UNT
     and UNL) after each read or write operation.
@@ -1306,7 +1301,6 @@ class AttrVI_ATTR_GPIB_UNADDR_EN(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_IMMEDIATE_SERV(BooleanAttribute):
     """VI_ATTR_IMMEDIATE_SERV specifies whether the device associated with
     this session is an immediate servant of the controller running
@@ -1326,7 +1320,6 @@ class AttrVI_ATTR_IMMEDIATE_SERV(BooleanAttribute):
     read, write, local = True, False, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_INTF_INST_NAME(Attribute):
     """VI_ATTR_INTF_INST_NAME specifies human-readable text that describes
     the given interface.
@@ -1347,7 +1340,6 @@ class AttrVI_ATTR_INTF_INST_NAME(Attribute):
     # [u'N/A']
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_INTF_NUM(RangeAttribute):
     """VI_ATTR_INTF_NUM specifies the board number for the given interface.
     """
@@ -1364,10 +1356,9 @@ class AttrVI_ATTR_INTF_NUM(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0x0, 0xFFFF, []
+    min_value, max_value, values = 0x0, 0xFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_INTF_TYPE(RangeAttribute):
     """VI_ATTR_INTF_TYPE specifies the interface type of the given session.
     """
@@ -1384,10 +1375,9 @@ class AttrVI_ATTR_INTF_TYPE(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_IO_PROT(RangeAttribute):
     """VI_ATTR_IO_PROT specifies which protocol to use. In VXI, you can
     choose normal word serial or fast data channel (FDC). In GPIB, you
@@ -1418,10 +1408,26 @@ class AttrVI_ATTR_IO_PROT(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
+class AttrVI_ATTR_JOB_ID(Attribute):
+    """VI_ATTR_JOB_ID contains the job ID of the asynchronous operation that has completed.
+    """
+
+    resources = [constants.EventType.io_completion]
+
+    py_name = "job_id"
+
+    visa_name = "VI_ATTR_JOB_ID"
+
+    visa_type = "ViJobId"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
 class AttrVI_ATTR_MAINFRAME_LA(RangeAttribute):
     """VI_ATTR_MA.infRAME_LA specifies the lowest logical address in the
     mainframe. If the logical address is not known, VI_UNKNOWN_LA is
@@ -1446,7 +1452,6 @@ class AttrVI_ATTR_MAINFRAME_LA(RangeAttribute):
     min_value, max_value, values = 0, 255, [constants.VI_UNKNOWN_LA]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_MANF_ID(RangeAttribute):
     """VI_ATTR_MANF_ID is the manufacturer identification number of the
     device.
@@ -1469,10 +1474,9 @@ class AttrVI_ATTR_MANF_ID(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0x0, 0xFFFF, []
+    min_value, max_value, values = 0x0, 0xFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_MANF_NAME(Attribute):
     """This string attribute is the manufacturer name.
     """
@@ -1498,7 +1502,6 @@ class AttrVI_ATTR_MANF_NAME(Attribute):
     # [u'N/A']
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_MAX_QUEUE_LENGTH(RangeAttribute):
     """VI_ATTR_MAX_QUEUE_LENGTH specifies the maximum number of events that
     can be queued at any time on the given session. Events that occur
@@ -1517,7 +1520,7 @@ class AttrVI_ATTR_MAX_QUEUE_LENGTH(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0x1, 0xFFFFFFFF, []
+    min_value, max_value, values = 0x1, 0xFFFFFFFF, None
 
 
 # Could not generate class for VI_ATTR_MEM_BASE.html
@@ -1544,7 +1547,6 @@ ViUInt64. Range: [u'VI_ATTR_MEM_SIZE:', u'0h to FFFFFFFFh for 32\u2011bit applic
 """
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_MEM_SPACE(RangeAttribute):
     """VI_ATTR_MEM_SPACE specifies the VXIbus address space used by the
     device. The three types are A16, A24, or A32 memory address space.
@@ -1562,10 +1564,9 @@ class AttrVI_ATTR_MEM_SPACE(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_MODEL_CODE(RangeAttribute):
     """VI_ATTR_MODEL_CODE specifies the model code for the device.
     """
@@ -1587,10 +1588,9 @@ class AttrVI_ATTR_MODEL_CODE(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0x0, 0xFFFF, []
+    min_value, max_value, values = 0x0, 0xFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_MODEL_NAME(Attribute):
     """This string attribute is the model name of the device.
     """
@@ -1613,10 +1613,25 @@ class AttrVI_ATTR_MODEL_NAME(Attribute):
 
     read, write, local = True, False, False
 
-    # [u'N/A']
+
+class AttrVI_ATTR_OPER_NAME(Attribute):
+    """VI_ATTR_OPER_NAME contains the name of the operation generating this
+    event.
+    """
+
+    resources = [constants.EventType.io_completion, constants.EventType.exception]
+
+    py_name = "oper_name"
+
+    visa_name = "VI_ATTR_OPER_NAME"
+
+    visa_type = "ViString"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_ACTUAL_LWIDTH(ValuesAttribute):
     """VI_ATTR_PXI_ACTUAL_LWIDTH specifies the PCI Express link width
     negotiated between the PCI Express host controller and the device.
@@ -1639,7 +1654,6 @@ class AttrVI_ATTR_PXI_ACTUAL_LWIDTH(ValuesAttribute):
     values = [-1, 1, 2, 4, 8, 16]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_BUS_NUM(RangeAttribute):
     """VI_ATTR_PXI_BUS_NUM specifies the PCI bus number of this device.
     """
@@ -1656,10 +1670,9 @@ class AttrVI_ATTR_PXI_BUS_NUM(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 255, []
+    min_value, max_value, values = 0, 255, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_CHASSIS(RangeAttribute):
     """VI_ATTR_PXI_CHASSIS specifies the PXI chassis number of this device. A
     value of –1 means the chassis number is unknown.
@@ -1683,7 +1696,6 @@ class AttrVI_ATTR_PXI_CHASSIS(RangeAttribute):
     min_value, max_value, values = 0, 255, [-1]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_DEST_TRIG_BUS(RangeAttribute):
     """VI_ATTR_PXI_DEST_TRIG_BUS specifies the segment to use to qualify
     trigDest in viMapTrigger.
@@ -1701,10 +1713,9 @@ class AttrVI_ATTR_PXI_DEST_TRIG_BUS(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_DEV_NUM(RangeAttribute):
     """This is the PXI device number.
     """
@@ -1721,10 +1732,9 @@ class AttrVI_ATTR_PXI_DEV_NUM(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 31, []
+    min_value, max_value, values = 0, 31, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_DSTAR_BUS(RangeAttribute):
     """VI_ATTR_PXI_DSTAR_BUS specifies the differential star bus number of
     this device. A value of –1 means the chassis is unidentified or
@@ -1743,10 +1753,9 @@ class AttrVI_ATTR_PXI_DSTAR_BUS(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_DSTAR_SET(RangeAttribute):
     """
 
@@ -1767,7 +1776,6 @@ class AttrVI_ATTR_PXI_DSTAR_SET(RangeAttribute):
     min_value, max_value, values = 0, 16, [-1]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_FUNC_NUM(RangeAttribute):
     """This is the PCI function number of the PXI/PCI resource. For most
     devices, the function number is 0, but a multifunction device may
@@ -1787,10 +1795,9 @@ class AttrVI_ATTR_PXI_FUNC_NUM(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 7, []
+    min_value, max_value, values = 0, 7, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_IS_EXPRESS(BooleanAttribute):
     """VI_ATTR_PXI_IS_EXPRESS specifies whether the device is PXI/PCI or
     PXI/PCI Express.
@@ -1809,7 +1816,6 @@ class AttrVI_ATTR_PXI_IS_EXPRESS(BooleanAttribute):
     read, write, local = True, False, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_MAX_LWIDTH(ValuesAttribute):
     """VI_ATTR_PXI_MAX_LWIDTH specifies the maximum PCI Express link width of
     the device. A value of –1 indicates that the device is not a
@@ -1831,7 +1837,6 @@ class AttrVI_ATTR_PXI_MAX_LWIDTH(ValuesAttribute):
     values = [-1, 1, 2, 4, 8, 16]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_MEM_BASE_BARX(RangeAttribute):
     """PXI memory base address assigned to the specified BAR. If the value of
     the corresponding VI_ATTR_PXI_MEM_TYPE_BARx is VI_PXI_ADDR_NONE,
@@ -1851,10 +1856,9 @@ class AttrVI_ATTR_PXI_MEM_BASE_BARX(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 0xFFFFFFFF, []
+    min_value, max_value, values = 0, 0xFFFFFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_MEM_SIZE_BARX(RangeAttribute):
     """Memory size used by the device in the specified BAR. If the value of
     the corresponding VI_ATTR_PXI_MEM_TYPE_BARx is VI_PXI_ADDR_NONE,
@@ -1874,10 +1878,9 @@ class AttrVI_ATTR_PXI_MEM_SIZE_BARX(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 0xFFFFFFFF, []
+    min_value, max_value, values = 0, 0xFFFFFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_MEM_TYPE_BARX(RangeAttribute):
     """Memory type used by the device in the specified BAR (if applicable).
     """
@@ -1894,10 +1897,9 @@ class AttrVI_ATTR_PXI_MEM_TYPE_BARX(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_SLOT_LBUS_LEFT(RangeAttribute):
     """VI_ATTR_PXI_SLOT_LBUS_LEFT specifies the slot number or special
     feature connected to the local bus left lines of this device.
@@ -1937,7 +1939,6 @@ class AttrVI_ATTR_PXI_SLOT_LBUS_LEFT(RangeAttribute):
     )
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_SLOT_LBUS_RIGHT(RangeAttribute):
     """VI_ATTR_PXI_SLOT_LBUS_RIGHT specifies the slot number or special
     feature connected to the local bus right lines of this device.
@@ -1977,7 +1978,6 @@ class AttrVI_ATTR_PXI_SLOT_LBUS_RIGHT(RangeAttribute):
     )
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_SLOT_LWIDTH(ValuesAttribute):
     """VI_ATTR_PXI_SLOT_LWIDTH specifies the PCI Express link width of the
     PXI Express peripheral slot in which the device resides. A value
@@ -1999,7 +1999,6 @@ class AttrVI_ATTR_PXI_SLOT_LWIDTH(ValuesAttribute):
     values = [-1, 1, 4, 8]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_SLOTPATH(Attribute):
     """VI_ATTR_PXI_SLOTPATH specifies the slot path of this device.
     """
@@ -2019,7 +2018,6 @@ class AttrVI_ATTR_PXI_SLOTPATH(Attribute):
     # [u'N/A']
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_SRC_TRIG_BUS(RangeAttribute):
     """VI_ATTR_PXI_SRC_TRIG_BUS specifies the segment to use to qualify
     trigSrc in viMapTrigger.
@@ -2037,10 +2035,9 @@ class AttrVI_ATTR_PXI_SRC_TRIG_BUS(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_STAR_TRIG_BUS(RangeAttribute):
     """VI_ATTR_PXI_STAR_TRIG_BUS specifies the star trigger bus number of
     this device.
@@ -2058,10 +2055,9 @@ class AttrVI_ATTR_PXI_STAR_TRIG_BUS(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_STAR_TRIG_LINE(RangeAttribute):
     """VI_ATTR_PXI_STAR_TRIG_LINE specifies the PXI_STAR line connected to
     this device.
@@ -2079,10 +2075,9 @@ class AttrVI_ATTR_PXI_STAR_TRIG_LINE(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_PXI_TRIG_BUS(RangeAttribute):
     """VI_ATTR_PXI_TRIG_BUS specifies the trigger bus number of this device.
     """
@@ -2102,17 +2097,17 @@ class AttrVI_ATTR_PXI_TRIG_BUS(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RD_BUF_OPER_MODE(RangeAttribute):
-    """VI_ATTR_RD_BUF_OPER_MODE specifies the operational mode of the
-    formatted I/O read buffer. When the operational mode is set to
-    VI_FLUSH_DISABLE (default), the buffer is flushed only on explicit
-    calls to viFlush(). If the operational mode is set to
-    VI_FLUSH_ON_ACCESS, the read buffer is flushed every time a
+    """Operational mode of the formatted I/O read buffer.
+
+    When the operational mode is set to VI_FLUSH_DISABLE (default), the buffer
+    is flushed only on explicit calls to viFlush(). If the operational mode is
+    set to VI_FLUSH_ON_ACCESS, the read buffer is flushed every time a
     viScanf() (or related) operation completes.
+
     """
 
     resources = [
@@ -2137,10 +2132,9 @@ class AttrVI_ATTR_RD_BUF_OPER_MODE(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RD_BUF_SIZE(RangeAttribute):
     """This is the current size of the formatted I/O input buffer for this
     session. The user can modify this value by calling viSetBuf().
@@ -2168,10 +2162,9 @@ class AttrVI_ATTR_RD_BUF_SIZE(RangeAttribute):
 
     read, write, local = True, False, True
 
-    min_value, max_value, values = 0, 4294967295, []
+    min_value, max_value, values = 0, 4294967295, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RM_SESSION(RangeAttribute):
     """This is the current size of the formatted I/O input buffer for this
     session. The user can modify this value by calling viSetBuf().
@@ -2192,10 +2185,9 @@ class AttrVI_ATTR_RM_SESSION(RangeAttribute):
 
     read, write, local = True, False, True
 
-    min_value, max_value, values = 0, 4294967295, []
+    min_value, max_value, values = 0, 4294967295, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RSRC_CLASS(Attribute):
     """VI_ATTR_RSRC_CLASS specifies the resource class (for example, "INSTR")
     as defined by the canonical resource name.
@@ -2216,7 +2208,6 @@ class AttrVI_ATTR_RSRC_CLASS(Attribute):
     # [u'N/A']
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RSRC_IMPL_VERSION(RangeAttribute):
     """VI_ATTR_RSRC_IMPL_VERSION is the resource version that uniquely identifies
     each of the different revisions or implementations of a resource. This
@@ -2238,10 +2229,9 @@ class AttrVI_ATTR_RSRC_IMPL_VERSION(RangeAttribute):
 
     read, write, local = True, False, True
 
-    min_value, max_value, values = 0, 4294967295, []
+    min_value, max_value, values = 0, 4294967295, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RSRC_LOCK_STATE(EnumAttribute):
     """VI_ATTR_RSRC_LOCK_STATE indicates the current locking state of the
     resource. The resource can be unlocked, locked with an exclusive
@@ -2263,7 +2253,6 @@ class AttrVI_ATTR_RSRC_LOCK_STATE(EnumAttribute):
     enum_type = constants.AccessModes
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RSRC_MANF_ID(RangeAttribute):
     """VI_ATTR_RSRC_MANF_ID is a value that corresponds to the VXI manufacturer
     ID of the vendor that implemented the VISA library. This attribute is not
@@ -2282,10 +2271,9 @@ class AttrVI_ATTR_RSRC_MANF_ID(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 0x3FFF, []
+    min_value, max_value, values = 0, 0x3FFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RSRC_MANF_NAME(Attribute):
     """VI_ATTR_RSRC_MANF_NAME is a string that corresponds to the manufacturer
     name of the vendor that implemented the VISA library. This attribute is not
@@ -2309,7 +2297,6 @@ class AttrVI_ATTR_RSRC_MANF_NAME(Attribute):
     read, write, local = True, False, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RSRC_NAME(Attribute):
     """VI_ATTR_RSRC_MANF_NAME is a string that corresponds to the manufacturer
     name of the vendor that implemented the VISA library. This attribute is not
@@ -2333,7 +2320,6 @@ class AttrVI_ATTR_RSRC_NAME(Attribute):
     read, write, local = True, False, False
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_RSRC_SPEC_VERSION(RangeAttribute):
     """VI_ATTR_RSRC_SPEC_VERSION is the resource version that uniquely identifies
     the version of the VISA specification to which the implementation is compliant.
@@ -2355,10 +2341,9 @@ class AttrVI_ATTR_RSRC_SPEC_VERSION(RangeAttribute):
 
     read, write, local = True, False, True
 
-    min_value, max_value, values = 0, 4294967295, []
+    min_value, max_value, values = 0, 4294967295, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_SEND_END_EN(BooleanAttribute):
     """VI_ATTR_SEND_END_EN specifies whether to assert END during the
     transfer of the last byte of the buffer.
@@ -2385,7 +2370,6 @@ class AttrVI_ATTR_SEND_END_EN(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_SLOT(RangeAttribute):
     """VI_ATTR_SLOT specifies the physical slot location of the device. If
     the slot number is not known, VI_UNKNOWN_SLOT is returned.
@@ -2409,7 +2393,6 @@ class AttrVI_ATTR_SLOT(RangeAttribute):
     # [u'VXI', u'0 to 12', u'VI_UNKNOWN_SLOT (\u20131)', u'PXI', u'1 to 18', u'VI_UNKNOWN_SLOT (\u20131)'], ValueError('too many values to unpack',)
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_SRC_ACCESS_PRIV(RangeAttribute):
     """VI_ATTR_SRC_ACCESS_PRIV specifies the address modifier to be used in
     high-level access operations, such as viInXX() and viMoveInXX(),
@@ -2431,10 +2414,9 @@ class AttrVI_ATTR_SRC_ACCESS_PRIV(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_SRC_BYTE_ORDER(RangeAttribute):
     """VI_ATTR_SRC_BYTE_ORDER specifies the byte order to be used in high-
     level access operations, such as viInXX() and viMoveInXX(), when
@@ -2456,10 +2438,9 @@ class AttrVI_ATTR_SRC_BYTE_ORDER(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_SRC_INCREMENT(RangeAttribute):
     """VI_ATTR_SRC_INCREMENT is used in the viMoveInXX() operations to
     specify by how many elements the source offset is to be
@@ -2488,10 +2469,27 @@ class AttrVI_ATTR_SRC_INCREMENT(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 1, []
+    min_value, max_value, values = 0, 1, None
 
 
-# noinspection PyPep8Naming
+class AttrVI_ATTR_STATUS(Attribute):
+    """VI_ATTR_STATUS contains the return code of the operation generating this
+    event.
+    """
+
+    resources = [constants.EventType.exception, constants.EventType.io_completion]
+
+    py_name = "status"
+
+    visa_name = "VI_ATTR_STATUS"
+
+    visa_type = "ViStatus"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
 class AttrVI_ATTR_SUPPRESS_END_EN(BooleanAttribute):
     """VI_ATTR_SUPPRESS_END_EN is relevant only in viRead and related
     operations.
@@ -2515,7 +2513,6 @@ class AttrVI_ATTR_SUPPRESS_END_EN(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TCPIP_ADDR(Attribute):
     """This is the TCPIP address of the device to which the session is
     connected. This string is formatted in dot notation.
@@ -2539,7 +2536,6 @@ class AttrVI_ATTR_TCPIP_ADDR(Attribute):
     # [u'N/A']
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TCPIP_DEVICE_NAME(Attribute):
     """This specifies the LAN device name used by the VXI-11 or LXI protocol
     during connection.
@@ -2560,7 +2556,6 @@ class AttrVI_ATTR_TCPIP_DEVICE_NAME(Attribute):
     # [u'N/A']
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TCPIP_HOSTNAME(Attribute):
     """This specifies the host name of the device. If no host name is
     available, this attribute returns an empty string.
@@ -2584,7 +2579,6 @@ class AttrVI_ATTR_TCPIP_HOSTNAME(Attribute):
     # [u'N/A']
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TCPIP_KEEPALIVE(BooleanAttribute):
     """Setting this attribute to TRUE requests that a TCP/IP provider enable
     the use of keep-alive packets on TCP connections. After the system
@@ -2607,7 +2601,6 @@ class AttrVI_ATTR_TCPIP_KEEPALIVE(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TCPIP_NODELAY(BooleanAttribute):
     """The Nagle algorithm is disabled when this attribute is enabled (and
     vice versa). The Nagle algorithm improves network performance by
@@ -2629,7 +2622,6 @@ class AttrVI_ATTR_TCPIP_NODELAY(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TCPIP_PORT(RangeAttribute):
     """This specifies the port number for a given TCPIP address. For a TCPIP
     SOCKET Resource, this is a required part of the address string.
@@ -2647,10 +2639,9 @@ class AttrVI_ATTR_TCPIP_PORT(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 0xFFFF, []
+    min_value, max_value, values = 0, 0xFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TERMCHAR(CharAttribute):
     """VI_ATTR_TERMCHAR is the termination character. When the termination
     character is read and VI_ATTR_TERMCHAR_EN is enabled during a read
@@ -2680,7 +2671,6 @@ class AttrVI_ATTR_TERMCHAR(CharAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TERMCHAR_EN(BooleanAttribute):
     """VI_ATTR_TERMCHAR_EN is a flag that determines whether the read
     operation should terminate when a termination character is
@@ -2712,7 +2702,6 @@ class AttrVI_ATTR_TERMCHAR_EN(BooleanAttribute):
     read, write, local = True, True, True
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TMO_VALUE(RangeAttribute):
     """VI_ATTR_TMO_VALUE specifies the minimum timeout value to use (in
     milliseconds) when accessing the device associated with the given
@@ -2733,10 +2722,9 @@ class AttrVI_ATTR_TMO_VALUE(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 0xFFFFFFFF, []
+    min_value, max_value, values = 0, 0xFFFFFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_TRIG_ID(ValuesAttribute):
     """VI_ATTR_TRIG_ID is the identifier for the current triggering
     mechanism.
@@ -2764,10 +2752,29 @@ class AttrVI_ATTR_TRIG_ID(ValuesAttribute):
 
     read, write, local = True, True, True
 
-    values = []  # TODO
+    values = []  # XXX
 
 
-# noinspection PyPep8Naming
+class AttrVI_ATTR_RET_COUNT(RangeAttribute):
+    """VI_ATTR_RET_COUNT contains the actual number of elements that were
+    asynchronously transferred.
+    """
+
+    resources = [constants.EventType.io_completion]
+
+    py_name = "ret_count"
+
+    visa_name = "VI_ATTR_RET_COUNT"
+
+    visa_type = "ViUInt32"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 0, 0xFFFFFFFF, None
+
+
 class AttrVI_ATTR_USB_ALT_SETTING(RangeAttribute):
     """VI_ATTR_USB_ALT_SETTING specifies the USB alternate setting used by
     this USB interface.
@@ -2785,10 +2792,9 @@ class AttrVI_ATTR_USB_ALT_SETTING(RangeAttribute):
 
     read, write, local = True, True, False
 
-    min_value, max_value, values = 0, 0xFF, []
+    min_value, max_value, values = 0, 0xFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_BULK_IN_PIPE(RangeAttribute):
     """VI_ATTR_USB_BULK_IN_PIPE specifies the endpoint address of the USB
     bulk-in pipe used by the given session. An initial value of -1
@@ -2811,7 +2817,6 @@ class AttrVI_ATTR_USB_BULK_IN_PIPE(RangeAttribute):
     min_value, max_value, values = 0x81, 0x8F, [-1]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_BULK_IN_STATUS(RangeAttribute):
     """VI_ATTR_USB_BULK_IN_STATUS specifies whether the USB bulk-in pipe used
     by the given session is stalled or ready. This attribute can be
@@ -2830,10 +2835,9 @@ class AttrVI_ATTR_USB_BULK_IN_STATUS(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_BULK_OUT_PIPE(RangeAttribute):
     """VI_ATTR_USB_BULK_OUT_PIPE specifies the endpoint address of the USB
     bulk-out or interrupt-out pipe used by the given session. An
@@ -2857,7 +2861,6 @@ class AttrVI_ATTR_USB_BULK_OUT_PIPE(RangeAttribute):
     min_value, max_value, values = 0x01, 0x0F, [-1]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_BULK_OUT_STATUS(RangeAttribute):
     """VI_ATTR_USB_BULK_OUT_STATUS specifies whether the USB bulk-out or
     interrupt-out pipe used by the given session is stalled or ready.
@@ -2876,10 +2879,9 @@ class AttrVI_ATTR_USB_BULK_OUT_STATUS(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_CLASS(RangeAttribute):
     """VI_ATTR_USB_CLASS specifies the USB class used by this USB interface.
     """
@@ -2896,10 +2898,9 @@ class AttrVI_ATTR_USB_CLASS(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 0xFF, []
+    min_value, max_value, values = 0, 0xFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_CTRL_PIPE(RangeAttribute):
     """VI_ATTR_USB_CTRL_PIPE specifies the endpoint address of the USB
     control pipe used by the given session. A value of 0 signifies
@@ -2920,10 +2921,9 @@ class AttrVI_ATTR_USB_CTRL_PIPE(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0x00, 0x0F, []
+    min_value, max_value, values = 0x00, 0x0F, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_END_IN(ValuesAttribute):
     """VI_ATTR_USB_END_IN indicates the method used to terminate read
     operations.
@@ -2948,7 +2948,6 @@ class AttrVI_ATTR_USB_END_IN(ValuesAttribute):
     ]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_INTFC_NUM(RangeAttribute):
     """VI_ATTR_USB_INTFC_NUM specifies the USB interface number used by the
     given session.
@@ -2969,10 +2968,9 @@ class AttrVI_ATTR_USB_INTFC_NUM(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 0xFE, []
+    min_value, max_value, values = 0, 0xFE, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_INTR_IN_PIPE(RangeAttribute):
     """VI_ATTR_USB_INTR_IN_PIPE specifies the endpoint address of the USB
     interrupt-in pipe used by the given session. An initial value of
@@ -2996,7 +2994,6 @@ class AttrVI_ATTR_USB_INTR_IN_PIPE(RangeAttribute):
     min_value, max_value, values = 0x81, 0x8F, [-1]
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_INTR_IN_STATUS(RangeAttribute):
     """VI_ATTR_USB_INTR_IN_STATUS specifies whether the USB interrupt-in pipe
     used by the given session is stalled or ready. This attribute can
@@ -3015,10 +3012,9 @@ class AttrVI_ATTR_USB_INTR_IN_STATUS(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = -32768, 32767, []
+    min_value, max_value, values = -32768, 32767, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_MAX_INTR_SIZE(RangeAttribute):
     """VI_ATTR_USB_MAX_INTR_SIZE specifies the maximum size of data that will
     be stored by any given USB interrupt. If a USB interrupt contains
@@ -3041,10 +3037,9 @@ class AttrVI_ATTR_USB_MAX_INTR_SIZE(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 0xFFFF, []
+    min_value, max_value, values = 0, 0xFFFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_NUM_INTFCS(RangeAttribute):
     """VI_ATTR_USB_NUM_INTFCS specifies the number of interfaces supported by
     this USB device.
@@ -3062,10 +3057,9 @@ class AttrVI_ATTR_USB_NUM_INTFCS(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 1, 0xFF, []
+    min_value, max_value, values = 1, 0xFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_NUM_PIPES(RangeAttribute):
     """VI_ATTR_USB_NUM_PIPES specifies the number of pipes supported by this
     USB interface. This does not include the default control pipe.
@@ -3083,10 +3077,9 @@ class AttrVI_ATTR_USB_NUM_PIPES(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 30, []
+    min_value, max_value, values = 0, 30, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_PROTOCOL(RangeAttribute):
     """VI_ATTR_USB_PROTOCOL specifies the USB protocol used by this USB
     interface.
@@ -3107,10 +3100,9 @@ class AttrVI_ATTR_USB_PROTOCOL(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 0xFF, []
+    min_value, max_value, values = 0, 0xFF, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_SERIAL_NUM(Attribute):
     """VI_ATTR_USB_SERIAL_NUM specifies the USB serial number of this device.
     """
@@ -3133,7 +3125,6 @@ class AttrVI_ATTR_USB_SERIAL_NUM(Attribute):
     # [u'N/A']
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_USB_SUBCLASS(RangeAttribute):
     """VI_ATTR_USB_SUBCLASS specifies the USB subclass used by this USB
     interface.
@@ -3151,7 +3142,7 @@ class AttrVI_ATTR_USB_SUBCLASS(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 0xFF, []
+    min_value, max_value, values = 0, 0xFF, None
 
 
 # Could not generate class for VI_ATTR_USER_DATA.html
@@ -3166,7 +3157,6 @@ ViUInt64. Range: [u'VI_ATTR_USER_DATA:', u'Not specified', u'VI_ATTR_USER_DATA_3
 """
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_VXI_DEV_CLASS(RangeAttribute):
     """This attribute represents the VXI-defined device class to which the
     resource belongs, either message based (VI_VXI_CLASS_MESSAGE),
@@ -3188,10 +3178,9 @@ class AttrVI_ATTR_VXI_DEV_CLASS(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_VXI_LA(RangeAttribute):
     """For an INSTR session, VI_ATTR_VXI_LA specifies the logical address of
     the VXI or VME device used by the given session. For a MEMACC or
@@ -3215,10 +3204,9 @@ class AttrVI_ATTR_VXI_LA(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 511, []
+    min_value, max_value, values = 0, 511, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_VXI_TRIG_DIR(RangeAttribute):
     """VI_ATTR_TRIG_DIR is a bit map of the directions of the mapped TTL
     trigger lines. Bits 0-7 represent TTL triggers 0-7 respectively. A
@@ -3240,10 +3228,9 @@ class AttrVI_ATTR_VXI_TRIG_DIR(RangeAttribute):
 
     read, write, local = True, True, False
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_VXI_TRIG_LINES_EN(RangeAttribute):
     """VI_ATTR_VXI_TRIG_LINES_EN is a bit map of what VXI TLL triggers have
     mappings. Bits 0-7 represent TTL triggers 0-7 respectively. A
@@ -3264,10 +3251,9 @@ class AttrVI_ATTR_VXI_TRIG_LINES_EN(RangeAttribute):
 
     read, write, local = True, True, False
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_VXI_TRIG_STATUS(RangeAttribute):
     """This attribute shows the current state of the VXI trigger lines. This
     is a bit vector with bits 0-9 corresponding to VI_TRIG_TTL0
@@ -3286,10 +3272,9 @@ class AttrVI_ATTR_VXI_TRIG_STATUS(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 4294967295, []
+    min_value, max_value, values = 0, 4294967295, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_VXI_TRIG_SUPPORT(RangeAttribute):
     """This attribute shows which VXI trigger lines this implementation
     supports. This is a bit vector with bits 0-9 corresponding to
@@ -3311,10 +3296,9 @@ class AttrVI_ATTR_VXI_TRIG_SUPPORT(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 4294967295, []
+    min_value, max_value, values = 0, 4294967295, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_VXI_VME_INTR_STATUS(RangeAttribute):
     """This attribute shows the current state of the VXI/VME interrupt lines.
     This is a bit vector with bits 0-6 corresponding to interrupt
@@ -3333,10 +3317,9 @@ class AttrVI_ATTR_VXI_VME_INTR_STATUS(RangeAttribute):
 
     read, write, local = True, False, False
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_VXI_VME_SYSFAIL_STATE(EnumAttribute):
     """This attribute shows the current state of the VXI/VME SYSFAIL (SYStem
     FAILure) backplane line.
@@ -3357,7 +3340,6 @@ class AttrVI_ATTR_VXI_VME_SYSFAIL_STATE(EnumAttribute):
     enum_type = constants.LineState
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_WIN_ACCESS(RangeAttribute):
     """VI_ATTR_WIN_ACCESS specifies the modes in which the current window may
     be accessed.
@@ -3380,10 +3362,9 @@ class AttrVI_ATTR_WIN_ACCESS(RangeAttribute):
 
     read, write, local = True, False, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_WIN_ACCESS_PRIV(RangeAttribute):
     """VI_ATTR_WIN_ACCESS_PRIV specifies the address modifier to be used in
     low-level access operations, such as viMapAddress(), viPeekXX(),
@@ -3405,7 +3386,7 @@ class AttrVI_ATTR_WIN_ACCESS_PRIV(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
 # Could not generate class for VI_ATTR_WIN_BASE_ADDR.html
@@ -3420,7 +3401,6 @@ ViUInt64. Range: [u'VI_ATTR_WIN_BASE_ADDR:', u'0h to FFFFFFFFh for 32\u2011bit a
 """
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_WIN_BYTE_ORDER(RangeAttribute):
     """VI_ATTR_WIN_BYTE_ORDER specifies the byte order to be used in low-
     level access operations, such as viMapAddress(), viPeekXX(), and
@@ -3442,7 +3422,7 @@ class AttrVI_ATTR_WIN_BYTE_ORDER(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
 # Could not generate class for VI_ATTR_WIN_SIZE.html
@@ -3457,7 +3437,6 @@ ViUInt64. Range: [u'VI_ATTR_WIN_SIZE:', u'0h to FFFFFFFFh for 32\u2011bit applic
 """
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_WR_BUF_OPER_MODE(RangeAttribute):
     """VI_ATTR_WR_BUF_OPER_MODE specifies the operational mode of the
     formatted I/O write buffer. When the operational mode is set to
@@ -3490,10 +3469,9 @@ class AttrVI_ATTR_WR_BUF_OPER_MODE(RangeAttribute):
 
     read, write, local = True, True, True
 
-    min_value, max_value, values = 0, 65535, []
+    min_value, max_value, values = 0, 65535, None
 
 
-# noinspection PyPep8Naming
 class AttrVI_ATTR_WR_BUF_SIZE(RangeAttribute):
     """This is the current size of the formatted I/O output buffer for this
     session. The user can modify this value by calling viSetBuf().
@@ -3521,4 +3499,4 @@ class AttrVI_ATTR_WR_BUF_SIZE(RangeAttribute):
 
     read, write, local = True, False, True
 
-    min_value, max_value, values = 0, 4294967295, []
+    min_value, max_value, values = 0, 4294967295, None

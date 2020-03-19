@@ -21,6 +21,20 @@ import sys
 import warnings
 from collections import OrderedDict
 from subprocess import check_output
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    overload,
+)
+
+from typing_extensions import Literal
 
 from . import __version__, logger
 
@@ -37,7 +51,7 @@ except ImportError:
 DEFAULT_LENGTH_BEFORE_BLOCK = 25
 
 
-def _use_numpy_routines(container):
+def _use_numpy_routines(container: Union[type, Callable]) -> bool:
     """Should optimized numpy routines be used to extract the data.
 
     """
@@ -45,14 +59,14 @@ def _use_numpy_routines(container):
         return False
 
     if container is np.array or (
-        inspect.isclass(container) and issubclass(container, np.ndarray)
+        inspect.isclass(container) and issubclass(container, np.ndarray)  # type: ignore
     ):
         return True
 
     return False
 
 
-def read_user_library_path():
+def read_user_library_path() -> Optional[str]:
     """Return the library path stored in one of the following configuration files:
 
         <sys prefix>/share/pyvisa/.pyvisarc
@@ -138,18 +152,26 @@ def add_user_dll_extra_paths():
 
 class LibraryPath(str):
 
-    #: Architectural information (32, ) or (64, ) or (32, 64)
-    _arch = None
+    #: Path with which the object was created
+    path: str
 
-    def __new__(cls, path, found_by="auto"):
-        obj = super(LibraryPath, cls).__new__(cls, path)
+    #: Detection method employed to locate the library
+    found_by: str
+
+    #: Architectural information (32, ) or (64, ) or (32, 64)
+    _arch: Optional[Tuple[int, ...]] = None
+
+    def __new__(
+        cls: Type["LibraryPath"], path: str, found_by: str = "auto"
+    ) -> "LibraryPath":
+        obj = super(LibraryPath, cls).__new__(cls, path)  # type: ignore
         obj.path = path
         obj.found_by = found_by
 
         return obj
 
     @property
-    def arch(self):
+    def arch(self) -> Tuple[int, ...]:
         if self._arch is None:
             try:
                 self._arch = get_arch(self.path)
@@ -159,19 +181,19 @@ class LibraryPath(str):
         return self._arch
 
     @property
-    def is_32bit(self):
+    def is_32bit(self) -> Union[bool, Literal["n/a"]]:
         if not self.arch:
             return "n/a"
         return 32 in self.arch
 
     @property
-    def is_64bit(self):
+    def is_64bit(self) -> Union[bool, Literal["n/a"]]:
         if not self.arch:
             return "n/a"
         return 64 in self.arch
 
     @property
-    def bitness(self):
+    def bitness(self) -> str:
         if not self.arch:
             return "n/a"
         return ", ".join(str(a) for a in self.arch)
@@ -211,10 +233,10 @@ def split_kwargs(keyw, self_keys, parent_keys, warn=True):  # pragma: no cover
     return self_kwargs, parent_kwargs
 
 
-_converters = {
+_converters: Dict[str, Callable[[str], Any]] = {
     "s": str,
     "b": functools.partial(int, base=2),
-    "c": chr,
+    "c": ord,
     "d": int,
     "o": functools.partial(int, base=8),
     "x": functools.partial(int, base=16),
@@ -238,7 +260,18 @@ _np_converters = {
 }
 
 
-def from_ascii_block(ascii_data, converter="f", separator=",", container=list):
+ASCII_CONVERTER = Union[
+    Literal["s", "b", "c", "d", "o", "x", "X", "e", "E", "f", "F", "g", "G"],
+    Callable[[str], Any],
+]
+
+
+def from_ascii_block(
+    ascii_data: str,
+    converter: ASCII_CONVERTER = "f",
+    separator: Union[str, Callable[[str], Iterable[str]]] = ",",
+    container=list,
+) -> Any:
     """Parse ascii data and return an iterable of numbers.
 
     :param ascii_data: data to be parsed.
@@ -268,6 +301,7 @@ def from_ascii_block(ascii_data, converter="f", separator=",", container=list):
                 % (converter, str(tuple(_converters.keys())))
             )
 
+    data: Iterable[str]
     if isinstance(separator, str):
         data = ascii_data.split(separator)
     else:
@@ -276,7 +310,11 @@ def from_ascii_block(ascii_data, converter="f", separator=",", container=list):
     return container([converter(raw_value) for raw_value in data])
 
 
-def to_ascii_block(iterable, converter="f", separator=","):
+def to_ascii_block(
+    iterable: Iterable[Any],
+    converter: Union[str, Callable[[Any], str]] = "f",
+    separator: Union[str, Callable[[Iterable[str]], str]] = ",",
+) -> str:
     """Turn an iterable of numbers in an ascii block of data.
 
     :param iterable: data to be parsed.
@@ -285,8 +323,8 @@ def to_ascii_block(iterable, converter="f", separator=","):
                       String formatting codes are also accepted.
                       Defaults to str.
     :type converter: callable | str
-    :param separator: a callable that split the str into individual elements.
-                      If a str is given, data.split(separator) is used.
+    :param separator: a callable that join individual elements into a str.
+                      If a str is given, separator.join(data) is used.
     :type: separator: (collections.Iterable[T]) -> str | str
 
     :rtype: str
@@ -303,9 +341,22 @@ def to_ascii_block(iterable, converter="f", separator=","):
     return block
 
 
+#: Valid binary header when reading/writing binary block of data from an instrument
+BINARY_HEADERS = Literal["ieee", "hp", "empty"]
+
+#: Valid datatype for binary block. See Python standard library struct module for more
+#: details.
+BINARY_DATATYPES = Literal["f"]
+
+#: Valid output containers for storing the parsed binary data
+BINARY_CONTAINERS = Union[type, Callable]
+
+
 def parse_ieee_block_header(
-    block, length_before_block=None, raise_on_late_block=False
-) -> (int, int):
+    block: Union[bytes, bytearray],
+    length_before_block: int = None,
+    raise_on_late_block: bool = False,
+) -> Tuple[int, int]:
     """Parse the header of a IEEE block.
 
     Definite Length Arbitrary Block:
@@ -365,8 +416,11 @@ def parse_ieee_block_header(
 
 
 def parse_hp_block_header(
-    block, is_big_endian, length_before_block=None, raise_on_late_block=False
-):
+    block: Union[bytes, bytearray],
+    is_big_endian: bool,
+    length_before_block: int = None,
+    raise_on_late_block: bool = False,
+) -> Tuple[int, int]:
     """Parse the header of a HP block.
 
     Definite Length Arbitrary Block:
@@ -411,7 +465,12 @@ def parse_hp_block_header(
     return offset, data_length
 
 
-def from_ieee_block(block, datatype="f", is_big_endian=False, container=list):
+def from_ieee_block(
+    block: Union[bytes, bytearray],
+    datatype: BINARY_DATATYPES = "f",
+    is_big_endian: bool = False,
+    container: Type = list,
+) -> Sequence[Union[int, float]]:
     """Convert a block in the IEEE format into an iterable of numbers.
 
     Definite Length Arbitrary Block:
@@ -450,7 +509,12 @@ def from_ieee_block(block, datatype="f", is_big_endian=False, container=list):
     )
 
 
-def from_hp_block(block, datatype="f", is_big_endian=False, container=list):
+def from_hp_block(
+    block: Union[bytes, bytearray],
+    datatype: BINARY_DATATYPES = "f",
+    is_big_endian: bool = False,
+    container=list,
+) -> Sequence[Union[int, float]]:
     """Convert a block in the HP format into an iterable of numbers.
 
     Definite Length Arbitrary Block:
@@ -486,8 +550,13 @@ def from_hp_block(block, datatype="f", is_big_endian=False, container=list):
 
 
 def from_binary_block(
-    block, offset=0, data_length=None, datatype="f", is_big_endian=False, container=list
-):
+    block: Union[bytes, bytearray],
+    offset: int = 0,
+    data_length: Optional[int] = None,
+    datatype: BINARY_DATATYPES = "f",
+    is_big_endian: bool = False,
+    container=list,
+) -> Sequence[Union[int, float]]:
     """Convert a binary block into an iterable of numbers.
 
     :param block: binary block.
@@ -520,7 +589,12 @@ def from_binary_block(
         raise ValueError("Binary data was malformed")
 
 
-def to_binary_block(iterable, header, datatype, is_big_endian):
+def to_binary_block(
+    iterable: Sequence[Union[int, float]],
+    header: Union[str, bytes],
+    datatype: BINARY_DATATYPES,
+    is_big_endian: bool,
+) -> bytes:
     """Convert an iterable of numbers into a block of data with a given header.
 
     :param iterable: an iterable of numbers.
@@ -541,7 +615,11 @@ def to_binary_block(iterable, header, datatype, is_big_endian):
     return header + struct.pack(fullfmt, *iterable)
 
 
-def to_ieee_block(iterable, datatype="f", is_big_endian=False):
+def to_ieee_block(
+    iterable: Sequence[Union[int, float]],
+    datatype: BINARY_DATATYPES = "f",
+    is_big_endian: bool = False,
+) -> bytes:
     """Convert an iterable of numbers into a block of data in the IEEE format.
 
     :param iterable: an iterable of numbers.
@@ -560,7 +638,11 @@ def to_ieee_block(iterable, datatype="f", is_big_endian=False):
     return to_binary_block(iterable, header, datatype, is_big_endian)
 
 
-def to_hp_block(iterable, datatype="f", is_big_endian=False):
+def to_hp_block(
+    iterable: Sequence[Union[int, float]],
+    datatype: BINARY_DATATYPES = "f",
+    is_big_endian: bool = False,
+) -> bytes:
     """Convert an iterable of numbers into a block of data in the HP format.
 
     :param iterable: an iterable of numbers.
@@ -569,7 +651,6 @@ def to_hp_block(iterable, datatype="f", is_big_endian=False):
     :return: IEEE block.
     :rtype: bytes
     """
-
     array_length = len(iterable)
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
@@ -581,8 +662,9 @@ def to_hp_block(iterable, datatype="f", is_big_endian=False):
     return to_binary_block(iterable, header, datatype, is_big_endian)
 
 
-def get_system_details(backends=True):
-    """Return a dictionary with information about the system
+def get_system_details(backends: bool = True) -> Dict[str, str]:
+    """Return a dictionary with information about the system.
+
     """
     buildno, builddate = platform.python_build()
     if sys.maxunicode == 65535:
@@ -635,7 +717,7 @@ def get_system_details(backends=True):
     return d
 
 
-def system_details_to_str(d, indent=""):
+def system_details_to_str(d: Dict[str, str], indent: str = "") -> str:
     """Return a str with the system details.
 
     """
@@ -698,6 +780,16 @@ def system_details_to_str(d, indent=""):
     return indent + joiner.join(l) + "\n"
 
 
+@overload
+def get_debug_info(to_screen: Literal[True]) -> None:
+    ...
+
+
+@overload
+def get_debug_info(to_screen: Literal[False]) -> str:
+    ...
+
+
 def get_debug_info(to_screen=True):
     out = system_details_to_str(get_system_details())
     if not to_screen:
@@ -751,7 +843,7 @@ machine_types = {
 }
 
 
-def get_shared_library_arch(filename):
+def get_shared_library_arch(filename: str) -> str:
     with io.open(filename, "rb") as fp:
         dos_headers = fp.read(64)
         _ = fp.read(4)
@@ -772,7 +864,7 @@ def get_shared_library_arch(filename):
         return machine_types.get(machine, "UNKNOWN")
 
 
-def get_arch(filename):
+def get_arch(filename: str) -> Tuple[int, ...]:
     this_platform = sys.platform
     if this_platform.startswith("win"):
         machine_type = get_shared_library_arch(filename)
@@ -785,8 +877,8 @@ def get_arch(filename):
     elif this_platform not in ("linux2", "linux3", "linux", "darwin"):
         raise OSError("Unsupported platform: %s" % this_platform)
 
-    out = subprocess.run(["file", filename], capture_output=True)
-    out = out.stdout.decode("ascii")
+    res = subprocess.run(["file", filename], capture_output=True)
+    out = res.stdout.decode("ascii")
     ret = []
     if this_platform.startswith("linux"):
         if "32-bit" in out:

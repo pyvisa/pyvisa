@@ -14,7 +14,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 
-def visa_main(command=None):
+def visa_main(command: str = None) -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="PyVISA command-line utilities")
@@ -49,10 +49,12 @@ def visa_main(command=None):
 
         shell.main("@" + args.backend if args.backend else "")
 
+        shell.main("@" + args.backend if args.backend else "")
 
-def visa_shell():
+
+def visa_shell() -> None:
     visa_main("shell")
 
 
-def visa_info():
+def visa_info() -> None:
     visa_main("info")

@@ -10,24 +10,21 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-import time
 import sys
-
-if sys.version_info > (3, 2):
-    perf_counter = time.perf_counter
-else:
-    perf_counter = time.clock
+import time
+from time import perf_counter
+from typing import Tuple
 
 from .. import constants
+from .messagebased import ControlRenMixin, MessageBasedResource
 from .resource import Resource
-from .messagebased import MessageBasedResource, ControlRenMixin
 
 
 class _GPIBMixin(ControlRenMixin):
     """Common attributes and methods of GPIB Instr and Interface.
     """
 
-    def send_command(self, data):
+    def send_command(self, data: bytes) -> Tuple[int, constants.StatusCode]:
         """Write GPIB command bytes on the bus.
 
         Corresponds to viGpibCommand function of the VISA library.
@@ -39,19 +36,24 @@ class _GPIBMixin(ControlRenMixin):
         """
         return self.visalib.gpib_command(self.session, data)
 
-    def control_atn(self, mode):
+    def control_atn(self, mode: int) -> constants.StatusCode:
         """Specifies the state of the ATN line and the local active controller state.
 
         Corresponds to viGpibControlATN function of the VISA library.
 
         :param mode: Specifies the state of the ATN line and optionally the local active controller state.
-                     (Constants.GPIB_ATN*)
+                     constants.VI_GPIB_ATN_ASSERT,
+            constants.VI_GPIB_ATN_ASSERT_IMMEDIATE,
+            constants.VI_GPIB_ATN_DEASSERT,
+            constants.VI_GPIB_ATN_DEASSERT_HANDSHAKE,
         :return: return value of the library call.
         :rtype: VISAStatus
         """
         return self.visalib.gpib_control_atn(self.session, mode)
 
-    def pass_control(self, primary_address, secondary_address):
+    def pass_control(
+        self, primary_address: int, secondary_address: int
+    ) -> constants.StatusCode:
         """Tell the GPIB device at the specified address to become controller in charge (CIC).
 
         Corresponds to viGpibPassControl function of the VISA library.
@@ -67,7 +69,7 @@ class _GPIBMixin(ControlRenMixin):
             self.session, primary_address, secondary_address
         )
 
-    def send_ifc(self):
+    def send_ifc(self) -> constants.StatusCode:
         """Pulse the interface clear line (IFC) for at least 100 microseconds.
 
         Corresponds to viGpibSendIFC function of the VISA library.
@@ -88,7 +90,7 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
-    def wait_for_srq(self, timeout=25000):
+    def wait_for_srq(self, timeout: int = 25000) -> None:
         """Wait for a serial request (SRQ) coming from the instrument.
 
         Note that this method is not ended when *another* instrument signals an
@@ -132,7 +134,9 @@ class GPIBInterface(_GPIBMixin, Resource):
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
-    def group_execute_trigger(self, *resources):
+    def group_execute_trigger(
+        self, *resources: GPIBInstrument
+    ) -> Tuple[int, constants.StatusCode]:
 
         for resource in resources:
             if not isinstance(resource, GPIBInstrument):
@@ -157,7 +161,7 @@ class GPIBInterface(_GPIBMixin, Resource):
 
         return self.send_command(bytes(command))
 
-    def flush(self, mask):
+    def flush(self, mask: constants.BufferOperation) -> constants.StatusCode:
         """Manually clears the specified buffers.
 
         Depending on the mask this can cause the buffer data to be written to
@@ -167,4 +171,4 @@ class GPIBInterface(_GPIBMixin, Resource):
             See highlevel.VisaLibraryBase.flush for a detailed description.
 
         """
-        self.visalib.flush(self.session, mask)
+        return self.visalib.flush(self.session, mask)

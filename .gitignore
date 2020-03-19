@@ -15,3 +15,4 @@ MANIFEST
 _test/
 .vscode
 htmlcov/
+.mypy_cache/

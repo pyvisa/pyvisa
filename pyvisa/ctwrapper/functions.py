@@ -11,6 +11,8 @@
     :license: MIT, see LICENSE for more details.
 """
 import warnings
+from contextlib import contextmanager
+from threading import Lock
 
 from pyvisa.highlevel import ResourceInfo
 from pyvisa import attributes, constants
@@ -100,14 +102,19 @@ __all__ = ["visa_functions", "set_signatures"] + visa_functions
 
 VI_SPEC_VERSION = 0x00300000
 
+#: Global lock to ensure that we cannot have one thread change the type while
+#: another is trying to interact with VISA
+ViHndlr_lock = Lock()
 
+
+@contextmanager
 def set_user_handle_type(library, user_handle):
     """Set the type of the user handle to install and uninstall handler signature.
 
     :param library: the visa library wrapped by ctypes.
     :param user_handle: use None for a void_p
     """
-
+    ViHndlr_lock.acquire()
     # Actually, it's not necessary to change ViHndlr *globally*.  However,
     # I don't want to break symmetry too much with all the other VPP43
     # routines.
@@ -126,6 +133,8 @@ def set_user_handle_type(library, user_handle):
         ViHndlr,
         user_handle_p,
     ]
+    yield
+    ViHndlr_lock.release()
 
 
 def set_signatures(library, errcheck=None):
@@ -813,7 +822,9 @@ def in_64(library, session, space, offset, extended=False):
     return value_64.value, ret
 
 
-def install_handler(library, session, event_type, handler, user_handle):
+def install_handler(
+    library, session, event_type, handler, user_handle: Any
+) -> Tuple[typing.VisaHandler, Any, Any, constants.StatusCode]:
     """Installs handlers for event callbacks.
 
     Corresponds to viInstallHandler function of the VISA library.
@@ -860,14 +871,14 @@ def install_handler(library, session, event_type, handler, user_handle):
                     "Type not allowed as user handle: %s" % type(user_handle)
                 )
 
-    set_user_handle_type(library, converted_user_handle)
-    converted_handler = ViHndlr(handler)
-    if user_handle is None:
-        ret = library.viInstallHandler(session, event_type, converted_handler, None)
-    else:
-        ret = library.viInstallHandler(
-            session, event_type, converted_handler, byref(converted_user_handle)
-        )
+    with set_user_handle_type(library, converted_user_handle):
+        converted_handler = ViHndlr(handler)
+        if user_handle is None:
+            ret = library.viInstallHandler(session, event_type, converted_handler, None)
+        else:
+            ret = library.viInstallHandler(
+                session, event_type, converted_handler, byref(converted_user_handle)
+            )
 
     return handler, converted_user_handle, converted_handler, ret
 
@@ -1069,34 +1080,6 @@ def move_asynchronously(
     return job_id, ret
 
 
-def move_in(library, session, space, offset, length, width, extended=False):
-    """Moves a block of data to local memory from the specified address space and offset.
-
-    Corresponds to viMoveIn* functions of the VISA library.
-
-    :param library: the visa library wrapped by ctypes.
-    :param session: Unique logical identifier to a session.
-    :param space: Specifies the address space. (Constants.*SPACE*)
-    :param offset: Offset (in bytes) of the address or register from which to read.
-    :param length: Number of elements to transfer, where the data width of the elements to transfer
-                   is identical to the source data width.
-    :param width: Number of bits to read per element.
-    :param extended: Use 64 bits offset independent of the platform.
-    :return: Data read from the bus, return value of the library call.
-    :rtype: list, :class:`pyvisa.constants.StatusCode`
-    """
-    if width == 8:
-        return move_in_8(library, session, space, offset, length, extended)
-    elif width == 16:
-        return move_in_16(library, session, space, offset, length, extended)
-    elif width == 32:
-        return move_in_32(library, session, space, offset, length, extended)
-    elif width == 64:
-        return move_in_64(library, session, space, offset, length, extended)
-
-    raise ValueError("%s is not a valid size. Valid values are 8, 16, 32 or 64" % width)
-
-
 def move_in_8(library, session, space, offset, length, extended=False):
     """Moves an 8-bit block of data from the specified address space and offset to local memory.
 
@@ -1190,35 +1173,6 @@ def move_in_64(library, session, space, offset, length, extended=False):
         ret = library.viMoveIn64(session, space, offset, length, buffer_64)
 
     return list(buffer_64), ret
-
-
-def move_out(library, session, space, offset, length, data, width, extended=False):
-    """Moves a block of data from local memory to the specified address space and offset.
-
-    Corresponds to viMoveOut* functions of the VISA library.
-
-    :param library: the visa library wrapped by ctypes.
-    :param session: Unique logical identifier to a session.
-    :param space: Specifies the address space. (Constants.*SPACE*)
-    :param offset: Offset (in bytes) of the address or register from which to read.
-    :param length: Number of elements to transfer, where the data width of the elements to transfer
-                   is identical to the source data width.
-    :param data: Data to write to bus.
-    :param width: Number of bits to read per element.
-    :param extended: Use 64 bits offset independent of the platform.
-    :return: return value of the library call.
-    :rtype: :class:`pyvisa.constants.StatusCode`
-    """
-    if width == 8:
-        return move_out_8(library, session, space, offset, length, data, extended)
-    elif width == 16:
-        return move_out_16(library, session, space, offset, length, data, extended)
-    elif width == 32:
-        return move_out_32(library, session, space, offset, length, data, extended)
-    elif width == 64:
-        return move_out_64(library, session, space, offset, length, data, extended)
-
-    raise ValueError("%s is not a valid size. Valid values are 8, 16, 32 or 64" % width)
 
 
 def move_out_8(library, session, space, offset, length, data, extended=False):
@@ -1364,31 +1318,6 @@ def open_default_resource_manager(library):
     session = ViSession()
     ret = library.viOpenDefaultRM(byref(session))
     return session.value, ret
-
-
-def write_memory(library, session, space, offset, data, width, extended=False):
-    """Write in an 8-bit, 16-bit, 32-bit, value to the specified memory space and offset.
-
-    Corresponds to viOut* functions of the VISA library.
-
-    :param library: the visa library wrapped by ctypes.
-    :param session: Unique logical identifier to a session.
-    :param space: Specifies the address space. (Constants.*SPACE*)
-    :param offset: Offset (in bytes) of the address or register from which to read.
-    :param data: Data to write to bus.
-    :param width: Number of bits to read.
-    :param extended: Use 64 bits offset independent of the platform.
-    :return: return value of the library call.
-    :rtype: :class:`pyvisa.constants.StatusCode`
-    """
-    if width == 8:
-        return out_8(library, session, space, offset, data, extended)
-    elif width == 16:
-        return out_16(library, session, space, offset, data, extended)
-    elif width == 32:
-        return out_32(library, session, space, offset, data, extended)
-
-    raise ValueError("%s is not a valid size. Valid values are 8, 16 or 32" % width)
 
 
 def out_8(library, session, space, offset, data, extended=False):
@@ -1551,31 +1480,6 @@ def parse_resource_extended(library, session, resource_name):
     )
 
 
-def peek(library, session, address, width):
-    """Read an 8, 16 or 32-bit value from the specified address.
-
-    Corresponds to viPeek* functions of the VISA library.
-
-    :param library: the visa library wrapped by ctypes.
-    :param session: Unique logical identifier to a session.
-    :param address: Source address to read the value.
-    :param width: Number of bits to read.
-    :return: Data read from bus, return value of the library call.
-    :rtype: bytes, :class:`pyvisa.constants.StatusCode`
-    """
-
-    if width == 8:
-        return peek_8(library, session, address)
-    elif width == 16:
-        return peek_16(library, session, address)
-    elif width == 32:
-        return peek_32(library, session, address)
-    elif width == 64:
-        return peek_64(library, session, address)
-
-    raise ValueError("%s is not a valid size. Valid values are 8, 16, 32 or 64" % width)
-
-
 def peek_8(library, session, address):
     """Read an 8-bit value from the specified address.
 
@@ -1638,30 +1542,6 @@ def peek_64(library, session, address):
     value_64 = ViUInt64()
     ret = library.viPeek64(session, address, byref(value_64))
     return value_64.value, ret
-
-
-def poke(library, session, address, width, data):
-    """Writes an 8, 16 or 32-bit value from the specified address.
-
-    Corresponds to viPoke* functions of the VISA library.
-
-    :param library: the visa library wrapped by ctypes.
-    :param session: Unique logical identifier to a session.
-    :param address: Source address to read the value.
-    :param width: Number of bits to read.
-    :param data: Data to be written to the bus.
-    :return: return value of the library call.
-    :rtype: :class:`pyvisa.constants.StatusCode`
-    """
-
-    if width == 8:
-        return poke_8(library, session, address, data)
-    elif width == 16:
-        return poke_16(library, session, address, data)
-    elif width == 32:
-        return poke_32(library, session, address, data)
-
-    raise ValueError("%s is not a valid size. Valid values are 8, 16 or 32" % width)
 
 
 def poke_8(library, session, address, data):
@@ -1867,10 +1747,10 @@ def uninstall_handler(library, session, event_type, handler, user_handle=None):
     :return: return value of the library call.
     :rtype: :class:`pyvisa.constants.StatusCode`
     """
-    set_user_handle_type(library, user_handle)
-    if user_handle != None:
-        user_handle = byref(user_handle)
-    return library.viUninstallHandler(session, event_type, handler, user_handle)
+    with set_user_handle_type(library, user_handle):
+        if user_handle != None:
+            user_handle = byref(user_handle)
+        return library.viUninstallHandler(session, event_type, handler, user_handle)
 
 
 def unlock(library, session):

@@ -73,7 +73,7 @@ ViPString = ViString
 ViBuf, ViPBuf, ViABuf = ViPString, ViPString, ViAString
 
 
-def buffer_to_text(buf):
+def buffer_to_text(buf) -> str:
     return buf.value.decode("ascii")
 
 
@@ -89,7 +89,7 @@ _ViObject, ViPObject, ViAObject = _type_triplet(ViUInt32)
 _ViSession, ViPSession, ViASession = _type_triplet(ViUInt32)
 
 
-class ViObject(_ViObject):
+class ViObject(_ViObject):  # type: ignore
     @classmethod
     def from_param(cls, obj):
         if obj is None:

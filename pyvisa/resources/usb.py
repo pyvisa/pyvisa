@@ -27,8 +27,13 @@ class USBInstrument(ControlRenMixin, MessageBasedResource):
     """
 
     def control_in(
-        self, request_type_bitmap_field, request_id, request_value, index, length=0
-    ):
+        self,
+        request_type_bitmap_field,
+        request_id,
+        request_value,
+        index,
+        length: int = 0,
+    ) -> constants.StatusCode:
         """Performs a USB control pipe transfer from the device.
 
         :param request_type_bitmap_field: bmRequestType parameter of the setup stage of a USB control transfer.

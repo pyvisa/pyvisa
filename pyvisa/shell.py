@@ -13,8 +13,9 @@
 """
 import cmd
 import sys
+from typing import List, Tuple
 
-from . import ResourceManager, attributes, constants, VisaIOError
+from . import ResourceManager, VisaIOError, attributes, constants
 from .thirdparty import prettytable
 
 # XXX providing a way to list/use constants would be nice
@@ -25,29 +26,26 @@ class VisaShell(cmd.Cmd):
 
     """
 
-    intro = "\nWelcome to the VISA shell. Type help or ? to list commands.\n"
-    prompt = "(visa) "
+    intro: str = "\nWelcome to the VISA shell. Type help or ? to list commands.\n"
+    prompt: str = "(visa) "
 
-    use_rawinput = True
+    use_rawinput: bool = True
 
-    def __init__(self, library_path=""):
+    def __init__(self, library_path: str = ""):
         super().__init__()
         self.resource_manager = ResourceManager(library_path)
         self.default_prompt = self.prompt
 
         #: Resource list (used for autocomplete)
         #: Store a tuple with the name and the alias.
-        #: list[tuple(str, str)]
-        self.resources = []
+        self.resources: List[Tuple[str, str]] = []
 
         #: Resource in use
         #: pyvisa.resources.Resource
         self.current = None
 
-        #: list[str]
-        self.py_attr = []
-        #: list[str]
-        self.vi_attr = []
+        self.py_attr: List[str] = []
+        self.vi_attr: List[str] = []
 
     def do_list(self, args):
         """List all connected resources."""
