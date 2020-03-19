@@ -64,6 +64,8 @@ class Resource(object):
     #: Reference to the VISA library instance used by the resource
     visalib: highlevel.VisaLibraryBase
 
+    # XXX manually set the attributes and make this class only check it was done correctly
+    # Will improve readability and typing both !
     @classmethod
     def register(
         cls, interface_type: constants.InterfaceType, resource_class: str
@@ -191,7 +193,7 @@ class Resource(object):
         >>> del instrument.timeout
 
         """
-        timeout = self.get_visa_attribute(constants.VI_ATTR_TMO_VALUE)
+        timeout = self.get_visa_attribute(constants.ResourceAttribute.timeout_value)
         if timeout == constants.VI_TMO_INFINITE:
             return float("+inf")
         return timeout
@@ -199,11 +201,13 @@ class Resource(object):
     @timeout.setter
     def timeout(self, timeout: float) -> None:
         timeout = self._cleanup_timeout(timeout)
-        self.set_visa_attribute(constants.VI_ATTR_TMO_VALUE, timeout)
+        self.set_visa_attribute(constants.ResourceAttribute.timeout_value, timeout)
 
     @timeout.deleter
     def timeout(self) -> None:
-        self.set_visa_attribute(constants.VI_ATTR_TMO_VALUE, constants.VI_TMO_INFINITE)
+        self.set_visa_attribute(
+            constants.ResourceAttribute.timeout_value, constants.VI_TMO_INFINITE
+        )
 
     @property
     def resource_info(self) -> highlevel.ResourceInfo:
@@ -301,7 +305,7 @@ class Resource(object):
         self.discard_events(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
         self.visalib.uninstall_all_visa_handlers(self.session)
 
-    def get_visa_attribute(self, name: constants.Attribute) -> Any:
+    def get_visa_attribute(self, name: constants.ResourceAttribute) -> Any:
         """Retrieves the state of an attribute in this resource.
 
         :param name: Resource attribute for which the state query is made (see Attributes.*)
@@ -311,7 +315,7 @@ class Resource(object):
         return self.visalib.get_attribute(self.session, name)[0]
 
     def set_visa_attribute(
-        self, name: constants.Attribute, state: Any
+        self, name: constants.ResourceAttribute, state: Any
     ) -> constants.StatusCode:
         """Sets the state of an attribute.
 

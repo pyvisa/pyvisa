@@ -16,19 +16,18 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
+import sys
 import enum
 
 from typing_extensions import Literal
 
+is_64bits = sys.maxsize > 2 ** 32
 
 # _to_int() is necessary because the VISA specification is flawed: It defines
 # the VISA codes, which have a value less than zero, in their internal 32-bit
 # signed integer representation.  However, this is positive.  ctypes doesn't
 # care about that and (correctly) returns the negative value, which is left as
 # such by Python.
-#
-
-# XXX use IntFlags where relevant
 
 
 def _to_int(x):
@@ -42,6 +41,8 @@ def _to_int(x):
 
 
 # fmt: off
+
+# Status codes : success
 VI_SUCCESS                   = _to_int(0x00000000)
 VI_SUCCESS_EVENT_EN          = _to_int(0x3FFF0002)
 VI_SUCCESS_EVENT_DIS         = _to_int(0x3FFF0003)
@@ -56,6 +57,7 @@ VI_SUCCESS_NESTED_SHARED     = _to_int(0x3FFF0099)
 VI_SUCCESS_NESTED_EXCLUSIVE  = _to_int(0x3FFF009A)
 VI_SUCCESS_SYNC              = _to_int(0x3FFF009B)
 
+# Status codes : warning
 VI_WARN_QUEUE_OVERFLOW       = _to_int(0x3FFF000C)
 VI_WARN_CONFIG_NLOADED       = _to_int(0x3FFF0077)
 VI_WARN_NULL_OBJECT          = _to_int(0x3FFF0082)
@@ -66,6 +68,7 @@ VI_WARN_NSUP_BUF             = _to_int(0x3FFF0088)
 # The following one is a non-standard NI extension
 VI_WARN_EXT_FUNC_NIMPL       = _to_int(0x3FFF00A9)
 
+# Status codes : errors
 VI_ERROR_SYSTEM_ERROR        = _to_int(0xBFFF0000)
 VI_ERROR_INV_OBJECT          = _to_int(0xBFFF000E)
 VI_ERROR_RSRC_LOCKED         = _to_int(0xBFFF000F)
@@ -161,7 +164,11 @@ VI_ATTR_RSRC_NAME            = 0xBFFF0002
 VI_ATTR_RSRC_IMPL_VERSION    = 0x3FFF0003
 VI_ATTR_RSRC_LOCK_STATE      = 0x3FFF0004
 VI_ATTR_MAX_QUEUE_LENGTH     = 0x3FFF0005
-VI_ATTR_USER_DATA            = 0x3FFF0007
+VI_ATTR_USER_DATA_32         = 0x3FFF0007
+VI_ATTR_USER_DATA_64         = 0x3FFF000A
+VI_ATTR_USER_DATA            = (
+    VI_ATTR_USER_DATA_64 if is_64bits else VI_ATTR_USER_DATA_64
+)
 VI_ATTR_FDC_CHNL             = 0x3FFF000D
 VI_ATTR_FDC_MODE             = 0x3FFF000F
 VI_ATTR_FDC_GEN_SIGNAL_EN    = 0x3FFF0011
@@ -216,10 +223,18 @@ VI_ATTR_VXI_VME_INTR_STATUS  = 0x3FFF008B
 VI_ATTR_VXI_TRIG_STATUS      = 0x3FFF008D
 VI_ATTR_VXI_VME_SYSFAIL_STATE = 0x3FFF0094
 
-VI_ATTR_WIN_BASE_ADDR        = 0x3FFF0098
+VI_ATTR_WIN_BASE_ADDR_32     = 0x3FFF0098
+VI_ATTR_WIN_BASE_ADDR_64     = 0x3FFF009B
+VI_ATTR_WIN_BASE_ADDR        = (
+    VI_ATTR_WIN_BASE_ADDR_64 if is_64bits else VI_ATTR_WIN_BASE_ADDR_32
+)
 VI_ATTR_WIN_SIZE             = 0x3FFF009A
 VI_ATTR_ASRL_AVAIL_NUM       = 0x3FFF00AC
-VI_ATTR_MEM_BASE             = 0x3FFF00AD  # XXX bitness dependent !
+VI_ATTR_MEM_BASE_32          = 0x3FFF00AD
+VI_ATTR_MEM_BASE_64          = 0x3FFF00D0
+VI_ATTR_MEM_BASE             = (
+    VI_ATTR_MEM_BASE_64 if is_64bits else VI_ATTR_MEM_BASE_32
+)
 VI_ATTR_ASRL_CTS_STATE       = 0x3FFF00AE
 VI_ATTR_ASRL_DCD_STATE       = 0x3FFF00AF
 VI_ATTR_ASRL_DSR_STATE       = 0x3FFF00B1
@@ -235,7 +250,11 @@ VI_ATTR_WIN_ACCESS           = 0x3FFF00C3
 VI_ATTR_RM_SESSION           = 0x3FFF00C4
 VI_ATTR_VXI_LA               = 0x3FFF00D5
 VI_ATTR_MANF_ID              = 0x3FFF00D9
-VI_ATTR_MEM_SIZE             = 0x3FFF00DD
+VI_ATTR_MEM_SIZE_32          = 0x3FFF00DD
+VI_ATTR_MEM_SIZE_64          = 0x3FFF00D1
+VI_ATTR_MEM_SIZE             = (
+    VI_ATTR_MEM_SIZE_64 if is_64bits else VI_ATTR_MEM_SIZE_32
+)
 VI_ATTR_MEM_SPACE            = 0x3FFF00DE
 VI_ATTR_MODEL_CODE           = 0x3FFF00DF
 VI_ATTR_SLOT                 = 0x3FFF00E8
@@ -280,9 +299,9 @@ VI_ATTR_USB_END_IN           = _to_int(0x3FFF01A9)
 VI_ATTR_USB_NUM_INTFCS       = _to_int(0x3FFF01AA)
 VI_ATTR_USB_NUM_PIPES        = _to_int(0x3FFF01AB)
 VI_ATTR_USB_BULK_OUT_STATUS  = _to_int(0x3FFF01AC)
-VI_ATTR_USB_BULK_IN_STATUS  = _to_int(0x3FFF01AD)
-VI_ATTR_USB_INTR_IN_STATUS  = _to_int(0x3FFF01AE)
-VI_ATTR_USB_CTRL_PIPE       = _to_int(0x3FFF01B0)
+VI_ATTR_USB_BULK_IN_STATUS   = _to_int(0x3FFF01AD)
+VI_ATTR_USB_INTR_IN_STATUS   = _to_int(0x3FFF01AE)
+VI_ATTR_USB_CTRL_PIPE        = _to_int(0x3FFF01B0)
 VI_ATTR_USB_RECV_INTR_SIZE   = 0x3FFF41B0
 VI_ATTR_USB_RECV_INTR_DATA   = 0xBFFF41B1
 
@@ -292,7 +311,9 @@ VI_ATTR_SIGP_STATUS_ID       = 0x3FFF4011
 VI_ATTR_RECV_TRIG_ID         = 0x3FFF4012
 VI_ATTR_INTR_STATUS_ID       = 0x3FFF4023
 VI_ATTR_STATUS               = 0x3FFF4025
-VI_ATTR_RET_COUNT            = 0x3FFF4026
+VI_ATTR_RET_COUNT_32         =0x3FFF4026
+VI_ATTR_RET_COUNT_64         = 0x3FFF4028
+VI_ATTR_RET_COUNT            = VI_ATTR_RET_COUNT_64 if is_64bits else VI_ATTR_RET_COUNT_64
 VI_ATTR_BUFFER               = 0x3FFF4027
 VI_ATTR_RECV_INTR_LEVEL      = 0x3FFF4041
 VI_ATTR_OPER_NAME            = 0xBFFF4042
@@ -355,6 +376,43 @@ VI_ATTR_PXI_MEM_SIZE_BAR2_64 = _to_int(0x3FFF023A)
 VI_ATTR_PXI_MEM_SIZE_BAR3_64 = _to_int(0x3FFF023B)
 VI_ATTR_PXI_MEM_SIZE_BAR4_64 = _to_int(0x3FFF023C)
 VI_ATTR_PXI_MEM_SIZE_BAR5_64 = _to_int(0x3FFF023D)
+
+VI_ATTR_PXI_MEM_BASE_BAR0   = (
+    VI_ATTR_PXI_MEM_BASE_BAR0_64 if is_64bits else VI_ATTR_PXI_MEM_BASE_BAR0_32
+)
+VI_ATTR_PXI_MEM_BASE_BAR1   = (
+    VI_ATTR_PXI_MEM_BASE_BAR1_64 if is_64bits else VI_ATTR_PXI_MEM_BASE_BAR1_32
+)
+VI_ATTR_PXI_MEM_BASE_BAR2   = (
+    VI_ATTR_PXI_MEM_BASE_BAR2_64 if is_64bits else VI_ATTR_PXI_MEM_BASE_BAR2_32
+)
+VI_ATTR_PXI_MEM_BASE_BAR3   = (
+    VI_ATTR_PXI_MEM_BASE_BAR3_64 if is_64bits else VI_ATTR_PXI_MEM_BASE_BAR3_32
+)
+VI_ATTR_PXI_MEM_BASE_BAR4   = (
+    VI_ATTR_PXI_MEM_BASE_BAR4_64 if is_64bits else VI_ATTR_PXI_MEM_BASE_BAR4_32
+)
+VI_ATTR_PXI_MEM_BASE_BAR5   = (
+    VI_ATTR_PXI_MEM_BASE_BAR5_64 if is_64bits else VI_ATTR_PXI_MEM_BASE_BAR5_32
+)
+VI_ATTR_PXI_MEM_SIZE_BAR0   = (
+    VI_ATTR_PXI_MEM_SIZE_BAR0_64 if is_64bits else VI_ATTR_PXI_MEM_SIZE_BAR0_32
+)
+VI_ATTR_PXI_MEM_SIZE_BAR1   = (
+    VI_ATTR_PXI_MEM_SIZE_BAR1_64 if is_64bits else VI_ATTR_PXI_MEM_SIZE_BAR1_32
+)
+VI_ATTR_PXI_MEM_SIZE_BAR2   = (
+    VI_ATTR_PXI_MEM_SIZE_BAR2_64 if is_64bits else VI_ATTR_PXI_MEM_SIZE_BAR2_32
+)
+VI_ATTR_PXI_MEM_SIZE_BAR3   = (
+    VI_ATTR_PXI_MEM_SIZE_BAR3_64 if is_64bits else VI_ATTR_PXI_MEM_SIZE_BAR3_32
+)
+VI_ATTR_PXI_MEM_SIZE_BAR4   = (
+    VI_ATTR_PXI_MEM_SIZE_BAR4_64 if is_64bits else VI_ATTR_PXI_MEM_SIZE_BAR4_32
+)
+VI_ATTR_PXI_MEM_SIZE_BAR5   = (
+    VI_ATTR_PXI_MEM_SIZE_BAR5_64 if is_64bits else VI_ATTR_PXI_MEM_SIZE_BAR5_32
+)
 
 #
 # Event Types
@@ -1649,7 +1707,7 @@ class EventAttribute(enum.IntEnum):
     received_trigger_id = VI_ATTR_RECV_TRIG_ID
     interrupt_status_id = VI_ATTR_INTR_STATUS_ID
     status = VI_ATTR_STATUS
-    return_count = VI_ATTR_RET_COUNT  # XXX 32-64 bits variants
+    return_count = VI_ATTR_RET_COUNT
     buffer = VI_ATTR_BUFFER
     received_interrupt_level = VI_ATTR_RECV_INTR_LEVEL
     operation_name = VI_ATTR_OPER_NAME
@@ -1679,8 +1737,8 @@ class ResourceAttribute(enum.IntEnum):
     resource_manufacturer_id = VI_ATTR_RSRC_MANF_ID
     timeout_value = VI_ATTR_TMO_VALUE
     max_queue_length = VI_ATTR_MAX_QUEUE_LENGTH
-    user_data = VI_ATTR_USER_DATA  # XXX 32, 64 bits variants
-    trigger_id = VI_ATTR_TRIG_ID  # most resources no USB, not TCPIP::SOCKET
+    user_data = VI_ATTR_USER_DATA
+    trigger_id = VI_ATTR_TRIG_ID  # most resources no USB, nor TCPIP::SOCKET
 
     # Message based resource attributes
     send_end_enabled = VI_ATTR_SEND_END_EN
@@ -1785,7 +1843,7 @@ class ResourceAttribute(enum.IntEnum):
     # (VXI, GPIB-VXI and PXI)::INSTR specific attributes
     slot = VI_ATTR_SLOT
     window_access = VI_ATTR_WIN_ACCESS
-    window_base_address = VI_ATTR_WIN_BASE_ADDR  # XXX 32-64 variants
+    window_base_address = VI_ATTR_WIN_BASE_ADDR
     window_size = VI_ATTR_WIN_SIZE
     source_increment = VI_ATTR_SRC_INCREMENT
     destination_increment = VI_ATTR_DEST_INCREMENT
@@ -1799,8 +1857,8 @@ class ResourceAttribute(enum.IntEnum):
     vxi_logical_address = VI_ATTR_VXI_LA
     commander_logical_address = VI_ATTR_CMDR_LA
     memory_space = VI_ATTR_MEM_SPACE
-    memory_size = VI_ATTR_MEM_SIZE  # XXX 32 64 bits variants
-    memory_base = VI_ATTR_MEM_BASE  # XXX 32 64 bits variants
+    memory_size = VI_ATTR_MEM_SIZE
+    memory_base = VI_ATTR_MEM_BASE
     immediate_servant = VI_ATTR_IMMEDIATE_SERV
     destination_access_private = VI_ATTR_DEST_ACCESS_PRIV
     destination_byte_order = VI_ATTR_DEST_BYTE_ORDER
@@ -1847,29 +1905,15 @@ class ResourceAttribute(enum.IntEnum):
     pxi_memory_type_bar4 = VI_ATTR_PXI_MEM_TYPE_BAR4
     pxi_memory_type_bar5 = VI_ATTR_PXI_MEM_TYPE_BAR5
 
-    # XXX reduce to bitness invariant form
-    pxi_memory_base_bar0_32 = VI_ATTR_PXI_MEM_BASE_BAR0_32
-    pxi_memory_base_bar1_32 = VI_ATTR_PXI_MEM_BASE_BAR1_32
-    pxi_memory_base_bar2_32 = VI_ATTR_PXI_MEM_BASE_BAR2_32
-    pxi_memory_base_bar3_32 = VI_ATTR_PXI_MEM_BASE_BAR3_32
-    pxi_memory_base_bar4_32 = VI_ATTR_PXI_MEM_BASE_BAR4_32
-    pxi_memory_base_bar5_32 = VI_ATTR_PXI_MEM_BASE_BAR5_32
-    pxi_memory_size_bar0_32 = VI_ATTR_PXI_MEM_SIZE_BAR0_32
-    pxi_memory_size_bar1_32 = VI_ATTR_PXI_MEM_SIZE_BAR1_32
-    pxi_memory_size_bar2_32 = VI_ATTR_PXI_MEM_SIZE_BAR2_32
-    pxi_memory_size_bar3_32 = VI_ATTR_PXI_MEM_SIZE_BAR3_32
-    pxi_memory_size_bar4_32 = VI_ATTR_PXI_MEM_SIZE_BAR4_32
-    pxi_memory_size_bar5_32 = VI_ATTR_PXI_MEM_SIZE_BAR5_32
-
-    pxi_memory_base_bar0_64 = VI_ATTR_PXI_MEM_BASE_BAR0_64
-    pxi_memory_base_bar1_64 = VI_ATTR_PXI_MEM_BASE_BAR1_64
-    pxi_memory_base_bar2_64 = VI_ATTR_PXI_MEM_BASE_BAR2_64
-    pxi_memory_base_bar3_64 = VI_ATTR_PXI_MEM_BASE_BAR3_64
-    pxi_memory_base_bar4_64 = VI_ATTR_PXI_MEM_BASE_BAR4_64
-    pxi_memory_base_bar5_64 = VI_ATTR_PXI_MEM_BASE_BAR5_64
-    pxi_memory_size_bar0_64 = VI_ATTR_PXI_MEM_SIZE_BAR0_64
-    pxi_memory_size_bar1_64 = VI_ATTR_PXI_MEM_SIZE_BAR1_64
-    pxi_memory_size_bar2_64 = VI_ATTR_PXI_MEM_SIZE_BAR2_64
-    pxi_memory_size_bar3_64 = VI_ATTR_PXI_MEM_SIZE_BAR3_64
-    pxi_memory_size_bar4_64 = VI_ATTR_PXI_MEM_SIZE_BAR4_64
-    pxi_memory_size_bar5_64 = VI_ATTR_PXI_MEM_SIZE_BAR5_64
+    pxi_memory_base_bar0 = VI_ATTR_PXI_MEM_BASE_BAR0
+    pxi_memory_base_bar1 = VI_ATTR_PXI_MEM_BASE_BAR1
+    pxi_memory_base_bar2 = VI_ATTR_PXI_MEM_BASE_BAR2
+    pxi_memory_base_bar3 = VI_ATTR_PXI_MEM_BASE_BAR3
+    pxi_memory_base_bar4 = VI_ATTR_PXI_MEM_BASE_BAR4
+    pxi_memory_base_bar5 = VI_ATTR_PXI_MEM_BASE_BAR5
+    pxi_memory_size_bar0 = VI_ATTR_PXI_MEM_SIZE_BAR0
+    pxi_memory_size_bar1 = VI_ATTR_PXI_MEM_SIZE_BAR1
+    pxi_memory_size_bar2 = VI_ATTR_PXI_MEM_SIZE_BAR2
+    pxi_memory_size_bar3 = VI_ATTR_PXI_MEM_SIZE_BAR3
+    pxi_memory_size_bar4 = VI_ATTR_PXI_MEM_SIZE_BAR4
+    pxi_memory_size_bar5 = VI_ATTR_PXI_MEM_SIZE_BAR5

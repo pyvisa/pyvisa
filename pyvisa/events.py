@@ -10,53 +10,73 @@
     :copyright: 2020 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
-from . import constants, typing
+from contextlib import contextmanager
+from typing import Optional
 
+from . import constants, highlevel, errors
+from .typing import VISAEventContext
+from .attributes import AttrVI_ATTR_STATUS, AttrVI_ATTR_OPER_NAME
 
-# XXX manually implement all attributes
+# XXX manually set all attributes (all attributes should be cached)
 
 
 class VisaEvent:
-    """
+    """Event that lead to the call of an event handler.
+
+    Do not instantiate directly use the visa_event context manager of the
+    Resource object passed to the handler.
 
     """
 
-    #:
+    #: Reference to the visa library
+    visalib: highlevel.VisaLibraryBase
+
+    #: Type of the event.
     event_type: constants.EventType
 
-    #:
-    context: typing.VISAEventContext
+    #: Context use to query the event attributes.
+    _context: Optional[VISAEventContext]
 
     @classmethod
     def register(cls,):
         """[summary]
         """
 
-    def get_visa_attribute(self, attribute_id):
-        """[summary]
+    def __init__(self, visalib, event_type, context):
+        self.visalib = visalib
+        self.event_type = event_type
+        self._context = context
 
-        Parameters
-        ----------
-        attribute_id : [type]
-            [description]
+    @property
+    def context(self) -> VISAEventContext:
+        c = self._context
+        if c is None:
+            raise errors.InvalidSession()
+        return c
+
+    def get_visa_attribute(self, attribute_id: constants.EventAttribute) -> Any:
+        """Get the specified VISA attribute.
+
         """
-        pass
+        return self.visalib.get_attribute(self.context, attribute_id)
 
 
 class VisaExceptionEvent(VisaEvent):
-    """[summary]
+    """Event corresponding to an exception
 
     """
 
-    #:
-    status
+    #: Status code of the opertion that generated the exception
+    status = AttrVI_ATTR_STATUS()
 
-    #:
-    operation_name
+    #: Name of the operation that led to the exception
+    operation_name = AttrVI_ATTR_OPER_NAME()
 
 
 class VisaGPIBCICEvent(VisaEvent):
-    """[summary]
+    """GPIB Controller in Charge event.
+
+    The event is emitted if the status is gained or lost.
 
     """
 
@@ -65,7 +85,7 @@ class VisaGPIBCICEvent(VisaEvent):
 
 
 class VisaIOCompletionEvent(VisaEvent):
-    """[summary]
+    """Event marking the completion of an IO operation.
 
     """
 
@@ -86,7 +106,7 @@ class VisaIOCompletionEvent(VisaEvent):
 
 
 class VisaTrigEvent(VisaEvent):
-    """[summary]
+    """Trigger event.
 
     """
 
@@ -95,7 +115,8 @@ class VisaTrigEvent(VisaEvent):
 
 
 class VisaUSBInteruptEvent(VisaEvent):
-    """
+    """USB interruption event.
+
     """
 
     #:
@@ -109,19 +130,21 @@ class VisaUSBInteruptEvent(VisaEvent):
 
 
 class VisaVXISignalEvent(VisaEvent):
-    """
+    """VXI signal event.
+
     """
 
     #:
-    status_id
+    status
 
 
 class VisaVXIInterruptEvent(VisaEvent):
-    """
+    """VXI interrupt event.
+
     """
 
     #:
-    status_id
+    status
 
     #:
     interrupt_level

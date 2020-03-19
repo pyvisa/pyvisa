@@ -790,24 +790,6 @@ class AttrVI_ATTR_ASRL_XON_CHAR(CharAttribute):
     read, write, local = True, True, True
 
 
-class AttrVI_ATTR_BUFFER(Attribute):
-    """VI_ATTR_BUFFER contains the address of a buffer that was used in an
-    asynchronous operation.
-    """
-
-    resources = [constants.EventType.io_completion]
-
-    py_name = "buffer"
-
-    visa_name = "VI_ATTR_BUFFER"
-
-    visa_type = "ViBuf"
-
-    default = NotAvailable
-
-    read, write, local = True, False, True
-
-
 class AttrVI_ATTR_CMDR_LA(RangeAttribute):
     """VI_ATTR_CMDR_LA is the unique logical address of the commander of the
     VXI device used by the given session.
@@ -1411,23 +1393,6 @@ class AttrVI_ATTR_IO_PROT(RangeAttribute):
     min_value, max_value, values = 0, 65535, None
 
 
-class AttrVI_ATTR_JOB_ID(Attribute):
-    """VI_ATTR_JOB_ID contains the job ID of the asynchronous operation that has completed.
-    """
-
-    resources = [constants.EventType.io_completion]
-
-    py_name = "job_id"
-
-    visa_name = "VI_ATTR_JOB_ID"
-
-    visa_type = "ViJobId"
-
-    default = NotAvailable
-
-    read, write, local = True, False, True
-
-
 class AttrVI_ATTR_MAINFRAME_LA(RangeAttribute):
     """VI_ATTR_MA.infRAME_LA specifies the lowest logical address in the
     mainframe. If the logical address is not known, VI_UNKNOWN_LA is
@@ -1612,24 +1577,6 @@ class AttrVI_ATTR_MODEL_NAME(Attribute):
     default = NotAvailable
 
     read, write, local = True, False, False
-
-
-class AttrVI_ATTR_OPER_NAME(Attribute):
-    """VI_ATTR_OPER_NAME contains the name of the operation generating this
-    event.
-    """
-
-    resources = [constants.EventType.io_completion, constants.EventType.exception]
-
-    py_name = "oper_name"
-
-    visa_name = "VI_ATTR_OPER_NAME"
-
-    visa_type = "ViString"
-
-    default = NotAvailable
-
-    read, write, local = True, False, True
 
 
 class AttrVI_ATTR_PXI_ACTUAL_LWIDTH(ValuesAttribute):
@@ -2472,24 +2419,6 @@ class AttrVI_ATTR_SRC_INCREMENT(RangeAttribute):
     min_value, max_value, values = 0, 1, None
 
 
-class AttrVI_ATTR_STATUS(Attribute):
-    """VI_ATTR_STATUS contains the return code of the operation generating this
-    event.
-    """
-
-    resources = [constants.EventType.exception, constants.EventType.io_completion]
-
-    py_name = "status"
-
-    visa_name = "VI_ATTR_STATUS"
-
-    visa_type = "ViStatus"
-
-    default = NotAvailable
-
-    read, write, local = True, False, True
-
-
 class AttrVI_ATTR_SUPPRESS_END_EN(BooleanAttribute):
     """VI_ATTR_SUPPRESS_END_EN is relevant only in viRead and related
     operations.
@@ -2753,26 +2682,6 @@ class AttrVI_ATTR_TRIG_ID(ValuesAttribute):
     read, write, local = True, True, True
 
     values = []  # XXX
-
-
-class AttrVI_ATTR_RET_COUNT(RangeAttribute):
-    """VI_ATTR_RET_COUNT contains the actual number of elements that were
-    asynchronously transferred.
-    """
-
-    resources = [constants.EventType.io_completion]
-
-    py_name = "ret_count"
-
-    visa_name = "VI_ATTR_RET_COUNT"
-
-    visa_type = "ViUInt32"
-
-    default = NotAvailable
-
-    read, write, local = True, False, True
-
-    min_value, max_value, values = 0, 0xFFFFFFFF, None
 
 
 class AttrVI_ATTR_USB_ALT_SETTING(RangeAttribute):
@@ -3500,3 +3409,248 @@ class AttrVI_ATTR_WR_BUF_SIZE(RangeAttribute):
     read, write, local = True, False, True
 
     min_value, max_value, values = 0, 4294967295, None
+
+
+# Event type attributes
+
+
+class AttrVI_ATTR_BUFFER(Attribute):
+    """Address of a buffer that was used in an asynchronous operation.
+
+    """
+
+    resources = [constants.EventType.io_completion]
+
+    py_name = "buffer"
+
+    visa_name = "VI_ATTR_BUFFER"
+
+    visa_type = "ViBuf"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
+class AttrVI_ATTR_JOB_ID(Attribute):
+    """VJob ID of the asynchronous operation that has completed.
+
+    """
+
+    resources = [constants.EventType.io_completion]
+
+    py_name = "job_id"
+
+    visa_name = "VI_ATTR_JOB_ID"
+
+    visa_type = "ViJobId"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
+class AttrVI_ATTR_OPER_NAME(Attribute):
+    """Name of the operation generating this event.
+
+    """
+
+    resources = [constants.EventType.io_completion, constants.EventType.exception]
+
+    py_name = "oper_name"
+
+    visa_name = "VI_ATTR_OPER_NAME"
+
+    visa_type = "ViString"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
+class AttrVI_ATTR_STATUS(EnumAttribute):
+    """Return code of the operation generating this event.
+
+    """
+
+    resources = [constants.EventType.exception, constants.EventType.io_completion]
+
+    py_name = "status"
+
+    visa_name = "VI_ATTR_STATUS"
+
+    visa_type = "ViStatus"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    enum_type = constants.StatusCode
+
+
+class AttrVI_ATTR_RET_COUNT(RangeAttribute):
+    """Actual number of elements that were asynchronously transferred.
+
+    """
+
+    resources = [constants.EventType.io_completion]
+
+    py_name = "ret_count"
+
+    visa_name = "VI_ATTR_RET_COUNT"
+
+    visa_type = "ViUInt32"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 0, 0xFFFFFFFF, None
+
+
+class AttrVI_ATTR_RECV_TCPIP_ADDR(Attribute):
+    """Address of the device from which the session received a connection
+    """
+
+    resources = [constants.EventType.tcpip_connect]
+
+    py_name = "tcpip_connect"
+
+    visa_name = "VI_ATTR_RECV_TCPIP_ADDR"
+
+    visa_type = "ViString"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
+class AttrVI_ATTR_GPIB_RECV_CIC_STATE(BooleanAttribute):
+    """Whether the event by the gain or the loss of the CIC state.
+
+    """
+
+    resources = [constants.EventType.gpib_controller_in_charge]
+
+    py_name = "cic_state"
+
+    visa_name = "VI_ATTR_GPIB_RECV_CIC_STATE"
+
+    visa_type = "ViBool"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
+class AttrVI_ATTR_SIGP_STATUS_ID(RangeAttribute):
+    """16-bit Status/ID retrieved during the IACK cycle or from the Signal register.
+
+    """
+
+    resources = [constants.EventType.vxi_signal_interrupt]
+
+    py_name = "cic_state"
+
+    visa_name = "VI_ATTR_SIGP_STATUS_ID"
+
+    visa_type = "ViUInt16"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 0, 0xFFFF, None
+
+
+class AttrVI_ATTR_RECV_TRIG_ID(EnumAttribute):
+
+    resources = [constants.EventType.trig]
+
+    py_name = "received_trigger_id"
+
+    visa_name = "VI_ATTR_RECV_TRIG_ID"
+
+    visa_type = "ViInt16"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    enum_type = constants.TriggerEventID
+
+
+class AttrVI_ATTR_INTR_STATUS_ID(RangeAttribute):
+    """32-bit status/ID retrieved during the IACK cycle.
+
+    """
+
+    resources = [constants.EventType.vxi_vme_interrupt]
+
+    py_name = "interrupt_status_id"
+
+    visa_name = "VI_ATTR_INTR_STATUS_ID"
+
+    visa_type = "ViUInt32"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 0, 0xFFFFFFFF, None
+
+
+class AttrVI_ATTR_RECV_INTR_LEVEL(RangeAttribute):
+    """VXI interrupt level on which the interrupt was received.
+
+    """
+
+    resources = [constants.EventType.vxi_vme_interrupt]
+
+    py_name = "received_interrupt_level"
+
+    visa_name = "VI_ATTR_INTR_STATUS_ID"
+
+    visa_type = "ViInt16"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+    min_value, max_value, values = 1, 7, [constants.VI_UNKNOWN_LEVEL]
+
+
+class AttrVI_ATTR_PXI_RECV_INTR_SEQ(Attribute):
+    """Index of the interrupt sequence that detected the interrupt condition.
+
+    """
+
+    resources = [constants.EventType.pxi_interrupt]
+
+    py_name = "pxi_received_interrupt_sequence"
+
+    visa_name = "VI_ATTR_PXI_RECV_INTR_SEQ"
+
+    visa_type = "ViInt16"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True
+
+
+class AttrVI_ATTR_PXI_RECV_INTR_DATA(Attribute):
+    """First PXI/PCI register read in the successful interrupt detection sequence.
+
+    """
+
+    resources = [constants.EventType.pxi_interrupt]
+
+    py_name = "pxi_received_interrupt_data"
+
+    visa_name = "VI_ATTR_PXI_RECV_INTR_DATA"
+
+    visa_type = "ViUInt32"
+
+    default = NotAvailable
+
+    read, write, local = True, False, True

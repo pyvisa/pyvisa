@@ -665,7 +665,9 @@ class VisaLibraryBase(object):
         raise NotImplementedError
 
     def get_attribute(
-        self, session: VISASession, attribute: constants.Attribute
+        self,
+        session: Union[VISASession, VISAEventContext],
+        attribute: Union[constants.ResourceAttribute, constants.EventAttribute],
     ) -> Tuple[Any, constants.StatusCode]:
         """Retrieves the state of an attribute.
 
@@ -1567,7 +1569,10 @@ class VisaLibraryBase(object):
         raise NotImplementedError
 
     def set_attribute(
-        self, session: VISASession, attribute: constants.Attribute, attribute_state: Any
+        self,
+        session: VISASession,
+        attribute: constants.ResourceAttribute,
+        attribute_state: Any,
     ) -> constants.StatusCode:
         """Sets the state of an attribute.
 

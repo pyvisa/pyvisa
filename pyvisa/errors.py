@@ -539,7 +539,6 @@ class UnknownHandler(Error):
 
     """
 
-    # XXX improve handler signature
     def __init__(
         self,
         event_type: constants.EventType,
