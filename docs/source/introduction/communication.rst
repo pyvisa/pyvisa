@@ -181,6 +181,12 @@ up a couple of paragraph).
     operation. This can be done globally using |query_delay| or passing
     ``delay=0.1`` for example to wait 100 ms after writing before reading.
 
+.. note::
+
+    When transferring large amount of data the total transfer time may exceed
+    the timeout value in which case increasing the timeout value should fix
+    the issue.
+
 The above focused on using only PyVISA,  if you are running Windows, or MacOS
 you are likely to have access to third party tools that can help. Some tips to
 use them are given in the next section.
