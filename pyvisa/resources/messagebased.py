@@ -279,7 +279,7 @@ class MessageBasedResource(Resource):
         :param chunk_size: The chunk size to use to perform the reading.
         :type chunk_size: int
         :param break_on_termchar: Should the reading stop when a termination
-            character is encountered.
+            character is encountered or when the message ends.
         :type break_on_termchar: bool
 
         :rtype: bytes
@@ -288,6 +288,7 @@ class MessageBasedResource(Resource):
         chunk_size = chunk_size or self.chunk_size
         ret = bytearray()
         left_to_read = count
+        success = constants.StatusCode.success
         termchar_read = constants.StatusCode.success_termination_character_read
 
         with self.ignore_warning(
@@ -306,7 +307,9 @@ class MessageBasedResource(Resource):
                     chunk, status = self.visalib.read(self.session, size)
                     ret.extend(chunk)
                     left_to_read -= len(chunk)
-                    if break_on_termchar and status == termchar_read:
+                    if break_on_termchar and (
+                        status == success or status == termchar_read
+                    ):
                         break
             except errors.VisaIOError as e:
                 logger.debug(
