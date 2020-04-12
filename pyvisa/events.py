@@ -11,16 +11,18 @@
     :license: MIT, see LICENSE for more details.
 """
 from contextlib import contextmanager
-from typing import Optional
+from typing import Callable, Optional, Type, TYPE_CHECKING
 
-from . import constants, highlevel, errors
-from .typing import VISAEventContext
-from .attributes import AttrVI_ATTR_STATUS, AttrVI_ATTR_OPER_NAME
+from . import attributes, constants, errors
+from .attributes import Attribute
+from .typing import Any, VISAEventContext, VISAJobID
+from .resources import Resource
 
-# XXX manually set all attributes (all attributes should be cached)
+if TYPE_CHECKING:
+    from . import highlevel
 
 
-class VisaEvent:
+class Event:
     """Event that lead to the call of an event handler.
 
     Do not instantiate directly use the visa_event context manager of the
@@ -38,11 +40,29 @@ class VisaEvent:
     _context: Optional[VISAEventContext]
 
     @classmethod
-    def register(cls,):
-        """[summary]
-        """
+    def register(
+        cls, event_type: constants.EventType,
+    ) -> Callable[[Type["Event"]], Type["Event"]]:
+        def _internal(python_class: Type["Event"]) -> Type["Event"]:
+            Resource.register_event_class(event_type, python_class)
 
-    def __init__(self, visalib, event_type, context):
+            for attr in attributes.AttributesPerResource[event_type]:
+                if not hasattr(python_class, attr.py_name):
+                    raise TypeError(
+                        "%s is expected to have an attribute %s"
+                        % (python_class, attr.py_name)
+                    )
+
+            return python_class
+
+        return _internal
+
+    def __init__(
+        self,
+        visalib: highlevel.VisaLibraryBase,
+        event_type: constants.EventType,
+        context: VISAEventContext,
+    ) -> None:
         self.visalib = visalib
         self.event_type = event_type
         self._context = context
@@ -61,90 +81,126 @@ class VisaEvent:
         return self.visalib.get_attribute(self.context, attribute_id)
 
 
-class VisaExceptionEvent(VisaEvent):
+# Those events do not have any payload beyond their type, for those use the base class
+for event in (
+    constants.EventType.clear,
+    constants.EventType.service_request,
+    constants.EventType.gpib_listen,
+    constants.EventType.gpib_talk,
+    constants.EventType.vxi_vme_sysfail,
+    constants.EventType.vxi_vme_sysreset,
+):
+    Event.register(event)(Event)
+
+
+@Event.register(constants.EventType.exception)
+class ExceptionEvent(Event):
     """Event corresponding to an exception
 
     """
 
     #: Status code of the opertion that generated the exception
-    status = AttrVI_ATTR_STATUS()
+    status: Attribute[constants.StatusCode] = attributes.AttrVI_ATTR_STATUS()
 
     #: Name of the operation that led to the exception
-    operation_name = AttrVI_ATTR_OPER_NAME()
+    operation_name: Attribute[str] = attributes.AttrVI_ATTR_OPER_NAME()
 
 
-class VisaGPIBCICEvent(VisaEvent):
+@Event.register(constants.EventType.gpib_controller_in_charge)
+class GPIBCICEvent(Event):
     """GPIB Controller in Charge event.
 
     The event is emitted if the status is gained or lost.
 
     """
 
-    #:
-    cic_state
+    #: New state of the controller in charge status
+    cic_state: Attribute[
+        constants.LineState
+    ] = attributes.AttrVI_ATTR_GPIB_RECV_CIC_STATE()
 
 
-class VisaIOCompletionEvent(VisaEvent):
+@Event.register(constants.EventType.io_completion)
+class IOCompletionEvent(Event):
     """Event marking the completion of an IO operation.
 
     """
 
-    #:
-    status
+    #: Status code of the asynchronous I/O operation that has completed.
+    status: Attribute[constants.StatusCode] = attributes.AttrVI_ATTR_STATUS()
 
-    #:
-    job_id
+    #: Buffer that was used in an asynchronous operation.
+    buffer: Attribute[bytes] = attributes.AttrVI_ATTR_BUFFER()
 
-    #:
-    buffer
+    #: Actual number of elements that were asynchronously transferred.
+    return_count: Attribute[int] = attributes.AttrVI_ATTR_RET_COUNT()
 
-    #:
-    return_count
+    #: Name of the operation generating the event.
+    operation_name: Attribute[str] = attributes.AttrVI_ATTR_OPER_NAME()
 
-    #:
-    operation_name
+    #: Job ID of the asynchronous operation that has completed.
+    job_id: Attribute[VISAJobID] = attributes.AttrVI_ATTR_JOB_ID()
 
 
-class VisaTrigEvent(VisaEvent):
+@Event.register(constants.EventType.trig)
+class TrigEvent(Event):
     """Trigger event.
 
     """
 
-    #:
-    trigger_id
+    #: Identifier of the triggering mechanism on which the specified trigger event
+    #: was received.
+    trigger_id: Attribute[constants.TriggerID] = attributes.AttrVI_ATTR_TRIG_ID()
 
 
-class VisaUSBInteruptEvent(VisaEvent):
+@Event.register(constants.EventType.usb_interrupt)
+class USBInteruptEvent(Event):
     """USB interruption event.
 
     """
 
-    #:
-    status
+    #: Status of the read operation from the USB interrupt-IN pipe.
+    status: Attribute[constants.StatusCode] = attributes.AttrVI_ATTR_STATUS()
 
-    #:
-    size
+    #: Size of the data that was received from the USB interrupt-IN pipe.
+    size: Attribute[int] = attributes.AttrVI_ATTR_USB_RECV_INTR_SIZE()
 
-    #:
-    data
+    #: Actual data that was received from the USB interrupt-IN pipe.
+    data = attributes.AttrVI_ATTR_USB_RECV_INTR_DATA()
 
 
-class VisaVXISignalEvent(VisaEvent):
+@Event.register(constants.EventType.vxi_signal_interrupt)
+class VXISignalInteruptEvent(Event):
     """VXI signal event.
 
     """
 
-    #:
-    status
+    #: 16-bit Status/ID value retrieved during the IACK cycle or
+    #: from the Signal register.
+    signal_register_status_id: Attribute[int] = attributes.AttrVI_ATTR_SIGP_STATUS_ID()
 
 
-class VisaVXIInterruptEvent(VisaEvent):
+@Event.register(constants.EventType.vxi_vme_interrupt)
+class VXIInterruptEvent(Event):
     """VXI interrupt event.
 
     """
 
-    #:
-    status
+    #: 32-bit status/ID retrieved during the IACK cycle.
+    status_id: Attribute[int] = attributes.AttrVI_ATTR_INTR_STATUS_ID()
 
-    #:
-    interrupt_level
+    #: VXI interrupt level on which the interrupt was received.
+    level: Attribute[int] = attributes.AttrVI_ATTR_RECV_INTR_LEVEL()
+
+
+@Event.register(constants.EventType.pxi_interrupt)
+class PXIInteruptEvent(Event):
+    """PXI interruption event.
+
+    """
+
+    #: Index of the interrupt sequence that detected the interrupt condition.
+    sequence: Attribute[int] = attributes.AttrVI_ATTR_PXI_RECV_INTR_SEQ()
+
+    #: First PXI/PCI register read in the successful interrupt detection sequence.
+    data: Attribute[int] = attributes.AttrVI_ATTR_PXI_RECV_INTR_DATA()
