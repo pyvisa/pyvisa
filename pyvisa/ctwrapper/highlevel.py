@@ -10,15 +10,29 @@
     :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
+import ctypes
 import logging
 import warnings
 from collections import OrderedDict
-from typing import Any, Dict, List, Tuple, Type, TypeVar, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    SupportsBytes,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
-from pyvisa import constants, errors, highlevel, logger
+from pyvisa import constants, errors, highlevel, logger, typing
 
 from ..util import LibraryPath, read_user_library_path
-from . import functions
+from . import functions, types
 from .cthelper import Library, find_library
 
 logger = logging.LoggerAdapter(logger, {"backend": "ivi"})  # type: ignore
@@ -45,6 +59,7 @@ def _args_to_str(args: Tuple[Any, ...]) -> Tuple[str, ...]:
 
 def unique(seq):
     """Keep unique while preserving order.
+
     """
     seen = set()
     return [x for x in seq if not (x in seen or seen.add(x))]
@@ -159,6 +174,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
             raise errors.LibraryError.from_exception(exc, self.library_path)
 
         self.lib = lib
+        self._async_read_jobs: List[Tuple[types.ViJobId, SupportsBytes]] = []
 
         # Set the argtypes, restype and errcheck for each function
         # of the visa library. Additionally store in `_functions` the
@@ -175,7 +191,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         for method_name in getattr(self.lib, "_functions", []):
             setattr(self, method_name, getattr(self.lib, method_name))
 
-    def _return_handler(self, ret_value: int, func, arguments):
+    def _return_handler(self, ret_value: int, func: Callable, arguments: tuple) -> Any:
         """Check return values for errors and warnings.
 
         """
@@ -237,7 +253,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         return ret_value
 
-    def list_resources(self, session, query="?*::INSTR"):
+    def list_resources(self, session: Any, query: str = "?*::INSTR") -> Tuple[str, ...]:
         """Returns a tuple of all connected devices matching query.
 
         note: The query uses the VISA Resource Regular Expression syntax - which is not the same
@@ -281,7 +297,9 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         :param query: a VISA Resource Regular Expression used to match devices.
         """
 
-        resources = []
+        resources: List[str] = []
+
+        # Ignore some type checks because method are dynamically set
 
         try:
             (
@@ -289,7 +307,9 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
                 return_counter,
                 instrument_description,
                 err,
-            ) = self.find_resources(session, query)
+            ) = self.find_resources(  # type: ignore
+                session, query
+            )
         except errors.VisaIOError as e:
             if e.error_code == constants.StatusCode.error_resource_not_found:
                 return tuple()
@@ -297,11 +317,54 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         resources.append(instrument_description)
         for i in range(return_counter - 1):
-            resources.append(self.find_next(find_list)[0])
+            resources.append(self.find_next(find_list)[0])  # type: ignore
 
         self.close(find_list)
 
         return tuple(resource for resource in resources)
+
+    def read_asynchronously(
+        self, session: typing.VISASession, count: int
+    ) -> Tuple[SupportsBytes, types.ViJobId, constants.StatusCode]:
+        """Read data from device or interface asynchronously.
+
+        Corresponds to viReadAsync function of the VISA library. Since the
+        asynchronous operation may complete before the function call return
+        implementation should make sure that get_buffer_from_id will be able
+        to return the proper buffer before this method returns.
+
+        :param library: the visa library wrapped by ctypes.
+        :param session: Unique logical identifier to a session.
+        :param count: Number of bytes to be read.
+        :return: result, jobid, return value of the library call.
+        :rtype: ctypes buffer, jobid, :class:`pyvisa.constants.StatusCode`
+        """
+        # The buffer actually supports bytes but typing fails
+        buffer = ctypes.create_string_buffer(count)
+        job_id = types.ViJobId()
+        self._async_read_jobs.append((job_id, buffer))  # type: ignore
+        ret = self.lib.viReadAsync(session, buffer, count, ctypes.byref(job_id))
+        return buffer, job_id, ret  # type: ignore
+
+    def get_buffer_from_id(self, job_id: types.ViJobId) -> Optional[SupportsBytes]:
+        """Retrieve the buffer associated with a job id created in read_asynchronously.
+
+        Parameters
+        ----------
+        job_id : VISAJobID
+            Id of the job for which to retrieve the buffer.
+
+        Returns
+        -------
+        SupportsBytes
+            Buffer in which the data are stored.
+
+        """
+        for jid, buffer in self._async_read_jobs:
+            if job_id.value == jid.value:
+                return buffer
+
+        return None
 
 
 class NIVisaLibrary(IVIVisaLibrary):  # pragma: no cover

@@ -25,7 +25,9 @@ VISASession = NewType("VISASession", int)
 VISAEventContext = NewType("VISAEventContext", int)
 
 #: Type alias used to identify a job id created during an asynchronous operation
-VISAJobID = NewType("VISAJobID", int)
+#: JobID should always be treated as opaque objects since their exact behavior
+#: may depend on the backend in use.
+VISAJobID = NewType("VISAJobID", object)
 
 #: Type alias used to identify a memory address in a register based resource after
 #: it has been mapped

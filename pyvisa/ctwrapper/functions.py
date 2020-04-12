@@ -12,14 +12,23 @@
 """
 import warnings
 from contextlib import contextmanager
+from ctypes import (
+    POINTER,
+    byref,
+    c_double,
+    c_long,
+    c_void_p,
+    c_wchar_p,
+    create_string_buffer,
+)
 from threading import Lock
+from typing import Any, List, Optional, Tuple, cast
 
+from pyvisa import attributes, constants, typing
 from pyvisa.highlevel import ResourceInfo
-from pyvisa import attributes, constants
 
 from . import types
 from .types import *
-from ctypes import byref, c_void_p, c_double, c_long, POINTER, create_string_buffer
 
 visa_functions = [
     "assert_interrupt_signal",
@@ -72,7 +81,6 @@ visa_functions = [
     "poke_32",
     "poke_8",
     "read",
-    "read_asynchronously",
     "read_to_file",
     "read_stb",
     "set_attribute",
@@ -830,7 +838,7 @@ def in_64(library, session, space, offset, extended=False):
 
 def install_handler(
     library, session, event_type, handler, user_handle: Any
-) -> Tuple[typing.VisaHandler, Any, Any, constants.StatusCode]:
+) -> Tuple[typing.VISAHandler, Any, Any, constants.StatusCode]:
     """Installs handlers for event callbacks.
 
     Corresponds to viInstallHandler function of the VISA library.
@@ -849,19 +857,19 @@ def install_handler(
              and return value of the library call.
     :rtype: int, :class:`pyvisa.constants.StatusCode`
     """
-    if user_handle is None:
-        converted_user_handle = None
-    else:
+    converted_user_handle: object  # Should be _CData but that type cannot be imported
+    if user_handle is not None:
         if isinstance(user_handle, int):
             converted_user_handle = c_long(user_handle)
         elif isinstance(user_handle, float):
             converted_user_handle = c_double(user_handle)
         elif isinstance(user_handle, str):
-            converted_user_handle = create_string_buffer(user_handle)
+            converted_user_handle = c_wchar_p(user_handle)
         elif isinstance(user_handle, list):
             for element in user_handle:
                 if not isinstance(element, int):
-                    converted_user_handle = (c_double * len(user_handle))(
+                    # Mypy cannot track the fact that the list has to contain float
+                    converted_user_handle = (c_double * len(user_handle))(  # type: ignore
                         tuple(user_handle)
                     )
                     break
@@ -883,7 +891,10 @@ def install_handler(
             ret = library.viInstallHandler(session, event_type, converted_handler, None)
         else:
             ret = library.viInstallHandler(
-                session, event_type, converted_handler, byref(converted_user_handle)
+                session,
+                event_type,
+                converted_handler,
+                byref(converted_user_handle),  # type: ignore
             )
 
     return handler, converted_user_handle, converted_handler, ret
@@ -1626,23 +1637,6 @@ def read(library, session, count):
     return_count = ViUInt32()
     ret = library.viRead(session, buffer, count, byref(return_count))
     return buffer.raw[: return_count.value], ret
-
-
-def read_asynchronously(library, session, count):
-    """Reads data from device or interface asynchronously.
-
-    Corresponds to viReadAsync function of the VISA library.
-
-    :param library: the visa library wrapped by ctypes.
-    :param session: Unique logical identifier to a session.
-    :param count: Number of bytes to be read.
-    :return: result, jobid, return value of the library call.
-    :rtype: ctypes buffer, jobid, :class:`pyvisa.constants.StatusCode`
-    """
-    buffer = create_string_buffer(count)
-    job_id = ViJobId()
-    ret = library.viReadAsync(session, buffer, count, byref(job_id))
-    return buffer, job_id, ret
 
 
 def read_stb(library, session):

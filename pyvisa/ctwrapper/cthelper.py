@@ -22,7 +22,6 @@ else:
 
 # On Linux, find Library returns the name not the path.
 # This excerpt provides a modified find_library.
-# noinspection PyUnresolvedReferences
 if os.name == "posix" and sys.platform.startswith("linux"):
 
     # Andreas Degert's find functions, using gcc, /sbin/ldconfig, objdump
@@ -56,7 +55,7 @@ if os.name == "posix" and sys.platform.startswith("linux"):
             return res.group(0)
 
         def _findlib_ldconfig(name):
-            # XXX assuming GLIBC's ldconfig (with option -p)
+            # NOTE: assuming GLIBC's ldconfig (with option -p)
             expr = r"/[^\(\)\s]*lib%s\.[^\(\)\s]*" % re.escape(name)
             with os.popen("/sbin/ldconfig -p 2>/dev/null") as pipe:
                 res = re.search(expr, pipe.read())

@@ -7,7 +7,7 @@
 
     This file is part of PyVISA.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
+    :copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
     :license: MIT, see LICENSE for more details.
 """
 import contextlib
@@ -135,7 +135,6 @@ class VisaLibraryBase(object):
     handlers: DefaultDict[VISASession, List[Tuple[VISAHandler, Any, Any, Any]]]
 
     #: Set error codes on which to issue a warning.
-    # XXX improve
     issue_warning_on: Set[constants.StatusCode]
 
     def __new__(
@@ -1533,12 +1532,32 @@ class VisaLibraryBase(object):
     ) -> Tuple[SupportsBytes, VISAJobID, constants.StatusCode]:
         """Reads data from device or interface asynchronously.
 
-        Corresponds to viReadAsync function of the VISA library.
+        Corresponds to viReadAsync function of the VISA library. Since the
+        asynchronous operation may complete before the function call return
+        implementation should make sure that get_buffer_from_id will be able
+        to return the proper buffer before this method returns.
 
         :param session: Unique logical identifier to a session.
         :param count: Number of bytes to be read.
         :return: result, jobid, return value of the library call.
         :rtype: ctypes buffer, jobid, :class:`pyvisa.constants.StatusCode`
+        """
+        raise NotImplementedError
+
+    def get_buffer_from_id(self, job_id: VISAJobID) -> Optional[SupportsBytes]:
+        """Retrieve the buffer associated with a job id created in read_asynchronously
+
+        Parameters
+        ----------
+        job_id : VISAJobID
+            Id of the job for which to retrieve the buffer.
+
+        Returns
+        -------
+        Optional[SupportsBytes]
+            Buffer in which the data are stored or None if the job id is not
+            associated with any job.
+
         """
         raise NotImplementedError
 
@@ -1959,8 +1978,8 @@ class ResourceManager(object):
     """
 
     #: Maps (Interface Type, Resource Class) to Python class encapsulating that resource.
-    _resource_classes: Dict[
-        Tuple[constants.InterfaceType, str], Type[Resource]
+    _resource_classes: ClassVar[
+        Dict[Tuple[constants.InterfaceType, str], Type[Resource]]
     ] = dict()
 
     #: Session handler for the resource manager.
