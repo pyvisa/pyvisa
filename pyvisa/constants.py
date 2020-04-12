@@ -190,7 +190,7 @@ VI_ATTR_ASRL_CONNECTED       = 0x3FFF01BB
 VI_ATTR_ASRL_BREAK_STATE     = 0x3FFF01BC
 VI_ATTR_ASRL_BREAK_LEN       = 0x3FFF01BD
 VI_ATTR_ASRL_ALLOW_TRANSMIT  = 0x3FFF01BE
-VI_ATTR_ASRL_WIRE_MODE       = 0x3FFF01BF
+VI_ATTR_ASRL_WIRE_MODE       = 0x3FFF01BF  # National instrument only
 
 VI_ATTR_RD_BUF_OPER_MODE     = 0x3FFF002A
 VI_ATTR_RD_BUF_SIZE          = 0x3FFF002B
@@ -437,6 +437,8 @@ VI_EVENT_TCPIP_CONNECT       = 0x3FFF2036
 VI_EVENT_USB_INTR            = 0x3FFF2037
 VI_ALL_ENABLED_EVENTS        = 0x3FFF7FFF
 
+VI_ATTR_VXI_TRIG_DIR        = _to_int(0x3FFF4044)
+VI_ATTR_VXI_TRIG_LINES_EN   = _to_int(0x3FFF4043)
 
 #
 # Values and Ranges
@@ -579,6 +581,15 @@ VI_ASRL_END_LAST_BIT         = 1
 VI_ASRL_END_TERMCHAR         = 2
 VI_ASRL_END_BREAK            = 3
 
+# The following are National Instrument only
+VI_ASRL_WIRE_485_4           = 0
+VI_ASRL_WIRE_485_2_DTR_ECHO  = 1
+VI_ASRL_WIRE_485_2_DTR_CTRL  = 2
+VI_ASRL_WIRE_485_2_AUTO      = 3
+VI_ASRL_WIRE_232_DTE         = 128
+VI_ASRL_WIRE_232_DCE         = 129
+VI_ASRL_WIRE_232_AUTO        = 130
+
 VI_STATE_ASSERTED            = 1
 VI_STATE_UNASSERTED          = 0
 VI_STATE_UNKNOWN             = -1
@@ -594,6 +605,11 @@ VI_BLCK_PRIV                 = 4
 VI_BLCK_NPRIV                = 5
 VI_D64_PRIV                  = 6
 VI_D64_NPRIV                 = 7
+VI_D64_2EVME                 = 8
+VI_D64_SST160                = 9
+VI_D64_SST267                = 10
+VI_D64_SST320                = 11
+
 
 VI_WIDTH_8                   = 1
 VI_WIDTH_16                  = 2
@@ -671,6 +687,11 @@ VI_PXI_BAR3_SPACE = 14
 VI_PXI_BAR4_SPACE = 15
 VI_PXI_BAR5_SPACE = 16
 
+VI_PXI_ADDR_NONE = 0
+VI_PXI_ADDR_MEM  = 1
+VI_PXI_ADDR_IO   = 2
+VI_PXI_ADDR_CFG  = 3
+
 VI_USB_PIPE_STATE_UNKNOWN = -1
 VI_USB_PIPE_READY = 0
 VI_USB_PIPE_STALLED = 1
@@ -692,6 +713,21 @@ VI_ASRL_IN_BUF_DISCARD       = VI_IO_IN_BUF_DISCARD
 VI_ASRL_OUT_BUF_DISCARD      = VI_IO_OUT_BUF_DISCARD
 
 # fmt: on
+
+# ======================================================================================
+# --- Enumeration for easier handling of the constants ---------------------------------
+# ======================================================================================
+
+
+@enum.unique
+class VisaBoolean(enum.IntEnum):
+    """Visa boolean values."""
+
+    true = VI_TRUE
+    false = VI_FALSE
+
+
+# Constants useful for all kind of resources.
 
 
 @enum.unique
@@ -874,58 +910,26 @@ class LineState(enum.IntEnum):
 
 
 @enum.unique
-class ATNLineOperation(enum.IntEnum):
-    """Operation that can be performed on the GPIB ATN line.
+class IOProtocol(enum.IntEnum):
+    """IO protocol used for communication.
 
-    These operations are available only to GPIB INTFC resources
-
-    """
-
-    #: Assert ATN line synchronously (in 488 terminology). If a data handshake
-    #: is in progress, ATN will not be asserted until the handshake is complete.
-    asrt = VI_GPIB_ATN_ASSERT
-
-    #: Assert ATN line asynchronously (in 488 terminology). This should generally
-    #: be used only under error conditions.
-    asrt_immediate = VI_GPIB_ATN_ASSERT_IMMEDIATE
-
-    #: Deassert the ATN line
-    deassert = VI_GPIB_ATN_DEASSERT
-
-    #: Deassert ATN line, and enter shadow handshake mode. The local board will
-    #: participate in data handshakes as an Acceptor without actually reading the data.
-    deassert_handshake = VI_GPIB_ATN_DEASSERT_HANDSHAKE
-
-
-@enum.unique
-class RENLineOperation(enum.IntEnum):
-    """Operation that can be performed on the REN line.
-
-    Some of these operation are available to GPIB INSTR, GPIB INTFC, USB INSTR,
-    TCPIP INSTR, please see the VISA reference for more details.
+    See attributes.AttrVI_ATTR_IO_PROT for more details.
 
     """
 
-    #: Send the Go To Local command (GTL) to this device.
-    address_gtl = VI_GPIB_REN_ADDRESS_GTL
+    normal = VI_PROT_NORMAL
 
-    #: Assert REN line.
-    asrt = VI_GPIB_REN_ASSERT
+    #: Fast data channel (FDC) protocol for VXI
+    fdc = VI_PROT_FDC
 
-    #: Assert REN line and address this device.
-    asrt_address = VI_GPIB_REN_ASSERT_ADDRESS
+    #: High speed 488 transfer for GPIB
+    hs488 = VI_PROT_HS488
 
-    #: Address this device and send it LLO, putting it in RWLS
-    asrt_address_llo = VI_GPIB_REN_ASSERT_ADDRESS_LLO
+    #: 488 style transfer for serial
+    protocol4882_strs = VI_PROT_4882_STRS
 
-    #: Send LLO to any devices that are addressed to listen.
-    asrt_llo = VI_GPIB_REN_ASSERT_LLO
-
-    #: Deassert REN line.
-    deassert = VI_GPIB_REN_DEASSERT
-
-    #: Send the Go To Local command (GTL) to this device and deassert REN line.
-    deassert_gtl = VI_GPIB_REN_DEASSERT_GTL
+    #: Test measurement class vendor specific for USB
+    usbtmc_vendor = VI_PROT_USBTMC_VENDOR
 
 
 @enum.unique
@@ -1010,6 +1014,237 @@ class EventType(enum.IntEnum):
 
 
 @enum.unique
+class BufferType(enum.IntFlag):
+    """Buffer potentially available on a message based resource.
+
+    Used with the set_buffer function to alter the size of a buffer.
+
+    """
+
+    #: Formatted read buffer
+    read = VI_READ_BUF
+
+    #: Formatted write buffer
+    write = VI_WRITE_BUF
+
+    #: I/O communication receive buffer.
+    io_in = VI_IO_IN_BUF
+
+    #: I/O communication transmit buffer.
+    io_out = VI_IO_OUT_BUF
+
+
+@enum.unique
+class BufferOperation(enum.IntFlag):
+    """Possible action of the buffer when performing a flush."""
+
+    #: Discard the read buffer contents and if data was present in the read buffer
+    #: and no END-indicator was present, read from the device until encountering
+    #: an END indicator (which causes the loss of data).
+    discard_read_buffer = VI_READ_BUF
+
+    #: Discard the read buffer contents (does not perform any I/O to the device).
+    discard_read_buffer_no_io = VI_READ_BUF_DISCARD
+
+    #: Flush the write buffer by writing all buffered data to the device.
+    flush_write_buffer = VI_WRITE_BUF
+
+    #: Discard the write buffer contents (does not perform any I/O to the device).
+    discard_write_buffer = VI_WRITE_BUF_DISCARD
+
+    #: Discard the receive buffer contents (does not perform any I/O to the device).
+    discard_receive_buffer = VI_IO_IN_BUF_DISCARD
+
+    #: Discards the receive buffer contents (same as VI_IO_IN_BUF_DISCARD)
+    discard_receive_buffer2 = VI_IO_IN_BUF
+
+    #: Flush the transmit buffer by writing all buffered data to the device.
+    flush_transmit_buffer = VI_IO_OUT_BUF
+
+    #: Discard the transmit buffer contents (does not perform any I/O to the device).
+    discard_transmit_buffer = VI_IO_OUT_BUF_DISCARD
+
+
+# Constants related to serial resources
+
+
+@enum.unique
+class StopBits(enum.IntEnum):
+    """The number of stop bits that indicate the end of a frame on a serial resource.
+
+    Used only for ASRL resources.
+
+    """
+
+    one = VI_ASRL_STOP_ONE
+    one_and_a_half = VI_ASRL_STOP_ONE5
+    two = VI_ASRL_STOP_TWO
+
+
+@enum.unique
+class Parity(enum.IntEnum):
+    """Parity type to use with every frame transmitted and received on a serial session.
+
+    Used only for ASRL resources.
+
+    """
+
+    none = VI_ASRL_PAR_NONE
+    odd = VI_ASRL_PAR_ODD
+    even = VI_ASRL_PAR_EVEN
+    mark = VI_ASRL_PAR_MARK
+    space = VI_ASRL_PAR_SPACE
+
+
+@enum.unique
+class SerialTermination(enum.IntEnum):
+    """The available methods for terminating a serial transfer."""
+
+    #: The transfer terminates when all requested data is transferred
+    #: or when an error occurs.
+    none = VI_ASRL_END_NONE
+
+    #: The transfer occurs with the last bit not set until the last
+    #: character is sent.
+    last_bit = VI_ASRL_END_LAST_BIT
+
+    #: The transfer terminate by searching for "/"
+    #: appending the termination character.
+    termination_char = VI_ASRL_END_TERMCHAR
+
+    #: The write transmits a break after all the characters for the
+    #: write are sent.
+    termination_break = VI_ASRL_END_BREAK
+
+
+@enum.unique
+class WireMode(enum.IntEnum):
+    """Valid modes for National Instruments hardware supporting it."""
+
+    #: 4-wire mode.
+    rs485_4 = VI_ASRL_WIRE_485_4
+
+    #: 2-wire DTR mode controlled with echo.
+    rs485_2_dtr_echo = VI_ASRL_WIRE_485_2_DTR_ECHO
+
+    #: 2-wire DTR mode controlled without echo
+    rs485_2_dtr_ctrl = VI_ASRL_WIRE_485_2_DTR_CTRL
+
+    #: 2-wire auto mode controlled with TXRDY
+    rs485_2_auto = VI_ASRL_WIRE_485_2_AUTO
+
+    #: Use DTE mode
+    rs232_dte = VI_ASRL_WIRE_232_DTE
+
+    #: Use DCE mode
+    rs232_dce = VI_ASRL_WIRE_232_DCE
+
+    #: Auto detect the mode to use
+    rs232_auto = VI_ASRL_WIRE_232_AUTO
+
+    #: Unknown mode
+    unknown = VI_STATE_UNKNOWN
+
+
+@enum.unique
+class ControlFlow(enum.IntEnum):
+    """Control flow for a serial resource."""
+
+    none = VI_ASRL_FLOW_NONE
+    xon_xoff = VI_ASRL_FLOW_XON_XOFF
+    rts_cts = VI_ASRL_FLOW_RTS_CTS
+    dtr_dsr = VI_ASRL_FLOW_DTR_DSR
+
+
+# USB specific constants
+
+
+@enum.unique
+class USBEndInput(enum.IntEnum):
+    """Method used to terminate input on USB RAW."""
+
+    none = VI_USB_END_NONE
+    short = VI_USB_END_SHORT
+    short_or_count = VI_USB_END_SHORT_OR_COUNT
+
+
+# GPIB specific value
+
+
+@enum.unique
+class AddressState(enum.IntEnum):
+    """State of a GPIB resource.
+
+    Corresponds to the Attribute.GPIB_address_state attribute
+
+    """
+
+    #: The resource is unadressed
+    unaddressed = VI_GPIB_UNADDRESSED
+
+    #: The resource is addressed to talk
+    talker = VI_GPIB_TALKER
+
+    #: The resource is addressed to listen
+    listenr = VI_GPIB_LISTENER
+
+
+@enum.unique
+class ATNLineOperation(enum.IntEnum):
+    """Operation that can be performed on the GPIB ATN line.
+
+    These operations are available only to GPIB INTFC resources
+
+    """
+
+    #: Assert ATN line synchronously (in 488 terminology). If a data handshake
+    #: is in progress, ATN will not be asserted until the handshake is complete.
+    asrt = VI_GPIB_ATN_ASSERT
+
+    #: Assert ATN line asynchronously (in 488 terminology). This should generally
+    #: be used only under error conditions.
+    asrt_immediate = VI_GPIB_ATN_ASSERT_IMMEDIATE
+
+    #: Deassert the ATN line
+    deassert = VI_GPIB_ATN_DEASSERT
+
+    #: Deassert ATN line, and enter shadow handshake mode. The local board will
+    #: participate in data handshakes as an Acceptor without actually reading the data.
+    deassert_handshake = VI_GPIB_ATN_DEASSERT_HANDSHAKE
+
+
+@enum.unique
+class RENLineOperation(enum.IntEnum):
+    """Operation that can be performed on the REN line.
+
+    Some of these operation are available to GPIB INSTR, GPIB INTFC, USB INSTR,
+    TCPIP INSTR, please see the VISA reference for more details.
+
+    """
+
+    #: Send the Go To Local command (GTL) to this device.
+    address_gtl = VI_GPIB_REN_ADDRESS_GTL
+
+    #: Assert REN line.
+    asrt = VI_GPIB_REN_ASSERT
+
+    #: Assert REN line and address this device.
+    asrt_address = VI_GPIB_REN_ASSERT_ADDRESS
+
+    #: Address this device and send it LLO, putting it in RWLS
+    asrt_address_llo = VI_GPIB_REN_ASSERT_ADDRESS_LLO
+
+    #: Send LLO to any devices that are addressed to listen.
+    asrt_llo = VI_GPIB_REN_ASSERT_LLO
+
+    #: Deassert REN line.
+    deassert = VI_GPIB_REN_DEASSERT
+
+    #: Send the Go To Local command (GTL) to this device and deassert REN line.
+    deassert_gtl = VI_GPIB_REN_DEASSERT_GTL
+
+
+@enum.unique
 class AddressSpace(enum.IntEnum):
     """Address space for register based resources.
 
@@ -1040,6 +1275,24 @@ class AddressSpace(enum.IntEnum):
 
     #: Physical locally allocated memory.
     pxi_allocated = VI_PXI_ALLOC_SPACE
+
+
+@enum.unique
+class AddressModifiers(enum.IntEnum):
+    """Address modifier to be used in high-level register operations."""
+
+    data_private = VI_DATA_PRIV
+    data_non_private = VI_DATA_NPRIV
+    program_private = VI_PROG_PRIV
+    program_non_private = VI_PROG_NPRIV
+    block_private = VI_BLCK_PRIV
+    block_non_private = VI_BLCK_NPRIV
+    d64_private = VI_D64_PRIV
+    d64_non_private = VI_D64_NPRIV
+    d64_2vme = VI_D64_2EVME
+    d64_sst160 = VI_D64_SST160
+    d64_sst267 = VI_D64_SST267
+    d64_sst320 = VI_D64_SST320
 
 
 @enum.unique
@@ -1109,6 +1362,27 @@ class VXICommands(enum.IntEnum):
 
     #: Send a command (32-bit integer) and read a response (16-bit integer)
     command_32_response_16 = VI_VXI_CMD32_RESP16
+
+
+@enum.unique
+class PXIMemory(enum.IntEnum):
+    """Memory type used in a PXI BAR."""
+
+    none = VI_PXI_ADDR_NONE
+    memory = VI_PXI_ADDR_MEM
+    io = VI_PXI_ADDR_IO
+    cfg = VI_PXI_ADDR_CFG
+
+
+@enum.unique
+class VXIClass(enum.IntEnum):
+    """VXI-defined device class."""
+
+    memory = VI_VXI_CLASS_MEMORY
+    extended = VI_VXI_CLASS_EXTENDED
+    message = VI_VXI_CLASS_MESSAGE
+    register = VI_VXI_CLASS_REGISTER
+    other = VI_VXI_CLASS_OTHER
 
 
 @enum.unique
@@ -1310,57 +1584,11 @@ class TriggerEventID(enum.IntEnum):
 
 
 @enum.unique
-class BufferType(enum.IntFlag):
-    """Buffer potentially available on a message based resource.
+class ByteOrder(enum.IntEnum):
+    """Byte order in register data transfer."""
 
-    Used with the set_buffer function to alter the size of a buffer.
-
-    """
-
-    #: Formatted read buffer
-    read = VI_READ_BUF
-
-    #: Formatted write buffer
-    write = VI_WRITE_BUF
-
-    #: I/O communication receive buffer.
-    io_in = VI_IO_IN_BUF
-
-    #: I/O communication transmit buffer.
-    io_out = VI_IO_OUT_BUF
-
-
-@enum.unique
-class BufferOperation(enum.IntFlag):
-    """Possible action of the buffer when performing a flush.
-
-    """
-
-    #: Discard the read buffer contents and if data was present in the read buffer
-    #: and no END-indicator was present, read from the device until encountering
-    #: an END indicator (which causes the loss of data).
-    discard_read_buffer = VI_READ_BUF
-
-    #: Discard the read buffer contents (does not perform any I/O to the device).
-    discard_read_buffer_no_io = VI_READ_BUF_DISCARD
-
-    #: Flush the write buffer by writing all buffered data to the device.
-    flush_write_buffer = VI_WRITE_BUF
-
-    #: Discard the write buffer contents (does not perform any I/O to the device).
-    discard_write_buffer = VI_WRITE_BUF_DISCARD
-
-    #: Discard the receive buffer contents (does not perform any I/O to the device).
-    discard_receive_buffer = VI_IO_IN_BUF_DISCARD
-
-    #: Discards the receive buffer contents (same as VI_IO_IN_BUF_DISCARD)
-    discard_receive_buffer2 = VI_IO_IN_BUF
-
-    #: Flush the transmit buffer by writing all buffered data to the device.
-    flush_transmit_buffer = VI_IO_OUT_BUF
-
-    #: Discard the transmit buffer contents (does not perform any I/O to the device).
-    discard_transmit_buffer = VI_IO_OUT_BUF_DISCARD
+    big_endian = VI_BIG_ENDIAN
+    little_endian = VI_LITTLE_ENDIAN
 
 
 @enum.unique
@@ -1389,6 +1617,9 @@ class DataWidth(enum.IntEnum):
         return cls(value // 8)
 
 
+# Status code
+
+
 @enum.unique
 class StatusCode(enum.IntEnum):
     """Specifies the status codes that NI-VISA driver-level operations can return.
@@ -1406,13 +1637,15 @@ class StatusCode(enum.IntEnum):
     #: Bus error occurred during transfer.
     error_bus_error = VI_ERROR_BERR
 
-    #: Unable to deallocate the previously allocated data structures corresponding to this session or object reference.
+    #: Unable to deallocate the previously allocated data structures corresponding
+    #: to this session or object reference.
     error_closing_failed = VI_ERROR_CLOSING_FAILED
 
     #: The connection for the specified session has been lost.
     error_connection_lost = VI_ERROR_CONN_LOST
 
-    #: An error occurred while trying to open the specified file. Possible causes include an invalid path or lack of access rights.
+    #: An error occurred while trying to open the specified file.
+    #: Possible causes include an invalid path or lack of access rights.
     error_file_access = VI_ERROR_FILE_ACCESS
 
     #: An error occurred while performing I/O on the specified file.
@@ -1421,7 +1654,8 @@ class StatusCode(enum.IntEnum):
     #: A handler is not currently installed for the specified event.
     error_handler_not_installed = VI_ERROR_HNDLR_NINSTALLED
 
-    #: Unable to queue the asynchronous operation because there is already an operation in progress.
+    #: Unable to queue the asynchronous operation because there is already
+    #: an operation in progress.
     error_in_progress = VI_ERROR_IN_PROGRESS
 
     #: Device reported an input protocol error during transfer.
@@ -1496,7 +1730,8 @@ class StatusCode(enum.IntEnum):
     #: Invalid resource reference specified. Parsing error.
     error_invalid_resource_name = VI_ERROR_INV_RSRC_NAME
 
-    #: Unable to start operation because setup is invalid due to inconsistent state of properties.
+    #: Unable to start operation because setup is invalid due to inconsistent
+    #: state of properties.
     error_invalid_setup = VI_ERROR_INV_SETUP
 
     #: Invalid size of window specified.
@@ -1526,19 +1761,24 @@ class StatusCode(enum.IntEnum):
     #: The specified operation is unimplemented.
     error_nonimplemented_operation = VI_ERROR_NIMPL_OPER
 
-    #: The specified attribute is not defined or supported by the referenced session, event, or find list.
+    #: The specified attribute is not defined or supported by the referenced
+    #: session, event, or find list.
     error_nonsupported_attribute = VI_ERROR_NSUP_ATTR
 
-    #: The specified state of the attribute is not valid or is not supported as defined by the session, event, or find list.
+    #: The specified state of the attribute is not valid or is not supported as
+    #: defined by the session, event, or find list.
     error_nonsupported_attribute_state = VI_ERROR_NSUP_ATTR_STATE
 
     #: A format specifier in the format string is not supported.
     error_nonsupported_format = VI_ERROR_NSUP_FMT
 
-    #: The interface cannot generate an interrupt on the requested level or with the requested statusID value.
+    #: The interface cannot generate an interrupt on the requested level or with
+    #: the requested statusID value.
     error_nonsupported_interrupt = VI_ERROR_NSUP_INTR
 
-    #: The specified trigger source line (trigSrc) or destination line (trigDest) is not supported by this VISA implementation, or the combination of lines is not a valid mapping.
+    #: The specified trigger source line (trigSrc) or destination line (trigDest)
+    #: is not supported by this VISA implementation, or the combination of lines
+    #: is not a valid mapping.
     error_nonsupported_line = VI_ERROR_NSUP_LINE
 
     #: The specified mechanism is not supported for the specified event type.
@@ -1550,7 +1790,8 @@ class StatusCode(enum.IntEnum):
     #: Specified offset is not accessible from this hardware.
     error_nonsupported_offset = VI_ERROR_NSUP_OFFSET
 
-    #: The specified offset is not properly aligned for the access width of the operation.
+    #: The specified offset is not properly aligned for the access width of
+    #: the operation.
     error_nonsupported_offset_alignment = VI_ERROR_NSUP_ALIGN_OFFSET
 
     #: The session or object reference does not support this operation.
@@ -1565,10 +1806,12 @@ class StatusCode(enum.IntEnum):
     #: Access to the remote machine is denied.
     error_no_permission = VI_ERROR_NPERMISSION
 
-    #: The interface associated with this session is not currently the Controller-in-Charge.
+    #: The interface associated with this session is not currently the
+    #: Controller-in-Charge.
     error_not_cic = VI_ERROR_NCIC
 
-    #: The session must be enabled for events of the specified type in order to receive them.
+    #: The session must be enabled for events of the specified type in order to
+    #: receive them.
     error_not_enabled = VI_ERROR_NENABLED
 
     #: The interface associated with this session is not the system controller.
@@ -1580,7 +1823,8 @@ class StatusCode(enum.IntEnum):
     #: Unable to queue asynchronous operation.
     error_queue_error = VI_ERROR_QUEUE_ERROR
 
-    #: The event queue for the specified type has overflowed, usually due to not closing previous events.
+    #: The event queue for the specified type has overflowed, usually due to
+    #: not closing previous events.
     error_queue_overflow = VI_ERROR_QUEUE_OVERFLOW
 
     #: Violation of raw read protocol occurred during transfer.
@@ -1592,10 +1836,12 @@ class StatusCode(enum.IntEnum):
     #: The resource is valid, but VISA cannot currently access it.
     error_resource_busy = VI_ERROR_RSRC_BUSY
 
-    #: Specified type of lock cannot be obtained or specified operation cannot be performed because the resource is locked.
+    #: Specified type of lock cannot be obtained or specified operation cannot
+    #: be performed because the resource is locked.
     error_resource_locked = VI_ERROR_RSRC_LOCKED
 
-    #: Insufficient location information, or the device or resource is not present in the system.
+    #: Insufficient location information, or the device or resource is not
+    #: present in the system.
     error_resource_not_found = VI_ERROR_RSRC_NFOUND
 
     #: A previous response is still pending, causing a multiple query error.
@@ -1604,7 +1850,8 @@ class StatusCode(enum.IntEnum):
     #: A framing error occurred during transfer.
     error_serial_framing = VI_ERROR_ASRL_FRAMING
 
-    #: An overrun error occurred during transfer. A character was not read from the hardware before the next character arrived.
+    #: An overrun error occurred during transfer. A character was not read from
+    #: the hardware before the next character arrived.
     error_serial_overrun = VI_ERROR_ASRL_OVERRUN
 
     #: A parity error occurred during transfer.
@@ -1622,10 +1869,12 @@ class StatusCode(enum.IntEnum):
     #: Timeout expired before operation completed.
     error_timeout = VI_ERROR_TMO
 
-    #: The path from the trigger source line (trigSrc) to the destination line (trigDest) is not currently mapped.
+    #: The path from the trigger source line (trigSrc) to the destination line
+    #: (trigDest) is not currently mapped.
     error_trigger_not_mapped = VI_ERROR_TRIG_NMAPPED
 
-    #: A specified user buffer is not valid or cannot be accessed for the required size.
+    #: A specified user buffer is not valid or cannot be accessed for the
+    #: required size.
     error_user_buffer = VI_ERROR_USER_BUF
 
     #: The specified session currently contains a mapped window.
@@ -1637,7 +1886,8 @@ class StatusCode(enum.IntEnum):
     #: Operation completed successfully.
     success = VI_SUCCESS
 
-    #: Session opened successfully, but the device at the specified address is not responding.
+    #: Session opened successfully, but the device at the specified address is
+    #: not responding.
     success_device_not_present = VI_SUCCESS_DEV_NPRESENT
 
     #: Specified event is already disabled for at least one of the specified mechanisms.
@@ -1655,13 +1905,16 @@ class StatusCode(enum.IntEnum):
     #: Operation completed successfully, and this session has nested shared locks.
     success_nested_shared = VI_SUCCESS_NESTED_SHARED
 
-    #: Event handled successfully. Do not invoke any other handlers on this session for this event.
+    #: Event handled successfully. Do not invoke any other handlers on this session
+    #: for this event.
     success_no_more_handler_calls_in_chain = VI_SUCCESS_NCHAIN
 
     #: Operation completed successfully, but the queue was already empty.
     success_queue_already_empty = VI_SUCCESS_QUEUE_EMPTY
 
-    #: Wait terminated successfully on receipt of an event notification. There is still at least one more event occurrence of the requested type(s) available for this session.
+    #: Wait terminated successfully on receipt of an event notification. There
+    #: is still at least one more event occurrence of the requested type(s)
+    #: available for this session.
     success_queue_not_empty = VI_SUCCESS_QUEUE_NEMPTY
 
     #: Asynchronous operation request was performed synchronously.
@@ -1670,16 +1923,20 @@ class StatusCode(enum.IntEnum):
     #: The specified termination character was read.
     success_termination_character_read = VI_SUCCESS_TERM_CHAR
 
-    #: The path from the trigger source line (trigSrc) to the destination line (trigDest) is already mapped.
+    #: The path from the trigger source line (trigSrc) to the destination line
+    #: (trigDest) is already mapped.
     success_trigger_already_mapped = VI_SUCCESS_TRIG_MAPPED
 
-    #: The specified configuration either does not exist or could not be loaded. The VISA-specified defaults are used.
+    #: The specified configuration either does not exist or could not be loaded.
+    #: The VISA-specified defaults are used.
     warning_configuration_not_loaded = VI_WARN_CONFIG_NLOADED
 
-    #: The operation succeeded, but a lower level driver did not implement the extended functionality.
+    #: The operation succeeded, but a lower level driver did not implement the
+    #: extended functionality.
     warning_ext_function_not_implemented = VI_WARN_EXT_FUNC_NIMPL
 
-    #: Although the specified state of the attribute is valid, it is not supported by this resource implementation.
+    #: Although the specified state of the attribute is valid, it is not supported
+    #: by this resource implementation.
     warning_nonsupported_attribute_state = VI_WARN_NSUP_ATTR_STATE
 
     #: The specified buffer is not supported.
@@ -1688,40 +1945,42 @@ class StatusCode(enum.IntEnum):
     #: The specified object reference is uninitialized.
     warning_null_object = VI_WARN_NULL_OBJECT
 
-    #: VISA received more event information of the specified type than the configured queue size could hold.
+    #: VISA received more event information of the specified type than the
+    #: configured queue size could hold.
     warning_queue_overflow = VI_WARN_QUEUE_OVERFLOW
 
     #: The status code passed to the operation could not be interpreted.
     warning_unknown_status = VI_WARN_UNKNOWN_STATUS
 
 
+# --- Attributes -----------------------------------------------------------------------
+
+
 @enum.unique
 class EventAttribute(enum.IntEnum):
-    """The possible attributes of VISA evenst.
+    """The possible attributes of VISA events."""
 
-    """
-
-    job_id = VI_ATTR_JOB_ID
     event_type = VI_ATTR_EVENT_TYPE
-    signal_register_status_id = VI_ATTR_SIGP_STATUS_ID
-    received_trigger_id = VI_ATTR_RECV_TRIG_ID
-    interrupt_status_id = VI_ATTR_INTR_STATUS_ID
     status = VI_ATTR_STATUS
+    operation_name = VI_ATTR_OPER_NAME
+    job_id = VI_ATTR_JOB_ID
     return_count = VI_ATTR_RET_COUNT
     buffer = VI_ATTR_BUFFER
-    received_interrupt_level = VI_ATTR_RECV_INTR_LEVEL
-    operation_name = VI_ATTR_OPER_NAME
+    received_trigger_id = VI_ATTR_RECV_TRIG_ID
     gpib_received_cic_state = VI_ATTR_GPIB_RECV_CIC_STATE
     received_tcpip_connect = VI_ATTR_RECV_TCPIP_ADDR
+    usb_received_interrupt_size = VI_ATTR_USB_RECV_INTR_SIZE
+    usb_received_interrupt_data = VI_ATTR_USB_RECV_INTR_DATA
+    signal_register_status_id = VI_ATTR_SIGP_STATUS_ID
+    interrupt_status_id = VI_ATTR_INTR_STATUS_ID
+    received_interrupt_level = VI_ATTR_RECV_INTR_LEVEL
     pxi_received_interrupt_sequence = VI_ATTR_PXI_RECV_INTR_SEQ
     pxi_received_interrupt_data = VI_ATTR_PXI_RECV_INTR_DATA
 
 
 @enum.unique
 class ResourceAttribute(enum.IntEnum):
-    """The possible attributes of VISA resources.
-
-    """
+    """The possible attributes of VISA resources."""
 
     # All sessions
     resource_manager_session = VI_ATTR_RM_SESSION
@@ -1769,18 +2028,16 @@ class ResourceAttribute(enum.IntEnum):
     # GPIB specific attributes
     gpib_primary_address = VI_ATTR_GPIB_PRIMARY_ADDR
     gpib_secondary_address = VI_ATTR_GPIB_SECONDARY_ADDR
-    gpib_ren_state = VI_ATTR_GPIB_REN_STATE
-    gpib_unadress_enable = VI_ATTR_GPIB_UNADDR_EN
-    gpib_atn_state = VI_ATTR_GPIB_ATN_STATE
-    gpib_address_state = VI_ATTR_GPIB_ADDR_STATE
+    gpib_system_controller = VI_ATTR_GPIB_SYS_CNTRL_STATE
     gpib_cic_state = VI_ATTR_GPIB_CIC_STATE
+    gpib_ren_state = VI_ATTR_GPIB_REN_STATE
+    gpib_atn_state = VI_ATTR_GPIB_ATN_STATE
     gpib_ndac_state = VI_ATTR_GPIB_NDAC_STATE
     gpib_srq_state = VI_ATTR_GPIB_SRQ_STATE
-    gpib_system_controller = VI_ATTR_GPIB_SYS_CNTRL_STATE
-    gpib_hs488_cable_length = VI_ATTR_GPIB_HS488_CBL_LEN
-    gpib_ren_state = VI_ATTR_GPIB_REN_STATE
+    gpib_address_state = VI_ATTR_GPIB_ADDR_STATE
     gpib_unadress_enable = VI_ATTR_GPIB_UNADDR_EN
     gpib_readdress_enabled = VI_ATTR_GPIB_READDR_EN
+    gpib_hs488_cable_length = VI_ATTR_GPIB_HS488_CBL_LEN
 
     # Serial specific attributes
     asrl_avalaible_number = VI_ATTR_ASRL_AVAIL_NUM
@@ -1791,47 +2048,45 @@ class ResourceAttribute(enum.IntEnum):
     asrl_flow_control = VI_ATTR_ASRL_FLOW_CNTRL
     asrl_discard_null = VI_ATTR_ASRL_DISCARD_NULL
     asrl_connected = VI_ATTR_ASRL_CONNECTED
-    asrl_break_state = VI_ATTR_ASRL_BREAK_STATE
-    asrl_break_length = VI_ATTR_ASRL_BREAK_LEN
     asrl_allow_transmit = VI_ATTR_ASRL_ALLOW_TRANSMIT
-    asrl_wire_mode = VI_ATTR_ASRL_WIRE_MODE
-    asrl_cts_state = VI_ATTR_ASRL_CTS_STATE
-    asrl_dcd_state = VI_ATTR_ASRL_DCD_STATE
-    asrl_dsr_state = VI_ATTR_ASRL_DSR_STATE
-    asrl_dtr_state = VI_ATTR_ASRL_DTR_STATE
     asrl_end_in = VI_ATTR_ASRL_END_IN
     asrl_end_out = VI_ATTR_ASRL_END_OUT
+    asrl_break_length = VI_ATTR_ASRL_BREAK_LEN
+    asrl_break_state = VI_ATTR_ASRL_BREAK_STATE
     asrl_replace_char = VI_ATTR_ASRL_REPLACE_CHAR
-    asrl_ri_state = VI_ATTR_ASRL_RI_STATE
-    asrl_atn_state = VI_ATTR_ASRL_RTS_STATE
     asrl_xon_char = VI_ATTR_ASRL_XON_CHAR
     asrl_xoff_char = VI_ATTR_ASRL_XOFF_CHAR
+    asrl_cts_state = VI_ATTR_ASRL_CTS_STATE
+    asrl_dsr_state = VI_ATTR_ASRL_DSR_STATE
+    asrl_dtr_state = VI_ATTR_ASRL_DTR_STATE
+    asrl_rts_state = VI_ATTR_ASRL_RTS_STATE
+    asrl_wire_mode = VI_ATTR_ASRL_WIRE_MODE
+    asrl_dcd_state = VI_ATTR_ASRL_DCD_STATE
+    asrl_ri_state = VI_ATTR_ASRL_RI_STATE
 
     # USB specific attributes
-    usb_serial_number = VI_ATTR_USB_SERIAL_NUM
     usb_interface_number = VI_ATTR_USB_INTFC_NUM
+    usb_serial_number = VI_ATTR_USB_SERIAL_NUM
     usb_protocol = VI_ATTR_USB_PROTOCOL
     usb_max_interrupt_size = VI_ATTR_USB_MAX_INTR_SIZE
-    usb_bulk_out_pipe = VI_ATTR_USB_BULK_OUT_PIPE
-    usb_bulk_in_pipe = VI_ATTR_USB_BULK_IN_PIPE
-    usb_interrupt_in_pipe = VI_ATTR_USB_INTR_IN_PIPE
     usb_class = VI_ATTR_USB_CLASS
     usb_subclass = VI_ATTR_USB_SUBCLASS
+    usb_bulk_in_status = VI_ATTR_USB_BULK_IN_STATUS
+    usb_bulk_in_pipe = VI_ATTR_USB_BULK_IN_PIPE
+    usb_bulk_out_status = VI_ATTR_USB_BULK_OUT_STATUS
+    usb_bulk_out_pipe = VI_ATTR_USB_BULK_OUT_PIPE
+    usb_interrupt_in_pipe = VI_ATTR_USB_INTR_IN_PIPE
     usb_alt_setting = VI_ATTR_USB_ALT_SETTING
     usb_end_in = VI_ATTR_USB_END_IN
     usb_number_interfaces = VI_ATTR_USB_NUM_INTFCS
     usb_number_pipes = VI_ATTR_USB_NUM_PIPES
-    usb_bulk_out_status = VI_ATTR_USB_BULK_OUT_STATUS
-    usb_bulk_in_status = VI_ATTR_USB_BULK_IN_STATUS
     usb_interrupt_in_status = VI_ATTR_USB_INTR_IN_STATUS
     usb_control_pipe = VI_ATTR_USB_CTRL_PIPE
-    usb_receive_interrupt_size = VI_ATTR_USB_RECV_INTR_SIZE
-    usb_receive_interrupt_data = VI_ATTR_USB_RECV_INTR_DATA
 
     #  USB, VXI, GPIB-VXI, PXI specific attributes
     manufacturer_name = VI_ATTR_MANF_NAME
-    model_name = VI_ATTR_MODEL_NAME
     manufacturer_id = VI_ATTR_MANF_ID
+    model_name = VI_ATTR_MODEL_NAME
     model_code = VI_ATTR_MODEL_CODE
 
     # GPIB INTFC, VXI SERVANT
@@ -1873,6 +2128,8 @@ class ResourceAttribute(enum.IntEnum):
 
     # VXI specific attributes
     vxi_device_class = VI_ATTR_VXI_DEV_CLASS  # INSTR
+    vxi_trig_dir = VI_ATTR_VXI_TRIG_DIR  # INSTR
+    vxi_trig_lines_enabled = VI_ATTR_VXI_TRIG_LINES_EN  # INSTR
     vxi_vme_interrupt_status = VI_ATTR_VXI_VME_INTR_STATUS  # BACKPLANE
     vxi_trigger_status = VI_ATTR_VXI_TRIG_STATUS  # BACKPLANE
     vxi_vme_sysfail_state = VI_ATTR_VXI_VME_SYSFAIL_STATE  # BACKPLANE

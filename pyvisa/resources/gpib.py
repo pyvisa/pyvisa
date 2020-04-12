@@ -15,14 +15,27 @@ import time
 from time import perf_counter
 from typing import Tuple
 
-from .. import constants
+from .. import attributes, constants
+from ..attributes import Attribute
 from .messagebased import ControlRenMixin, MessageBasedResource
 from .resource import Resource
 
 
 class _GPIBMixin(ControlRenMixin):
     """Common attributes and methods of GPIB Instr and Interface.
+
     """
+
+    #: Primary address of the GPIB device used by the given session.
+    primary_address: Attribute[int] = attributes.AttrVI_ATTR_GPIB_PRIMARY_ADDR()
+
+    #: Secondary address of the GPIB device used by the given session.
+    secondary_address: Attribute[int] = attributes.AttrVI_ATTR_GPIB_SECONDARY_ADDR()
+
+    #: Current state of the GPIB REN (Remote ENable) interface line.
+    remote_enabled: Attribute[
+        constants.LineState
+    ] = attributes.AttrVI_ATTR_GPIB_REN_STATE()
 
     def send_command(self, data: bytes) -> Tuple[int, constants.StatusCode]:
         """Write GPIB command bytes on the bus.
@@ -36,7 +49,7 @@ class _GPIBMixin(ControlRenMixin):
         """
         return self.visalib.gpib_command(self.session, data)
 
-    def control_atn(self, mode: int) -> constants.StatusCode:
+    def control_atn(self, mode: constants.ATNLineOperation) -> constants.StatusCode:
         """Specifies the state of the ATN line and the local active controller state.
 
         Corresponds to viGpibControlATN function of the VISA library.
@@ -90,6 +103,12 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
+    #: Whether to unaddress the device (UNT and UNL) after each read or write operation.
+    enable_unaddressing: Attribute[bool] = attributes.AttrVI_ATTR_GPIB_UNADDR_EN()
+
+    #: Whether to use repeat addressing before each read or write operation.
+    enable_repeat_addressing: Attribute[bool] = attributes.AttrVI_ATTR_GPIB_READDR_EN()
+
     def wait_for_srq(self, timeout: int = 25000) -> None:
         """Wait for a serial request (SRQ) coming from the instrument.
 
@@ -100,7 +119,9 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
                         Defaul: 25000 (milliseconds).
                         None means waiting forever if necessary.
         """
-        self.enable_event(constants.VI_EVENT_SERVICE_REQ, constants.VI_QUEUE)
+        self.enable_event(
+            constants.EventType.service_request, constants.EventMechanism.queue
+        )
 
         if timeout and not (0 <= timeout <= 4294967295):
             raise ValueError("timeout value is invalid")
@@ -117,11 +138,13 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
                 if adjusted_timeout < 0:
                     adjusted_timeout = 0
 
-            self.wait_on_event(constants.VI_EVENT_SERVICE_REQ, adjusted_timeout)
+            self.wait_on_event(constants.EventType.service_request, adjusted_timeout)
             if self.stb & 0x40:
                 break
 
-        self.discard_events(constants.VI_EVENT_SERVICE_REQ, constants.VI_QUEUE)
+        self.discard_events(
+            constants.EventType.service_request, constants.EventMechanism.queue
+        )
 
 
 @Resource.register(constants.InterfaceType.gpib, "INTFC")
@@ -133,6 +156,27 @@ class GPIBInterface(_GPIBMixin, Resource):
 
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
+
+    #: Is the specified GPIB interface currently the system controller.
+    is_system_controller: Attribute[
+        bool
+    ] = attributes.AttrVI_ATTR_GPIB_SYS_CNTRL_STATE()
+
+    #: Is the specified GPIB interface currently CIC (Controller In Charge).
+    is_controller_in_charge: Attribute[bool] = attributes.AttrVI_ATTR_GPIB_CIC_STATE()
+
+    #: Current state of the GPIB ATN (ATtentioN) interface line.
+    atn_state: Attribute[constants.LineState] = attributes.AttrVI_ATTR_GPIB_ATN_STATE()
+
+    #: Current state of the GPIB NDAC (Not Data ACcepted) interface line.
+    ndac_state: Attribute[
+        constants.LineState
+    ] = attributes.AttrVI_ATTR_GPIB_NDAC_STATE()
+
+    #: Is the GPIB interface currently addressed to talk or listen, or is not addressed.
+    address_state: Attribute[
+        constants.LineState
+    ] = attributes.AttrVI_ATTR_GPIB_ADDR_STATE()
 
     def group_execute_trigger(
         self, *resources: GPIBInstrument

@@ -614,18 +614,24 @@ def get_attribute(library, session, attribute):
     :rtype: unicode (Py2) or str (Py3), list or other type, :class:`pyvisa.constants.StatusCode`
     """
 
-    # FixMe: How to deal with ViBuf?
     attr = attributes.AttributesByID[attribute]
     datatype = getattr(types, attr.visa_type)
     if datatype == ViString:
         attribute_state = create_string_buffer(256)
         ret = library.viGetAttribute(session, attribute, attribute_state)
         return buffer_to_text(attribute_state), ret
-    elif datatype == ViAUInt8:
-        length = get_attribute(library, session, constants.VI_ATTR_USB_RECV_INTR_SIZE)
-        attribute_state = (ViUInt8 * length)()
-        ret = library.viGetAttribute(session, attribute, byref(attribute_state))
-        return list(attribute_state), ret
+    # There are only 2 buffer attribute, the one we do not handle if the one
+    # to async read that is handled at a higher since we pass the buffer ourself
+    elif datatype == ViBuf:
+        if attr.visa_name == "VI_ATTR_USB_RECV_INTR_DATA":
+            length = get_attribute(
+                library, session, constants.VI_ATTR_USB_RECV_INTR_SIZE
+            )
+            attribute_state = (ViUInt8 * length)()
+            ret = library.viGetAttribute(session, attribute, byref(attribute_state))
+            return list(attribute_state), ret
+        else:
+            raise AttributeError("%s cannot be accessed directly" % attr.visa_name)
     else:
         attribute_state = datatype()
         ret = library.viGetAttribute(session, attribute, byref(attribute_state))

@@ -12,12 +12,43 @@
 """
 import warnings
 
-from .. import constants
+from .. import constants, attributes
+from ..attributes import Attribute
 from .messagebased import MessageBasedResource, ControlRenMixin
 
 
+class USBCommon(MessageBasedResource):
+    """Common class for USB resources.
+
+    """
+
+    #: USB interface number used by the given session.
+    interface_number: Attribute[int] = attributes.AttrVI_ATTR_USB_INTFC_NUM()
+
+    #: USB serial number of this device.
+    serial_number: Attribute[str] = attributes.AttrVI_ATTR_USB_SERIAL_NUM()
+
+    #: USB protocol used by this USB interface.
+    usb_protocol: Attribute[int] = attributes.AttrVI_ATTR_USB_PROTOCOL()
+
+    #: Maximum size of data that will be stored by any given USB interrupt.
+    maximum_interrupt_size: Attribute[int] = attributes.AttrVI_ATTR_USB_MAX_INTR_SIZE()
+
+    #: Manufacturer name.
+    manufacturer_name: Attribute[str] = attributes.AttrVI_ATTR_MANF_NAME()
+
+    #: Manufacturer identification number of the device.
+    manufacturer_id: Attribute[int] = attributes.AttrVI_ATTR_MANF_ID()
+
+    #: Model name of the device.
+    model_name: Attribute[str] = attributes.AttrVI_ATTR_MODEL_NAME()
+
+    #: Model code for the device.
+    model_code: Attribute[int] = attributes.AttrVI_ATTR_MODEL_CODE()
+
+
 @MessageBasedResource.register(constants.InterfaceType.usb, "INSTR")
-class USBInstrument(ControlRenMixin, MessageBasedResource):
+class USBInstrument(ControlRenMixin, USBCommon):
     """Communicates with devices of type USB::manufacturer ID::model code::serial number
 
     More complex resource names can be specified with the following grammar:
@@ -26,14 +57,17 @@ class USBInstrument(ControlRenMixin, MessageBasedResource):
     Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
     """
 
+    #: Whether the device is 488.2 compliant.
+    is_4882_compliant: Attribute[bool] = attributes.AttrVI_ATTR_4882_COMPLIANT()
+
     def control_in(
         self,
-        request_type_bitmap_field,
-        request_id,
-        request_value,
-        index,
+        request_type_bitmap_field: int,
+        request_id: int,
+        request_value: int,
+        index: int,
         length: int = 0,
-    ) -> constants.StatusCode:
+    ) -> bytes:
         """Performs a USB control pipe transfer from the device.
 
         :param request_type_bitmap_field: bmRequestType parameter of the setup stage of a USB control transfer.
@@ -54,10 +88,15 @@ class USBInstrument(ControlRenMixin, MessageBasedResource):
             request_value,
             index,
             length,
-        )
+        )[0]
 
     def control_out(
-        self, request_type_bitmap_field, request_id, request_value, index, data=""
+        self,
+        request_type_bitmap_field: int,
+        request_id: int,
+        request_value: int,
+        index: int,
+        data: str = "",
     ):
         """Performs a USB control pipe transfer to the device.
 
@@ -79,7 +118,7 @@ class USBInstrument(ControlRenMixin, MessageBasedResource):
 
 
 @MessageBasedResource.register(constants.InterfaceType.usb, "RAW")
-class USBRaw(MessageBasedResource):
+class USBRaw(USBCommon):
     """Communicates with to devices of type USB::manufacturer ID::model code::serial number::RAW
 
     More complex resource names can be specified with the following grammar:

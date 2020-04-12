@@ -13,6 +13,7 @@
 import functools
 import inspect
 import io
+import math
 import os
 import platform
 import struct
@@ -36,7 +37,7 @@ from typing import (
 
 from typing_extensions import Literal
 
-from . import __version__, logger
+from . import __version__, logger, constants
 
 try:
     import numpy as np
@@ -199,6 +200,25 @@ class LibraryPath(str):
         return ", ".join(str(a) for a in self.arch)
 
 
+def cleanup_timeout(timeout: Optional[float]) -> int:
+    """Turn a timeout expressed as a float into in interger or the proper constant.
+
+    """
+    if timeout is None or math.isinf(timeout):
+        timeout = constants.VI_TMO_INFINITE
+
+    elif timeout < 1:
+        timeout = constants.VI_TMO_IMMEDIATE
+
+    elif not (1 <= timeout <= 4294967294):
+        raise ValueError("timeout value is invalid")
+
+    else:
+        timeout = int(timeout)
+
+    return timeout
+
+
 def warn_for_invalid_kwargs(keyw, allowed_keys):  # pragma: no cover
     warnings.warn("warn_for_invalid_kwargs will be removed in 1.12", FutureWarning)
     for key in keyw.keys():
@@ -241,6 +261,8 @@ _converters: Dict[str, Callable[[str], Any]] = {
     "o": functools.partial(int, base=8),
     "x": functools.partial(int, base=16),
     "X": functools.partial(int, base=16),
+    "h": functools.partial(int, base=16),
+    "H": functools.partial(int, base=16),
     "e": float,
     "E": float,
     "f": float,
@@ -346,7 +368,7 @@ BINARY_HEADERS = Literal["ieee", "hp", "empty"]
 
 #: Valid datatype for binary block. See Python standard library struct module for more
 #: details.
-BINARY_DATATYPES = Literal["f"]
+BINARY_DATATYPES = Literal["s", "h", "H", "i", "I", "l", "L", "q", "Q", "f", "d"]
 
 #: Valid output containers for storing the parsed binary data
 BINARY_CONTAINERS = Union[type, Callable]
@@ -380,7 +402,8 @@ def parse_ieee_block_header(
     begin = block.find(b"#")
     if begin < 0:
         raise ValueError(
-            "Could not find hash sign (#) indicating the start of" " the block."
+            "Could not find hash sign (#) indicating the start of the block. "
+            "The block begin by %r" % block[:25]
         )
 
     length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK
@@ -439,8 +462,8 @@ def parse_hp_block_header(
     begin = block.find(b"#A")
     if begin < 0:
         raise ValueError(
-            "Could not find the standard block header (#A) "
-            "indicating the start of the block."
+            "Could not find the standard block header (#A) indicating the start "
+            "of the block. The block begin by %r" % block[:25]
         )
 
     length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK

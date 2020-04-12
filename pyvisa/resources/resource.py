@@ -14,12 +14,30 @@ import contextlib
 import copy
 import math
 import time
-from typing import Any, Callable, ContextManager, Iterator, Optional, Type, Union, cast
+from itertools import chain
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ContextManager,
+    Dict,
+    Iterator,
+    Optional,
+    Set,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
-from typing_extensions import Literal
+from typing_extensions import Literal, ClassVar
 
-from .. import attributes, constants, errors, highlevel, logger, rname
-from ..typing import VISASession
+from .. import attributes, constants, errors, highlevel, logger, rname, util
+from ..typing import VISASession, VISAHandler
+from ..attributes import Attribute
+
+if TYPE_CHECKING:
+    from ..events import Event, BaseJob
 
 
 class WaitResponse(object):
@@ -47,6 +65,9 @@ class WaitResponse(object):
                 pass
 
 
+T = TypeVar("T", bound="Resource")
+
+
 class Resource(object):
     """Base class for resources.
 
@@ -58,18 +79,24 @@ class Resource(object):
     #: Reference to the resource manager used by this resource
     resource_manager: highlevel.ResourceManager
 
-    #: VISA name of the resource  "GPIB::10::INSTR"
-    resource_name: str
-
     #: Reference to the VISA library instance used by the resource
     visalib: highlevel.VisaLibraryBase
 
-    # XXX manually set the attributes and make this class only check it was done correctly
-    # Will improve readability and typing both !
+    #: VISA attribute descriptor classes that can be used to introspect the
+    #: supported attributes and the possible values. The "often used" ones
+    #: are generally directly available on the resource.
+    visa_attributes_classes = Set[Type[attributes.Attribute]]
+
+    #: Maps Event type to Python class encapsulating that event.
+    _event_classes: ClassVar[Dict[constants.EventType, Type[Event]]] = dict()
+
+    #: Maps of jobs to buffer.
+    _jobs: Dict[BaseJob, Any]
+
     @classmethod
     def register(
         cls, interface_type: constants.InterfaceType, resource_class: str
-    ) -> Callable[[Type["Resource"]], Type["Resource"]]:
+    ) -> Callable[[Type[T]], Type[T]]:
         def _internal(python_class):
             highlevel.ResourceManager.register_resource_class(
                 interface_type, resource_class, python_class
@@ -77,24 +104,37 @@ class Resource(object):
 
             # If the class already has this attribute,
             # it means that a parent class was registered first.
-            # We need to copy the current list and extended it.
-            attrs = copy.copy(getattr(python_class, "visa_attributes_classes", []))
+            # We need to copy the current set and extend it.
+            attrs = copy.copy(getattr(python_class, "visa_attributes_classes", set))
 
-            for attr in attributes.AttributesPerResource[
-                (interface_type, resource_class)
-            ]:
-                attrs.append(attr)
-                if not hasattr(python_class, attr.py_name) and attr.py_name != "":
-                    setattr(python_class, attr.py_name, attr())
-            for attr in attributes.AttributesPerResource[attributes.AllSessionTypes]:
-                attrs.append(attr)
-                if not hasattr(python_class, attr.py_name) and attr.py_name != "":
-                    setattr(python_class, attr.py_name, attr())
+            for attr in chain(
+                attributes.AttributesPerResource[(interface_type, resource_class)],
+                attributes.AttributesPerResource[attributes.AllSessionTypes],
+            ):
+                attrs.add(attr)
+                # Error on non-properly set descriptor (this ensures that we are
+                # consistent)
+                if attr.py_name != "" and not hasattr(python_class, attr.py_name):
+                    raise TypeError(
+                        "%s was expected to have a visa attribute %s"
+                        % (python_class, attr.py_name)
+                    )
 
             setattr(python_class, "visa_attributes_classes", attrs)
             return python_class
 
         return _internal
+
+    @classmethod
+    def register_event_class(
+        cls, event_type: constants.EventType, event_class: Type[Event]
+    ) -> None:
+        if event_type in cls._event_classes:
+            logger.warning(
+                "%s is already registered in the Resource. "
+                "Overwriting with %s" % (event_type, event_class)
+            )
+        cls._event_classes[event_type] = event_class
 
     def __init__(
         self, resource_manager: highlevel.ResourceManager, resource_name: str
@@ -162,53 +202,6 @@ class Resource(object):
         """
         return self.visalib.get_last_status_in_session(self.session)
 
-    def _cleanup_timeout(self, timeout: Optional[float]) -> int:
-        if timeout is None or math.isinf(timeout):
-            timeout = constants.VI_TMO_INFINITE
-
-        elif timeout < 1:
-            timeout = constants.VI_TMO_IMMEDIATE
-
-        elif not (1 <= timeout <= 4294967294):
-            raise ValueError("timeout value is invalid")
-
-        else:
-            timeout = int(timeout)
-
-        return timeout
-
-    @property
-    def timeout(self) -> float:
-        """The timeout in milliseconds for all resource I/O operations.
-
-        Special values:
-
-        - **immediate** (``VI_TMO_IMMEDIATE``): 0
-          (for convenience, any value smaller than 1 is considered as 0)
-        - **infinite** (``VI_TMO_INFINITE``): ``float('+inf')``
-          (for convenience, None is considered as ``float('+inf')``)
-
-        To set an **infinite** timeout, you can also use:
-
-        >>> del instrument.timeout
-
-        """
-        timeout = self.get_visa_attribute(constants.ResourceAttribute.timeout_value)
-        if timeout == constants.VI_TMO_INFINITE:
-            return float("+inf")
-        return timeout
-
-    @timeout.setter
-    def timeout(self, timeout: float) -> None:
-        timeout = self._cleanup_timeout(timeout)
-        self.set_visa_attribute(constants.ResourceAttribute.timeout_value, timeout)
-
-    @timeout.deleter
-    def timeout(self) -> None:
-        self.set_visa_attribute(
-            constants.ResourceAttribute.timeout_value, constants.VI_TMO_INFINITE
-        )
-
     @property
     def resource_info(self) -> highlevel.ResourceInfo:
         """Get the extended information of this resource.
@@ -218,16 +211,45 @@ class Resource(object):
             self._resource_manager.session, self._resource_name
         )[0]
 
-    @property
-    def interface_type(self) -> constants.InterfaceType:
-        """The interface type of the resource as a number.
+    # --- VISA attributes --------------------------------------------------------------
 
-        """
-        return self.visalib.parse_resource(
-            self._resource_manager.session, self._resource_name
-        )[0].interface_type
+    #: VISA attributes require the resource to be opened in order to get accessed.
+    #: Please have a look at the attributes definition for more details
 
-    def ignore_warning(self, *warnings_constants) -> ContextManager:
+    #: Interface type of the given session.
+    interface_type: Attribute[
+        constants.InterfaceType
+    ] = attributes.AttrVI_ATTR_INTF_TYPE()
+
+    #: Board number for the given interface.
+    interface_number: Attribute[int] = attributes.AttrVI_ATTR_INTF_NUM()
+
+    #: Resource class (for example, "INSTR") as defined by the canonical resource name.
+    resource_class: Attribute[str] = attributes.AttrVI_ATTR_RSRC_CLASS()
+
+    #: Unique identifier for a resource compliant with the address structure.
+    resource_name: Attribute[str] = attributes.AttrVI_ATTR_RSRC_NAME()
+
+    #: Resource version that identifies the revisions or implementations of a resource.
+    implementation_version: Attribute[int] = attributes.AttrVI_ATTR_RSRC_IMPL_VERSION()
+
+    #: Current locking state of the resource.
+    lock_state: Attribute[
+        constants.AccessModes
+    ] = attributes.AttrVI_ATTR_RSRC_LOCK_STATE()
+
+    #: Version of the VISA specification to which the implementation is compliant.
+    spec_version: Attribute[int] = attributes.AttrVI_ATTR_RSRC_SPEC_VERSION()
+
+    #: Manufacturer name of the vendor that implemented the VISA library.
+    resource_manufacturer_name: Attribute[str] = attributes.AttrVI_ATTR_RSRC_MANF_NAME()
+
+    #: Timeout in milliseconds for all resource I/O operations.
+    timeout: Attribute[float] = attributes.AttrVI_ATTR_TMO_VALUE()
+
+    def ignore_warning(
+        self, *warnings_constants: constants.StatusCode
+    ) -> ContextManager:
         """Ignoring warnings context manager for the current resource.
 
         :param warnings_constants: constants identifying the warnings to ignore.
@@ -301,8 +323,12 @@ class Resource(object):
             pass
 
     def __switch_events_off(self) -> None:
-        self.disable_event(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
-        self.discard_events(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
+        self.disable_event(
+            constants.EventType.all_enabled, constants.EventMechanism.all
+        )
+        self.discard_events(
+            constants.EventType.all_enabled, constants.EventMechanism.all
+        )
         self.visalib.uninstall_all_visa_handlers(self.session)
 
     def get_visa_attribute(self, name: constants.ResourceAttribute) -> Any:
@@ -332,7 +358,9 @@ class Resource(object):
         """
         self.visalib.clear(self.session)
 
-    def install_handler(self, event_type, handler, user_handle=None) -> Any:
+    def install_handler(
+        self, event_type: constants.EventType, handler: VISAHandler, user_handle=None
+    ) -> Any:
         """Installs handlers for event callbacks in this resource.
 
         :param event_type: Logical event identifier.
@@ -346,7 +374,9 @@ class Resource(object):
             self.session, event_type, handler, user_handle
         )
 
-    def uninstall_handler(self, event_type, handler, user_handle=None) -> None:
+    def uninstall_handler(
+        self, event_type: constants.EventType, handler: VISAHandler, user_handle=None
+    ) -> None:
         """Uninstalls handlers for events in this resource.
 
         :param event_type: Logical event identifier.
@@ -358,7 +388,9 @@ class Resource(object):
             self.session, event_type, handler, user_handle
         )
 
-    def disable_event(self, event_type, mechanism) -> None:
+    def disable_event(
+        self, event_type: constants.EventType, mechanism: constants.EventMechanism
+    ) -> None:
         """Disables notification of the specified event type(s) via the specified mechanism(s).
 
         :param event_type: Logical event identifier.
@@ -367,7 +399,9 @@ class Resource(object):
         """
         self.visalib.disable_event(self.session, event_type, mechanism)
 
-    def discard_events(self, event_type, mechanism) -> None:
+    def discard_events(
+        self, event_type: constants.EventType, mechanism: constants.EventMechanism
+    ) -> None:
         """Discards event occurrences for specified event types and mechanisms in this resource.
 
         :param event_type: Logical event identifier.
@@ -376,7 +410,12 @@ class Resource(object):
         """
         self.visalib.discard_events(self.session, event_type, mechanism)
 
-    def enable_event(self, event_type, mechanism, context=None) -> None:
+    def enable_event(
+        self,
+        event_type: constants.EventType,
+        mechanism: constants.EventMechanism,
+        context: None = None,
+    ) -> None:
         """Enable event occurrences for specified event types and mechanisms in this resource.
 
         :param event_type: Logical event identifier.
@@ -387,7 +426,10 @@ class Resource(object):
         self.visalib.enable_event(self.session, event_type, mechanism, context)
 
     def wait_on_event(
-        self, in_event_type, timeout, capture_timeout: bool = False
+        self,
+        in_event_type: constants.EventType,
+        timeout: int,
+        capture_timeout: bool = False,
     ) -> WaitResponse:
         """Waits for an occurrence of the specified event in this resource.
 
@@ -412,8 +454,10 @@ class Resource(object):
         return WaitResponse(event_type, context, ret, self.visalib)
 
     def lock(
-        self, timeout: Union[float, Literal["default"]] = "default", requested_key=None
-    ):
+        self,
+        timeout: Union[float, Literal["default"]] = "default",
+        requested_key: Optional[str] = None,
+    ) -> str:
         """Establish a shared lock to the resource.
 
         :param timeout: Absolute time period (in milliseconds) that a resource
@@ -427,7 +471,7 @@ class Resource(object):
 
         """
         tout = cast(float, self.timeout if timeout == "default" else timeout)
-        clean_timeout = self._cleanup_timeout(tout)
+        clean_timeout = util.cleanup_timeout(tout)
         return self.visalib.lock(
             self.session, constants.Lock.shared, clean_timeout, requested_key
         )[0]
@@ -441,7 +485,7 @@ class Resource(object):
 
         """
         tout = cast(float, self.timeout if timeout == "default" else timeout)
-        clean_timeout = self._cleanup_timeout(tout)
+        clean_timeout = util.cleanup_timeout(tout)
         self.visalib.lock(self.session, constants.Lock.exclusive, clean_timeout, None)
 
     def unlock(self) -> None:
@@ -454,8 +498,8 @@ class Resource(object):
     def lock_context(
         self,
         timeout: Union[float, Literal["default"]] = "default",
-        requested_key="exclusive",
-    ) -> Iterator:
+        requested_key: Optional[str] = "exclusive",
+    ) -> Iterator[Optional[str]]:
         """A context that locks
 
         :param timeout: Absolute time period (in milliseconds) that a resource

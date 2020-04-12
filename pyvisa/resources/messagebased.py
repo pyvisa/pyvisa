@@ -18,9 +18,10 @@ from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, TypeVa
 
 from typing_extensions import Literal
 
-from .. import constants, errors, logger, util
+from .. import attributes, constants, errors, logger, util
 from ..highlevel import VisaLibraryBase
 from ..typing import VISASession
+from .attributes import Attribute
 from .resource import Resource
 
 
@@ -33,7 +34,7 @@ class ControlRenMixin(object):
     visalib: VisaLibraryBase
 
     #: Will be present when used as a mixin with Resource
-    session: VISASession
+    session: Any
 
     # It should work for GPIB, USB and some TCPIP
     # For TCPIP I found some (all?) NI's VISA library do not handle
@@ -71,7 +72,11 @@ class MessageBasedResource(Resource):
     _write_termination: str = CR + LF
     _encoding: str = "ascii"
 
+    #: Number of bytes to read at a time. Some resources (serial) may not support
+    #: large chunk sizes.
     chunk_size: int = 20 * 1024
+
+    #: Delay in s to sleep between the write and read occuring in a query
     query_delay: float = 0.0
 
     @property
@@ -107,13 +112,19 @@ class MessageBasedResource(Resource):
             if last_char in value[:-1]:
                 raise ValueError("ambiguous ending in termination characters")
 
-            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(last_char))
-            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_TRUE)
+            self.set_visa_attribute(
+                constants.ResourceAttribute.termchar, ord(last_char)
+            )
+            self.set_visa_attribute(
+                constants.ResourceAttribute.termchar_enabled, constants.VI_TRUE
+            )
         else:
             # The termchar is also used in VI_ATTR_ASRL_END_IN (for serial
             # termination) so return it to its default.
-            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(self.LF))
-            self.set_visa_attribute(constants.VI_ATTR_TERMCHAR_EN, constants.VI_FALSE)
+            self.set_visa_attribute(constants.ResourceAttribute.termchar, ord(self.LF))
+            self.set_visa_attribute(
+                constants.ResourceAttribute.termchar_enabled, constants.VI_FALSE
+            )
 
         self._read_termination = value
 
@@ -127,6 +138,15 @@ class MessageBasedResource(Resource):
     @write_termination.setter
     def write_termination(self, value: str) -> None:
         self._write_termination = value
+
+    #: Should END be asserted during the transfer of the last byte of the buffer.
+    send_end: Attribute[bool] = attributes.AttrVI_ATTR_SEND_END_EN()
+
+    #: IO protocol to use. See the attribute definition for more details.
+    io_protocol: Attribute[constants.IOProtocol] = attributes.AttrVI_ATTR_IO_PROT()
+
+    #: Should I/O accesses use DMA (True) or Programmed I/O (False).
+    allow_dma: Attribute[bool] = attributes.AttrVI_ATTR_DMA_ALLOW_EN()
 
     def write_raw(self, message: bytes) -> int:
         """Write a byte message to the device.
@@ -647,10 +667,12 @@ class MessageBasedResource(Resource):
 
     @contextlib.contextmanager
     def read_termination_context(self, new_termination: str) -> Iterator:
-        term = self.get_visa_attribute(constants.VI_ATTR_TERMCHAR)
-        self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, ord(new_termination[-1]))
+        term = self.get_visa_attribute(constants.ResourceAttribute.termchar)
+        self.set_visa_attribute(
+            constants.ResourceAttribute.termchar, ord(new_termination[-1])
+        )
         yield
-        self.set_visa_attribute(constants.VI_ATTR_TERMCHAR, term)
+        self.set_visa_attribute(constants.ResourceAttribute.termchar, term)
 
     def flush(self, mask: constants.BufferOperation) -> None:
         """Manually clears the specified buffers.
