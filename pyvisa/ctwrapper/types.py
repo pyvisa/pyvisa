@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.ctwrapper.types
-    ~~~~~~~~~~~~~~~~~~~~~~
+"""VISA VPP-4.3 data types (VPP-4.3.2 spec, section 3) using ctypes constants.
 
-    VISA VPP-4.3 data types (VPP-4.3.2 spec, section 3) using ctypes constants.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+All data types that are defined by VPP-4.3.2.
 
-    All data types that are defined by VPP-4.3.2.
+The module exports all data types including the pointer and array types.  This
+means "ViUInt32" and such.
 
-    The module exports all data types including the pointer and array types.  This
-    means "ViUInt32" and such.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import ctypes as _ctypes
 

@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.resources.pxi
-    ~~~~~~~~~~~~~~~~~~~~
+"""High level wrapper for pxi resources.
 
-    High level wrapper for pxi resources.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 from .. import constants, attributes
 from ..attributes import Attribute
@@ -21,7 +18,9 @@ from .registerbased import RegisterBasedResource
 class PXIBackplane(RegisterBasedResource):
     """Communicates with to devices of type PXI[interface]::BACKPLANE
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     #: Manufacturer name.
@@ -32,9 +31,7 @@ class PXIBackplane(RegisterBasedResource):
 
 
 class PXICommon(RegisterBasedResource):
-    """Common parent class for PXI INSTR and MEMACC resources.
-
-    """
+    """Common parent class for PXI INSTR and MEMACC resources."""
 
     #: Number of elements by which to increment the source offset after a transfer.
     source_increment: Attribute[int] = attributes.AttrVI_ATTR_SRC_INCREMENT()
@@ -54,7 +51,9 @@ class PXIInstrument(PXICommon):
     or:
         PXI[interface]::CHASSISchassis number::SLOTslot number[::FUNCfunction][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     #: Manufacturer name.
@@ -74,5 +73,7 @@ class PXIInstrument(PXICommon):
 class PXIMemory(PXICommon):
     """Communicates with to devices of type PXI[interface]::MEMACC
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """

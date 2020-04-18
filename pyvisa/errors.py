@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.errors
-    ~~~~~~~~~~~~~
+"""Exceptions hierarchy and textual explanations of VISA completion and error codes.
 
-    Defines exceptions hierarchy and textual explanations of VISA completion and error codes.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 from typing import Any, Callable, Tuple
 
@@ -492,6 +489,7 @@ class VisaIOError(Error):
         self.description = description
 
     def __reduce__(self) -> Tuple[type, Tuple[int]]:
+        """Store the error code when pickling."""
         return (VisaIOError, (self.error_code,))
 
 
@@ -514,6 +512,7 @@ class VisaIOWarning(Warning):
         self.description = description
 
     def __reduce__(self) -> Tuple[type, Tuple[int]]:
+        """Store the error code when pickling."""
         return (VisaIOWarning, (self.error_code,))
 
 
@@ -553,19 +552,25 @@ class UnknownHandler(Error):
         self.user_handle = user_handle
 
     def __reduce__(self) -> Tuple[type, tuple]:
+        """Store the event type, handler and user handle when pickling."""
         return (UnknownHandler, (self.event_type, self.handler, self.user_handle))
 
 
 class OSNotSupported(Error):
+    """Exception used when dealing with an unsuported OS."""
+
     def __init__(self, os: str) -> None:
         super(OSNotSupported, self).__init__(os + " is not yet supported by PyVISA")
         self.os = os
 
     def __reduce__(self) -> Tuple[type, Tuple[str]]:
+        """Store the os name when pickling."""
         return (OSNotSupported, (self.os,))
 
 
 class InvalidBinaryFormat(Error):
+    """Exception used when the specified binary format is incorrect."""
+
     def __init__(self, description: str = "") -> None:
         desc = ": " + description if description else ""
         super(InvalidBinaryFormat, self).__init__(
@@ -574,12 +579,12 @@ class InvalidBinaryFormat(Error):
         self.description = description
 
     def __reduce__(self) -> Tuple[type, tuple]:
+        """Store the description when pickling."""
         return (InvalidBinaryFormat, (self.description,))
 
 
 class InvalidSession(Error):
-    """Exception raised when an invalid session is requested.
-    """
+    """Exception raised when an invalid session is requested."""
 
     def __init__(self) -> None:
         super(InvalidSession, self).__init__(
@@ -587,13 +592,16 @@ class InvalidSession(Error):
         )
 
     def __reduce__(self) -> Tuple[type, tuple]:
+        """Nothing to store when pickling."""
         return (InvalidSession, ())
 
 
 class LibraryError(OSError, Error):
+    """Exception used when an issue occurs loading the VISA library."""
+
     @classmethod
     def from_exception(cls, exc: Exception, filename: str) -> "LibraryError":
-
+        """Build the exception from a lower level exception."""
         try:
             msg = str(exc)
 
@@ -615,6 +623,7 @@ class LibraryError(OSError, Error):
 
     @classmethod
     def from_wrong_arch(cls, filename: str) -> "LibraryError":
+        """Build the exception when the library has a mismatched architecture."""
         s = ""
         details = util.get_system_details(backends=False)
         visalib = util.LibraryPath(
@@ -629,15 +638,13 @@ class LibraryError(OSError, Error):
         return cls("Error while accessing %s: %s" % (filename, s))
 
 
-# XXX remove when removing return handler
+# TODO remove when removing return handler
 def _args_to_str(args: tuple, kwargs: dict) -> str:  # pragma: no cover
     return "args=%s, kwargs=%s" % (args, kwargs)
 
 
 def return_handler(module_logger, first_is_session=True):  # pragma: no cover
-    """Decorator for VISA library classes.
-
-    """
+    """Decorate a VISA library function returning an error code."""
     warnings.warn("return_handler will be removed in 1.12", FutureWarning)
 
     def _outer(visa_library_method):

@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.resources.tcpip
-    ~~~~~~~~~~~~~~~~~~~~~~
+"""High level wrapper for TCPIP resources.
 
-    High level wrapper for TCPIP resources.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 from .. import constants
 
@@ -23,7 +20,9 @@ class TCPIPInstrument(ControlRenMixin, MessageBasedResource):
     More complex resource names can be specified with the following grammar:
         TCPIP[board]::host address[::LAN device name][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     pass
@@ -36,7 +35,9 @@ class TCPIPSocket(MessageBasedResource):
     More complex resource names can be specified with the following grammar:
         TCPIP[board]::host address::port::SOCKET
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     pass

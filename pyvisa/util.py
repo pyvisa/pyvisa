@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.util
-    ~~~~~~~~~~~
+"""General utility functions.
 
-    General utility functions.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import functools
 import inspect
@@ -53,9 +50,7 @@ DEFAULT_LENGTH_BEFORE_BLOCK = 25
 
 
 def _use_numpy_routines(container: Union[type, Callable]) -> bool:
-    """Should optimized numpy routines be used to extract the data.
-
-    """
+    """Should optimized numpy routines be used to extract data."""
     if np is None or container in (tuple, list):
         return False
 
@@ -152,6 +147,7 @@ def add_user_dll_extra_paths():
         return None
 
 class LibraryPath(str):
+    """Object encapsulating information about a VISA dynamic library."""
 
     #: Path with which the object was created
     path: str
@@ -173,6 +169,7 @@ class LibraryPath(str):
 
     @property
     def arch(self) -> Tuple[int, ...]:
+        """Architecture of the library."""
         if self._arch is None:
             try:
                 self._arch = get_arch(self.path)
@@ -183,27 +180,28 @@ class LibraryPath(str):
 
     @property
     def is_32bit(self) -> Union[bool, Literal["n/a"]]:
+        """Is the library 32 bits."""
         if not self.arch:
             return "n/a"
         return 32 in self.arch
 
     @property
     def is_64bit(self) -> Union[bool, Literal["n/a"]]:
+        """Is the library 64 bits."""
         if not self.arch:
             return "n/a"
         return 64 in self.arch
 
     @property
     def bitness(self) -> str:
+        """Bitness of the library."""
         if not self.arch:
             return "n/a"
         return ", ".join(str(a) for a in self.arch)
 
 
 def cleanup_timeout(timeout: Optional[float]) -> int:
-    """Turn a timeout expressed as a float into in interger or the proper constant.
-
-    """
+    """Turn a timeout expressed as a float into in interger or the proper constant."""
     if timeout is None or math.isinf(timeout):
         timeout = constants.VI_TMO_INFINITE
 
@@ -292,19 +290,28 @@ def from_ascii_block(
     ascii_data: str,
     converter: ASCII_CONVERTER = "f",
     separator: Union[str, Callable[[str], Iterable[str]]] = ",",
-    container=list,
-) -> Any:
+    container: Union[Type, Callable[[Iterable], Sequence]] = list,
+) -> Sequence:
     """Parse ascii data and return an iterable of numbers.
 
-    :param ascii_data: data to be parsed.
-    :type ascii_data: str
-    :param converter: function used to convert each value.
-                      Defaults to float
-    :type converter: callable
-    :param separator: a callable that split the str into individual elements.
-                      If a str is given, data.split(separator) is used.
-    :type: separator: (str) -> collections.Iterable[T] | str
-    :param container: container type to use for the output data.
+    Parameters
+    ----------
+    ascii_data : str
+        Data to be parsed.
+    converter : ASCII_CONVERTER, optional
+        Str format of function to convert each value. Default to "f".
+    separator : Union[str, Callable[[str], Iterable[str]]]
+        str or callable used to split the data into individual elements.
+        If a str is given, data.split(separator) is used. Default to ",".
+    container : Union[Type, Callable[[Iterable], Sequence]], optional
+        Container type to use for the output data. Possible values are: list,
+        tuple, np.ndarray, etc, Default to list.
+
+    Returns
+    -------
+    Sequence
+        Parsed data.
+
     """
     if (
         _use_numpy_routines(container)
@@ -329,7 +336,7 @@ def from_ascii_block(
     else:
         data = separator(ascii_data)
 
-    return container([converter(raw_value) for raw_value in data])
+    return container((converter(raw_value) for raw_value in data))
 
 
 def to_ascii_block(
@@ -339,19 +346,18 @@ def to_ascii_block(
 ) -> str:
     """Turn an iterable of numbers in an ascii block of data.
 
-    :param iterable: data to be parsed.
-    :type iterable: collections.Iterable[T]
-    :param converter: function used to convert each value.
-                      String formatting codes are also accepted.
-                      Defaults to str.
-    :type converter: callable | str
-    :param separator: a callable that join individual elements into a str.
-                      If a str is given, separator.join(data) is used.
-    :type: separator: (collections.Iterable[T]) -> str | str
+    Parameters
+    ----------
+    iterable : Iterable[Any]
+        Data to be formatted.
+    converter : Union[str, Callable[[Any], str]]
+        String formatting code or function used to convert each value.
+        Default to "f".
+    separator : Union[str, Callable[[Iterable[str]], str]]
+        str or callable that join individual elements into a str.
+        If a str is given, separator.join(data) is used.
 
-    :rtype: str
     """
-
     if isinstance(separator, str):
         separator = separator.join
 
@@ -376,7 +382,7 @@ BINARY_CONTAINERS = Union[type, Callable]
 
 def parse_ieee_block_header(
     block: Union[bytes, bytearray],
-    length_before_block: int = None,
+    length_before_block: Optional[int] = None,
     raise_on_late_block: bool = False,
 ) -> Tuple[int, int]:
     """Parse the header of a IEEE block.
@@ -393,10 +399,23 @@ def parse_ieee_block_header(
     In this case the data length returned will be 0. The actual length can be
     deduced from the block and the offset.
 
-    :param block: IEEE block.
-    :type block: bytes | bytearray
-    :return: (offset, data_length)
-    :rtype: (int, int)
+    Parameters
+    ----------
+    block : Union[bytes, bytearray]
+        IEEE formatted block of data.
+    length_before_block : Optional[int], optional
+        Number of bytes before the actual start of the block. Default to None,
+        which means that number will be inferred.
+    raise_on_late_block : bool, optional
+        Raise an error in the beginning of the block is not found before
+        DEFAULT_LENGTH_BEFORE_BLOCK, if False use a warning. Default to False.
+
+    Returns
+    -------
+    int
+        Offset at which the actual data starts
+    int
+        Length of the data in bytes.
 
     """
     begin = block.find(b"#")
@@ -452,11 +471,25 @@ def parse_hp_block_header(
     The header ia always 4 bytes long.
     The data_length field specifies the size of the data.
 
-    :param block: HP block.
-    :type block: bytes | bytearray
-    :param is_big_endian: boolean indicating endianess.
-    :return: (offset, data_length)
-    :rtype: (int, int)
+    Parameters
+    ----------
+    block : Union[bytes, bytearray]
+        HP formatted block of data.
+    is_big_endian : bool
+        Is the header in big or little endian order.
+    length_before_block : Optional[int], optional
+        Number of bytes before the actual start of the block. Default to None,
+        which means that number will be inferred.
+    raise_on_late_block : bool, optional
+        Raise an error in the beginning of the block is not found before
+        DEFAULT_LENGTH_BEFORE_BLOCK, if False use a warning. Default to False.
+
+    Returns
+    -------
+    int
+        Offset at which the actual data starts
+    int
+        Length of the data in bytes.
 
     """
     begin = block.find(b"#A")
@@ -505,13 +538,22 @@ def from_ieee_block(
     Indefinite Length Arbitrary Block:
     #0<data>
 
-    :param block: IEEE block.
-    :type block: bytes | bytearray
-    :param datatype: the format string for a single element. See struct module.
-    :param is_big_endian: boolean indicating endianess.
-    :param container: container type to use for the output data.
-    :return: items
-    :rtype: type(container)
+    Parameters
+    ----------
+    block : Union[bytes, bytearray]
+        IEEE formatted block of data.
+    datatype : BINARY_DATATYPES, optional
+        Format string for a single element. See struct module. 'f' by default.
+    is_big_endian : bool, optional
+        Are the data in big or little endian order.
+    container : Union[Type, Callable[[Iterable], Sequence]], optional
+        Container type to use for the output data. Possible values are: list,
+        tuple, np.ndarray, etc, Default to list.
+
+    Returns
+    -------
+    Sequence[Union[int, float]]
+        Parsed data.
 
     """
     offset, data_length = parse_ieee_block_header(block)
@@ -546,13 +588,23 @@ def from_hp_block(
     The header ia always 4 bytes long.
     The data_length field specifies the size of the data.
 
-    :param block: HP block.
-    :type block: bytes | bytearray
-    :param datatype: the format string for a single element. See struct module.
-    :param is_big_endian: boolean indicating endianess.
-    :param container: container type to use for the output data.
-    :return: items
-    :rtype: type(container)
+    Parameters
+    ----------
+    block : Union[bytes, bytearray]
+        HP formatted block of data.
+    datatype : BINARY_DATATYPES, optional
+        Format string for a single element. See struct module. 'f' by default.
+    is_big_endian : bool, optional
+        Are the data in big or little endian order.
+    container : Union[Type, Callable[[Iterable], Sequence]], optional
+        Container type to use for the output data. Possible values are: list,
+        tuple, np.ndarray, etc, Default to list.
+
+    Returns
+    -------
+    Sequence[Union[int, float]]
+        Parsed data.
+
     """
     offset, data_length = parse_hp_block_header(block, is_big_endian)
 
@@ -582,16 +634,28 @@ def from_binary_block(
 ) -> Sequence[Union[int, float]]:
     """Convert a binary block into an iterable of numbers.
 
-    :param block: binary block.
-    :type block: bytes | bytearray
-    :param offset: offset at which the data block starts (default=0)
-    :param data_length: size in bytes of the data block
-                        (default=len(block) - offset)
-    :param datatype: the format string for a single element. See struct module.
-    :param is_big_endian: boolean indicating endianess.
-    :param container: container type to use for the output data.
-    :return: items
-    :rtype: type(container)
+
+    Parameters
+    ----------
+    block : Union[bytes, bytearray]
+        HP formatted block of data.
+    offset : int
+        Offset at which the actual data starts
+    data_length : int
+        Length of the data in bytes.
+    datatype : BINARY_DATATYPES, optional
+        Format string for a single element. See struct module. 'f' by default.
+    is_big_endian : bool, optional
+        Are the data in big or little endian order.
+    container : Union[Type, Callable[[Iterable], Sequence]], optional
+        Container type to use for the output data. Possible values are: list,
+        tuple, np.ndarray, etc, Default to list.
+
+    Returns
+    -------
+    Sequence[Union[int, float]]
+        Parsed data.
+
     """
     if data_length is None:
         data_length = len(block) - offset
@@ -620,12 +684,22 @@ def to_binary_block(
 ) -> bytes:
     """Convert an iterable of numbers into a block of data with a given header.
 
-    :param iterable: an iterable of numbers.
-    :param header: the header which should prefix the binary block
-    :param datatype: the format string for a single element. See struct module.
-    :param is_big_endian: boolean indicating endianess.
-    :return: IEEE block.
-    :rtype: bytes
+    Parameters
+    ----------
+    iterable : Sequence[Union[int, float]]
+        Sequence of numbers to pack into a block.
+    header : Union[str, bytes]
+        Header which should prefix the binary block
+    datatype : BINARY_DATATYPES
+        Format string for a single element. See struct module.
+    is_big_endian : bool
+        Are the data in big or little endian order.
+
+    Returns
+    -------
+    bytes
+        Binary block of data preceded by the specified header
+
     """
     array_length = len(iterable)
 
@@ -645,11 +719,20 @@ def to_ieee_block(
 ) -> bytes:
     """Convert an iterable of numbers into a block of data in the IEEE format.
 
-    :param iterable: an iterable of numbers.
-    :param datatype: the format string for a single element. See struct module.
-    :param is_big_endian: boolean indicating endianess.
-    :return: IEEE block.
-    :rtype: bytes
+    Parameters
+    ----------
+    iterable : Sequence[Union[int, float]]
+        Sequence of numbers to pack into a block.
+    datatype : BINARY_DATATYPES, optional
+        Format string for a single element. See struct module. Default to 'f'.
+    is_big_endian : bool, optional
+        Are the data in big or little endian order. Default to False.
+
+    Returns
+    -------
+    bytes
+        Binary block of data preceded by the specified header
+
     """
     array_length = len(iterable)
     element_length = struct.calcsize(datatype)
@@ -668,11 +751,20 @@ def to_hp_block(
 ) -> bytes:
     """Convert an iterable of numbers into a block of data in the HP format.
 
-    :param iterable: an iterable of numbers.
-    :param datatype: the format string for a single element. See struct module.
-    :param is_big_endian: boolean indicating endianess.
-    :return: IEEE block.
-    :rtype: bytes
+    Parameters
+    ----------
+    iterable : Sequence[Union[int, float]]
+        Sequence of numbers to pack into a block.
+    datatype : BINARY_DATATYPES, optional
+        Format string for a single element. See struct module. Default to 'f'.
+    is_big_endian : bool, optional
+        Are the data in big or little endian order. Default to False.
+
+    Returns
+    -------
+    bytes
+        Binary block of data preceded by the specified header
+
     """
     array_length = len(iterable)
     element_length = struct.calcsize(datatype)
@@ -686,9 +778,7 @@ def to_hp_block(
 
 
 def get_system_details(backends: bool = True) -> Dict[str, str]:
-    """Return a dictionary with information about the system.
-
-    """
+    """Return a dictionary with information about the system."""
     buildno, builddate = platform.python_build()
     if sys.maxunicode == 65535:
         # UCS2 build (standard)
@@ -741,7 +831,9 @@ def get_system_details(backends: bool = True) -> Dict[str, str]:
 
 
 def system_details_to_str(d: Dict[str, str], indent: str = "") -> str:
-    """Return a str with the system details.
+    """Convert the system details to a str.
+
+    System details can be obtained by `get_system_details`.
 
     """
 
@@ -804,7 +896,7 @@ def system_details_to_str(d: Dict[str, str], indent: str = "") -> str:
 
 
 @overload
-def get_debug_info(to_screen: Literal[True]) -> None:
+def get_debug_info(to_screen: Literal[True] = True) -> None:
     ...
 
 
@@ -814,6 +906,7 @@ def get_debug_info(to_screen: Literal[False]) -> str:
 
 
 def get_debug_info(to_screen=True):
+    """Get the PyVISA debug information."""
     out = system_details_to_str(get_system_details())
     if not to_screen:
         return out
@@ -867,6 +960,7 @@ machine_types = {
 
 
 def get_shared_library_arch(filename: str) -> str:
+    """Get the architecture of shared library."""
     with io.open(filename, "rb") as fp:
         dos_headers = fp.read(64)
         _ = fp.read(4)
@@ -888,6 +982,7 @@ def get_shared_library_arch(filename: str) -> str:
 
 
 def get_arch(filename: str) -> Tuple[int, ...]:
+    """Get the architecture of the platform."""
     this_platform = sys.platform
     if this_platform.startswith("win"):
         machine_type = get_shared_library_arch(filename)

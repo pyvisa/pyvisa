@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa
-    ~~~~~~
+"""Python wrapper of IVI Virtual Instruments Software Architecture library (VISA).
 
-    Python wrapper of IVI Virtual Instruments Software Architecture library (VISA).
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014-2019 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import logging
 import pkg_resources

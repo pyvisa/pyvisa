@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.rname
-    ~~~~~~~~~~~~
+"""Functions and classes to parse and assemble resource name.
 
-    Functions and classes to parse and assemble resource name.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import contextlib
 import re
@@ -15,12 +12,13 @@ from typing import Callable, Dict, Iterable, List, NewType, Optional, Set, Tuple
 
 from . import constants, errors, logger, resources
 
-#:
+#: Interface types for which a subclass of ResourName exists
 _INTERFACE_TYPES: Set[str] = set()
 
 #: Resource Class for Interface type
 _RESOURCE_CLASSES: Dict[str, Set[str]] = defaultdict(set)
 
+#: Subclasses of ResourceName matching an interface type, resource class pair
 _SUBCLASSES: Dict[Tuple[str, str], Type["ResourceName"]] = {}
 
 # DEFAULT Resource Class for a given interface type.
@@ -28,9 +26,7 @@ _DEFAULT_RC: Dict[str, str] = {}
 
 
 class InvalidResourceName(ValueError):
-    """Exception raised when the resource name cannot be parsed.
-
-    """
+    """Exception raised when the resource name cannot be parsed."""
 
     def __init__(self, msg: str) -> None:
         self.msg = msg
@@ -39,9 +35,7 @@ class InvalidResourceName(ValueError):
     def bad_syntax(
         cls, syntax: str, resource_name: str, ex: Exception = None
     ) -> "InvalidResourceName":
-        """Exception used when the resource name cannot be parsed.
-
-        """
+        """Build an exception when the resource name cannot be parsed."""
         if ex:
             msg = "The syntax is '%s' (%s)." % (syntax, ex)
         else:
@@ -55,8 +49,7 @@ class InvalidResourceName(ValueError):
     def subclass_notfound(
         cls, interface_type_resource_class: Tuple[str, str], resource_name: str = None,
     ) -> "InvalidResourceName":
-        """Exception used when the subclass for a given interface type / resource class
-        pair cannot be found.
+        """Build an exception when no parser has been registered for a pair.
 
         """
 
@@ -71,7 +64,7 @@ class InvalidResourceName(ValueError):
     def rc_notfound(
         cls, interface_type: str, resource_name: str = None
     ) -> "InvalidResourceName":
-        """Exception used when no resource class is provided and no default is found.
+        """Build an exception when no resource class is provided and no default is found.
 
         """
 
@@ -89,9 +82,7 @@ class InvalidResourceName(ValueError):
 
 
 def register_subclass(cls: Type["ResourceName"]) -> Type["ResourceName"]:
-    """Register a subclass for a given interface type and resource class.
-
-    """
+    """Register a subclass for a given interface type and resource class."""
 
     key = cls.interface_type, cls.resource_class
 
@@ -112,9 +103,7 @@ def register_subclass(cls: Type["ResourceName"]) -> Type["ResourceName"]:
 
 
 class ResourceName(object):
-    """Base class for ResourceNames to be used as a Mixin.
-
-    """
+    """Base class for ResourceNames to be used as a mixin."""
 
     #: Interface type string
     interface_type: str = ""
@@ -152,10 +141,15 @@ class ResourceName(object):
     def from_string(cls, resource_name: str) -> "ResourceName":
         """Parse a resource name and return a ResourceName
 
-        :type resource_name: str
-        :rtype: ResourceName
+        Parameters
+        ----------
+        resource_name : str
+            Name of the resource
 
-        :raises InvalidResourceName: if the resource name is invalid.
+        Raises
+        ------
+        InvalidResourceName
+            Raised if the resource name is invalid.
 
         """
         # TODO Remote VISA
@@ -211,6 +205,7 @@ class ResourceName(object):
 
     @classmethod
     def from_kwargs(cls, **kwargs) -> "ResourceName":
+        """Build a resource from keyword arguments."""
         interface_type = kwargs.pop("interface_type")
 
         if interface_type not in _INTERFACE_TYPES:
@@ -257,16 +252,23 @@ def build_rn_class(
     The field names are changed to lower case and the spaces replaced
     by underscores ('_').
 
-    :param interface_type: the interface type
-    :type: interface_type: str
-    :param resource_parts: each of the parts of the resource name indicating
-                           name and default value.
-                           Use None for mandatory fields.
-    :type resource_parts: tuple[(str, str)]
-    :param resource_class: the resource class
-    :type resource_class: str
-    :param is_rc_optional: indicates if the resource class part is optional
-    :type is_rc_optional: boolean.
+    Parameters
+    -----------
+    interface_type : str
+        The interface type the built class will be used for.
+    resource_parts : Tuple[Tuple[str, Optional[str]], ...]
+        Each of the parts of the resource name indicating name and default
+        value. Use None for mandatory fields.
+    resource_class : str
+        The resource class the built class will be used for.
+    is_rc_optional : bool, optional
+        Indicates if the resource class part is optional.
+
+    Returns
+    -------
+    Type[ResourceName]
+        ResourceName subclass customized for the specified interface type and
+        resource class.
 
     """
 
@@ -338,6 +340,7 @@ def build_rn_class(
 
         @classmethod
         def from_parts(cls, *parts):
+            """Construct a resource name from a list of parts."""
 
             if len(parts) < sum(1 for _, v in p_resource_parts if v is not None):
                 raise ValueError("not enough parts")
@@ -457,18 +460,12 @@ VXIServant = build_rn_class("VXI", (("board", "0"),), "SERVANT", False)
 
 
 def assemble_canonical_name(**kwargs) -> str:
-    """Given a set of keyword arguments defining a resource name,
-    return the canonical resource name.
-    """
+    """Build the canonical resource name from a set of keyword arguments."""
     return str(ResourceName.from_kwargs(**kwargs))
 
 
 def to_canonical_name(resource_name: str) -> str:
-    """Parse a resource name and return the canonical version.
-
-    :type resource_name: str
-    :rtype: str
-    """
+    """Parse a resource name and return the canonical version."""
     return str(ResourceName.from_string(resource_name))
 
 
@@ -502,38 +499,35 @@ def filter(resources: Iterable[str], query: str) -> Tuple[str, ...]:
     in the logical expression part of the expr parameter.
 
 
-        Symbol      Meaning
-        ----------  ----------
+    Symbol      Meaning
+    ----------  ----------
 
-        ?           Matches any one character.
+    ?           Matches any one character.
 
-        \           Makes the character that follows it an ordinary character
-                    instead of special character. For example, when a question
-                    mark follows a backslash (\?), it matches the ? character
-                    instead of any one character.
+    \           Makes the character that follows it an ordinary character
+                instead of special character. For example, when a question
+                mark follows a backslash (\?), it matches the ? character
+                instead of any one character.
 
-        [list]      Matches any one character from the enclosed list. You can
-                    use a hyphen to match a range of characters.
+    [list]      Matches any one character from the enclosed list. You can
+                use a hyphen to match a range of characters.
 
-        [^list]     Matches any character not in the enclosed list. You can use
-                    a hyphen to match a range of characters.
+    [^list]     Matches any character not in the enclosed list. You can use
+                a hyphen to match a range of characters.
 
-        *           Matches 0 or more occurrences of the preceding character or
-                    expression.
+    *           Matches 0 or more occurrences of the preceding character or
+                expression.
 
-        +           Matches 1 or more occurrences of the preceding character or
-                    expression.
+    +           Matches 1 or more occurrences of the preceding character or
+                expression.
 
-        Exp|exp     Matches either the preceding or following expression. The or
-                    operator | matches the entire expression that precedes or
-                    follows it and not just the character that precedes or follows
-                    it. For example, VXI|GPIB means (VXI)|(GPIB), not VX(I|G)PIB.
+    Exp|exp     Matches either the preceding or following expression. The or
+                operator | matches the entire expression that precedes or
+                follows it and not just the character that precedes or follows
+                it. For example, VXI|GPIB means (VXI)|(GPIB), not VX(I|G)PIB.
 
-        (exp)       Grouping characters or expressions.
+    (exp)       Grouping characters or expressions.
 
-
-    :param resources: iterable of resources.
-    :param query: query expression.
 
     """
 
@@ -564,9 +558,16 @@ def filter2(
     .. warning: This function is experimental and unsafe as it uses eval,
                 It also might require to open the resource.
 
-    :param resources: iterable of resources.
-    :param query: query expression.
-    :param open_resource: function to open the resource.
+    Parameters
+    ----------
+    resources : Iterable[str]
+        Iterable of resource name to filter.
+
+    query : str
+        The pattern to use for filtering
+
+    open_resource : Callable[[str], "resources.Resource"]
+        Function to open a resource (typically ResourceManager().open_resource)
 
     """
     optional: Optional[str]

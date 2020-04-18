@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.ctwrapper.highlevel
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""Highlevel wrapper of the VISA Library.
 
-    Highlevel wrapper of the VISA Library.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import ctypes
 import logging
@@ -42,12 +39,14 @@ T = TypeVar("T", bound=highlevel.VisaLibraryBase)
 
 
 def add_visa_methods(aclass: Type[T]) -> Type[T]:
+    """Add the methods to the library."""
     for method in functions.visa_functions:
         setattr(aclass, method, getattr(functions, method))
     return aclass
 
 
 def _args_to_str(args: Tuple[Any, ...]) -> Tuple[str, ...]:
+    """Convert function arguments to str."""
     out = []
     for arg in args:
         try:
@@ -58,9 +57,7 @@ def _args_to_str(args: Tuple[Any, ...]) -> Tuple[str, ...]:
 
 
 def unique(seq):
-    """Keep unique while preserving order.
-
-    """
+    """Keep unique while preserving order."""
     seen = set()
     return [x for x in seq if not (x in seen or seen.add(x))]
 
@@ -80,15 +77,11 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         >>> visa_library = IVIVisaLibrary('/my/path/visa.so')
 
-    :param library_path: path of the VISA library.
     """
 
     @staticmethod
     def get_library_paths() -> Tuple[LibraryPath, ...]:
-        """Return a tuple of possible library paths.
-
-        :rtype: tuple
-        """
+        """Return a tuple of possible library paths."""
 
         from ..util import LibraryPath, read_user_library_path, add_user_dll_extra_paths
 
@@ -118,9 +111,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
     @classmethod
     def get_debug_info(cls) -> Dict[str, Union[str, Dict[str, Any]]]:
-        """Return a list of lines with backend info.
-
-        """
+        """Return a list of lines with backend info."""
         from pyvisa import __version__
 
         d: Dict[str, Union[str, Dict[str, Any]]] = OrderedDict()
@@ -192,10 +183,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
             setattr(self, method_name, getattr(self.lib, method_name))
 
     def _return_handler(self, ret_value: int, func: Callable, arguments: tuple) -> Any:
-        """Check return values for errors and warnings.
-
-        """
-
+        """Check return values for errors and warnings."""
         logger.debug(
             "%s%s -> %r",
             func.__name__,
@@ -253,61 +241,69 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
         return ret_value
 
-    def list_resources(self, session: Any, query: str = "?*::INSTR") -> Tuple[str, ...]:
+    def list_resources(
+        self, session: typing.VISARMSession, query: str = "?*::INSTR"
+    ) -> Tuple[str, ...]:
         """Returns a tuple of all connected devices matching query.
 
-        note: The query uses the VISA Resource Regular Expression syntax - which is not the same
-              as the Python regular expression syntax. (see below)
+        Parameters
+        ----------
+        session : typing.VISARMSession
+            Unused, present for consistency
+        query : str
+            Query using the VISA Resource Regular Expression syntax - which is
+            not the same as the Python regular expression syntax. (see below)
 
-            The VISA Resource Regular Expression syntax is defined in the VISA Library specification:
-            http://www.ivifoundation.org/docs/vpp43.pdf
+        Notes
+        -----
 
-            Symbol      Meaning
-            ----------  ----------
+        The VISA Resource Regular Expression syntax is defined in the VISA
+        Library specification:
+        http://www.ivifoundation.org/docs/vpp43.pdf
 
-            ?           Matches any one character.
+        Symbol      Meaning
+        ----------  ----------
 
-            \           Makes the character that follows it an ordinary character
-                        instead of special character. For example, when a question
-                        mark follows a backslash (\?), it matches the ? character
-                        instead of any one character.
+        ?           Matches any one character.
 
-            [list]      Matches any one character from the enclosed list. You can
-                        use a hyphen to match a range of characters.
+        \           Makes the character that follows it an ordinary character
+                    instead of special character. For example, when a question
+                    mark follows a backslash (\?), it matches the ? character
+                    instead of any one character.
 
-            [^list]     Matches any character not in the enclosed list. You can use
-                        a hyphen to match a range of characters.
+        [list]      Matches any one character from the enclosed list. You can
+                    use a hyphen to match a range of characters.
 
-            *           Matches 0 or more occurrences of the preceding character or
-                        expression.
+        [^list]     Matches any character not in the enclosed list. You can use
+                    a hyphen to match a range of characters.
 
-            +           Matches 1 or more occurrences of the preceding character or
-                        expression.
+        *           Matches 0 or more occurrences of the preceding character or
+                    expression.
 
-            Exp|exp     Matches either the preceding or following expression. The or
-                        operator | matches the entire expression that precedes or
-                        follows it and not just the character that precedes or follows
-                        it. For example, VXI|GPIB means (VXI)|(GPIB), not VX(I|G)PIB.
+        +           Matches 1 or more occurrences of the preceding character or
+                    expression.
 
-            (exp)       Grouping characters or expressions.
+        Exp|exp     Matches either the preceding or following expression. The or
+                    operator | matches the entire expression that precedes or
+                    follows it and not just the character that precedes or follows
+                    it. For example, VXI|GPIB means (VXI)|(GPIB), not VX(I|G)PIB.
 
-            Thus the default query, '?*::INSTR', matches any sequences of characters ending
-            ending with '::INSTR'.
+        (exp)       Grouping characters or expressions.
 
-        :param query: a VISA Resource Regular Expression used to match devices.
+        Thus the default query, '?*::INSTR', matches any sequences of characters
+        ending ending with '::INSTR'.
+
         """
-
         resources: List[str] = []
 
         # Ignore some type checks because method are dynamically set
-
         try:
             (
                 find_list,
                 return_counter,
                 instrument_description,
                 err,
-            ) = self.find_resources(  # type: ignore
+            ) = self._find_resources(  # type: ignore
                 session, query
             )
         except errors.VisaIOError as e:
@@ -315,11 +311,15 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
                 return tuple()
             raise e
 
-        resources.append(instrument_description)
-        for i in range(return_counter - 1):
-            resources.append(self.find_next(find_list)[0])  # type: ignore
-
-        self.close(find_list)
+        try:
+            resources.append(instrument_description)
+            for i in range(return_counter - 1):
+                resources.append(self._find_next(find_list)[0])  # type: ignore
+        finally:
+            # This is the only occurrence of a find list so ignore the typing error
+            # since it would make things harder to follow to document ViFindList as
+            # supported.
+            self.close(find_list)  # type: ignore
 
         return tuple(resource for resource in resources)
 
@@ -333,11 +333,22 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         implementation should make sure that get_buffer_from_id will be able
         to return the proper buffer before this method returns.
 
-        :param library: the visa library wrapped by ctypes.
-        :param session: Unique logical identifier to a session.
-        :param count: Number of bytes to be read.
-        :return: result, jobid, return value of the library call.
-        :rtype: ctypes buffer, jobid, :class:`pyvisa.constants.StatusCode`
+        Parameters
+        ----------
+        session : typing.VISASession
+            Unique logical identifier to a session.
+        count : int
+            Number of bytes to be read.
+
+        Returns
+        -------
+        SupportsBytes
+            Buffer in which the data will be written.
+        types.ViJobId
+            Id of the job.
+        constants.StatusCode
+            Return value of the library call.
+
         """
         # The buffer actually supports bytes but typing fails
         buffer = ctypes.create_string_buffer(count)
@@ -376,10 +387,7 @@ class NIVisaLibrary(IVIVisaLibrary):  # pragma: no cover
 
     @staticmethod
     def get_library_paths() -> Tuple[LibraryPath, ...]:
-        """Return a tuple of possible library paths.
-
-        :rtype: tuple
-        """
+        """Return a tuple of possible library paths."""
         warnings.warn(
             "NIVisaLibrary is deprecated and will be removed in 1.12. "
             "Use IVIVisaLibrary instead.",
@@ -389,9 +397,7 @@ class NIVisaLibrary(IVIVisaLibrary):  # pragma: no cover
 
     @classmethod
     def get_debug_info(cls) -> Dict[str, Union[str, Dict[str, Any]]]:
-        """Return a list of lines with backend info.
-
-        """
+        """Return a list of lines with backend info."""
         warnings.warn(
             "NIVisaLibrary is deprecated and will be removed in 1.12. "
             "Use IVIVisaLibrary instead.",

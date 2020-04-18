@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.resources.gpib
-    ~~~~~~~~~~~~~~~~~~~~~
+"""High level wrapper for GPIB resources.
 
-    High level wrapper for GPIB resources.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import sys
 import time
@@ -22,9 +19,7 @@ from .resource import Resource
 
 
 class _GPIBMixin(ControlRenMixin):
-    """Common attributes and methods of GPIB Instr and Interface.
-
-    """
+    """Common attributes and methods of GPIB Instr and Interface."""
 
     #: Primary address of the GPIB device used by the given session.
     primary_address: Attribute[int] = attributes.AttrVI_ATTR_GPIB_PRIMARY_ADDR()
@@ -42,10 +37,18 @@ class _GPIBMixin(ControlRenMixin):
 
         Corresponds to viGpibCommand function of the VISA library.
 
-        :param data: data tor write.
-        :type data: bytes
-        :return: Number of written bytes, return value of the library call.
-        :rtype: int, VISAStatus
+        Parameters
+        ----------
+        data : bytes
+            Command to write.
+
+        Returns
+        -------
+        int
+            Number of bytes written
+        constants.StatusCode
+            Return value of the library call.
+
         """
         return self.visalib.gpib_command(self.session, data)
 
@@ -54,29 +57,41 @@ class _GPIBMixin(ControlRenMixin):
 
         Corresponds to viGpibControlATN function of the VISA library.
 
-        :param mode: Specifies the state of the ATN line and optionally the local active controller state.
-                     constants.VI_GPIB_ATN_ASSERT,
-            constants.VI_GPIB_ATN_ASSERT_IMMEDIATE,
-            constants.VI_GPIB_ATN_DEASSERT,
-            constants.VI_GPIB_ATN_DEASSERT_HANDSHAKE,
-        :return: return value of the library call.
-        :rtype: VISAStatus
+        Parameters
+        ----------
+        mode : constants.ATNLineOperation
+            Specifies the state of the ATN line and optionally the local active
+             controller state.
+
+        Returns
+        -------
+        constants.StatusCode
+            Return value of the library call.
+
         """
         return self.visalib.gpib_control_atn(self.session, mode)
 
     def pass_control(
         self, primary_address: int, secondary_address: int
     ) -> constants.StatusCode:
-        """Tell the GPIB device at the specified address to become controller in charge (CIC).
+        """Tell a GPIB device to become controller in charge (CIC).
 
         Corresponds to viGpibPassControl function of the VISA library.
 
-        :param primary_address: Primary address of the GPIB device to which you want to pass control.
-        :param secondary_address: Secondary address of the targeted GPIB device.
-                                  If the targeted device does not have a secondary address,
-                                  this parameter should contain the value Constants.NO_SEC_ADDR.
-        :return: return value of the library call.
-        :rtype: VISAStatus
+        Parameters
+        ----------
+        primary_address : int
+            Primary address of the GPIB device to which you want to pass control.
+        secondary_address : int
+            Secondary address of the targeted GPIB device.
+            If the targeted device does not have a secondary address,
+            this parameter should contain the value Constants.NO_SEC_ADDR.
+
+        Returns
+        -------
+        constants.StatusCode
+            Return value of the library call.
+
         """
         return self.visalib.gpib_pass_control(
             self.session, primary_address, secondary_address
@@ -87,8 +102,6 @@ class _GPIBMixin(ControlRenMixin):
 
         Corresponds to viGpibSendIFC function of the VISA library.
 
-        :return: return value of the library call.
-        :rtype: VISAStatus
         """
         return self.visalib.gpib_send_ifc(self.session)
 
@@ -100,7 +113,9 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
     More complex resource names can be specified with the following grammar:
         GPIB[board]::primary address[::secondary address][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     #: Whether to unaddress the device (UNT and UNL) after each read or write operation.
@@ -115,9 +130,12 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
         Note that this method is not ended when *another* instrument signals an
         SRQ, only *this* instrument.
 
-        :param timeout: the maximum waiting time in milliseconds.
-                        Defaul: 25000 (milliseconds).
-                        None means waiting forever if necessary.
+        Parameters
+        ----------
+        timeout : int
+            Maximum waiting time in milliseconds. Defaul: 25000 (milliseconds).
+            None means waiting forever if necessary.
+
         """
         self.enable_event(
             constants.EventType.service_request, constants.EventMechanism.queue
@@ -154,7 +172,9 @@ class GPIBInterface(_GPIBMixin, Resource):
     More complex resource names can be specified with the following grammar:
         GPIB[board]::INTFC
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     #: Is the specified GPIB interface currently the system controller.
@@ -181,7 +201,21 @@ class GPIBInterface(_GPIBMixin, Resource):
     def group_execute_trigger(
         self, *resources: GPIBInstrument
     ) -> Tuple[int, constants.StatusCode]:
+        """
 
+        Parameters
+        ----------
+        resources : GPIBInstrument
+            GPIB resources to which to send the group trigger.
+
+        Returns
+        -------
+        int
+            Number of bytes written as part of sending the GPIB commands.
+        constants.StatusCode
+            Return value of the library call.
+
+        """
         for resource in resources:
             if not isinstance(resource, GPIBInstrument):
                 raise ValueError("%r is not a GPIBInstrument", resource)
@@ -211,7 +245,10 @@ class GPIBInterface(_GPIBMixin, Resource):
         Depending on the mask this can cause the buffer data to be written to
         the device.
 
-        :param mask: Specifies the action to be taken with flushing the buffer.
+        Parameters
+        ----------
+        mask : constants.BufferOperation
+            Specifies the action to be taken with flushing the buffer.
             See highlevel.VisaLibraryBase.flush for a detailed description.
 
         """

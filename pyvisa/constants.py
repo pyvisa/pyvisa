@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.constants
-    ~~~~~~~~~~~~~~~~
+"""VISA VPP-4.3 constants (VPP-4.3.2 spec, section 3).
 
-    VISA VPP-4.3 constants (VPP-4.3.2 spec, section 3).
+Makes all "completion and error codes", "attribute values", "event type
+values", and "values and ranges" defined in the VISA specification VPP-4.3.2,
+section 3, available as variable values.
 
-    Makes all "completion and error codes", "attribute values", "event type
-    values", and "values and ranges" defined in the VISA specification VPP-4.3.2,
-    section 3, available as variable values.
+The module exports the values under the original, all-uppercase names.
 
-    The module exports the values under the original, all-uppercase names.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import sys
 import enum
@@ -23,16 +20,28 @@ from typing_extensions import Literal
 
 is_64bits = sys.maxsize > 2 ** 32
 
-# _to_int() is necessary because the VISA specification is flawed: It defines
-# the VISA codes, which have a value less than zero, in their internal 32-bit
-# signed integer representation.  However, this is positive.  ctypes doesn't
-# care about that and (correctly) returns the negative value, which is left as
-# such by Python.
+# _to_int()
 
 
-def _to_int(x):
-    """Converts a completion and error code as it is listed in 32-bit notation
-    in the VPP-4.3.2 specification to the actual integer value.
+def _to_int(x: int) -> int:
+    """Convert a signed completion and error code to the proper value.
+
+    This function is necessary because the VISA specification is flawed: It defines
+    the VISA codes, which have a value less than zero, in their internal 32-bit
+    signed integer representation. However, this is positive.  ctypes doesn't
+    care about that and (correctly) returns the negative value, which is left as
+    such by Python.
+
+    Parameters
+    ----------
+    x : int
+        Value in 32-bit notation as listed in the VPP-4.3.2 specification
+
+    Returns
+    -------
+    int
+        Properly signed value
+
     """
     if x > 0x7FFFFFFF:
         return int(x - 0x100000000)
@@ -41,6 +50,10 @@ def _to_int(x):
 
 
 # fmt: off
+
+# ======================================================================================
+# --- VISA constants  ------------------------------------------------------------------
+# ======================================================================================
 
 # Status codes : success
 VI_SUCCESS                   = _to_int(0x00000000)
@@ -732,9 +745,7 @@ class VisaBoolean(enum.IntEnum):
 
 @enum.unique
 class Lock(enum.IntEnum):
-    """Kind of lock to use when locking a resource.
-
-    """
+    """Kind of lock to use when locking a resource."""
 
     #: Obtains a exclusive lock on the VISA resource.
     exclusive = VI_EXCLUSIVE_LOCK
@@ -746,9 +757,7 @@ class Lock(enum.IntEnum):
 
 @enum.unique
 class AccessModes(enum.IntEnum):
-    """Whether and how to lock a resource when opening a connection.
-
-    """
+    """Whether and how to lock a resource when opening a connection."""
 
     #: Does not obtain any lock on the VISA resource.
     no_lock = VI_NO_LOCK
@@ -762,59 +771,8 @@ class AccessModes(enum.IntEnum):
 
 
 @enum.unique
-class StopBits(enum.IntEnum):
-    """The number of stop bits that indicate the end of a frame on a serial resource.
-
-    Used only for ASRL resources.
-
-    """
-
-    one = VI_ASRL_STOP_ONE
-    one_and_a_half = VI_ASRL_STOP_ONE5
-    two = VI_ASRL_STOP_TWO
-
-
-@enum.unique
-class Parity(enum.IntEnum):
-    """Parity type to use with every frame transmitted and received on a serial session.
-
-    Used only for ASRL resources.
-
-    """
-
-    none = VI_ASRL_PAR_NONE
-    odd = VI_ASRL_PAR_ODD
-    even = VI_ASRL_PAR_EVEN
-    mark = VI_ASRL_PAR_MARK
-    space = VI_ASRL_PAR_SPACE
-
-
-@enum.unique
-class SerialTermination(enum.IntEnum):
-    """The available methods for terminating a serial transfer.
-    """
-
-    #: The transfer terminates when all requested data is transferred
-    #: or when an error occurs.
-    none = VI_ASRL_END_NONE
-
-    #: The transfer occurs with the last bit not set until the last
-    #: character is sent.
-    last_bit = VI_ASRL_END_LAST_BIT
-
-    #: The transfer terminate by searching for "/"
-    #: appending the termination character.
-    termination_char = VI_ASRL_END_TERMCHAR
-
-    #: The write transmits a break after all the characters for the
-    #: write are sent.
-    termination_break = VI_ASRL_END_BREAK
-
-
-@enum.unique
 class InterfaceType(enum.IntEnum):
-    """The hardware interface
-    """
+    """The hardware interface."""
 
     # Used for unknown interface type strings.
     unknown = -1
@@ -848,42 +806,6 @@ class InterfaceType(enum.IntEnum):
 
     #: Rohde and Schwarz Device via Passport
     rsnrp = 33024
-
-
-@enum.unique
-class AddressState(enum.IntEnum):
-    """State of a GPIB resource.
-
-    Corresponds to the Attribute.GPIB_address_state attribute
-
-    """
-
-    #: The resource is unadressed
-    unaddressed = VI_GPIB_UNADDRESSED
-
-    #: The resource is addressed to talk
-    talker = VI_GPIB_TALKER
-
-    #: The resource is addressed to listen
-    listenr = VI_GPIB_LISTENER
-
-
-@enum.unique
-class IOProtocol(enum.IntEnum):
-
-    normal = VI_PROT_NORMAL
-
-    #: Fast data channel (FDC) protocol for VXI
-    fdc = VI_PROT_FDC
-
-    #: High speed 488 transfer for GPIB
-    hs488 = VI_PROT_HS488
-
-    #: 488 style transfer for serial
-    protocol4882_strs = VI_PROT_4882_STRS
-
-    #: Test measurement class vendor specific for USB
-    usbtmc_vendor = VI_PROT_USBTMC_VENDOR
 
 
 @enum.unique
@@ -934,9 +856,7 @@ class IOProtocol(enum.IntEnum):
 
 @enum.unique
 class EventMechanism(enum.IntEnum):
-    """The available event mechanisms for event handling.
-
-    """
+    """The available event mechanisms for event handling."""
 
     #: Queue events that can then be queried using wait_on_event
     queue = VI_QUEUE
@@ -952,11 +872,12 @@ class EventMechanism(enum.IntEnum):
     all = VI_ALL_MECH
 
 
+# Message based resources relevant constants
+
+
 @enum.unique
 class EventType(enum.IntEnum):
-    """The available event types for event handling.
-
-    """
+    """The available event types for event handling."""
 
     #: Notification that an asynchronous operation has completed.
     io_completion = VI_EVENT_IO_COMPLETION
@@ -1246,9 +1167,7 @@ class RENLineOperation(enum.IntEnum):
 
 @enum.unique
 class AddressSpace(enum.IntEnum):
-    """Address space for register based resources.
-
-    """
+    """Address space for register based resources."""
 
     #: A16 address space of VXI/MXI bus.
     a16 = VI_A16_SPACE
@@ -1297,7 +1216,7 @@ class AddressModifiers(enum.IntEnum):
 
 @enum.unique
 class AssertSignalInterrupt(enum.IntEnum):
-    """Line on which to perform an assertion or interrupt
+    """Line on which to perform an assertion or interrupt.
 
     Used only for VXI backplane and servant resources.
 
@@ -1322,9 +1241,7 @@ class AssertSignalInterrupt(enum.IntEnum):
 
 @enum.unique
 class UtilityBusSignal(enum.IntEnum):
-    """Operation on the utility line of a VXI backplane or servant.
-
-    """
+    """Operation on the utility line of a VXI backplane or servant."""
 
     #: Assert the SYSRESET ie perform a HARD RESET on the whole VXI bus.
     sysrest = VI_UTIL_ASSERT_SYSRESET
@@ -1338,9 +1255,7 @@ class UtilityBusSignal(enum.IntEnum):
 
 @enum.unique
 class VXICommands(enum.IntEnum):
-    """VXI commands that can be sent using the vxi_command_query method of the library.
-
-    """
+    """VXI commands that can be sent using the vxi_command_query."""
 
     #: Send a command fitting in a 16-bit integer
     command_16 = VI_VXI_CMD16
@@ -1387,9 +1302,7 @@ class VXIClass(enum.IntEnum):
 
 @enum.unique
 class TriggerProtocol(enum.IntEnum):
-    """Trigger protocol used when assering a resource trigger
-
-    """
+    """Trigger protocol used when assering a resource trigger."""
 
     # FIXME The VISA standard is not very detailed on those
     #: Default protocol.
@@ -1509,9 +1422,7 @@ class OutputTriggerLine(enum.IntEnum):
 
 @enum.unique
 class TriggerID(enum.IntEnum):
-    """Identifier of the currently active trigerring mechanism on a resource.
-
-    """
+    """Identifier of the currently active trigerring mechanism on a resource."""
 
     #: Trigger using a serial word
     serial_word = VI_TRIG_SW
@@ -1551,9 +1462,7 @@ class TriggerID(enum.IntEnum):
 
 @enum.unique
 class TriggerEventID(enum.IntEnum):
-    """Identifier of the triggering mechanism on which a trigger event was received.
-
-    """
+    """Identifier of the triggering mechanism on which a trigger event was received."""
 
     #: TTL trigger lines
     ttl0 = VI_TRIG_TTL0
@@ -1593,9 +1502,7 @@ class ByteOrder(enum.IntEnum):
 
 @enum.unique
 class DataWidth(enum.IntEnum):
-    """Width of the words used when transferring data to/from register based resources.
-
-    """
+    """Word width used when transferring data to/from register based resources."""
 
     #: Transfer data using 1 byte word
     bit_8 = VI_WIDTH_8
@@ -1611,9 +1518,7 @@ class DataWidth(enum.IntEnum):
 
     @classmethod
     def from_literal(cls, value: Literal[8, 16, 32, 64]) -> "DataWidth":
-        """Convert a literal width in the proper enum value.
-
-        """
+        """Convert a literal width in the proper enum value."""
         return cls(value // 8)
 
 
@@ -1622,8 +1527,7 @@ class DataWidth(enum.IntEnum):
 
 @enum.unique
 class StatusCode(enum.IntEnum):
-    """Specifies the status codes that NI-VISA driver-level operations can return.
-    """
+    """Status codes that VISA driver-level operations can return."""
 
     #: The operation was aborted.
     error_abort = VI_ERROR_ABORT

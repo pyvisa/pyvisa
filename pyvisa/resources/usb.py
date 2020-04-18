@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.resources.usb
-    ~~~~~~~~~~~~~~~~~~~~
+"""High level wrapper for USB resources.
 
-    High level wrapper for USB resources.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import warnings
 
@@ -18,9 +15,7 @@ from .messagebased import MessageBasedResource, ControlRenMixin
 
 
 class USBCommon(MessageBasedResource):
-    """Common class for USB resources.
-
-    """
+    """Common class for USB resources."""
 
     #: USB interface number used by the given session.
     interface_number: Attribute[int] = attributes.AttrVI_ATTR_USB_INTFC_NUM()
@@ -49,12 +44,14 @@ class USBCommon(MessageBasedResource):
 
 @MessageBasedResource.register(constants.InterfaceType.usb, "INSTR")
 class USBInstrument(ControlRenMixin, USBCommon):
-    """Communicates with devices of type USB::manufacturer ID::model code::serial number
+    """USB INSTR resources USB::manufacturer ID::model code::serial number
 
     More complex resource names can be specified with the following grammar:
         USB[board]::manufacturer ID::model code::serial number[::USB interface number][::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     #: Whether the device is 488.2 compliant.
@@ -70,16 +67,28 @@ class USBInstrument(ControlRenMixin, USBCommon):
     ) -> bytes:
         """Performs a USB control pipe transfer from the device.
 
-        :param request_type_bitmap_field: bmRequestType parameter of the setup stage of a USB control transfer.
-        :param request_id: bRequest parameter of the setup stage of a USB control transfer.
-        :param request_value: wValue parameter of the setup stage of a USB control transfer.
-        :param index: wIndex parameter of the setup stage of a USB control transfer.
-                      This is usually the index of the interface or endpoint.
-        :param length: wLength parameter of the setup stage of a USB control transfer.
-                       This value also specifies the size of the data buffer to receive the data from the
-                       optional data stage of the control transfer.
-        :return: The data buffer that receives the data from the optional data stage of the control transfer.
-        :rtype: bytes
+        Parameters
+        ----------
+        request_type_bitmap_field : int
+            bmRequestType parameter of the setup stage of a USB control transfer.
+        request_id : int
+            bRequest parameter of the setup stage of a USB control transfer.
+        request_value : int
+            wValue parameter of the setup stage of a USB control transfer.
+        index : int
+            wIndex parameter of the setup stage of a USB control transfer.
+            This is usually the index of the interface or endpoint.
+        length : int
+            wLength parameter of the setup stage of a USB control transfer.
+            This value also specifies the size of the data buffer to receive
+            the data from the optional data stage of the control transfer.
+
+        Returns
+        -------
+        bytes
+            The data buffer that receives the data from the optional data stage
+            of the control transfer.
+
         """
         return self.visalib.usb_control_in(
             self.session,
@@ -96,16 +105,25 @@ class USBInstrument(ControlRenMixin, USBCommon):
         request_id: int,
         request_value: int,
         index: int,
-        data: str = "",
+        data: bytes = b"",
     ):
         """Performs a USB control pipe transfer to the device.
 
-        :param request_type_bitmap_field: bmRequestType parameter of the setup stage of a USB control transfer.
-        :param request_id: bRequest parameter of the setup stage of a USB control transfer.
-        :param request_value: wValue parameter of the setup stage of a USB control transfer.
-        :param index: wIndex parameter of the setup stage of a USB control transfer.
-                      This is usually the index of the interface or endpoint.
-        :param data: The data buffer that sends the data in the optional data stage of the control transfer.
+        Parameters
+        ----------
+        request_type_bitmap_field : int
+            bmRequestType parameter of the setup stage of a USB control transfer.
+        request_id : int
+            bRequest parameter of the setup stage of a USB control transfer.
+        request_value : int
+            wValue parameter of the setup stage of a USB control transfer.
+        index : int
+            wIndex parameter of the setup stage of a USB control transfer.
+            This is usually the index of the interface or endpoint.
+        data : str
+            The data buffer that sends the data in the optional data stage of
+            the control transfer.
+
         """
         return self.visalib.usb_control_out(
             self.session,
@@ -119,10 +137,12 @@ class USBInstrument(ControlRenMixin, USBCommon):
 
 @MessageBasedResource.register(constants.InterfaceType.usb, "RAW")
 class USBRaw(USBCommon):
-    """Communicates with to devices of type USB::manufacturer ID::model code::serial number::RAW
+    """USB RAW resources: USB::manufacturer ID::model code::serial number::RAW
 
     More complex resource names can be specified with the following grammar:
         USB[board]::manufacturer ID::model code::serial number[::USB interface number]::RAW
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """

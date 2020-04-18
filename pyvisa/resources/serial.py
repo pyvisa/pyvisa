@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.resources.serial
-    ~~~~~~~~~~~~~~~~~~~~~~~
+"""High level wrapper for Serial resources.
 
-    High level wrapper for Serial resources.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 from .. import attributes, constants
 from ..attributes import Attribute
@@ -19,7 +16,9 @@ from .messagebased import MessageBasedResource
 class SerialInstrument(MessageBasedResource):
     """Communicates with devices of type ASRL<board>[::INSTR]
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
     """
 
     #: Baud rate of the interface.
@@ -74,4 +73,3 @@ class SerialInstrument(MessageBasedResource):
 
     #: XON character used for XON/XOFF flow control (both directions).
     xon_char: Attribute[str] = attributes.AttrVI_ATTR_ASRL_XON_CHAR()
-

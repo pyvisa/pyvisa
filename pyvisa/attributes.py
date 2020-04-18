@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.attributes
-    ~~~~~~~~~~~~~~~~~
+"""Descriptor to access VISA attributes.
 
-    Comprehensive of all properties.
+Not all descriptors are used but they provide a reference regarding the
+possible values for each attributes.
 
-    This file is part of PyVISA.
+This file is part of PyVISA.
 
-    :copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
+
 """
 import enum
 import sys
@@ -43,6 +43,8 @@ NotAvailable = object()
 
 #: Attribute for all session types.
 class AllSessionTypes:  # We use a class to simplify typing
+    """Class used as a placeholder to indicate an attribute exist on all resources."""
+
     ...
 
 
@@ -64,9 +66,7 @@ T = TypeVar("T")
 
 
 class Attribute(Generic[T]):
-    """Base class for Attributes to be used as Properties.
-
-    """
+    """Base class for Attributes to be used as properties."""
 
     #: List of resource or event types with this attribute.
     #: each element is a tuple (constants.InterfaceType, str)
@@ -101,7 +101,7 @@ class Attribute(Generic[T]):
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
-
+        """Register the subclass with the supported resources."""
         super().__init_subclass__(**kwargs)
 
         if not cls.__name__.startswith("AttrVI_"):
@@ -121,6 +121,7 @@ class Attribute(Generic[T]):
 
     @classmethod
     def redoc(cls) -> None:
+        """Generate a descriptive docstring."""
         cls.__doc__ += "\n:VISA Attribute: %s (%s)" % (cls.visa_name, cls.attribute_id)
 
     def post_get(self, value: Any) -> T:
@@ -135,6 +136,7 @@ class Attribute(Generic[T]):
         -------
         T
             Equivalent python value.
+
         """
         return value
 
@@ -156,13 +158,16 @@ class Attribute(Generic[T]):
 
     @overload
     def __get__(self, instance: None, owner) -> "Attribute":
+        """From a class return the descriptor."""
         ...
 
     @overload
     def __get__(self, instance: Union[Resource, Event], owner) -> T:
+        """From an instance return the attribute value."""
         ...
 
     def __get__(self, instance, owner):
+        """Access a VISA attribute and convert to a nice Python representation."""
         if instance is None:
             return self
 
@@ -172,10 +177,15 @@ class Attribute(Generic[T]):
         return self.post_get(instance.get_visa_attribute(self.attribute_id))
 
     def __set__(self, instance: Resource, value: T) -> None:
+        """Set the attribute if writable."""
         if not self.write:
             raise AttributeError("can't write attribute")
 
-        instance.set_visa_attribute(self.attribute_id, self.pre_set(value))
+        # Here we use the bare integer value of the enumeration hence the type ignore
+        instance.set_visa_attribute(
+            self.attribute_id,  # type: ignore
+            self.pre_set(value),
+        )
 
     @classmethod
     def in_resource(cls, session_type: Tuple[constants.InterfaceType, str]) -> bool:
@@ -198,15 +208,14 @@ class Attribute(Generic[T]):
 
 
 class EnumAttribute(Attribute):
-    """Class for attributes with values that map to a PyVISA Enum.
-
-    """
+    """Class for attributes with values that map to a PyVISA Enum."""
 
     #: Enum type with valid values.
     enum_type: ClassVar[Type[enum.IntEnum]]
 
     @classmethod
     def redoc(cls) -> None:
+        """Add the enum member to the docstring."""
         super(EnumAttribute, cls).redoc()
         cls.__doc__ += "\n:type: :class:%s.%s" % (
             cls.enum_type.__module__,
@@ -214,9 +223,11 @@ class EnumAttribute(Attribute):
         )
 
     def post_get(self, value: Any) -> enum.IntEnum:
+        """Convert the VISA value to the proper enum member."""
         return self.enum_type(value)
 
     def pre_set(self, value: enum.IntEnum) -> Any:
+        """Validate the value passed against the enum."""
         # Allow to pass bare integer (for backward compatibility)
         if isinstance(value, int):
             value = self.enum_type(value)
@@ -236,23 +247,21 @@ class EnumAttribute(Attribute):
 
 
 class IntAttribute(Attribute):
-    """Class for attributes with integers values.
-
-    """
+    """Class for attributes with integers values."""
 
     @classmethod
     def redoc(cls) -> None:
+        """Add the type of the returned value."""
         super(IntAttribute, cls).redoc()
         cls.__doc__ += "\n:type: int"
 
     def post_get(self, value: SupportsInt) -> int:
+        """Convert the returned value to an integer."""
         return int(value)
 
 
 class RangeAttribute(IntAttribute):
-    """Class for integer attributes with values within a range.
-
-    """
+    """Class for integer attributes with values within a range."""
 
     #: Range for the value, and iterable of extra values.
     min_value: int
@@ -261,12 +270,14 @@ class RangeAttribute(IntAttribute):
 
     @classmethod
     def redoc(cls) -> None:
+        """Specify the range of validity for the attribute."""
         super(RangeAttribute, cls).redoc()
         cls.__doc__ += "\n:range: %s <= value <= %s" % (cls.min_value, cls.max_value)
         if cls.values:
             cls.__doc__ += " or in %s" % cls.values
 
     def pre_set(self, value: int) -> int:
+        """Check that the value falls in the specified range."""
         if not self.min_value <= value <= self.max_value:
             if not self.values:
                 raise ValueError(
@@ -290,19 +301,19 @@ class RangeAttribute(IntAttribute):
 
 
 class ValuesAttribute(Attribute):
-    """Class for attributes with values in a list.
-
-    """
+    """Class for attributes with values in a list."""
 
     #: Valid values
     values: list = []
 
     @classmethod
     def redoc(cls) -> None:
+        """Add the allowed values to teh docs."""
         super(ValuesAttribute, cls).redoc()
         cls.__doc__ += "\n:values: %s" % cls.values
 
     def pre_set(self, value: int) -> int:
+        """Validate the value against the allowed values."""
         if value not in self.values:
             raise ValueError(
                 "%r is an invalid value for attribute %s, "
@@ -312,39 +323,42 @@ class ValuesAttribute(Attribute):
 
 
 class BooleanAttribute(Attribute):
-    """Class for attributes with boolean values.
-    """
+    """Class for attributes with boolean values."""
 
     py_type: bool
 
     @classmethod
     def redoc(cls) -> None:
+        """Add the type to the docs."""
         super(BooleanAttribute, cls).redoc()
         cls.__doc__ += "\n:type: bool"
 
     def post_get(self, value: constants.VisaBoolean) -> bool:
+        """Convert to a Python boolean."""
         return value == constants.VisaBoolean.true
 
     def pre_set(self, value: bool) -> constants.VisaBoolean:
+        """Convert to a VISA boolean."""
         return constants.VisaBoolean.true if value else constants.VisaBoolean.false
 
 
 class CharAttribute(Attribute):
-    """Class for attributes with char values.
-
-    """
+    """Class for attributes with char values."""
 
     py_type = str
 
     @classmethod
     def redoc(cls) -> None:
+        """Specify the valid characters."""
         super(CharAttribute, cls).redoc()
-        cls.__doc__ += "\n:range: 0 <= x <= 255\n:type: int"
+        cls.__doc__ += "\nASCII Character\n:type: str | bytes"
 
     def post_get(self, value: int) -> str:
+        """Convert the integer to a character."""
         return chr(value)
 
     def pre_set(self, value: Union[str, bytes]) -> int:
+        """Convert a character to an integer."""
         return ord(value)
 
 
@@ -356,9 +370,7 @@ class CharAttribute(Attribute):
 
 
 class AttrVI_ATTR_INTF_TYPE(EnumAttribute):
-    """Interface type of the given session.
-
-    """
+    """Interface type of the given session."""
 
     resources = AllSessionTypes
 
@@ -376,9 +388,7 @@ class AttrVI_ATTR_INTF_TYPE(EnumAttribute):
 
 
 class AttrVI_ATTR_INTF_NUM(RangeAttribute):
-    """Board number for the given interface.
-
-    """
+    """Board number for the given interface."""
 
     resources = AllSessionTypes
 
@@ -396,9 +406,7 @@ class AttrVI_ATTR_INTF_NUM(RangeAttribute):
 
 
 class AttrVI_ATTR_INTF_INST_NAME(Attribute):
-    """Human-readable text that describes the given interface.
-
-    """
+    """Human-readable text that describes the given interface."""
 
     resources = AllSessionTypes
 
@@ -414,7 +422,9 @@ class AttrVI_ATTR_INTF_INST_NAME(Attribute):
 
 
 class AttrVI_ATTR_RSRC_CLASS(Attribute):
-    """Resource class (for example, "INSTR") as defined by the canonical resource name.
+    """Resource class as defined by the canonical resource name.
+
+    Possible values are: INSTR, INTFC, SOCKET, RAW...
 
     """
 
@@ -432,9 +442,7 @@ class AttrVI_ATTR_RSRC_CLASS(Attribute):
 
 
 class AttrVI_ATTR_RSRC_NAME(Attribute):
-    """Unique identifier for a resource compliant with the address structure.
-
-    """
+    """Unique identifier for a resource compliant with the address structure."""
 
     resources = AllSessionTypes
 
@@ -605,26 +613,19 @@ class AttrVI_ATTR_TMO_VALUE(RangeAttribute):
 
     min_value, max_value, values = 0, 0xFFFFFFFF, None
 
-    def pre_set(self, value):
-        """[summary]
-
-        Parameters
-        ----------
-        value : [type]
-            [description]
-        """
-        timeout = util.cleanup_timeout(timeout)
-        self.set_visa_attribute(constants.ResourceAttribute.timeout_value, timeout)
+    def pre_set(self, value: Union[int, float]) -> int:
+        """Convert the timeout to an integer recognized by the VISA library."""
+        timeout = util.cleanup_timeout(value)
+        return timeout
 
     def post_get(self, value: int) -> Union[int, float]:  # type: ignore
-        """Convert VI_TMO_INFINTE into float("+inf")
-
-        """
+        """Convert VI_TMO_INFINTE into float("+inf")."""
         if value == constants.VI_TMO_INFINITE:
             return float("+inf")
         return value
 
     def __delete__(self, instance: Resource) -> None:
+        """Set an infinite timeout upon deletion."""
         instance.set_visa_attribute(
             constants.ResourceAttribute.timeout_value, constants.VI_TMO_INFINITE
         )
@@ -679,9 +680,7 @@ class AttrVI_ATTR_USER_DATA(RangeAttribute):
 
 
 class AttrVI_ATTR_TRIG_ID(EnumAttribute):
-    """Identifier for the current triggering mechanism.
-
-    """
+    """Identifier for the current triggering mechanism."""
 
     resources = [
         (constants.InterfaceType.gpib, "INSTR"),
@@ -709,9 +708,7 @@ class AttrVI_ATTR_TRIG_ID(EnumAttribute):
 
 
 class AttrVI_ATTR_SEND_END_EN(BooleanAttribute):
-    """Should END be asserted during the transfer of the last byte of the buffer.
-
-    """
+    """Should END be asserted during the transfer of the last byte of the buffer."""
 
     # TODO find out if USB RAW should be listed
     resources = [
@@ -871,9 +868,7 @@ class AttrVI_ATTR_IO_PROT(EnumAttribute):
 
 
 class AttrVI_ATTR_FILE_APPEND_EN(BooleanAttribute):
-    """Should viReadToFile() overwrite (truncate) or append when opening a file.
-
-    """
+    """Should viReadToFile() overwrite (truncate) or append when opening a file."""
 
     resources = [
         (constants.InterfaceType.gpib, "INSTR"),
@@ -1138,9 +1133,7 @@ class AttrVI_ATTR_TCPIP_PORT(RangeAttribute):
 
 
 class AttrVI_ATTR_TCPIP_DEVICE_NAME(Attribute):
-    """LAN device name used by the VXI-11 or LXI protocol during connection.
-
-    """
+    """LAN device name used by the VXI-11 or LXI protocol during connection."""
 
     resources = [(constants.InterfaceType.tcpip, "INSTR")]
 
@@ -1201,9 +1194,7 @@ class AttrVI_ATTR_TCPIP_KEEPALIVE(BooleanAttribute):
 
 
 class AttrVI_ATTR_TCPIP_IS_HISLIP(BooleanAttribute):
-    """Does this resource use the HiSLIP protocol
-
-    """
+    """Does this resource use the HiSLIP protocol."""
 
     resources = [(constants.InterfaceType.tcpip, "INSTR")]
 
@@ -1358,9 +1349,7 @@ class AttrVI_ATTR_GPIB_SYS_CNTRL_STATE(BooleanAttribute):
 
 
 class AttrVI_ATTR_GPIB_CIC_STATE(BooleanAttribute):
-    """Is the specified GPIB interface currently CIC (Controller In Charge).
-
-    """
+    """Is the specified GPIB interface currently CIC (Controller In Charge)."""
 
     resources = [(constants.InterfaceType.gpib, "INTFC")]
 
@@ -1376,9 +1365,7 @@ class AttrVI_ATTR_GPIB_CIC_STATE(BooleanAttribute):
 
 
 class AttrVI_ATTR_GPIB_REN_STATE(EnumAttribute):
-    """Current state of the GPIB REN (Remote ENable) interface line.
-
-    """
+    """Current state of the GPIB REN (Remote ENable) interface line."""
 
     resources = [
         (constants.InterfaceType.gpib, "INSTR"),
@@ -1399,9 +1386,7 @@ class AttrVI_ATTR_GPIB_REN_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_GPIB_ATN_STATE(EnumAttribute):
-    """Current state of the GPIB ATN (ATtentioN) interface line.
-
-    """
+    """Current state of the GPIB ATN (ATtentioN) interface line."""
 
     resources = [(constants.InterfaceType.gpib, "INTFC")]
 
@@ -1419,9 +1404,7 @@ class AttrVI_ATTR_GPIB_ATN_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_GPIB_NDAC_STATE(EnumAttribute):
-    """Current state of the GPIB NDAC (Not Data ACcepted) interface line.
-
-    """
+    """Current state of the GPIB NDAC (Not Data ACcepted) interface line."""
 
     resources = [(constants.InterfaceType.gpib, "INTFC")]
 
@@ -1439,9 +1422,7 @@ class AttrVI_ATTR_GPIB_NDAC_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_GPIB_SRQ_STATE(EnumAttribute):
-    """Current state of the GPIB SRQ (Service ReQuest) interface line.
-
-    """
+    """Current state of the GPIB SRQ (Service ReQuest) interface line."""
 
     resources = [(constants.InterfaceType.gpib, "INTFC")]
 
@@ -1459,7 +1440,9 @@ class AttrVI_ATTR_GPIB_SRQ_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_GPIB_ADDR_STATE(EnumAttribute):
-    """Is the GPIB interface currently addressed to talk or listen, or is not addressed.
+    """Current state of the GPIB interface.
+
+    The interface can be addressed to talk or listen, or not addressed.
 
     """
 
@@ -1479,9 +1462,7 @@ class AttrVI_ATTR_GPIB_ADDR_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_GPIB_UNADDR_EN(BooleanAttribute):
-    """Whether to unaddress the device (UNT and UNL) after each read or write operation.
-
-    """
+    """Whether to unaddress the device (UNT and UNL) after each read/write operation."""
 
     resources = [(constants.InterfaceType.gpib, "INSTR")]
 
@@ -1497,9 +1478,7 @@ class AttrVI_ATTR_GPIB_UNADDR_EN(BooleanAttribute):
 
 
 class AttrVI_ATTR_GPIB_READDR_EN(BooleanAttribute):
-    """Whether to use repeat addressing before each read or write operation.
-
-    """
+    """Whether to use repeat addressing before each read/write operation."""
 
     resources = [(constants.InterfaceType.gpib, "INSTR")]
 
@@ -1515,9 +1494,7 @@ class AttrVI_ATTR_GPIB_READDR_EN(BooleanAttribute):
 
 
 class AttrVI_ATTR_GPIB_HS488_CBL_LEN(RangeAttribute):
-    """Total number of meters of GPIB cable used in the specified GPIB interface.
-
-    """
+    """Total number of meters of GPIB cable used in the specified GPIB interface."""
 
     resources = [(constants.InterfaceType.gpib, "INTFC")]
 
@@ -1539,9 +1516,7 @@ class AttrVI_ATTR_GPIB_HS488_CBL_LEN(RangeAttribute):
 
 
 class AttrVI_ATTR_ASRL_AVAIL_NUM(RangeAttribute):
-    """Number of bytes available in the low- level I/O receive buffer.
-
-    """
+    """Number of bytes available in the low- level I/O receive buffer."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -1606,9 +1581,7 @@ class AttrVI_ATTR_ASRL_DATA_BITS(RangeAttribute):
 
 
 class AttrVI_ATTR_ASRL_PARITY(EnumAttribute):
-    """Parity used with every frame transmitted and received.
-
-    """
+    """Parity used with every frame transmitted and received."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -1648,9 +1621,7 @@ class AttrVI_ATTR_ASRL_STOP_BITS(EnumAttribute):
 
 
 class AttrVI_ATTR_ASRL_FLOW_CNTRL(EnumAttribute):
-    """Indicates the type of flow control used by the transfer mechanism.
-
-    """
+    """Indicate the type of flow control used by the transfer mechanism."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -1733,9 +1704,7 @@ class AttrVI_ATTR_ASRL_ALLOW_TRANSMIT(BooleanAttribute):
 
 
 class AttrVI_ATTR_ASRL_END_IN(EnumAttribute):
-    """Method used to terminate read operations.
-
-    """
+    """Method used to terminate read operations."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -1753,9 +1722,7 @@ class AttrVI_ATTR_ASRL_END_IN(EnumAttribute):
 
 
 class AttrVI_ATTR_ASRL_END_OUT(EnumAttribute):
-    """Method used to terminate write operations.
-
-    """
+    """Method used to terminate write operations."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -1888,9 +1855,7 @@ class AttrVI_ATTR_ASRL_XON_CHAR(CharAttribute):
 
 
 class AttrVI_ATTR_ASRL_CTS_STATE(EnumAttribute):
-    """Current state of the Clear To Send (CTS) input signal.
-
-    """
+    """Current state of the Clear To Send (CTS) input signal."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -1908,9 +1873,7 @@ class AttrVI_ATTR_ASRL_CTS_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_ASRL_DSR_STATE(EnumAttribute):
-    """Current state of the Data Set Ready (DSR) input signal.
-
-    """
+    """Current state of the Data Set Ready (DSR) input signal."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -1928,9 +1891,7 @@ class AttrVI_ATTR_ASRL_DSR_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_ASRL_DTR_STATE(EnumAttribute):
-    """Current state of the Data Terminal Ready (DTR) input signal.
-
-    """
+    """Current state of the Data Terminal Ready (DTR) input signal."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -1948,9 +1909,7 @@ class AttrVI_ATTR_ASRL_DTR_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_ASRL_RTS_STATE(EnumAttribute):
-    """Manually assert or unassert the Request To Send (RTS) output signal.
-
-    """
+    """Manually assert or unassert the Request To Send (RTS) output signal."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -2049,9 +2008,7 @@ class AttrVI_ATTR_ASRL_RI_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_USB_INTFC_NUM(RangeAttribute):
-    """USB interface number used by the given session.
-
-    """
+    """USB interface number used by the given session."""
 
     resources = [
         (constants.InterfaceType.usb, "INSTR"),
@@ -2072,9 +2029,7 @@ class AttrVI_ATTR_USB_INTFC_NUM(RangeAttribute):
 
 
 class AttrVI_ATTR_USB_SERIAL_NUM(Attribute):
-    """USB serial number of this device.
-
-    """
+    """USB serial number of this device."""
 
     resources = [
         (constants.InterfaceType.usb, "INSTR"),
@@ -2093,9 +2048,7 @@ class AttrVI_ATTR_USB_SERIAL_NUM(Attribute):
 
 
 class AttrVI_ATTR_USB_PROTOCOL(RangeAttribute):
-    """USB protocol used by this USB interface.
-
-    """
+    """USB protocol used by this USB interface."""
 
     resources = [
         (constants.InterfaceType.usb, "INSTR"),
@@ -2142,9 +2095,7 @@ class AttrVI_ATTR_USB_MAX_INTR_SIZE(RangeAttribute):
 
 
 class AttrVI_ATTR_USB_CLASS(RangeAttribute):
-    """USB class used by this USB interface.
-
-    """
+    """USB class used by this USB interface."""
 
     resources = [(constants.InterfaceType.usb, "RAW")]
 
@@ -2162,9 +2113,7 @@ class AttrVI_ATTR_USB_CLASS(RangeAttribute):
 
 
 class AttrVI_ATTR_USB_SUBCLASS(RangeAttribute):
-    """USB subclass used by this USB interface.
-
-    """
+    """USB subclass used by this USB interface."""
 
     resources = [(constants.InterfaceType.usb, "RAW")]
 
@@ -2298,9 +2247,7 @@ class AttrVI_ATTR_USB_INTR_IN_PIPE(RangeAttribute):
 
 
 class AttrVI_ATTR_USB_ALT_SETTING(RangeAttribute):
-    """USB alternate setting used by this USB interface.
-
-    """
+    """USB alternate setting used by this USB interface."""
 
     resources = [(constants.InterfaceType.usb, "RAW")]
 
@@ -2318,9 +2265,7 @@ class AttrVI_ATTR_USB_ALT_SETTING(RangeAttribute):
 
 
 class AttrVI_ATTR_USB_END_IN(EnumAttribute):
-    """Method used to terminate read operations.
-
-    """
+    """Method used to terminate read operations."""
 
     resources = [(constants.InterfaceType.usb, "RAW")]
 
@@ -2338,9 +2283,7 @@ class AttrVI_ATTR_USB_END_IN(EnumAttribute):
 
 
 class AttrVI_ATTR_USB_NUM_INTFCS(RangeAttribute):
-    """Number of interfaces supported by this USB device.
-
-    """
+    """Number of interfaces supported by this USB device."""
 
     resources = [(constants.InterfaceType.usb, "RAW")]
 
@@ -2426,9 +2369,7 @@ class AttrVI_ATTR_USB_CTRL_PIPE(RangeAttribute):
 
 
 class AttrVI_ATTR_MANF_NAME(Attribute):
-    """Manufacturer name.
-
-    """
+    """Manufacturer name."""
 
     resources = [
         (constants.InterfaceType.pxi, "INSTR"),
@@ -2450,9 +2391,7 @@ class AttrVI_ATTR_MANF_NAME(Attribute):
 
 
 class AttrVI_ATTR_MANF_ID(RangeAttribute):
-    """Manufacturer identification number of the device.
-
-    """
+    """Manufacturer identification number of the device."""
 
     resources = [
         (constants.InterfaceType.pxi, "INSTR"),
@@ -2475,9 +2414,7 @@ class AttrVI_ATTR_MANF_ID(RangeAttribute):
 
 
 class AttrVI_ATTR_MODEL_NAME(Attribute):
-    """Model name of the device.
-
-    """
+    """Model name of the device."""
 
     resources = [
         (constants.InterfaceType.pxi, "INSTR"),
@@ -2499,9 +2436,7 @@ class AttrVI_ATTR_MODEL_NAME(Attribute):
 
 
 class AttrVI_ATTR_MODEL_CODE(RangeAttribute):
-    """Model code for the device.
-
-    """
+    """Model code for the device."""
 
     resources = [
         (constants.InterfaceType.pxi, "INSTR"),
@@ -2524,9 +2459,7 @@ class AttrVI_ATTR_MODEL_CODE(RangeAttribute):
 
 
 class AttrVI_ATTR_DEV_STATUS_BYTE(CharAttribute):
-    """488-style status byte of the local controller or device for this session.
-
-    """
+    """488-style status byte of the local controller or device for this session."""
 
     resources = [
         (constants.InterfaceType.gpib, "INTFC"),
@@ -2545,9 +2478,7 @@ class AttrVI_ATTR_DEV_STATUS_BYTE(CharAttribute):
 
 
 class AttrVI_ATTR_4882_COMPLIANT(BooleanAttribute):
-    """Whether the device is 488.2 compliant.
-
-    """
+    """Whether the device is 488.2 compliant."""
 
     resources = [
         (constants.InterfaceType.usb, "INSTR"),
@@ -2593,9 +2524,7 @@ class AttrVI_ATTR_SLOT(RangeAttribute):
 
 
 class AttrVI_ATTR_WIN_ACCESS(RangeAttribute):
-    """Modes in which the current window may be accessed.
-
-    """
+    """Modes in which the current window may be accessed."""
 
     resources = [
         (constants.InterfaceType.pxi, "INSTR"),
@@ -2618,9 +2547,7 @@ class AttrVI_ATTR_WIN_ACCESS(RangeAttribute):
 
 
 class AttrVI_ATTR_WIN_BASE_ADDR(RangeAttribute):
-    """Base address of the interface bus to which this window is mapped.
-
-    """
+    """Base address of the interface bus to which this window is mapped."""
 
     resources = [
         (constants.InterfaceType.pxi, "INSTR"),
@@ -2647,9 +2574,7 @@ class AttrVI_ATTR_WIN_BASE_ADDR(RangeAttribute):
 
 
 class AttrVI_ATTR_WIN_SIZE(RangeAttribute):
-    """Base address of the interface bus to which this window is mapped.
-
-    """
+    """Base address of the interface bus to which this window is mapped."""
 
     resources = [
         (constants.InterfaceType.pxi, "INSTR"),
@@ -2738,9 +2663,7 @@ class AttrVI_ATTR_DEST_INCREMENT(RangeAttribute):
 
 
 class AttrVI_ATTR_FDC_CHNL(RangeAttribute):
-    """Which Fast Data Channel (FDC) to use to transfer the buffer.
-
-    """
+    """Which Fast Data Channel (FDC) to use to transfer the buffer."""
 
     resources = [(constants.InterfaceType.vxi, "INSTR")]
 
@@ -2758,9 +2681,7 @@ class AttrVI_ATTR_FDC_CHNL(RangeAttribute):
 
 
 class AttrVI_ATTR_FDC_MODE(RangeAttribute):
-    """Which Fast Data Channel (FDC) mode to use (either normal or stream mode).
-
-    """
+    """Which Fast Data Channel (FDC) mode to use (either normal or stream mode)."""
 
     resources = [(constants.InterfaceType.vxi, "INSTR")]
 
@@ -2778,9 +2699,7 @@ class AttrVI_ATTR_FDC_MODE(RangeAttribute):
 
 
 class AttrVVI_ATTR_FDC_GEN_SIGNAL_EN(BooleanAttribute):
-    """Fast Data Channel (FDC) signal enable.
-
-    """
+    """Fast Data Channel (FDC) signal enable."""
 
     resources = [(constants.InterfaceType.vxi, "INSTR")]
 
@@ -2868,9 +2787,7 @@ class AttrVI_ATTR_VXI_LA(RangeAttribute):
 
 
 class AttrVI_ATTR_CMDR_LA(RangeAttribute):
-    """Unique logical address of the commander of the VXI device.
-
-    """
+    """Unique logical address of the commander of the VXI device."""
 
     resources = [
         (constants.InterfaceType.vxi, "INSTR"),
@@ -2913,9 +2830,7 @@ class AttrVI_ATTR_MEM_SPACE(EnumAttribute):
 
 
 class AttrVI_ATTR_MEM_SIZE(RangeAttribute):
-    """Unique logical address of the commander of the VXI device.
-
-    """
+    """Unique logical address of the commander of the VXI device."""
 
     resources = [
         (constants.InterfaceType.vxi, "INSTR"),
@@ -2940,9 +2855,7 @@ class AttrVI_ATTR_MEM_SIZE(RangeAttribute):
 
 
 class AttrVI_ATTR_MEM_BASE(RangeAttribute):
-    """Unique logical address of the commander of the VXI device.
-
-    """
+    """Unique logical address of the commander of the VXI device."""
 
     resources = [
         (constants.InterfaceType.vxi, "INSTR"),
@@ -2967,9 +2880,7 @@ class AttrVI_ATTR_MEM_BASE(RangeAttribute):
 
 
 class AttrVI_ATTR_IMMEDIATE_SERV(BooleanAttribute):
-    """IS the device an immediate servant of the controller running VISA.
-
-    """
+    """Is the device an immediate servant of the controller running VISA."""
 
     resources = [(constants.InterfaceType.vxi, "INSTR")]
 
@@ -3085,7 +2996,7 @@ class AttrVI_ATTR_SRC_BYTE_ORDER(EnumAttribute):
 
 
 class AttrVI_ATTR_WIN_ACCESS_PRIV(RangeAttribute):
-    """Address modifier to be used in low-level access operations
+    """Address modifier to be used in low-level access operations.
 
     Low-level operation are viMapAddress(), viPeekXX(), and viPokeXX(),
     when accessing the mapped window.
@@ -3189,12 +3100,19 @@ class AttrVI_ATTR_VXI_TRIG_SUPPORT(RangeAttribute):
 
 
 class AttrVI_ATTR_VXI_DEV_CLASS(EnumAttribute):
-    """This attribute represents the VXI-defined device class to which the
-    resource belongs, either message based (VI_VXI_CLASS_MESSAGE),
-    register based (VI_VXI_CLASS_REGISTER), extended
-    (VI_VXI_CLASS_EXTENDED), or memory (VI_VXI_CLASS_MEMORY). VME
-    devices are usually either register based or belong to a
-    miscellaneous class (VI_VXI_CLASS_OTHER).
+    """VXI-defined device class to which the resource belongs.
+
+    This can be either:
+
+    - message based (VI_VXI_CLASS_MESSAGE)
+    - register based (VI_VXI_CLASS_REGISTER)
+    - extended (VI_VXI_CLASS_EXTENDED)
+    - memory (VI_VXI_CLASS_MEMORY)
+    - other (VI_VXI_CLASS_OTHER)
+
+    VME devices are usually either register based or belong to a miscellaneous
+    class (VI_VXI_CLASS_OTHER).
+
     """
 
     resources = [(constants.InterfaceType.vxi, "INSTR")]
@@ -3307,9 +3225,7 @@ class AttrVI_ATTR_VXI_TRIG_STATUS(RangeAttribute):
 
 
 class AttrVI_ATTR_VXI_VME_SYSFAIL_STATE(EnumAttribute):
-    """Current state of the VXI/VME SYSFAIL (SYStem FAILure) backplane line.
-
-    """
+    """Current state of the VXI/VME SYSFAIL (SYStem FAILure) backplane line."""
 
     resources = [(constants.InterfaceType.vxi, "BACKPLANE")]
 
@@ -3327,9 +3243,7 @@ class AttrVI_ATTR_VXI_VME_SYSFAIL_STATE(EnumAttribute):
 
 
 class AttrVI_ATTR_PXI_DEV_NUM(RangeAttribute):
-    """This is the PXI device number.
-
-    """
+    """PXI device number."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3371,9 +3285,7 @@ class AttrVI_ATTR_PXI_FUNC_NUM(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_BUS_NUM(RangeAttribute):
-    """PCI bus number of this device.
-
-    """
+    """PCI bus number of this device."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3392,6 +3304,7 @@ class AttrVI_ATTR_PXI_BUS_NUM(RangeAttribute):
 
 class AttrVI_ATTR_PXI_CHASSIS(RangeAttribute):
     """PXI chassis number of this device.
+
     A value of –1 means the chassis number is unknown.
 
     """
@@ -3415,9 +3328,7 @@ class AttrVI_ATTR_PXI_CHASSIS(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_SLOTPATH(Attribute):
-    """Slot path of this device.
-
-    """
+    """Slot path of this device."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3433,9 +3344,7 @@ class AttrVI_ATTR_PXI_SLOTPATH(Attribute):
 
 
 class AttrVI_ATTR_PXI_SLOT_LBUS_LEFT(RangeAttribute):
-    """Slot number or special feature connected to the local bus left lines.
-
-    """
+    """Slot number or special feature connected to the local bus left lines."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3472,9 +3381,7 @@ class AttrVI_ATTR_PXI_SLOT_LBUS_LEFT(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_SLOT_LBUS_RIGHT(RangeAttribute):
-    """Slot number or special feature connected to the local bus right lines.
-
-    """
+    """Slot number or special feature connected to the local bus right lines."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3511,9 +3418,7 @@ class AttrVI_ATTR_PXI_SLOT_LBUS_RIGHT(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_IS_EXPRESS(BooleanAttribute):
-    """Whether the device is PXI/PCI or PXI/PCI Express.
-
-    """
+    """Whether the device is PXI/PCI or PXI/PCI Express."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3617,9 +3522,7 @@ class AttrVI_ATTR_PXI_DSTAR_BUS(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_DSTAR_SET(RangeAttribute):
-    """Set of PXI_DSTAR lines connected to this device.
-
-    """
+    """Set of PXI_DSTAR lines connected to this device."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3637,9 +3540,7 @@ class AttrVI_ATTR_PXI_DSTAR_SET(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_TRIG_BUS(RangeAttribute):
-    """The trigger bus number of this device.
-
-    """
+    """The trigger bus number of this device."""
 
     resources = [
         (constants.InterfaceType.pxi, "INSTR"),
@@ -3660,9 +3561,7 @@ class AttrVI_ATTR_PXI_TRIG_BUS(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_STAR_TRIG_BUS(RangeAttribute):
-    """The star trigger bus number of this device.
-
-    """
+    """The star trigger bus number of this device."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3680,9 +3579,7 @@ class AttrVI_ATTR_PXI_STAR_TRIG_BUS(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_STAR_TRIG_LINE(RangeAttribute):
-    """The PXI_STAR line connected to this device.
-
-    """
+    """The PXI_STAR line connected to this device."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3700,9 +3597,7 @@ class AttrVI_ATTR_PXI_STAR_TRIG_LINE(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_SRC_TRIG_BUS(RangeAttribute):
-    """VThe segment to use to qualify trigSrc in viMapTrigger.
-
-    """
+    """VThe segment to use to qualify trigSrc in viMapTrigger."""
 
     resources = [(constants.InterfaceType.pxi, "BACKPLANE")]
 
@@ -3720,9 +3615,7 @@ class AttrVI_ATTR_PXI_SRC_TRIG_BUS(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_DEST_TRIG_BUS(RangeAttribute):
-    """The segment to use to qualify trigDest in viMapTrigger.
-
-    """
+    """The segment to use to qualify trigDest in viMapTrigger."""
 
     resources = [(constants.InterfaceType.pxi, "BACKPLANE")]
 
@@ -3740,9 +3633,7 @@ class AttrVI_ATTR_PXI_DEST_TRIG_BUS(RangeAttribute):
 
 
 class _AttrVI_ATTR_PXI_MEM_TYPE_BARX(EnumAttribute):
-    """Memory type used by the device in the specified BAR (if applicable).
-
-    """
+    """Memory type used by the device in the specified BAR (if applicable)."""
 
     resources = [(constants.InterfaceType.pxi, "INSTR")]
 
@@ -3838,9 +3729,7 @@ for i in range(0, 5):
 
 
 class AttrVI_ATTR_STATUS(EnumAttribute):
-    """Return code of the operation generating this event.
-
-    """
+    """Status code of the operation generating this event."""
 
     resources = [constants.EventType.exception, constants.EventType.io_completion]
 
@@ -3858,9 +3747,7 @@ class AttrVI_ATTR_STATUS(EnumAttribute):
 
 
 class AttrVI_ATTR_OPER_NAME(Attribute):
-    """Name of the operation generating this event.
-
-    """
+    """Name of the operation generating this event."""
 
     resources = [constants.EventType.io_completion, constants.EventType.exception]
 
@@ -3876,9 +3763,7 @@ class AttrVI_ATTR_OPER_NAME(Attribute):
 
 
 class AttrVI_ATTR_JOB_ID(Attribute):
-    """VJob ID of the asynchronous operation that has completed.
-
-    """
+    """Job ID of the asynchronous operation that has completed."""
 
     resources = [constants.EventType.io_completion]
 
@@ -3894,9 +3779,7 @@ class AttrVI_ATTR_JOB_ID(Attribute):
 
 
 class AttrVI_ATTR_RET_COUNT(RangeAttribute):
-    """Actual number of elements that were asynchronously transferred.
-
-    """
+    """Actual number of elements that were asynchronously transferred."""
 
     resources = [constants.EventType.io_completion]
 
@@ -3914,9 +3797,7 @@ class AttrVI_ATTR_RET_COUNT(RangeAttribute):
 
 
 class AttrVI_ATTR_BUFFER(Attribute):
-    """Address of a buffer that was used in an asynchronous operation.
-
-    """
+    """Buffer that was used in an asynchronous operation."""
 
     resources = [constants.EventType.io_completion]
 
@@ -3933,6 +3814,7 @@ class AttrVI_ATTR_BUFFER(Attribute):
     def __get__(  # type: ignore
         self, instance: Optional[IOCompletionEvent], owner
     ) -> Optional[Union[SupportsBytes, "AttrVI_ATTR_BUFFER"]]:
+        """Retrieve the buffer stored on the library using the jod Id."""
         if instance is None:
             return self
         # The buffer we need to access has been created in an earlier call
@@ -3942,6 +3824,7 @@ class AttrVI_ATTR_BUFFER(Attribute):
 
 
 class AttrVI_ATTR_RECV_TRIG_ID(EnumAttribute):
+    """Id of the trigger that generated the event."""
 
     resources = [constants.EventType.trig]
 
@@ -3959,9 +3842,7 @@ class AttrVI_ATTR_RECV_TRIG_ID(EnumAttribute):
 
 
 class AttrVI_ATTR_GPIB_RECV_CIC_STATE(BooleanAttribute):
-    """Whether the event by the gain or the loss of the CIC state.
-
-    """
+    """Whether the event by the gain or the loss of the CIC state."""
 
     resources = [constants.EventType.gpib_controller_in_charge]
 
@@ -3977,8 +3858,7 @@ class AttrVI_ATTR_GPIB_RECV_CIC_STATE(BooleanAttribute):
 
 
 class AttrVI_ATTR_RECV_TCPIP_ADDR(Attribute):
-    """Address of the device from which the session received a connection
-    """
+    """Address of the device from which the session received a connection."""
 
     resources = [constants.EventType.tcpip_connect]
 
@@ -3994,9 +3874,7 @@ class AttrVI_ATTR_RECV_TCPIP_ADDR(Attribute):
 
 
 class AttrVI_ATTR_USB_RECV_INTR_SIZE(RangeAttribute):
-    """Size of the data that was received from the USB interrupt-IN pipe.
-
-    """
+    """Size of the data that was received from the USB interrupt-IN pipe."""
 
     resources = [constants.EventType.usb_interrupt]
 
@@ -4014,9 +3892,7 @@ class AttrVI_ATTR_USB_RECV_INTR_SIZE(RangeAttribute):
 
 
 class AttrVI_ATTR_USB_RECV_INTR_DATA(Attribute):
-    """Actual data that was received from the USB interrupt-IN pipe
-
-    """
+    """Actual data that was received from the USB interrupt-IN pipe."""
 
     resources = [constants.EventType.pxi_interrupt]
 
@@ -4032,9 +3908,7 @@ class AttrVI_ATTR_USB_RECV_INTR_DATA(Attribute):
 
 
 class AttrVI_ATTR_SIGP_STATUS_ID(RangeAttribute):
-    """16-bit Status/ID retrieved during the IACK cycle or from the Signal register.
-
-    """
+    """16-bit Status/ID retrieved during the IACK cycle or from the Signal register."""
 
     resources = [constants.EventType.vxi_signal_interrupt]
 
@@ -4052,9 +3926,7 @@ class AttrVI_ATTR_SIGP_STATUS_ID(RangeAttribute):
 
 
 class AttrVI_ATTR_INTR_STATUS_ID(RangeAttribute):
-    """32-bit status/ID retrieved during the IACK cycle.
-
-    """
+    """32-bit status/ID retrieved during the IACK cycle."""
 
     resources = [constants.EventType.vxi_vme_interrupt]
 
@@ -4072,9 +3944,7 @@ class AttrVI_ATTR_INTR_STATUS_ID(RangeAttribute):
 
 
 class AttrVI_ATTR_RECV_INTR_LEVEL(RangeAttribute):
-    """VXI interrupt level on which the interrupt was received.
-
-    """
+    """VXI interrupt level on which the interrupt was received."""
 
     resources = [constants.EventType.vxi_vme_interrupt]
 
@@ -4092,9 +3962,7 @@ class AttrVI_ATTR_RECV_INTR_LEVEL(RangeAttribute):
 
 
 class AttrVI_ATTR_PXI_RECV_INTR_SEQ(Attribute):
-    """Index of the interrupt sequence that detected the interrupt condition.
-
-    """
+    """Index of the interrupt sequence that detected the interrupt condition."""
 
     resources = [constants.EventType.pxi_interrupt]
 
@@ -4110,9 +3978,7 @@ class AttrVI_ATTR_PXI_RECV_INTR_SEQ(Attribute):
 
 
 class AttrVI_ATTR_PXI_RECV_INTR_DATA(Attribute):
-    """First PXI/PCI register read in the successful interrupt detection sequence.
-
-    """
+    """First PXI/PCI register read in the successful interrupt detection sequence."""
 
     resources = [constants.EventType.pxi_interrupt]
 

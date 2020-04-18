@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
+"""Command line tools used for debugging and testing.
+
+This file is part of PyVISA.
+
+:copyright: 2019-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
+
 """
-    pyvisa.cmd_line_tools
-    ~~~~~~~~~~~~~~~~~~~~~
-
-    Command line tools used for debugging and testing.
-
-    This file is part of PyVISA.
-
-    :copyright: 2019 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
-"""
-
-from __future__ import division, unicode_literals, print_function, absolute_import
+from typing import Optional
 
 
-def visa_main(command: str = None) -> None:
+def visa_main(command: Optional[str] = None) -> None:
+    """Run the main entry point for command line tools.
+
+    Parameters
+    ----------
+    command : str, optional
+        What command to invoke, if None the value is read from the command
+        line arguments
+
+    """
     import argparse
 
     parser = argparse.ArgumentParser(description="PyVISA command-line utilities")
@@ -53,8 +58,10 @@ def visa_main(command: str = None) -> None:
 
 
 def visa_shell() -> None:
+    """Run the VISA shell CLI program."""
     visa_main("shell")
 
 
 def visa_info() -> None:
+    """Summarize the infos about PyVISA and VISA."""
     visa_main("info")

@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.events
-    ~~~~~~~~~~~~~
+"""VISA events with convenient access to the available attributes.
 
-    VISA events with convenient access to the available attributes.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2020 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 from contextlib import contextmanager
 from typing import Callable, Optional, Type, TYPE_CHECKING
@@ -43,6 +40,8 @@ class Event:
     def register(
         cls, event_type: constants.EventType,
     ) -> Callable[[Type["Event"]], Type["Event"]]:
+        """Register a class with a given event type."""
+
         def _internal(python_class: Type["Event"]) -> Type["Event"]:
             Resource.register_event_class(event_type, python_class)
 
@@ -69,15 +68,18 @@ class Event:
 
     @property
     def context(self) -> VISAEventContext:
+        """Access the VISA context used to retrieve attributes.
+
+        This is equivalent to the session on a resource.
+
+        """
         c = self._context
         if c is None:
             raise errors.InvalidSession()
         return c
 
     def get_visa_attribute(self, attribute_id: constants.EventAttribute) -> Any:
-        """Get the specified VISA attribute.
-
-        """
+        """Get the specified VISA attribute."""
         return self.visalib.get_attribute(self.context, attribute_id)
 
 
@@ -95,9 +97,7 @@ for event in (
 
 @Event.register(constants.EventType.exception)
 class ExceptionEvent(Event):
-    """Event corresponding to an exception
-
-    """
+    """Event corresponding to an exception."""
 
     #: Status code of the opertion that generated the exception
     status: Attribute[constants.StatusCode] = attributes.AttrVI_ATTR_STATUS()
@@ -122,9 +122,7 @@ class GPIBCICEvent(Event):
 
 @Event.register(constants.EventType.io_completion)
 class IOCompletionEvent(Event):
-    """Event marking the completion of an IO operation.
-
-    """
+    """Event marking the completion of an IO operation."""
 
     #: Status code of the asynchronous I/O operation that has completed.
     status: Attribute[constants.StatusCode] = attributes.AttrVI_ATTR_STATUS()
@@ -144,9 +142,7 @@ class IOCompletionEvent(Event):
 
 @Event.register(constants.EventType.trig)
 class TrigEvent(Event):
-    """Trigger event.
-
-    """
+    """Trigger event."""
 
     #: Identifier of the triggering mechanism on which the specified trigger event
     #: was received.
@@ -155,9 +151,7 @@ class TrigEvent(Event):
 
 @Event.register(constants.EventType.usb_interrupt)
 class USBInteruptEvent(Event):
-    """USB interruption event.
-
-    """
+    """USB interruption event."""
 
     #: Status of the read operation from the USB interrupt-IN pipe.
     status: Attribute[constants.StatusCode] = attributes.AttrVI_ATTR_STATUS()
@@ -171,9 +165,7 @@ class USBInteruptEvent(Event):
 
 @Event.register(constants.EventType.vxi_signal_interrupt)
 class VXISignalInteruptEvent(Event):
-    """VXI signal event.
-
-    """
+    """VXI signal event."""
 
     #: 16-bit Status/ID value retrieved during the IACK cycle or
     #: from the Signal register.
@@ -182,9 +174,7 @@ class VXISignalInteruptEvent(Event):
 
 @Event.register(constants.EventType.vxi_vme_interrupt)
 class VXIInterruptEvent(Event):
-    """VXI interrupt event.
-
-    """
+    """VXI interrupt event."""
 
     #: 32-bit status/ID retrieved during the IACK cycle.
     status_id: Attribute[int] = attributes.AttrVI_ATTR_INTR_STATUS_ID()
@@ -195,9 +185,7 @@ class VXIInterruptEvent(Event):
 
 @Event.register(constants.EventType.pxi_interrupt)
 class PXIInteruptEvent(Event):
-    """PXI interruption event.
-
-    """
+    """PXI interruption event."""
 
     #: Index of the interrupt sequence that detected the interrupt condition.
     sequence: Attribute[int] = attributes.AttrVI_ATTR_PXI_RECV_INTR_SEQ()

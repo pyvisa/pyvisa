@@ -1,15 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.shell
-    ~~~~~~~~~~~~
+"""Shell for interactive testing.
 
-    Shell for interactive testing.
+This file is taken from the Lantz Project.
 
-    This file is taken from the Lantz Project.
+:copyright: (c) 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 
-    :copyright: (c) 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
 """
 import cmd
 import sys
@@ -18,13 +15,11 @@ from typing import List, Tuple
 from . import ResourceManager, VisaIOError, attributes, constants
 from .thirdparty import prettytable
 
-# XXX providing a way to list/use constants would be nice
+# TODO providing a way to list/use constants would be nice
 
 
 class VisaShell(cmd.Cmd):
-    """Shell for interactive testing.
-
-    """
+    """Shell for interactive testing."""
 
     intro: str = "\nWelcome to the VISA shell. Type help or ? to list commands.\n"
     prompt: str = "(visa) "
@@ -104,6 +99,7 @@ class VisaShell(cmd.Cmd):
             print(e)
 
     def complete_open(self, text, line, begidx, endidx):
+        """Provide completion on open."""
         if not self.resources:
             self.do_list("do not print")
         return [item[0] for item in self.resources if item[0].startswith(text)] + [
@@ -195,6 +191,7 @@ class VisaShell(cmd.Cmd):
                 print(e)
 
     def print_attribute_list(self):
+        """Print the supported attribute list."""
         p = prettytable.PrettyTable(("VISA name", "Constant", "Python name", "val"))
         for attr in getattr(self.current, "visa_attributes_classes", ()):
             try:
@@ -304,6 +301,7 @@ class VisaShell(cmd.Cmd):
                 return
 
     def complete_attr(self, text, line, begidx, endidx):
+        """Provide completion for the attr command."""
         return [item for item in self.py_attr if item.startswith(text)] + [
             item for item in self.vi_attr if item.startswith(text)
         ]
@@ -388,4 +386,5 @@ class VisaShell(cmd.Cmd):
 
 
 def main(library_path=""):
+    """Main entry point to start the shell."""
     VisaShell(library_path).cmdloop()

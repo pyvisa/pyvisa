@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.typing
-    ~~~~~~~~~~~~~
+"""Type aliases allowing to narrow down definition and reduce duplication
 
-    Type aliases allowing to narrow down definition and reduce duplication
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2020 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import ctypes
 from typing import TYPE_CHECKING, Any, Callable, List, NewType, Union
@@ -18,7 +15,10 @@ from . import constants
 if TYPE_CHECKING:
     from .resources import Resource
 
-#: Type alias used to identify VISA sessions (ResourceManager or Resource)
+#: Type alias used to identify VISA resource manager sessions
+VISARMSession = NewType("VISARMSession", int)
+
+#: Type alias used to identify VISA resource sessions
 VISASession = NewType("VISASession", int)
 
 #: Type alias used to identify an event context (created when handling an event)
