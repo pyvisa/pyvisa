@@ -23,28 +23,49 @@ class EventHandler:
 
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.event_success = False
         self.srq_success = False
         self.io_completed = False
         self.handle = None
+        self.session = None
 
-    def handle_event(self, instr, event_type, event, handle=None):
+    def handle_event(self, session, event_type, event, handle=None):
         """Event handler
 
         """
+        self.session = session
         self.handle = handle
         if event_type == constants.EventType.service_request:
             self.event_success = True
             self.srq_success = True
-            return 0
+            return None  # was 0
         if event_type == constants.EventType.io_completion:
             self.event_success = True
             self.io_completed = True
-            return 0
+            return None
         else:
             self.event_success = True
-            return 0
+            return None
+
+    def simplified_handler(self, resource, event, handle=None):
+        """Simplified handler that can be wrapped.
+
+        """
+        self.session = resource.session
+        self.handle = handle
+        event_type = event.event_type
+        if event_type == constants.EventType.service_request:
+            self.event_success = True
+            self.srq_success = True
+            return None  # was 0
+        if event_type == constants.EventType.io_completion:
+            self.event_success = True
+            self.io_completed = True
+            return None
+        else:
+            self.event_success = True
+            return None
 
 
 class MessagebasedResourceTestCase(ResourceTestCase):
@@ -128,7 +149,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         for ch in b"test\n":
             self.assertEqual(self.instr.read_bytes(1), ch.to_bytes(1, "little"))
 
-        # Breaking on termchar
+        # Breaking on termchar XXX handle the case of breaking on end of message
         self.instr.read_termination = "\r"
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"te\rst\r\n")
@@ -136,6 +157,13 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertEqual(self.instr.read_bytes(100, break_on_termchar=True), b"te\r")
         self.assertEqual(self.instr.read_bytes(100, break_on_termchar=True), b"st\r")
         self.assertEqual(self.instr.read_bytes(1), b"\n")
+
+        # Breaking on end of message
+        self.instr.read_termination = "\n"
+        self.instr.write_raw(b"RECEIVE\n")
+        self.instr.write_raw(b"test\n")
+        self.instr.write_raw(b"SEND\n")
+        self.assertEqual(self.instr.read_bytes(100, break_on_termchar=True), b"test\n")
 
     def test_handling_exception_in_read_bytes(self):
         """Test handling exception in read_bytes (monkeypatching)
@@ -601,9 +629,15 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             response = self.instr.wait_on_event(event_type, wait_time)
         finally:
             self.instr.disable_event(event_type, event_mech)
+
         self.assertFalse(response.timed_out)
-        self.assertEqual(response.event_type, constants.EventType.service_request)
+        self.assertEqual(response.event.event_type, constants.EventType.service_request)
         self.assertEqual(self.instr.read(), "1")
+
+        with self.assertWarns(FutureWarning):
+            response.event_type
+        with self.assertWarns(FutureWarning):
+            response.context
 
     def test_wait_on_event_timeout(self):
         """Test waiting on a VISA event.
@@ -657,6 +691,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                     event_type, handler.handle_event, user_handle
                 )
 
+            self.assertEqual(handler.session, self.instr.session)
             self.assertEqual(handler.handle, handle)
             self.assertTrue(handler.srq_success)
             self.assertEqual(self.instr.read(), "1")
@@ -667,19 +702,42 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         for handle in (1, 1.0, "1", [1], [1.0], Point(1, 2)):
             _test(handle)
 
-    def test_handling_invalid_handler(self):
-        """Test handling an error related to a wrong handler type.
+    def test_wrapping_handler(self):
+        """Test wrapping a handler using a Resource."""
+        handler = EventHandler()
+        event_type = constants.EventType.service_request
+        event_mech = constants.EventMechanism.handler
+        wrapped_handler = self.instr.wrap_handler(handler.simplified_handler)
+        user_handle = self.instr.install_handler(event_type, wrapped_handler)
+        self.instr.enable_event(event_type, event_mech, None)
+        self.instr.write("RCVSLOWSRQ")
+        self.instr.write("1")
+        self.instr.write("SENDSLOWSRQ")
 
-        """
+        try:
+            t1 = time.time()
+            while not handler.event_success:
+                if (time.time() - t1) > 2:
+                    break
+                time.sleep(0.1)
+        finally:
+            self.instr.disable_event(event_type, event_mech)
+            self.instr.uninstall_handler(event_type, wrapped_handler, user_handle)
+
+        self.assertEqual(handler.session, self.instr.session)
+        self.assertEqual(handler.handle, handle)
+        self.assertTrue(handler.srq_success)
+        self.assertEqual(self.instr.read(), "1")
+
+    def test_handling_invalid_handler(self):
+        """Test handling an error related to a wrong handler type."""
         with self.assertRaises(errors.VisaTypeError):
             event_type = constants.EventType.service_request
             event_mech = constants.EventMechanism.handler
             self.instr.install_handler(event_type, 1, object())
 
     def test_uninstalling_missing_visa_handler(self):
-        """Test uninstalling a visa handler that was not registered.
-
-        """
+        """Test uninstalling a visa handler that was not registered."""
         handler1 = EventHandler()
         handler2 = EventHandler()
         event_type = constants.EventType.service_request
@@ -717,6 +775,35 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         self.rm.visalib.uninstall_all_visa_handlers(None)
         self.assertFalse(self.rm.visalib.handlers)
+
+    def test_manual_async_read(self):
+        """Test handling IOCompletion event which has extra attributes."""
+        # Prepare message
+        self.instr.write_raw(b"RECEIVE\n")
+        self.instr.write_raw(b"test\n")
+        self.instr.write_raw(b"SEND\n")
+
+        # Enable event handling
+        event_type = constants.EventType.io_completion
+        event_mech = constants.EventMechanism.queue
+        wait_time = 2000  # set time that program waits to receive event
+        self.instr.enable_event(event_type, event_mech, None)
+
+        try:
+            visalib = self.instr.visalib
+            buffer, job_id, status_code = visalib.read_asynchronously(
+                self.instr.session, 10
+            )
+            self.assertIs(buffer, visalib.get_buffer_from_id(job_id))
+            response = self.instr.wait_on_event(event_type, wait_time)
+        finally:
+            self.instr.disable_event(event_type, event_mech)
+
+        self.assertEqual(response.event.status, constants.StatusCode.success)
+        self.assertEqual(bytes(buffer), bytes(response.event.buffer))
+        self.assertEqual(bytes(buffer), b"test\n")
+        self.assertEqual(response.event.return_count, 5)
+        self.assertEqual(response.event.operation_name, "viReadAsync")
 
     def test_shared_locking(self):
         """Test locking/unlocking a resource.
