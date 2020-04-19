@@ -11,6 +11,8 @@ import contextlib
 import copy
 import math
 import time
+import warnings
+from functools import update_wrapper
 from itertools import chain
 from typing import (
     TYPE_CHECKING,
@@ -27,16 +29,12 @@ from typing import (
     cast,
 )
 
-from typing_extensions import Literal, ClassVar
+from typing_extensions import ClassVar, Literal
 
-from .. import attributes, constants, errors, highlevel, logger, rname, util
-from ..typing import VISASession, VISAHandler
+from .. import attributes, constants, errors, highlevel, logger, rname, typing, util
 from ..attributes import Attribute
-
-if TYPE_CHECKING:
-    from ..events import Event
-
-# XXX provide a wrapper for handler converting the event
+from ..events import Event
+from ..typing import VISAHandler, VISASession
 
 
 class WaitResponse(object):
@@ -50,18 +48,39 @@ class WaitResponse(object):
 
     def __init__(self, event_type, context, ret, visalib, timed_out=False):
         if event_type == 0:
-            self.event_type = None
+            self._event_type = None
+            self.event = None
         else:
-            self.event_type = constants.EventType(event_type)
-        self.context = context
+            self._event_type = constants.EventType(event_type)
+            self.event = Event(visalib, event_type, context)
+        self._context = context
         self.ret = ret
         self._visalib = visalib
         self.timed_out = timed_out
 
+    @property
+    def event_type(self):
+        warnings.warn(
+            "event_type is deprecated and will be removed in 1.12. "
+            "Use the event object instead.",
+            FutureWarning,
+        )
+        return self._event_type
+
+    @property
+    def context(self):
+        warnings.warn(
+            "context is deprecated and will be removed in 1.12. "
+            "Use the event object instead to access the event attributes.",
+            FutureWarning,
+        )
+        return self._event_type
+
     def __del__(self) -> None:
-        if self.context != None:
+        if self._context != None:
             try:
-                self._visalib.close(self.context)
+                self.event.close()
+                self._visalib.close(self._context)
             except errors.VisaIOError:
                 pass
 
@@ -88,31 +107,26 @@ class Resource(object):
     #: are generally directly available on the resource.
     visa_attributes_classes = Set[Type[attributes.Attribute]]
 
-    #: Maps Event type to Python class encapsulating that event.
-    _event_classes: ClassVar[Dict[constants.EventType, Type[Event]]] = dict()
-
     @classmethod
     def register(
         cls, interface_type: constants.InterfaceType, resource_class: str
     ) -> Callable[[Type[T]], Type[T]]:
-        """[summary]
+        """Create a decorator to register a class.
+
+        The class is associated to an interface type, resource class pair.
 
         Parameters
         ----------
         interface_type : constants.InterfaceType
-            [description]
+            Interface type for which to register a wrapper class.
         resource_class : str
-            [description]
+            Resource class for which to register a wrapper class.
 
         Returns
         -------
         Callable[[Type[T]], Type[T]]
-            [description]
-
-        Raises
-        ------
-        TypeError
-            [description]
+            Decorator registering the class. Raises TypeError if some VISA
+            attributes are missing on the registered class.
 
         """
 
@@ -143,27 +157,6 @@ class Resource(object):
             return python_class
 
         return _internal
-
-    @classmethod
-    def register_event_class(
-        cls, event_type: constants.EventType, event_class: Type[Event]
-    ) -> None:
-        """[summary]
-
-        Parameters
-        ----------
-        event_type : constants.EventType
-            [description]
-        event_class : Type[Event]
-            [description]
-
-        """
-        if event_type in cls._event_classes:
-            logger.warning(
-                "%s is already registered in the Resource. "
-                "Overwriting with %s" % (event_type, event_class)
-            )
-        cls._event_classes[event_type] = event_class
 
     def __init__(
         self, resource_manager: highlevel.ResourceManager, resource_name: str
@@ -441,6 +434,37 @@ class Resource(object):
         return self.visalib.install_visa_handler(
             self.session, event_type, handler, user_handle
         )
+
+    def wrap_handler(
+        self, callable: Callable[["Resource", Event, Any], None],
+    ) -> VISAHandler:
+        """Wrap an event handler to provide the signature expected by VISA.
+
+        The handler is expected to have the following signature:
+        handler(resource: Resource, event: Event, user_handle: Any) -> None.
+
+        The wrapped handler should only be used for event occuring on the resource
+        used to wrap the handler, this is enforced by checking the session of the
+        resource against the session passed to the callback.
+
+        """
+
+        def event_handler(
+            session: VISASession,
+            event_type: constants.EventType,
+            event_context: typing.VISAEventContext,
+            user_handle: Any,
+        ) -> None:
+            assert session == self.session
+            try:
+                event = Event(self.visalib, event_type, event_context)
+                return callable(self, event, user_handle)
+            finally:
+                event.close()
+
+        update_wrapper(event_handler, callable)
+
+        return event_handler
 
     def uninstall_handler(
         self, event_type: constants.EventType, handler: VISAHandler, user_handle=None

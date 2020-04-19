@@ -33,7 +33,8 @@ VISAJobID = NewType("VISAJobID", object)
 #: it has been mapped
 VISAMemoryAddress = NewType("VISAMemoryAddress", int)
 
-#: Type for event handler passed to the VISA library
+#: Type for event handler passed to the VISA library. The last argument is the
+#: user handle specified when registering the handler.
 VISAHandler = Callable[
-    ["Resource", constants.EventType, VISAEventContext, Any], None,
+    [VISASession, constants.EventType, VISAEventContext, Any], None,
 ]

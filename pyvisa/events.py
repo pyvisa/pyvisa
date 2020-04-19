@@ -8,12 +8,14 @@ This file is part of PyVISA.
 
 """
 from contextlib import contextmanager
-from typing import Callable, Optional, Type, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Type
 
-from . import attributes, constants, errors
+from typing_extensions import ClassVar
+
+from . import attributes, constants, errors, logger
 from .attributes import Attribute
-from .typing import Any, VISAEventContext, VISAJobID
 from .resources import Resource
+from .typing import Any, VISAEventContext, VISAHandler, VISAJobID, VISASession
 
 if TYPE_CHECKING:
     from . import highlevel
@@ -24,6 +26,14 @@ class Event:
 
     Do not instantiate directly use the visa_event context manager of the
     Resource object passed to the handler.
+
+    Notes
+    -----
+    When using the queuing mechanism events are expected to be closed manually
+    after handling them.
+    When using callbacks, the events should only be closed if VISA will never
+    get control again which since we always attempt to properly close all
+    resources should never happend and hence events should never be closed manually.
 
     """
 
@@ -36,6 +46,9 @@ class Event:
     #: Context use to query the event attributes.
     _context: Optional[VISAEventContext]
 
+    #: Maps Event type to Python class encapsulating that event.
+    _event_classes: ClassVar[Dict[constants.EventType, Type[Event]]] = dict()
+
     @classmethod
     def register(
         cls, event_type: constants.EventType,
@@ -43,7 +56,13 @@ class Event:
         """Register a class with a given event type."""
 
         def _internal(python_class: Type["Event"]) -> Type["Event"]:
-            Resource.register_event_class(event_type, python_class)
+
+            if event_type in cls._event_classes:
+                logger.warning(
+                    "%s is already registered. "
+                    "Overwriting with %s" % (event_type, python_class)
+                )
+            cls._event_classes[event_type] = python_class
 
             for attr in attributes.AttributesPerResource[event_type]:
                 if not hasattr(python_class, attr.py_name):
@@ -55,6 +74,15 @@ class Event:
             return python_class
 
         return _internal
+
+    def __new__(
+        cls,
+        visalib: highlevel.VisaLibraryBase,
+        event_type: constants.EventType,
+        context: VISAEventContext,
+    ) -> "Event":
+        event_cls = cls._event_classes.get(event_type, Event)
+        return event_cls(visalib, event_type, context)
 
     def __init__(
         self,
@@ -81,6 +109,15 @@ class Event:
     def get_visa_attribute(self, attribute_id: constants.EventAttribute) -> Any:
         """Get the specified VISA attribute."""
         return self.visalib.get_attribute(self.context, attribute_id)
+
+    def close(self):
+        """Simply invalidate the context.
+
+        The event is not closed since it is only ever required when using
+        the queue mechanism and this is handled in WaitResponse.
+
+        """
+        self._context = None
 
 
 # Those events do not have any payload beyond their type, for those use the base class
