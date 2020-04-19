@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+import atexit
 import contextlib
 import os
 import pkgutil
@@ -35,7 +36,7 @@ from typing import (
     cast,
     overload,
 )
-from weakref import WeakSet
+from weakref import WeakSet, WeakMethod
 
 from typing_extensions import ClassVar, DefaultDict, Literal
 
@@ -2894,6 +2895,9 @@ class ResourceManager(object):
     #: Resources created by this manager to allow closing them when the manager is closed
     _created_resources: WeakSet
 
+    #: Handler for atexit using a weakref to close
+    _atexit_handler: Callable
+
     @classmethod
     def register_resource_class(
         cls,
@@ -2949,6 +2953,18 @@ class ResourceManager(object):
         obj.visalib.resource_manager = obj
         obj._created_resources = WeakSet()
 
+        # Register an atexit handler to ensure the Resource Manager is properly
+        # closed.
+        close_ref = WeakMethod(obj.close)  # type: ignore
+
+        def call_close():
+            meth = close_ref()
+            if meth:
+                meth()
+
+        atexit.register(call_close)
+        obj._atexit_handler = call_close  # type: ignore
+
         logger.debug("Created ResourceManager with session %s", obj.session)
         return obj
 
@@ -3000,6 +3016,7 @@ class ResourceManager(object):
 
     def close(self) -> None:
         """Close the resource manager session."""
+        atexit.unregister(self._atexit_handler)
         try:
             logger.debug("Closing ResourceManager (session: %s)", self.session)
             # Cleanly close all resources when closing the manager.
