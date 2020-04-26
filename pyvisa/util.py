@@ -336,7 +336,7 @@ def from_ascii_block(
     else:
         data = separator(ascii_data)
 
-    return container((converter(raw_value) for raw_value in data))
+    return container([converter(raw_value) for raw_value in data])
 
 
 def to_ascii_block(

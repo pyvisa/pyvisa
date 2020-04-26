@@ -34,10 +34,10 @@ from typing_extensions import ClassVar, Literal
 from .. import attributes, constants, errors, highlevel, logger, rname, typing, util
 from ..attributes import Attribute
 from ..events import Event
-from ..typing import VISAHandler, VISASession
+from ..typing import VISAHandler, VISASession, VISAEventContext
 
 
-class WaitResponse(object):
+class WaitResponse:
     """Class used in return of wait_on_event.
 
     It properly closes the context upon delete.
@@ -46,7 +46,23 @@ class WaitResponse(object):
 
     """
 
-    def __init__(self, event_type, context, ret, visalib, timed_out=False):
+    #: Reference to the event object that was waited for.
+    event: Event
+
+    #: Status code returned by the VISA library
+    ret: constants.StatusCode
+
+    #: Did a timeout occurs
+    timed_out: bool
+
+    def __init__(
+        self,
+        event_type: constants.EventType,
+        context: VISAEventContext,
+        ret: constants.StatusCode,
+        visalib: highlevel.VisaLibraryBase,
+        timed_out: bool = False,
+    ):
         if event_type == 0:
             self._event_type = None
             self.event = None
@@ -59,7 +75,7 @@ class WaitResponse(object):
         self.timed_out = timed_out
 
     @property
-    def event_type(self):
+    def event_type(self) -> constants.EventType:
         warnings.warn(
             "event_type is deprecated and will be removed in 1.12. "
             "Use the event object instead.",
@@ -68,13 +84,13 @@ class WaitResponse(object):
         return self._event_type
 
     @property
-    def context(self):
+    def context(self) -> VISAEventContext:
         warnings.warn(
             "context is deprecated and will be removed in 1.12. "
             "Use the event object instead to access the event attributes.",
             FutureWarning,
         )
-        return self._event_type
+        return self._context
 
     def __del__(self) -> None:
         if self._context != None:
@@ -105,7 +121,7 @@ class Resource(object):
     #: VISA attribute descriptor classes that can be used to introspect the
     #: supported attributes and the possible values. The "often used" ones
     #: are generally directly available on the resource.
-    visa_attributes_classes = Set[Type[attributes.Attribute]]
+    visa_attributes_classes: ClassVar[Set[Type[attributes.Attribute]]]
 
     @classmethod
     def register(
@@ -138,7 +154,7 @@ class Resource(object):
             # If the class already has this attribute,
             # it means that a parent class was registered first.
             # We need to copy the current set and extend it.
-            attrs = copy.copy(getattr(python_class, "visa_attributes_classes", set))
+            attrs = copy.copy(getattr(python_class, "visa_attributes_classes", set()))
 
             for attr in chain(
                 attributes.AttributesPerResource[(interface_type, resource_class)],
@@ -454,13 +470,14 @@ class Resource(object):
             event_type: constants.EventType,
             event_context: typing.VISAEventContext,
             user_handle: Any,
-        ) -> None:
+        ) -> Literal[0]:
             assert session == self.session
             try:
                 event = Event(self.visalib, event_type, event_context)
                 return callable(self, event, user_handle)
             finally:
                 event.close()
+            return 0
 
         update_wrapper(event_handler, callable)
 

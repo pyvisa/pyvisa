@@ -4,7 +4,7 @@
 """
 import logging
 
-from pyvisa import ResourceManager, rname
+from pyvisa import ResourceManager, rname, logger
 from pyvisa.resources import Resource
 
 from .. import BaseTestCase
@@ -36,10 +36,10 @@ class TestFilter2(BaseTestCase):
 
     def test_filter2_optional_clause_with_connection(self):
         self._test_filter2(
-            "?*::INSTR{VI_ATTR_TERMCHAR_EN == 1 && VI_ATTR_TERMCHAR == 0)}"
+            "?*::INSTR{VI_ATTR_TERMCHAR_EN == 1 && VI_ATTR_TERMCHAR == 0}"
         )
         # Linefeed \n is 10
-        self._test_filter2("TCPIP::?*::INSTR{VI_ATTR_TERMCHAR == 10)}")
+        self._test_filter2("TCPIP::?*::INSTR{VI_ATTR_TERMCHAR == 10}")
 
         # test handling error in the evaluation of the attribute
         def broken_get_visa_attribute(self, name):
@@ -48,8 +48,10 @@ class TestFilter2(BaseTestCase):
         old = Resource.get_visa_attribute
         Resource.get_visa_attribute = broken_get_visa_attribute
 
-        with self.assertLogs(level=logging.ERROR):
+        # Using any other log level will cause the test to fail for no apparent
+        # good reason
+        with self.assertLogs(level=logging.DEBUG, logger=logger):
             try:
-                self._test_filter2("TCPIP::?*::INSTR{VI_ATTR_TERMCHAR == 10)}")
+                self._test_filter2("TCPIP::?*::INSTR{VI_ATTR_TERMCHAR == 10}")
             finally:
                 Resource.get_visa_attribute = old

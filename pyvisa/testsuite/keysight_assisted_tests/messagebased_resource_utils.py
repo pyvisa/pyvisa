@@ -33,20 +33,22 @@ class EventHandler:
     def handle_event(self, session, event_type, event, handle=None):
         """Event handler
 
+        Ctypes handler are expected to return an interger.
+
         """
         self.session = session
         self.handle = handle
         if event_type == constants.EventType.service_request:
             self.event_success = True
             self.srq_success = True
-            return None  # was 0
+            return 0
         if event_type == constants.EventType.io_completion:
             self.event_success = True
             self.io_completed = True
-            return None
+            return 0
         else:
             self.event_success = True
-            return None
+            return 0
 
     def simplified_handler(self, resource, event, handle=None):
         """Simplified handler that can be wrapped.
@@ -89,6 +91,20 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write_termination = "\n"
         self.instr.read_termination = "\n"
         self.instr.timeout = 100
+
+    def compare_user_handle(self, h1, h2):
+        """Function comparing to user handle as passed to a callback.
+
+        We need such an indirection because we cannot safely always return
+        a Python object and most ctypes object do not compare equal.
+
+        """
+        if isinstance(h1, ctypes.Structure):
+            return h1 == h2
+        elif hasattr(h1, "value"):
+            return h1.value == h2.value
+        else:  # assume an array
+            return all((i == j for i, j in zip(h1, h2)))
 
     def test_encoding(self):
         """Tets setting the string encoding.
@@ -653,7 +669,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         finally:
             self.instr.disable_event(event_type, event_mech)
         self.assertTrue(response.timed_out)
-        self.assertEqual(response.event_type, event_type)
+        self.assertEqual(response.event.event_type, event_type)
 
         with self.assertRaises(errors.VisaIOError):
             self.instr.enable_event(event_type, event_mech, None)
@@ -692,14 +708,21 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                 )
 
             self.assertEqual(handler.session, self.instr.session)
-            self.assertEqual(handler.handle, handle)
+            self.assertTrue(self.compare_user_handle(handler.handle, user_handle))
             self.assertTrue(handler.srq_success)
             self.assertEqual(self.instr.read(), "1")
+            self.instr.clear()
 
         class Point(ctypes.Structure):
             _fields_ = [("x", ctypes.c_int), ("y", ctypes.c_int)]
 
+            def __eq__(self, other):
+                if type(self) is not type(other):
+                    return False
+                return self.x == other.x and self.y == other.y
+
         for handle in (1, 1.0, "1", [1], [1.0], Point(1, 2)):
+            print(handle)
             _test(handle)
 
     def test_wrapping_handler(self):
@@ -708,7 +731,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         event_type = constants.EventType.service_request
         event_mech = constants.EventMechanism.handler
         wrapped_handler = self.instr.wrap_handler(handler.simplified_handler)
-        user_handle = self.instr.install_handler(event_type, wrapped_handler)
+        user_handle = self.instr.install_handler(event_type, wrapped_handler, 1)
         self.instr.enable_event(event_type, event_mech, None)
         self.instr.write("RCVSLOWSRQ")
         self.instr.write("1")
@@ -725,7 +748,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.uninstall_handler(event_type, wrapped_handler, user_handle)
 
         self.assertEqual(handler.session, self.instr.session)
-        self.assertEqual(handler.handle, handle)
+        self.assertTrue(self.compare_user_handle(handler.handle, user_handle))
         self.assertTrue(handler.srq_success)
         self.assertEqual(self.instr.read(), "1")
 
@@ -801,7 +824,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         self.assertEqual(response.event.status, constants.StatusCode.success)
         self.assertEqual(bytes(buffer), bytes(response.event.buffer))
-        self.assertEqual(bytes(buffer), b"test\n")
+        self.assertEqual(bytes(response.event.data), b"test\n")
         self.assertEqual(response.event.return_count, 5)
         self.assertEqual(response.event.operation_name, "viReadAsync")
 

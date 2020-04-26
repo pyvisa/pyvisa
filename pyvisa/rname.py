@@ -10,7 +10,7 @@ import re
 from collections import defaultdict, namedtuple
 from typing import Callable, Dict, Iterable, List, NewType, Optional, Set, Tuple, Type
 
-from . import constants, errors, logger, resources
+from . import constants, errors, logger
 
 #: Interface types for which a subclass of ResourName exists
 _INTERFACE_TYPES: Set[str] = set()
@@ -125,10 +125,6 @@ class ResourceName(object):
 
     #: Common field to all resources
     board: str
-
-    # Implemented when building concrete subclass in build_rn_class
-    def __new__(cls, **kwargs):
-        ...
 
     @property
     def interface_type_const(self) -> constants.InterfaceType:
@@ -473,7 +469,7 @@ parse_resource_name = ResourceName.from_string
 
 
 def filter(resources: Iterable[str], query: str) -> Tuple[str, ...]:
-    """Filter a list of resources according to a query expression.
+    r"""Filter a list of resources according to a query expression.
 
     The search criteria specified in the query parameter has two parts:
       1. a VISA regular expression over a resource string.

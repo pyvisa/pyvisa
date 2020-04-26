@@ -23,7 +23,7 @@ class TestHighlevel(BaseTestCase):
         """Test the base class implementation of parse_resource.
 
         """
-        lib = highlevel.VisaLibraryBase()
+        lib = highlevel.VisaLibraryBase("test")
         rsc_name = "TCPIP::192.168.0.1::INSTR"
         info, ret_code = lib.parse_resource(None, rsc_name)
 
@@ -183,7 +183,7 @@ class TestHighlevel(BaseTestCase):
         """Test the base class implementation of get_library_paths.
 
         """
-        self.assertEqual(("unset",), highlevel.VisaLibraryBase.get_library_paths())
+        self.assertEqual((), highlevel.VisaLibraryBase.get_library_paths())
 
     def test_base_get_debug_info(self):
         """Test the base class implementation of get_debug_info.

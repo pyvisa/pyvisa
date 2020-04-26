@@ -39,6 +39,9 @@ class PXICommon(RegisterBasedResource):
     #: Number of elements by which to increment the destination offset after a transfer.
     destination_increment: Attribute[int] = attributes.AttrVI_ATTR_DEST_INCREMENT()
 
+    #: Should I/O accesses use DMA (True) or Programmed I/O (False).
+    allow_dma: Attribute[bool] = attributes.AttrVI_ATTR_DMA_ALLOW_EN()
+
 
 @Resource.register(constants.InterfaceType.pxi, "INSTR")
 class PXIInstrument(PXICommon):

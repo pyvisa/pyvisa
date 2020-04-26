@@ -42,7 +42,7 @@ class SerialInstrument(MessageBasedResource):
     bytes_in_buffer: Attribute[int] = attributes.AttrVI_ATTR_ASRL_AVAIL_NUM()
 
     #: If set to True, NUL characters are discarded.
-    discard_nul: Attribute[bool] = attributes.AttrVI_ATTR_ASRL_DISCARD_NULL()
+    discard_null: Attribute[bool] = attributes.AttrVI_ATTR_ASRL_DISCARD_NULL()
 
     #: Manually control transmission.
     allow_transmit: Attribute[bool] = attributes.AttrVI_ATTR_ASRL_ALLOW_TRANSMIT()

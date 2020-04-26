@@ -162,7 +162,7 @@ class Attribute(Generic[T]):
         ...
 
     @overload
-    def __get__(self, instance: Union[Resource, Event], owner) -> T:
+    def __get__(self, instance: Union["Resource", "Event"], owner) -> T:
         """From an instance return the attribute value."""
         ...
 
@@ -176,7 +176,7 @@ class Attribute(Generic[T]):
 
         return self.post_get(instance.get_visa_attribute(self.attribute_id))
 
-    def __set__(self, instance: Resource, value: T) -> None:
+    def __set__(self, instance: "Resource", value: T) -> None:
         """Set the attribute if writable."""
         if not self.write:
             raise AttributeError("can't write attribute")
@@ -266,7 +266,7 @@ class RangeAttribute(IntAttribute):
     #: Range for the value, and iterable of extra values.
     min_value: int
     max_value: int
-    values: Optional[List[int]]
+    values: Optional[List[int]] = None
 
     @classmethod
     def redoc(cls) -> None:
@@ -624,7 +624,7 @@ class AttrVI_ATTR_TMO_VALUE(RangeAttribute):
             return float("+inf")
         return value
 
-    def __delete__(self, instance: Resource) -> None:
+    def __delete__(self, instance: "Resource") -> None:
         """Set an infinite timeout upon deletion."""
         instance.set_visa_attribute(
             constants.ResourceAttribute.timeout_value, constants.VI_TMO_INFINITE
@@ -2995,7 +2995,7 @@ class AttrVI_ATTR_SRC_BYTE_ORDER(EnumAttribute):
     enum_type = constants.ByteOrder
 
 
-class AttrVI_ATTR_WIN_ACCESS_PRIV(RangeAttribute):
+class AttrVI_ATTR_WIN_ACCESS_PRIV(EnumAttribute):
     """Address modifier to be used in low-level access operations.
 
     Low-level operation are viMapAddress(), viPeekXX(), and viPokeXX(),
@@ -3648,7 +3648,7 @@ class _AttrVI_ATTR_PXI_MEM_TYPE_BARX(EnumAttribute):
     enum_type = constants.PXIMemory
 
 
-class AttrVI_ATTR_PXI_MEM_BASE_BARX(RangeAttribute):
+class _AttrVI_ATTR_PXI_MEM_BASE_BARX(RangeAttribute):
     """PXI memory base address assigned to the specified BAR.
 
     If the value of the corresponding VI_ATTR_PXI_MEM_TYPE_BARx is
@@ -3670,7 +3670,7 @@ class AttrVI_ATTR_PXI_MEM_BASE_BARX(RangeAttribute):
     min_value, max_value, values = 0, 0xFFFFFFFF, None
 
 
-class AttrVI_ATTR_PXI_MEM_SIZE_BARX(RangeAttribute):
+class _AttrVI_ATTR_PXI_MEM_SIZE_BARX(RangeAttribute):
     """Memory size used by the device in the specified BAR.
 
     If the value of the corresponding VI_ATTR_PXI_MEM_TYPE_BARx is
@@ -3709,7 +3709,7 @@ for i in range(0, 5):
         f"AttrVI_ATTR_PXI_MEM_TYPE_BAR{i}",
         type(
             f"AttrVI_ATTR_PXI_MEM_BASE_BAR{i}",
-            (_AttrVI_ATTR_PXI_MEM_TYPE_BARX,),
+            (_AttrVI_ATTR_PXI_MEM_BASE_BARX,),
             {"visa_name": f"VI_ATTR_PXI_MEM_BASE_BAR{i}"},
         ),
     )
@@ -3719,7 +3719,7 @@ for i in range(0, 5):
         f"AttrVI_ATTR_PXI_MEM_TYPE_BAR{i}",
         type(
             f"AttrVI_ATTR_PXI_MEM_SIZE_BAR{i}",
-            (_AttrVI_ATTR_PXI_MEM_TYPE_BARX,),
+            (_AttrVI_ATTR_PXI_MEM_SIZE_BARX,),
             {"visa_name": f"VI_ATTR_PXI_MEM_SIZE_BAR{i}"},
         ),
     )
@@ -3751,7 +3751,7 @@ class AttrVI_ATTR_OPER_NAME(Attribute):
 
     resources = [constants.EventType.io_completion, constants.EventType.exception]
 
-    py_name = "oper_name"
+    py_name = "operation_name"
 
     visa_name = "VI_ATTR_OPER_NAME"
 
@@ -3783,7 +3783,7 @@ class AttrVI_ATTR_RET_COUNT(RangeAttribute):
 
     resources = [constants.EventType.io_completion]
 
-    py_name = "ret_count"
+    py_name = "return_count"
 
     visa_name = "VI_ATTR_RET_COUNT"
 
@@ -3812,7 +3812,7 @@ class AttrVI_ATTR_BUFFER(Attribute):
     read, write, local = True, False, True
 
     def __get__(  # type: ignore
-        self, instance: Optional[IOCompletionEvent], owner
+        self, instance: Optional["IOCompletionEvent"], owner
     ) -> Optional[Union[SupportsBytes, "AttrVI_ATTR_BUFFER"]]:
         """Retrieve the buffer stored on the library using the jod Id."""
         if instance is None:
@@ -3930,7 +3930,7 @@ class AttrVI_ATTR_INTR_STATUS_ID(RangeAttribute):
 
     resources = [constants.EventType.vxi_vme_interrupt]
 
-    py_name = "interrupt_status_id"
+    py_name = "status_id"
 
     visa_name = "VI_ATTR_INTR_STATUS_ID"
 
@@ -3948,7 +3948,7 @@ class AttrVI_ATTR_RECV_INTR_LEVEL(RangeAttribute):
 
     resources = [constants.EventType.vxi_vme_interrupt]
 
-    py_name = "received_interrupt_level"
+    py_name = "level"
 
     visa_name = "VI_ATTR_RECV_INTR_LEVEL"
 

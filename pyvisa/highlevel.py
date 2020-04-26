@@ -171,6 +171,8 @@ class VisaLibraryBase(object):
 
         if not isinstance(library_path, LibraryPath):
             lib_path = LibraryPath(library_path, "user specified")
+        else:
+            lib_path = library_path
 
         if (cls, lib_path) in cls._registry:
             return cls._registry[(cls, lib_path)]
@@ -179,7 +181,7 @@ class VisaLibraryBase(object):
 
         obj.library_path = lib_path
 
-        obj._logging_extra = {"library_path": obj.lib_path}
+        obj._logging_extra = {"library_path": obj.library_path}
 
         obj._init()
 
@@ -293,10 +295,10 @@ class VisaLibraryBase(object):
                 session, event_type, handler, user_handle
             )
         except TypeError as e:
-            raise errors.VisaTypeError(str(e))
+            raise errors.VisaTypeError(str(e)) from e
 
         self.handlers[session].append(new_handler[:-1] + (event_type,))
-        return new_handler[2]
+        return new_handler[1]
 
     def uninstall_visa_handler(
         self,
@@ -2883,7 +2885,7 @@ class ResourceManager(object):
 
     #: Maps (Interface Type, Resource Class) to Python class encapsulating that resource.
     _resource_classes: ClassVar[
-        Dict[Tuple[constants.InterfaceType, str], Type[Resource]]
+        Dict[Tuple[constants.InterfaceType, str], Type["Resource"]]
     ] = dict()
 
     #: Session handler for the resource manager.
@@ -2903,7 +2905,7 @@ class ResourceManager(object):
         cls,
         interface_type: constants.InterfaceType,
         resource_class: str,
-        python_class: Type[Resource],
+        python_class: Type["Resource"],
     ) -> None:
         """Register a class for a specific interface type, resource class pair.
 
@@ -3030,7 +3032,7 @@ class ResourceManager(object):
             pass
 
     def list_resources(self, query: str = "?*::INSTR") -> Tuple[str, ...]:
-        """Return a tuple of all connected devices matching query.
+        r"""Return a tuple of all connected devices matching query.
 
         Notes
         -----
@@ -3095,7 +3097,7 @@ class ResourceManager(object):
             for resource in self.list_resources(query)
         )
 
-    def list_opened_resources(self) -> List[Resource]:
+    def list_opened_resources(self) -> List["Resource"]:
         """Return a list of all the opened resources."""
         opened = []
         for resource in self._created_resources:
@@ -3162,9 +3164,9 @@ class ResourceManager(object):
         resource_name: str,
         access_mode: constants.AccessModes = constants.AccessModes.no_lock,
         open_timeout: int = constants.VI_TMO_IMMEDIATE,
-        resource_pyclass: Optional[Type[Resource]] = None,
+        resource_pyclass: Optional[Type["Resource"]] = None,
         **kwargs: Any,
-    ) -> Resource:
+    ) -> "Resource":
         """Return an instrument for the resource name.
 
         Parameters
@@ -3241,9 +3243,9 @@ class ResourceManager(object):
         resource_name: str,
         access_mode: constants.AccessModes = constants.AccessModes.no_lock,
         open_timeout: int = constants.VI_TMO_IMMEDIATE,
-        resource_pyclass: Type[Resource] = None,
+        resource_pyclass: Type["Resource"] = None,
         **kwargs: Any,
-    ) -> Resource:
+    ) -> "Resource":
         """Return an instrument for the resource name.
 
         .. warning::

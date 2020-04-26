@@ -36,6 +36,9 @@ class VXICommon(RegisterBasedResource):
     #: Number of elements by which to increment the destination offset after a transfer.
     destination_increment: Attribute[int] = attributes.AttrVI_ATTR_DEST_INCREMENT()
 
+    #: Should I/O accesses use DMA (True) or Programmed I/O (False).
+    allow_dma: Attribute[bool] = attributes.AttrVI_ATTR_DMA_ALLOW_EN()
+
 
 @Resource.register(constants.InterfaceType.vxi, "INSTR")
 class VXIInstrument(VXICommon):
@@ -63,6 +66,12 @@ class VXIInstrument(VXICommon):
 
     #: Whether the device is 488.2 compliant.
     is_4882_compliant: Attribute[bool] = attributes.AttrVI_ATTR_4882_COMPLIANT()
+
+    #: Should END be asserted during the transfer of the last byte of the buffer.
+    send_end: Attribute[bool] = attributes.AttrVI_ATTR_SEND_END_EN()
+
+    #: IO protocol to use. See the attribute definition for more details.
+    io_protocol: Attribute[constants.IOProtocol] = attributes.AttrVI_ATTR_IO_PROT()
 
 
 @Resource.register(constants.InterfaceType.vxi, "MEMACC")

@@ -18,6 +18,7 @@ from ctypes import (
     c_wchar_p,
     create_string_buffer,
 )
+from functools import update_wrapper
 from threading import Lock
 from typing import Any, Callable, List, Optional, Tuple, Union, cast
 
@@ -1104,7 +1105,8 @@ def install_handler(
         Return value of the library call
 
     """
-    converted_user_handle: object  # Should be _CData but that type cannot be imported
+    # Should be Optional[_CData] but that type cannot be imported
+    converted_user_handle: object = None
     if user_handle is not None:
         if isinstance(user_handle, int):
             converted_user_handle = c_long(user_handle)
@@ -1117,7 +1119,7 @@ def install_handler(
                 if not isinstance(element, int):
                     # Mypy cannot track the fact that the list has to contain float
                     converted_user_handle = (c_double * len(user_handle))(  # type: ignore
-                        tuple(user_handle)
+                        *tuple(user_handle)
                     )
                     break
             else:
@@ -1133,7 +1135,22 @@ def install_handler(
                 )
 
     with set_user_handle_type(library, converted_user_handle):
-        converted_handler = ViHndlr(handler)
+
+        # Wrap the handler to provide a non-wrapper specific interface
+        def handler_wrapper(
+            ctype_session, ctype_event_type, ctype_event_context, ctype_user_handle
+        ):
+            handler(
+                ctype_session.value,
+                ctype_event_type,
+                ctype_event_context.value,
+                ctype_user_handle.contents if ctype_user_handle else ctype_user_handle,
+            )
+            return 0
+
+        update_wrapper(handler_wrapper, handler)
+
+        converted_handler = ViHndlr(handler_wrapper)
         if user_handle is None:
             ret = library.viInstallHandler(session, event_type, converted_handler, None)
         else:

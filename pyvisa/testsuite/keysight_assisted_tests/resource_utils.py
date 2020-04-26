@@ -138,7 +138,7 @@ class ResourceTestCase:
         """Test accessing the resource info.
 
         """
-        rinfo, status = self.instr.resource_info
+        rinfo = self.instr.resource_info
         self.assertEqual(
             rinfo.interface_type,
             getattr(InterfaceType, self.rname.interface_type.lower()),

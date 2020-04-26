@@ -166,7 +166,7 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
 
 
 @Resource.register(constants.InterfaceType.gpib, "INTFC")
-class GPIBInterface(_GPIBMixin, Resource):
+class GPIBInterface(_GPIBMixin, MessageBasedResource):
     """Communicates with to devices of type GPIB::INTFC
 
     More complex resource names can be specified with the following grammar:
@@ -238,18 +238,3 @@ class GPIBInterface(_GPIBMixin, Resource):
         command.append(0x08)
 
         return self.send_command(bytes(command))
-
-    def flush(self, mask: constants.BufferOperation) -> constants.StatusCode:
-        """Manually clears the specified buffers.
-
-        Depending on the mask this can cause the buffer data to be written to
-        the device.
-
-        Parameters
-        ----------
-        mask : constants.BufferOperation
-            Specifies the action to be taken with flushing the buffer.
-            See highlevel.VisaLibraryBase.flush for a detailed description.
-
-        """
-        return self.visalib.flush(self.session, mask)

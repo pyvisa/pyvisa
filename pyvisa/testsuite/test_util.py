@@ -201,7 +201,7 @@ class TestParser(BaseTestCase):
             msg = msg % ("ascii", fmt)
             tb = lambda values: util.to_ascii_block(values, fmt, ",")
             fb = lambda block, cont: util.from_ascii_block(block, fmt, ",", cont)
-            self.round_trip_block_converstion(values, tb, fb, msg)
+            self.round_trip_block_conversion(values, tb, fb, msg)
 
     def test_non_integer_ascii_block(self):
         values = [val + 0.5 for val in range(99)]
@@ -211,7 +211,7 @@ class TestParser(BaseTestCase):
             msg = msg % ("ascii", fmt)
             tb = lambda values: util.to_ascii_block(values, fmt, ",")
             fb = lambda block, cont: util.from_ascii_block(block, fmt, ",", cont)
-            self.round_trip_block_converstion(values, tb, fb, msg)
+            self.round_trip_block_conversion(values, tb, fb, msg)
 
     def test_invalid_string_converter(self):
         with self.assertRaises(ValueError) as ex:
@@ -229,7 +229,7 @@ class TestParser(BaseTestCase):
         fb = lambda block, cont: util.from_ascii_block(
             block, fmt, lambda s: s.split(":"), cont
         )
-        self.round_trip_block_converstion(values, tb, fb, msg)
+        self.round_trip_block_conversion(values, tb, fb, msg)
 
     def test_function_converter(self):
         values = list(range(99))
@@ -238,7 +238,7 @@ class TestParser(BaseTestCase):
         fb = lambda block, cont: util.from_ascii_block(
             block, int, lambda s: s.split(":"), cont
         )
-        self.round_trip_block_converstion(values, tb, fb, msg)
+        self.round_trip_block_conversion(values, tb, fb, msg)
 
     def test_integer_binary_block(self):
         values = list(range(99))
@@ -253,7 +253,7 @@ class TestParser(BaseTestCase):
                     msg = msg % (block, fmt, endi)
                     tblock = lambda values: tb(values, fmt, endi)
                     fblock = lambda block, cont: fb(block, fmt, endi, cont)
-                    self.round_trip_block_converstion(values, tblock, fblock, msg)
+                    self.round_trip_block_conversion(values, tblock, fblock, msg)
 
     def test_noninteger_binary_block(self):
         values = [val + 0.5 for val in range(99)]
@@ -268,7 +268,7 @@ class TestParser(BaseTestCase):
                     msg = msg % (block, fmt, endi)
                     tblock = lambda values: bytearray(tb(values, fmt, endi))
                     fblock = lambda block, cont: fb(block, fmt, endi, cont)
-                    self.round_trip_block_converstion(values, tblock, fblock, msg)
+                    self.round_trip_block_conversion(values, tblock, fblock, msg)
 
     def test_malformed_binary_block_header(self):
         values = list(range(10))
@@ -372,7 +372,7 @@ class TestParser(BaseTestCase):
                 e.exception.args[0],
             )
 
-    def round_trip_block_converstion(self, values, to_block, from_block, msg):
+    def round_trip_block_conversion(self, values, to_block, from_block, msg):
         """Test that block conversion round trip as expected.
 
         """

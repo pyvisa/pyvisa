@@ -14,7 +14,6 @@ from typing_extensions import ClassVar
 
 from . import attributes, constants, errors, logger
 from .attributes import Attribute
-from .resources import Resource
 from .typing import Any, VISAEventContext, VISAHandler, VISAJobID, VISASession
 
 if TYPE_CHECKING:
@@ -38,7 +37,7 @@ class Event:
     """
 
     #: Reference to the visa library
-    visalib: highlevel.VisaLibraryBase
+    visalib: "highlevel.VisaLibraryBase"
 
     #: Type of the event.
     event_type: constants.EventType
@@ -47,7 +46,7 @@ class Event:
     _context: Optional[VISAEventContext]
 
     #: Maps Event type to Python class encapsulating that event.
-    _event_classes: ClassVar[Dict[constants.EventType, Type[Event]]] = dict()
+    _event_classes: ClassVar[Dict[constants.EventType, Type["Event"]]] = dict()
 
     @classmethod
     def register(
@@ -77,16 +76,16 @@ class Event:
 
     def __new__(
         cls,
-        visalib: highlevel.VisaLibraryBase,
+        visalib: "highlevel.VisaLibraryBase",
         event_type: constants.EventType,
         context: VISAEventContext,
     ) -> "Event":
         event_cls = cls._event_classes.get(event_type, Event)
-        return event_cls(visalib, event_type, context)
+        return object.__new__(event_cls)
 
     def __init__(
         self,
-        visalib: highlevel.VisaLibraryBase,
+        visalib: "highlevel.VisaLibraryBase",
         event_type: constants.EventType,
         context: VISAEventContext,
     ) -> None:
@@ -108,7 +107,7 @@ class Event:
 
     def get_visa_attribute(self, attribute_id: constants.EventAttribute) -> Any:
         """Get the specified VISA attribute."""
-        return self.visalib.get_attribute(self.context, attribute_id)
+        return self.visalib.get_attribute(self.context, attribute_id)[0]
 
     def close(self):
         """Simply invalidate the context.
@@ -176,6 +175,13 @@ class IOCompletionEvent(Event):
     #: Job ID of the asynchronous operation that has completed.
     job_id: Attribute[VISAJobID] = attributes.AttrVI_ATTR_JOB_ID()
 
+    @property
+    def data(self):
+        """Portion of the buffer that was actually filled during the call.
+
+        """
+        return bytes(self.buffer[: self.return_count])
+
 
 @Event.register(constants.EventType.trig)
 class TrigEvent(Event):
@@ -183,7 +189,9 @@ class TrigEvent(Event):
 
     #: Identifier of the triggering mechanism on which the specified trigger event
     #: was received.
-    trigger_id: Attribute[constants.TriggerID] = attributes.AttrVI_ATTR_TRIG_ID()
+    received_trigger_id: Attribute[
+        constants.TriggerID
+    ] = attributes.AttrVI_ATTR_TRIG_ID()
 
 
 @Event.register(constants.EventType.usb_interrupt)
