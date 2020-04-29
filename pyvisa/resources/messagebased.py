@@ -19,16 +19,12 @@ from typing import (
     Optional,
     Sequence,
     Type,
-    TypeVar,
     Union,
 )
-
-from typing_extensions import Literal
 
 from .. import attributes, constants, errors, logger, util
 from ..attributes import Attribute
 from ..highlevel import VisaLibraryBase
-from ..typing import VISASession
 from .resource import Resource
 
 

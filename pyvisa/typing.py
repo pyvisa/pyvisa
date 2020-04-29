@@ -7,13 +7,9 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
-import ctypes
-from typing import TYPE_CHECKING, Any, Callable, List, NewType, Union
+from typing import Any, Callable, NewType
 
 from . import constants
-
-if TYPE_CHECKING:
-    from .resources import Resource
 
 #: Type alias used to identify VISA resource manager sessions
 VISARMSession = NewType("VISARMSession", int)

@@ -18,7 +18,6 @@ import subprocess
 import sys
 import warnings
 from collections import OrderedDict
-from subprocess import check_output
 from typing import (
     Any,
     Callable,
@@ -37,7 +36,7 @@ from typing_extensions import Literal
 from . import __version__, logger, constants
 
 try:
-    import numpy as np
+    import numpy as np  # type: ignore
 except ImportError:
     np = None
 
@@ -837,7 +836,7 @@ def system_details_to_str(d: Dict[str, str], indent: str = "") -> str:
 
     """
 
-    l = [
+    details = [
         "Machine Details:",
         "   Platform ID:    %s" % d.get("platform", "n/a"),
         "   Processor:      %s" % d.get("processor", "n/a"),
@@ -889,10 +888,10 @@ def system_details_to_str(d: Dict[str, str], indent: str = "") -> str:
         else:
             return ["%s" % value]
 
-    l.extend(_to_list("Backends", d["backends"]))
+    details.extend(_to_list("Backends", d["backends"]))
 
     joiner = "\n" + indent
-    return indent + joiner.join(l) + "\n"
+    return indent + joiner.join(details) + "\n"
 
 
 @overload
@@ -916,8 +915,7 @@ def get_debug_info(to_screen=True):
 def pip_install(package):  # pragma: no cover
     warnings.warn("warn_for_invalid_kwargs will be removed in 1.12", FutureWarning)
     try:
-        # noinspection PyPackageRequirements,PyUnresolvedReferences
-        import pip
+        import pip  # type: ignore
 
         return pip.main(["install", package])
     except ImportError:

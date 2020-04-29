@@ -20,8 +20,6 @@ from typing_extensions import Literal
 
 is_64bits = sys.maxsize > 2 ** 32
 
-# _to_int()
-
 
 def _to_int(x: int) -> int:
     """Convert a signed completion and error code to the proper value.
@@ -324,7 +322,7 @@ VI_ATTR_SIGP_STATUS_ID       = 0x3FFF4011
 VI_ATTR_RECV_TRIG_ID         = 0x3FFF4012
 VI_ATTR_INTR_STATUS_ID       = 0x3FFF4023
 VI_ATTR_STATUS               = 0x3FFF4025
-VI_ATTR_RET_COUNT_32         =0x3FFF4026
+VI_ATTR_RET_COUNT_32         = 0x3FFF4026
 VI_ATTR_RET_COUNT_64         = 0x3FFF4028
 VI_ATTR_RET_COUNT            = VI_ATTR_RET_COUNT_64 if is_64bits else VI_ATTR_RET_COUNT_64
 VI_ATTR_BUFFER               = 0x3FFF4027
@@ -678,7 +676,7 @@ VI_VXI_CLASS_REGISTER        = 3
 VI_VXI_CLASS_OTHER           = 4
 
 VI_PXI_LBUS_UNKNOWN = -1
-VI_PXI_LBUS_NONE    =  0
+VI_PXI_LBUS_NONE    = 0
 VI_PXI_LBUS_STAR_TRIG_BUS_0 = 1000
 VI_PXI_LBUS_STAR_TRIG_BUS_1 = 1001
 VI_PXI_LBUS_STAR_TRIG_BUS_2 = 1002

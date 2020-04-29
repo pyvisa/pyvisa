@@ -36,11 +36,9 @@ def visa_main(command: Optional[str] = None) -> None:
     if not command:
         subparsers = parser.add_subparsers(title="command", dest="command")
 
-        info_parser = subparsers.add_parser(
-            "info", help="print information to diagnose PyVISA"
-        )
+        subparsers.add_parser("info", help="print information to diagnose PyVISA")
 
-        console_parser = subparsers.add_parser("shell", help="start the PyVISA console")
+        subparsers.add_parser("shell", help="start the PyVISA console")
 
     args = parser.parse_args()
     if command:

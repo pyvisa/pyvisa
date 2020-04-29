@@ -20,13 +20,59 @@ from ctypes import (
 )
 from functools import update_wrapper
 from threading import Lock
-from typing import Any, Callable, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Optional, Tuple
 
 from pyvisa import attributes, constants, typing
 from pyvisa.highlevel import ResourceInfo
 
 from . import types
-from .types import *
+from .types import (
+    FUNCTYPE,
+    ViAccessMode,
+    ViAChar,
+    ViAddr,
+    ViAttr,
+    ViAttrState,
+    ViAUInt8,
+    ViAUInt16,
+    ViAUInt32,
+    ViAUInt64,
+    ViBoolean,
+    ViBuf,
+    ViBusAddress,
+    ViBusAddress64,
+    ViBusSize,
+    ViEvent,
+    ViEventFilter,
+    ViEventType,
+    ViFindList,
+    ViHndlr,
+    ViInt16,
+    ViJobId,
+    ViKeyId,
+    ViObject,
+    ViPAddr,
+    ViPBuf,
+    ViPBusAddress,
+    ViPEvent,
+    ViPEventType,
+    ViPFindList,
+    ViPJobId,
+    ViPSession,
+    ViPUInt8,
+    ViPUInt16,
+    ViPUInt32,
+    ViPUInt64,
+    ViRsrc,
+    ViSession,
+    ViStatus,
+    ViString,
+    ViUInt8,
+    ViUInt16,
+    ViUInt32,
+    ViUInt64,
+    buffer_to_text,
+)
 
 visa_functions = [
     "assert_interrupt_signal",
@@ -2474,7 +2520,7 @@ def uninstall_handler(library, session, event_type, handler, user_handle=None):
 
     """
     with set_user_handle_type(library, user_handle):
-        if user_handle != None:
+        if user_handle is not None:
             user_handle = byref(user_handle)
         return library.viUninstallHandler(session, event_type, handler, user_handle)
 

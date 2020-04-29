@@ -9,7 +9,6 @@ This file is taken from the Lantz Project.
 
 """
 import cmd
-import sys
 from typing import List, Tuple
 
 from . import ResourceManager, VisaIOError, attributes, constants

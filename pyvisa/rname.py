@@ -8,9 +8,22 @@
 import contextlib
 import re
 from collections import defaultdict, namedtuple
-from typing import Callable, Dict, Iterable, List, NewType, Optional, Set, Tuple, Type
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TYPE_CHECKING,
+)
 
 from . import constants, errors, logger
+
+if TYPE_CHECKING:
+    from .resources import Resource  # noqa
 
 #: Interface types for which a subclass of ResourName exists
 _INTERFACE_TYPES: Set[str] = set()
@@ -130,7 +143,7 @@ class ResourceName(object):
     def interface_type_const(self) -> constants.InterfaceType:
         try:
             return getattr(constants.InterfaceType, self.interface_type.lower())
-        except:
+        except Exception:
             return constants.InterfaceType.unknown
 
     @classmethod
@@ -222,7 +235,8 @@ class ResourceName(object):
 
         # And create the object
         try:
-            return subclass(**kwargs)
+            # Always use for subclasses that do take arguments
+            return subclass(**kwargs)  # type: ignore
         except ValueError as ex:
             raise InvalidResourceName(str(ex))
 
@@ -543,9 +557,7 @@ def filter(resources: Iterable[str], query: str) -> Tuple[str, ...]:
 
 
 def filter2(
-    resources: Iterable[str],
-    query: str,
-    open_resource: Callable[[str], "resources.Resource"],
+    resources: Iterable[str], query: str, open_resource: Callable[[str], "Resource"],
 ) -> List[str]:
     """Filter a list of resources according to a query expression.
 
@@ -562,7 +574,7 @@ def filter2(
     query : str
         The pattern to use for filtering
 
-    open_resource : Callable[[str], "resources.Resource"]
+    open_resource : Callable[[str], Resource]
         Function to open a resource (typically ResourceManager().open_resource)
 
     """

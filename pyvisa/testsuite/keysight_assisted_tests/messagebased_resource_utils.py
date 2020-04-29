@@ -4,16 +4,14 @@
 """
 import ctypes
 import gc
-import logging
 import time
-import unittest
 
 from pyvisa import constants, errors
 
 from .resource_utils import ResourceTestCase
 
 try:
-    import numpy as np
+    import numpy as np  # type: ignore
 except ImportError:
     np = None
 
@@ -268,7 +266,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         read = self.instr.visalib.read
         self.instr.visalib.read = false_read
-        with self.assertLogs(level="DEBUG") as cm:
+        with self.assertLogs(level="DEBUG"):
             try:
                 self.instr.read()
             except errors.VisaIOError:
@@ -281,9 +279,9 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         """
         # Standard separator
-        l = [1, 2, 3, 4, 5]
+        values = [1, 2, 3, 4, 5]
         self.instr.write("RECEIVE")
-        count = self.instr.write_ascii_values("", l, "d")
+        count = self.instr.write_ascii_values("", values, "d")
         self.assertEqual(count, 10)
         self.instr.write("SEND")
         self.assertEqual(self.instr.read(), "1,2,3,4,5")
@@ -291,7 +289,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Non standard separator and termination
         self.instr.write_termination = "\r"
         self.instr.write("RECEIVE", termination="\n")
-        self.instr.write_ascii_values("", l, "d", separator=";", termination=False)
+        self.instr.write_ascii_values("", values, "d", separator=";", termination=False)
         self.instr.write("", termination="\n")
         self.instr.write("SEND", termination="\n")
         self.assertEqual(self.instr.read(), "1;2;3;4;5")
@@ -301,9 +299,9 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write_termination = "\n" if char else "\r"
             self.instr.write("RECEIVE", termination="\n")
             with self.assertWarns(Warning):
-                l = [1, 2, 3, 4, 5]
+                values = [1, 2, 3, 4, 5]
                 self.instr.write_ascii_values(
-                    "\r", l, "s", separator=";", termination=char
+                    "\r", values, "s", separator=";", termination=char
                 )
             self.instr.write("", termination="\n")
             self.instr.write("SEND", termination="\n")
@@ -316,10 +314,10 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         for hfmt, prefix in zip(("ieee", "hp", "empty"), (b"#210", b"#A\n\x00", b"")):
             self.subTest(hfmt)
 
-            l = [1, 2, 3, 4, 5]
+            values = [1, 2, 3, 4, 5]
             self.instr.write_termination = "\n"
             self.instr.write("RECEIVE")
-            count = self.instr.write_binary_values("", l, "h", header_fmt=hfmt)
+            count = self.instr.write_binary_values("", values, "h", header_fmt=hfmt)
             # Each interger encoded as h uses 2 bytes
             self.assertEqual(count, len(prefix) + 10 + 1)
             self.instr.write("SEND")
@@ -333,7 +331,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write_termination = "\r"
             self.instr.write("RECEIVE", termination="\n")
             self.instr.write_binary_values(
-                "", l, "h", is_big_endian=True, termination=False, header_fmt=hfmt
+                "", values, "h", is_big_endian=True, termination=False, header_fmt=hfmt
             )
             self.instr.write("", termination="\n")
             self.instr.write("SEND", termination="\n")
@@ -349,7 +347,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write("RECEIVE", termination="\n")
             with self.assertWarns(Warning):
                 self.instr.write_binary_values(
-                    "\r", l, "h", header_fmt=hfmt, termination=char
+                    "\r", values, "h", header_fmt=hfmt, termination=char
                 )
             self.instr.write("", termination="\n")
             self.instr.write("SEND", termination="\n")
@@ -359,7 +357,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         # Wrong header format
         with self.assertRaises(ValueError):
-            self.instr.write_binary_values("", l, "h", header_fmt="zxz")
+            self.instr.write_binary_values("", values, "h", header_fmt="zxz")
 
     def test_read_ascii_values(self):
         """Test reading ascii values.
@@ -367,7 +365,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """
         # Standard separator
         self.instr.write("RECEIVE")
-        l = [1, 2, 3, 4, 5]
         self.instr.write("1,2,3,4,5")
         self.instr.write("SEND")
         values = self.instr.read_ascii_values()
@@ -453,7 +450,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             "", data, "h", header_fmt="ieee", is_big_endian=True
         )
         self.instr.write("SEND")
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValueError):
             self.instr.read_binary_values(
                 datatype="h",
                 is_big_endian=False,
@@ -466,7 +463,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write_binary_values(
             "", data, "h", header_fmt="ieee", is_big_endian=True
         )
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValueError):
             self.instr.query_binary_values(
                 "*IDN",
                 datatype="h",
@@ -555,7 +552,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Test using the instrument wide delay
         self.instr.query_delay = 1.0
         self.instr.write("RECEIVE")
-        l = [1, 2, 3, 4, 5]
         self.instr.write("1,2,3,4,5")
         tic = time.perf_counter()
         values = self.instr.query_ascii_values("SEND")
@@ -566,7 +562,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Test specifying the delay
         self.instr.query_delay = 0.0
         self.instr.write("RECEIVE")
-        l = [1, 2, 3, 4, 5]
         self.instr.write("1,2,3,4,5")
         tic = time.perf_counter()
         values = self.instr.query_ascii_values("SEND", delay=1.0)
@@ -756,7 +751,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test handling an error related to a wrong handler type."""
         with self.assertRaises(errors.VisaTypeError):
             event_type = constants.EventType.service_request
-            event_mech = constants.EventMechanism.handler
             self.instr.install_handler(event_type, 1, object())
 
     def test_uninstalling_missing_visa_handler(self):
@@ -764,7 +758,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         handler1 = EventHandler()
         handler2 = EventHandler()
         event_type = constants.EventType.service_request
-        event_mech = constants.EventMechanism.handler
         self.instr.install_handler(event_type, handler1.handle_event)
         with self.assertRaises(errors.UnknownHandler):
             self.instr.uninstall_handler(event_type, handler2.handle_event)
@@ -780,7 +773,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """
         handler = EventHandler()
         event_type = constants.EventType.service_request
-        event_mech = constants.EventMechanism.handler
         self.instr.install_handler(event_type, handler.handle_event)
 
         self.instr = None
@@ -793,7 +785,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """
         handler = EventHandler()
         event_type = constants.EventType.service_request
-        event_mech = constants.EventMechanism.handler
         self.instr.install_handler(event_type, handler.handle_event)
 
         self.rm.visalib.uninstall_all_visa_handlers(None)
@@ -846,6 +837,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Share the lock for a limited time
         with instr3.lock_context(requested_key=key) as key2:
             self.assertTrue(instr3.query("*IDN?"))
+            self.assertEqual(key, key2)
 
         # Stop sharing the lock
         instr2.unlock()

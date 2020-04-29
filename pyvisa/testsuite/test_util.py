@@ -20,8 +20,7 @@ from pyvisa.ctwrapper import IVIVisaLibrary
 from pyvisa.testsuite import BaseTestCase
 
 try:
-    # noinspection PyPackageRequirements
-    import numpy as np
+    import numpy as np  # type: ignore
 except ImportError:
     np = None
 
@@ -331,10 +330,14 @@ class TestParser(BaseTestCase):
         ):
             block = tb(values, "h", False)
             if header == "ieee":
-                l = int(block[1])
-                block = block[:2] + b"9" * l + block[2 + l :]
+                header_byte_number = int(block[1])
+                block = (
+                    block[:2]
+                    + b"9" * header_byte_number
+                    + block[2 + header_byte_number :]
+                )
             else:
-                block = block[:2] + b"\xff\xff\xff\xff" * l + block[2 + l :]
+                block = block[:2] + b"\xff\xff\xff\xff" + block[2 + 4 :]
             with self.assertRaises(ValueError) as e:
                 fb(block, "h", False, list)
 
@@ -349,8 +352,8 @@ class TestParser(BaseTestCase):
         ):
             block = tb(values, "h", False) + b"\n"
             if header == "ieee":
-                l = int(block[1:2].decode())
-                block = block[:2] + b"0" * l + block[2 + l :]
+                header_length = int(block[1:2].decode())
+                block = block[:2] + b"0" * header_length + block[2 + header_length :]
             else:
                 block = block[:2] + b"\x00\x00\x00\x00" + block[2 + 4 :]
             self.assertListEqual(fb(block, "h", False, list), values)

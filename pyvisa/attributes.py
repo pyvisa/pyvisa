@@ -30,16 +30,17 @@ from typing import (
     overload,
 )
 
-from typing_extensions import ClassVar, DefaultDict, Literal
+from typing_extensions import ClassVar, DefaultDict
 
 from . import constants, util
 
 if TYPE_CHECKING:
-    from .events import Event, IOCompletionEvent
-    from .resources import Resource
+    from .events import Event, IOCompletionEvent  # noqa
+    from .resources import Resource  # noqa
 
 #: Not available value.
 NotAvailable = object()
+
 
 #: Attribute for all session types.
 class AllSessionTypes:  # We use a class to simplify typing
@@ -72,7 +73,7 @@ class Attribute(Generic[T]):
     #: each element is a tuple (constants.InterfaceType, str)
     resources: ClassVar[
         Union[
-            List[Union[Tuple[constants.InterfaceType, str], constants.EventType,]],
+            List[Union[Tuple[constants.InterfaceType, str], constants.EventType]],
             Type[AllSessionTypes],
         ]
     ] = []
@@ -158,15 +159,13 @@ class Attribute(Generic[T]):
 
     @overload
     def __get__(self, instance: None, owner) -> "Attribute":
-        """From a class return the descriptor."""
         ...
 
-    @overload
+    @overload  # noqa: F811
     def __get__(self, instance: Union["Resource", "Event"], owner) -> T:
-        """From an instance return the attribute value."""
         ...
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, owner):  # noqa: F811
         """Access a VISA attribute and convert to a nice Python representation."""
         if instance is None:
             return self

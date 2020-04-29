@@ -25,7 +25,6 @@ from typing import (
     Iterator,
     List,
     NamedTuple,
-    NewType,
     Optional,
     Set,
     SupportsBytes,
@@ -34,7 +33,6 @@ from typing import (
     TypeVar,
     Union,
     cast,
-    overload,
 )
 from weakref import WeakSet, WeakMethod
 

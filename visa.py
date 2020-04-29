@@ -41,5 +41,21 @@ from pyvisa.errors import (
 from pyvisa.resources import Resource
 from pyvisa.cmd_line_tools import visa_main
 
+__all__ = [
+    "ResourceManager",
+    "constants",
+    "logger",
+    "Error",
+    "VisaIOError",
+    "VisaIOWarning",
+    "VisaTypeError",
+    "UnknownHandler",
+    "OSNotSupported",
+    "InvalidBinaryFormat",
+    "InvalidSession",
+    "LibraryError",
+    "log_to_screen",
+]
+
 if __name__ == "__main__":
     visa_main()

@@ -3,7 +3,6 @@
 
 """
 import gc
-import os
 import unittest
 import logging
 
@@ -47,7 +46,7 @@ class TestResourceManager(unittest.TestCase):
 
         self.assertIs(self.rm.visalib, ResourceManager(self.rm.visalib).visalib)
 
-        with self.assertLogs(level=logging.DEBUG, logger=logger) as log:
+        with self.assertLogs(level=logging.DEBUG, logger=logger):
             self.rm.close()
 
         with self.assertRaises(InvalidSession):
@@ -193,7 +192,7 @@ class TestResourceManager(unittest.TestCase):
         rname = list(RESOURCE_ADDRESSES.values())[0]
 
         with self.assertRaises(ValueError) as cm:
-            rsc = self.rm.open_resource(rname, open_timeout="")
+            self.rm.open_resource(rname, open_timeout="")
 
         self.assertIn("integer (or compatible type)", str(cm.exception))
 
@@ -212,7 +211,7 @@ class TestResourceManager(unittest.TestCase):
 
         # Success to access an unlocked resource.
         rsc.unlock()
-        rsc2 = self.rm.open_resource(rname, access_mode=AccessModes.exclusive_lock)
+        self.rm.open_resource(rname, access_mode=AccessModes.exclusive_lock)
         self.assertEqual(len(self.rm.list_opened_resources()), 2)
 
     def test_opening_resource_specific_class(self):
@@ -221,7 +220,7 @@ class TestResourceManager(unittest.TestCase):
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
         with self.assertRaises(TypeError):
-            rsc = self.rm.open_resource(rname, resource_pyclass=object)
+            self.rm.open_resource(rname, resource_pyclass=object)
 
         self.assertEqual(len(self.rm.list_opened_resources()), 0)
 
@@ -256,7 +255,7 @@ class TestResourceManager(unittest.TestCase):
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
         with self.assertRaises(ValueError):
-            rsc = self.rm.open_resource(rname, unknown_attribute=None)
+            self.rm.open_resource(rname, unknown_attribute=None)
 
         self.assertEqual(len(self.rm.list_opened_resources()), 0)
 
@@ -266,7 +265,7 @@ class TestResourceManager(unittest.TestCase):
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
         with self.assertWarns(FutureWarning):
-            rsc = self.rm.get_instrument(rname)
+            self.rm.get_instrument(rname)
 
 
 @require_virtual_instr

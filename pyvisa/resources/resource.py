@@ -9,17 +9,14 @@ This file is part of PyVISA.
 """
 import contextlib
 import copy
-import math
 import time
 import warnings
 from functools import update_wrapper
 from itertools import chain
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     ContextManager,
-    Dict,
     Iterator,
     Optional,
     Set,
@@ -41,8 +38,9 @@ class WaitResponse:
     """Class used in return of wait_on_event.
 
     It properly closes the context upon delete.
-    A call with event_type of 0 (normally used when timed_out is True) will be
-    recorded as None, otherwise it records the proper EventType enum.
+
+    A call with event_type of 0 (normally used when timed_out is True) will store
+    None as the event and event type, otherwise it records the proper Event.
 
     """
 
@@ -58,24 +56,20 @@ class WaitResponse:
     def __init__(
         self,
         event_type: constants.EventType,
-        context: VISAEventContext,
+        context: Optional[VISAEventContext],
         ret: constants.StatusCode,
         visalib: highlevel.VisaLibraryBase,
         timed_out: bool = False,
     ):
-        if event_type == 0:
-            self._event_type = None
-            self.event = None
-        else:
-            self._event_type = constants.EventType(event_type)
-            self.event = Event(visalib, event_type, context)
+        self.event = Event(visalib, event_type, context)
+        self._event_type = constants.EventType(event_type)
         self._context = context
         self.ret = ret
         self._visalib = visalib
         self.timed_out = timed_out
 
     @property
-    def event_type(self) -> constants.EventType:
+    def event_type(self) -> Optional[constants.EventType]:
         warnings.warn(
             "event_type is deprecated and will be removed in 1.12. "
             "Use the event object instead.",
@@ -84,7 +78,7 @@ class WaitResponse:
         return self._event_type
 
     @property
-    def context(self) -> VISAEventContext:
+    def context(self) -> Optional[VISAEventContext]:
         warnings.warn(
             "context is deprecated and will be removed in 1.12. "
             "Use the event object instead to access the event attributes.",
@@ -93,10 +87,10 @@ class WaitResponse:
         return self._context
 
     def __del__(self) -> None:
-        if self._context != None:
+        if self.event._context is not None:
             try:
                 self.event.close()
-                self._visalib.close(self._context)
+                self._visalib.close(self.event._context)
             except errors.VisaIOError:
                 pass
 
@@ -470,14 +464,13 @@ class Resource(object):
             event_type: constants.EventType,
             event_context: typing.VISAEventContext,
             user_handle: Any,
-        ) -> Literal[0]:
+        ) -> None:
             assert session == self.session
             try:
                 event = Event(self.visalib, event_type, event_context)
                 return callable(self, event, user_handle)
             finally:
                 event.close()
-            return 0
 
         update_wrapper(event_handler, callable)
 
@@ -584,7 +577,11 @@ class Resource(object):
         except errors.VisaIOError as exc:
             if capture_timeout and exc.error_code == constants.StatusCode.error_timeout:
                 return WaitResponse(
-                    in_event_type, None, exc.error_code, self.visalib, timed_out=True
+                    in_event_type,
+                    None,
+                    constants.StatusCode.error_timeout,
+                    self.visalib,
+                    timed_out=True,
                 )
             raise
         return WaitResponse(event_type, context, ret, self.visalib)

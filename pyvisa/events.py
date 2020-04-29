@@ -7,14 +7,13 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
-from contextlib import contextmanager
 from typing import TYPE_CHECKING, Callable, Dict, Optional, Type
 
 from typing_extensions import ClassVar
 
 from . import attributes, constants, errors, logger
 from .attributes import Attribute
-from .typing import Any, VISAEventContext, VISAHandler, VISAJobID, VISASession
+from .typing import Any, VISAEventContext, VISAJobID
 
 if TYPE_CHECKING:
     from . import highlevel
@@ -87,7 +86,7 @@ class Event:
         self,
         visalib: "highlevel.VisaLibraryBase",
         event_type: constants.EventType,
-        context: VISAEventContext,
+        context: Optional[VISAEventContext],
     ) -> None:
         self.visalib = visalib
         self.event_type = event_type

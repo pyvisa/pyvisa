@@ -7,10 +7,114 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
-from typing import Any, Callable, Tuple
+from typing import Any, Tuple
+import warnings
 
-from . import constants, typing, util
-from .constants import *
+from . import typing, util
+from .constants import (
+    StatusCode,
+    EventType,
+    VI_SUCCESS,
+    VI_SUCCESS_EVENT_EN,
+    VI_SUCCESS_EVENT_DIS,
+    VI_SUCCESS_QUEUE_EMPTY,
+    VI_SUCCESS_TERM_CHAR,
+    VI_SUCCESS_MAX_CNT,
+    VI_SUCCESS_DEV_NPRESENT,
+    VI_SUCCESS_TRIG_MAPPED,
+    VI_SUCCESS_QUEUE_NEMPTY,
+    VI_SUCCESS_NCHAIN,
+    VI_SUCCESS_NESTED_SHARED,
+    VI_SUCCESS_NESTED_EXCLUSIVE,
+    VI_SUCCESS_SYNC,
+    VI_WARN_QUEUE_OVERFLOW,
+    VI_WARN_CONFIG_NLOADED,
+    VI_WARN_NULL_OBJECT,
+    VI_WARN_NSUP_ATTR_STATE,
+    VI_WARN_UNKNOWN_STATUS,
+    VI_WARN_NSUP_BUF,
+    VI_WARN_EXT_FUNC_NIMPL,
+    VI_ERROR_SYSTEM_ERROR,
+    VI_ERROR_INV_OBJECT,
+    VI_ERROR_RSRC_LOCKED,
+    VI_ERROR_INV_EXPR,
+    VI_ERROR_RSRC_NFOUND,
+    VI_ERROR_INV_RSRC_NAME,
+    VI_ERROR_INV_ACC_MODE,
+    VI_ERROR_TMO,
+    VI_ERROR_CLOSING_FAILED,
+    VI_ERROR_INV_DEGREE,
+    VI_ERROR_INV_JOB_ID,
+    VI_ERROR_NSUP_ATTR,
+    VI_ERROR_NSUP_ATTR_STATE,
+    VI_ERROR_ATTR_READONLY,
+    VI_ERROR_INV_LOCK_TYPE,
+    VI_ERROR_INV_ACCESS_KEY,
+    VI_ERROR_INV_EVENT,
+    VI_ERROR_INV_MECH,
+    VI_ERROR_HNDLR_NINSTALLED,
+    VI_ERROR_INV_HNDLR_REF,
+    VI_ERROR_INV_CONTEXT,
+    VI_ERROR_QUEUE_OVERFLOW,
+    VI_ERROR_NENABLED,
+    VI_ERROR_ABORT,
+    VI_ERROR_RAW_WR_PROT_VIOL,
+    VI_ERROR_RAW_RD_PROT_VIOL,
+    VI_ERROR_OUTP_PROT_VIOL,
+    VI_ERROR_INP_PROT_VIOL,
+    VI_ERROR_BERR,
+    VI_ERROR_IN_PROGRESS,
+    VI_ERROR_INV_SETUP,
+    VI_ERROR_QUEUE_ERROR,
+    VI_ERROR_ALLOC,
+    VI_ERROR_INV_MASK,
+    VI_ERROR_IO,
+    VI_ERROR_INV_FMT,
+    VI_ERROR_NSUP_FMT,
+    VI_ERROR_LINE_IN_USE,
+    VI_ERROR_NSUP_MODE,
+    VI_ERROR_SRQ_NOCCURRED,
+    VI_ERROR_INV_SPACE,
+    VI_ERROR_INV_OFFSET,
+    VI_ERROR_INV_WIDTH,
+    VI_ERROR_NSUP_OFFSET,
+    VI_ERROR_NSUP_VAR_WIDTH,
+    VI_ERROR_WINDOW_NMAPPED,
+    VI_ERROR_RESP_PENDING,
+    VI_ERROR_NLISTENERS,
+    VI_ERROR_NCIC,
+    VI_ERROR_NSYS_CNTLR,
+    VI_ERROR_NSUP_OPER,
+    VI_ERROR_INTR_PENDING,
+    VI_ERROR_ASRL_PARITY,
+    VI_ERROR_ASRL_FRAMING,
+    VI_ERROR_ASRL_OVERRUN,
+    VI_ERROR_TRIG_NMAPPED,
+    VI_ERROR_NSUP_ALIGN_OFFSET,
+    VI_ERROR_USER_BUF,
+    VI_ERROR_RSRC_BUSY,
+    VI_ERROR_NSUP_WIDTH,
+    VI_ERROR_INV_PARAMETER,
+    VI_ERROR_INV_PROT,
+    VI_ERROR_INV_SIZE,
+    VI_ERROR_WINDOW_MAPPED,
+    VI_ERROR_NIMPL_OPER,
+    VI_ERROR_INV_LENGTH,
+    VI_ERROR_INV_MODE,
+    VI_ERROR_SESN_NLOCKED,
+    VI_ERROR_MEM_NSHARED,
+    VI_ERROR_LIBRARY_NFOUND,
+    VI_ERROR_NSUP_INTR,
+    VI_ERROR_INV_LINE,
+    VI_ERROR_FILE_ACCESS,
+    VI_ERROR_FILE_IO,
+    VI_ERROR_NSUP_LINE,
+    VI_ERROR_NSUP_MECH,
+    VI_ERROR_INTF_NUM_NCONFIG,
+    VI_ERROR_CONN_LOST,
+    VI_ERROR_MACHINE_NAVAIL,
+    VI_ERROR_NPERMISSION,
+)
 
 completion_and_error_messages = {
     VI_SUCCESS: ("VI_SUCCESS", "Operation completed successfully."),
@@ -448,17 +552,17 @@ completion_and_error_messages = {
 
 default_warnings = frozenset(
     [
-        constants.StatusCode.success_max_count_read,
-        constants.StatusCode.success_device_not_present,
-        constants.StatusCode.success_synchronous,
-        constants.StatusCode.warning_queue_overflow,
-        constants.StatusCode.warning_configuration_not_loaded,
-        constants.StatusCode.warning_null_object,
-        constants.StatusCode.warning_nonsupported_attribute_state,
-        constants.StatusCode.warning_unknown_status,
-        constants.StatusCode.warning_unknown_status,
-        constants.StatusCode.warning_nonsupported_buffer,
-        constants.StatusCode.warning_ext_function_not_implemented,
+        StatusCode.success_max_count_read,
+        StatusCode.success_device_not_present,
+        StatusCode.success_synchronous,
+        StatusCode.warning_queue_overflow,
+        StatusCode.warning_configuration_not_loaded,
+        StatusCode.warning_null_object,
+        StatusCode.warning_nonsupported_attribute_state,
+        StatusCode.warning_unknown_status,
+        StatusCode.warning_unknown_status,
+        StatusCode.warning_nonsupported_buffer,
+        StatusCode.warning_ext_function_not_implemented,
     ]
 )
 
@@ -539,10 +643,7 @@ class UnknownHandler(Error):
     """
 
     def __init__(
-        self,
-        event_type: constants.EventType,
-        handler: typing.VISAHandler,
-        user_handle: Any,
+        self, event_type: EventType, handler: typing.VISAHandler, user_handle: Any,
     ) -> None:
         super(UnknownHandler, self).__init__(
             "%s, %s, %s" % (event_type, handler, user_handle)
@@ -659,7 +760,7 @@ def return_handler(module_logger, first_is_session=True):  # pragma: no cover
             )
 
             try:
-                ret_value = constants.StatusCode(ret_value)
+                ret_value = StatusCode(ret_value)
             except ValueError:
                 pass
 

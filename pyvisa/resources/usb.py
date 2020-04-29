@@ -7,8 +7,6 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
-import warnings
-
 from .. import constants, attributes
 from ..attributes import Attribute
 from .messagebased import MessageBasedResource, ControlRenMixin
