@@ -9,6 +9,10 @@ This file is part of PyVISA.
 """
 import logging
 
+# Defined here since it is imported in other pyvisa modules
+logger = logging.getLogger("pyvisa")
+logger.addHandler(logging.NullHandler())
+
 import pkg_resources
 
 from .errors import (
@@ -24,9 +28,6 @@ from .errors import (
 )
 from .highlevel import ResourceManager
 from .resources import Resource  # noqa : F401 This is needed to register all resources.
-
-logger = logging.getLogger("pyvisa")
-logger.addHandler(logging.NullHandler())
 
 
 def log_to_screen(level=logging.DEBUG) -> None:

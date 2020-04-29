@@ -33,7 +33,7 @@ from typing import (
 
 from typing_extensions import Literal
 
-from . import __version__, constants, logger
+from . import constants, logger
 
 try:
     import numpy as np  # type: ignore
@@ -786,6 +786,8 @@ def get_system_details(backends: bool = True) -> Dict[str, str]:
         # UCS4 build (most recent Linux distros)
         unitype = "UCS4"
     bits, linkage = platform.architecture()
+
+    from . import __version__
 
     d = {
         "platform": platform.platform(),
