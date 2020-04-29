@@ -16,8 +16,8 @@ on:
       - setup.py
 
 jobs:
-  formatting:
-    name: Check formatting
+    formatting:
+    name: Check code formatting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -25,13 +25,19 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.7
-      - name: Install dependencies
+      - name: Install tools
         run: |
           python -m pip install --upgrade pip
-          pip install black
+          pip install flake8 black isort
+      - name: Isort
+        run: |
+          isort pyvisa -rc -c;
       - name: Black
         run: |
-          black --check .
+          black pyvisa --check;
+      - name: Flake8
+        run: |
+          flake8 pyvisa
   tests:
     name: Unit tests
     runs-on: ${{ matrix.os }}
