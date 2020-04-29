@@ -4,7 +4,7 @@
 """
 import logging
 
-from pyvisa import ResourceManager, rname, logger
+from pyvisa import ResourceManager, logger, rname
 from pyvisa.resources import Resource
 
 from .. import BaseTestCase

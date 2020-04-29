@@ -11,16 +11,7 @@ import contextlib
 import struct
 import time
 import warnings
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    Optional,
-    Sequence,
-    Type,
-    Union,
-)
+from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, Type, Union
 
 from .. import attributes, constants, errors, logger, util
 from ..attributes import Attribute

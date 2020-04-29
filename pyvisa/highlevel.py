@@ -34,7 +34,7 @@ from typing import (
     Union,
     cast,
 )
-from weakref import WeakSet, WeakMethod
+from weakref import WeakMethod, WeakSet
 
 from typing_extensions import ClassVar, DefaultDict, Literal
 

@@ -7,10 +7,9 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+import ctypes
 import os
 import sys
-
-import ctypes
 
 if sys.platform == "win32":
     FUNCTYPE, Library = ctypes.WINFUNCTYPE, ctypes.WinDLL
@@ -58,8 +57,8 @@ if os.name == "posix" and sys.platform.startswith("linux"):
                 res = re.search(expr, pipe.read())
             if not res:
                 # Hm, this works only for libs needed by the python executable.
-                cmd = "ldd %s 2>/dev/null" % _sys.executable
-                with _os.popen(cmd) as pipe:
+                cmd = "ldd %s 2>/dev/null" % sys.executable
+                with os.popen(cmd) as pipe:
                     res = re.search(expr, pipe.read())
                 if not res:
                     return None
@@ -68,7 +67,7 @@ if os.name == "posix" and sys.platform.startswith("linux"):
         def _find_library(name):
             path = _findlib_ldconfig(name) or _findlib_gcc(name)
             if path:
-                return _os.path.realpath(path)
+                return os.path.realpath(path)
             return path
 
         return _find_library

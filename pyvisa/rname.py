@@ -9,6 +9,7 @@ import contextlib
 import re
 from collections import defaultdict, namedtuple
 from typing import (
+    TYPE_CHECKING,
     Callable,
     Dict,
     Iterable,
@@ -17,7 +18,6 @@ from typing import (
     Set,
     Tuple,
     Type,
-    TYPE_CHECKING,
 )
 
 from . import constants, errors, logger
@@ -556,6 +556,89 @@ def filter(resources: Iterable[str], query: str) -> Tuple[str, ...]:
     return tuple(res for res in resources if matcher.match(res))
 
 
+class _AttrGetter:
+    """Smart attr getter infering common attribute from resource name.
+
+    Used to implement filter2
+
+    """
+
+    def __init__(
+        self, resource_name: str, open_resource: Callable[[str], "Resource"]
+    ) -> None:
+        self.resource_name = resource_name
+        self.parsed = parse_resource_name(resource_name)
+        self.resource = None
+        self.open_resource = open_resource
+
+    def __getattr__(self, item):  # noqa: C901
+        if item == "VI_ATTR_INTF_NUM":
+            return int(self.parsed.board)
+        elif item == "VI_ATTR_MANF_ID":
+            if not isinstance(self.parsed, (USBInstr, USBRaw)):
+                raise self.raise_missing_attr(item)
+            else:
+                return self.parsed.manufacturer_id
+        elif item == "VI_ATTR_MODEL_CODE":
+            if not isinstance(self.parsed, (USBInstr, USBRaw)):
+                raise self.raise_missing_attr(item)
+            else:
+                return self.parsed.model_code
+        elif item == "VI_ATTR_USB_SERIAL_NUM":
+            if not isinstance(self.parsed, (USBInstr, USBRaw)):
+                raise self.raise_missing_attr(item)
+            else:
+                return self.parsed.serial_number
+        elif item == "VI_ATTR_USB_INTFC_NUM":
+            if not isinstance(self.parsed, (USBInstr, USBRaw)):
+                raise self.raise_missing_attr(item)
+            else:
+                return int(self.parsed.board)
+        elif item == "VI_ATTR_TCPIP_ADDR":
+            if not isinstance(self.parsed, (TCPIPInstr, TCPIPSocket)):
+                raise self.raise_missing_attr(item)
+            else:
+                return self.parsed.host_address
+        elif item == "VI_ATTR_TCPIP_DEVICE_NAME":
+            if not isinstance(self.parsed, TCPIPInstr):
+                raise self.raise_missing_attr(item)
+            else:
+                return self.parsed.lan_device_name
+        elif item == "VI_ATTR_TCPIP_PORT":
+            if not isinstance(self.parsed, TCPIPSocket):
+                raise self.raise_missing_attr(item)
+            else:
+                return int(self.parsed.port)
+        elif item == "VI_ATTR_GPIB_PRIMARY_ADDR":
+            if not isinstance(self.parsed, GPIBInstr):
+                raise self.raise_missing_attr(item)
+            else:
+                return int(self.parsed.primary_address)
+        elif item == "VI_ATTR_GPIB_SECONDARY_ADDR":
+            if not isinstance(self.parsed, GPIBInstr):
+                raise self.raise_missing_attr(item)
+            else:
+                return int(self.parsed.secondary_address)
+        elif item == "VI_ATTR_PXI_CHASSIS":
+            if not isinstance(self.parsed, PXIBackplane):
+                raise self.raise_missing_attr(item)
+            else:
+                return int(self.parsed.chassis_number)
+        elif item == "VI_ATTR_MAINFRAME_LA":
+            if not isinstance(self.parsed, (VXIInstr, VXIBackplane)):
+                raise self.raise_missing_attr(item)
+            else:
+                return int(self.parsed.vxi_logical_address)
+
+        if self.resource is None:
+            self.resource = self.open_resource(self.resource_name)
+
+        return self.resource.get_visa_attribute(item)
+
+    def raise_missing_attr(self, item):
+        raise errors.VisaIOError(constants.VI_ERROR_NSUP_ATTR)
+
+
 def filter2(
     resources: Iterable[str], query: str, open_resource: Callable[[str], "Resource"],
 ) -> List[str]:
@@ -596,82 +679,9 @@ def filter2(
     optional = optional.replace("&&", "and").replace("||", "or").replace("!", "not ")
     optional = optional.replace("VI_", "res.VI_")
 
-    class AttrGetter:
-        def __init__(self, resource_name):
-            self.resource_name = resource_name
-            self.parsed = parse_resource_name(resource_name)
-            self.resource = None
-
-        def __getattr__(self, item):
-            if item == "VI_ATTR_INTF_NUM":
-                return int(self.parsed.board)
-            elif item == "VI_ATTR_MANF_ID":
-                if not isinstance(self.parsed, (USBInstr, USBRaw)):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return self.parsed.manufacturer_id
-            elif item == "VI_ATTR_MODEL_CODE":
-                if not isinstance(self.parsed, (USBInstr, USBRaw)):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return self.parsed.model_code
-            elif item == "VI_ATTR_USB_SERIAL_NUM":
-                if not isinstance(self.parsed, (USBInstr, USBRaw)):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return self.parsed.serial_number
-            elif item == "VI_ATTR_USB_INTFC_NUM":
-                if not isinstance(self.parsed, (USBInstr, USBRaw)):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return int(self.parsed.board)
-            elif item == "VI_ATTR_TCPIP_ADDR":
-                if not isinstance(self.parsed, (TCPIPInstr, TCPIPSocket)):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return self.parsed.host_address
-            elif item == "VI_ATTR_TCPIP_DEVICE_NAME":
-                if not isinstance(self.parsed, TCPIPInstr):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return self.parsed.lan_device_name
-            elif item == "VI_ATTR_TCPIP_PORT":
-                if not isinstance(self.parsed, TCPIPSocket):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return int(self.parsed.port)
-            elif item == "VI_ATTR_GPIB_PRIMARY_ADDR":
-                if not isinstance(self.parsed, GPIBInstr):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return int(self.parsed.primary_address)
-            elif item == "VI_ATTR_GPIB_SECONDARY_ADDR":
-                if not isinstance(self.parsed, GPIBInstr):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return int(self.parsed.secondary_address)
-            elif item == "VI_ATTR_PXI_CHASSIS":
-                if not isinstance(self.parsed, PXIBackplane):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return int(self.parsed.chassis_number)
-            elif item == "VI_ATTR_MAINFRAME_LA":
-                if not isinstance(self.parsed, (VXIInstr, VXIBackplane)):
-                    raise self.raise_missing_attr(item)
-                else:
-                    return int(self.parsed.vxi_logical_address)
-
-            if self.resource is None:
-                self.resource = open_resource(self.resource_name)
-
-            return self.resource.get_visa_attribute(item)
-
-        def raise_missing_attr(self, item):
-            raise errors.VisaIOError(constants.VI_ERROR_NSUP_ATTR)
-
     @contextlib.contextmanager
     def open_close(resource_name):
-        getter = AttrGetter(resource_name)
+        getter = _AttrGetter(resource_name, open_resource)
         yield getter
         if getter.resource is not None:
             getter.resource.close()

@@ -3,18 +3,17 @@
 
 """
 import gc
-import unittest
 
-from pyvisa import ResourceManager, InvalidSession, VisaIOError
+from pyvisa import InvalidSession, ResourceManager
 from pyvisa.constants import (
-    StatusCode,
-    InterfaceType,
     VI_ATTR_TMO_VALUE,
     VI_TMO_IMMEDIATE,
     VI_TMO_INFINITE,
+    InterfaceType,
+    StatusCode,
 )
-from pyvisa.rname import ResourceName
 from pyvisa.resources.resource import Resource
+from pyvisa.rname import ResourceName
 
 from . import RESOURCE_ADDRESSES
 

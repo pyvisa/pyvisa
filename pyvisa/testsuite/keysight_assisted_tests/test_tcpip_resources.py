@@ -2,7 +2,6 @@
 """Test the TCPIP based resources.
 
 """
-import os
 import unittest
 
 from pyvisa import constants, errors

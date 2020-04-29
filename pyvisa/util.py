@@ -33,7 +33,7 @@ from typing import (
 
 from typing_extensions import Literal
 
-from . import __version__, logger, constants
+from . import __version__, constants, logger
 
 try:
     import numpy as np  # type: ignore

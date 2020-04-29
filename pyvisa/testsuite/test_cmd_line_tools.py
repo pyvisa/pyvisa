@@ -2,10 +2,10 @@
 """Test the behavior of the command line tools.
 
 """
-from subprocess import run, Popen, PIPE
+from subprocess import PIPE, Popen, run
 
 from pyvisa import util
-from pyvisa.cmd_line_tools import visa_main, visa_info, visa_shell
+
 from . import BaseTestCase, require_visa_lib
 
 

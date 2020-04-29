@@ -31,7 +31,7 @@ from typing_extensions import ClassVar, Literal
 from .. import attributes, constants, errors, highlevel, logger, rname, typing, util
 from ..attributes import Attribute
 from ..events import Event
-from ..typing import VISAHandler, VISASession, VISAEventContext
+from ..typing import VISAEventContext, VISAHandler, VISASession
 
 
 class WaitResponse:

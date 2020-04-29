@@ -205,7 +205,7 @@ class VisaShell(cmd.Cmd):
 
         print(p.get_string(sortby="VISA name"))
 
-    def do_attr(self, args):
+    def do_attr(self, args):  # noqa: C901
         """Get or set the state for a visa attribute.
 
         List all attributes:
@@ -237,8 +237,10 @@ class VisaShell(cmd.Cmd):
             print(
                 "Invalid syntax, use `attr <name>` to get; or `attr <name> <value>` to set"
             )
-        elif len(args) == 1:
-            # Get
+            return
+
+        if len(args) == 1:
+            # Get a given attribute
             attr_name = args[0]
             if attr_name.startswith("VI_"):
                 try:
@@ -252,52 +254,50 @@ class VisaShell(cmd.Cmd):
                     print(getattr(self.current, attr_name))
                 except Exception as e:
                     print(e)
-        else:
-            attr_name, attr_state = args[0], args[1]
-            if attr_name.startswith("VI_"):
-                try:
-                    attributeId = getattr(constants, attr_name)
-                    attr = attributes.AttributesByID[attributeId]
-                    datatype = attr.visa_type
-                    retcode = None
-                    if datatype == "ViBoolean":
-                        if attr_state == "True":
-                            attr_state = True
-                        elif attr_state == "False":
-                            attr_state = False
-                        else:
-                            retcode = (
-                                constants.StatusCode.error_nonsupported_attribute_state
-                            )
-                    elif datatype in [
-                        "ViUInt8",
-                        "ViUInt16",
-                        "ViUInt32",
-                        "ViInt8",
-                        "ViInt16",
-                        "ViInt32",
-                    ]:
-                        try:
-                            attr_state = int(attr_state)
-                        except ValueError:
-                            retcode = (
-                                constants.StatusCode.error_nonsupported_attribute_state
-                            )
-                    if not retcode:
-                        retcode = self.current.set_visa_attribute(
-                            attributeId, attr_state
-                        )
-                    if retcode:
-                        print("Error {}".format(str(retcode)))
+            return
+
+        # Set the specified attribute value
+        attr_name, attr_state = args[0], args[1]
+        if attr_name.startswith("VI_"):
+            try:
+                attributeId = getattr(constants, attr_name)
+                attr = attributes.AttributesByID[attributeId]
+                datatype = attr.visa_type
+                retcode = None
+                if datatype == "ViBoolean":
+                    if attr_state == "True":
+                        attr_state = True
+                    elif attr_state == "False":
+                        attr_state = False
                     else:
-                        print("Done")
-                except Exception as e:
-                    print(e)
-            else:
-                print(
-                    "Setting Resource Attributes by python name is not yet supported."
-                )
-                return
+                        retcode = (
+                            constants.StatusCode.error_nonsupported_attribute_state
+                        )
+                elif datatype in [
+                    "ViUInt8",
+                    "ViUInt16",
+                    "ViUInt32",
+                    "ViInt8",
+                    "ViInt16",
+                    "ViInt32",
+                ]:
+                    try:
+                        attr_state = int(attr_state)
+                    except ValueError:
+                        retcode = (
+                            constants.StatusCode.error_nonsupported_attribute_state
+                        )
+                if not retcode:
+                    retcode = self.current.set_visa_attribute(attributeId, attr_state)
+                if retcode:
+                    print("Error {}".format(str(retcode)))
+                else:
+                    print("Done")
+            except Exception as e:
+                print(e)
+        else:
+            print("Setting Resource Attributes by python name is not yet supported.")
+            return
 
     def complete_attr(self, text, line, begidx, endidx):
         """Provide completion for the attr command."""

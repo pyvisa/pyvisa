@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-from pyvisa import highlevel, constants, rname
+from pyvisa import constants, highlevel, rname
 from pyvisa.ctwrapper import IVIVisaLibrary
 
 from . import BaseTestCase
@@ -52,7 +52,7 @@ class TestHighlevel(BaseTestCase):
 
         """
         with self.assertLogs(level=logging.DEBUG) as cm:
-            with self.assertRaises(Exception) as e:
+            with self.assertRaises(Exception):
                 highlevel.open_visa_library("non/existent/file")
 
         self.assertIn("Could not open VISA wrapper", cm.output[0])

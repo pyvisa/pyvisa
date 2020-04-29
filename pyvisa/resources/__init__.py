@@ -7,25 +7,16 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
-from .resource import Resource
-
-from .gpib import GPIBInterface
-from .vxi import VXIBackplane
-from .vxi import VXIInstrument
-
-from .messagebased import MessageBasedResource
-from .gpib import GPIBInstrument
-from .tcpip import TCPIPInstrument
-from .tcpip import TCPIPSocket
-from .serial import SerialInstrument
-from .usb import USBRaw
-from .usb import USBInstrument
-
-from .registerbased import RegisterBasedResource
 from .firewire import FirewireInstrument
-from .pxi import PXIMemory
-from .pxi import PXIInstrument
-from .vxi import VXIMemory
+from .gpib import GPIBInstrument, GPIBInterface
+from .messagebased import MessageBasedResource
+from .pxi import PXIInstrument, PXIMemory
+from .registerbased import RegisterBasedResource
+from .resource import Resource
+from .serial import SerialInstrument
+from .tcpip import TCPIPInstrument, TCPIPSocket
+from .usb import USBInstrument, USBRaw
+from .vxi import VXIBackplane, VXIInstrument, VXIMemory
 
 __all__ = [
     "Resource",

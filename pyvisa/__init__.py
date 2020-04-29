@@ -8,23 +8,22 @@ This file is part of PyVISA.
 
 """
 import logging
+
 import pkg_resources
 
-from .highlevel import ResourceManager
 from .errors import (
     Error,
-    VisaIOError,
-    VisaIOWarning,
-    VisaTypeError,
-    UnknownHandler,
-    OSNotSupported,
     InvalidBinaryFormat,
     InvalidSession,
     LibraryError,
+    OSNotSupported,
+    UnknownHandler,
+    VisaIOError,
+    VisaIOWarning,
+    VisaTypeError,
 )
-
-# This is needed to register all resources.
-from .resources import Resource  # noqa : F401
+from .highlevel import ResourceManager
+from .resources import Resource  # noqa : F401 This is needed to register all resources.
 
 logger = logging.getLogger("pyvisa")
 logger.addHandler(logging.NullHandler())

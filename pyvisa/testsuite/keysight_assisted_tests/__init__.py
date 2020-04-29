@@ -19,7 +19,6 @@ See https://coverage.readthedocs.io/en/v4.5.x/subprocess.html for details.
 import os
 import unittest
 
-
 require_virtual_instr = unittest.skipUnless(
     "PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ,
     "Requires the Keysight virtual instrument. Run on PyVISA " "buildbot.",

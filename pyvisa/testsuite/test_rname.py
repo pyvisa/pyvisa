@@ -2,10 +2,8 @@
 """Test test the resource name parsing.
 
 """
-import unittest
+from pyvisa import constants, errors, rname
 from pyvisa.testsuite import BaseTestCase
-
-from pyvisa import rname, constants, errors
 
 
 class TestInvalidResourceName(BaseTestCase):

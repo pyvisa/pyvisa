@@ -8,7 +8,6 @@ This file is part of PyVISA.
 
 """
 from .. import constants
-
 from .registerbased import RegisterBasedResource
 
 

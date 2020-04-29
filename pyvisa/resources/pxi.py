@@ -7,11 +7,10 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
-from .. import constants, attributes
+from .. import attributes, constants
 from ..attributes import Attribute
-
-from .resource import Resource
 from .registerbased import RegisterBasedResource
+from .resource import Resource
 
 
 @Resource.register(constants.InterfaceType.pxi, "BACKPLANE")

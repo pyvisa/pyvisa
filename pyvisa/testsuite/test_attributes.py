@@ -7,14 +7,14 @@ import enum
 from pyvisa import constants
 from pyvisa.attributes import (
     Attribute,
+    AttrVI_ATTR_ASRL_BAUD,
+    AttrVI_ATTR_INTF_INST_NAME,
     BooleanAttribute,
     CharAttribute,
     EnumAttribute,
     IntAttribute,
     RangeAttribute,
     ValuesAttribute,
-    AttrVI_ATTR_INTF_INST_NAME,
-    AttrVI_ATTR_ASRL_BAUD,
 )
 
 from . import BaseTestCase

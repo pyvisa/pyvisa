@@ -4,9 +4,8 @@
 """
 import pickle
 
-from pyvisa.testsuite import BaseTestCase
-
 from pyvisa import errors
+from pyvisa.testsuite import BaseTestCase
 
 
 class TestPicleUnpickle(BaseTestCase):

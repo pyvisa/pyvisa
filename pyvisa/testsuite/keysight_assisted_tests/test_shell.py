@@ -6,16 +6,16 @@ import os
 import time
 from contextlib import redirect_stdout
 from io import StringIO
-from subprocess import Popen, PIPE
-from threading import Thread, Event, Lock
+from subprocess import PIPE, Popen
+from threading import Event, Lock, Thread
 
 from pyvisa import constants, errors
 from pyvisa.resources import Resource
-from pyvisa.shell import VisaShell
 from pyvisa.rname import to_canonical_name
+from pyvisa.shell import VisaShell
 
 from .. import BaseTestCase
-from . import RESOURCE_ADDRESSES, ALIASES, require_virtual_instr
+from . import ALIASES, RESOURCE_ADDRESSES, require_virtual_instr
 
 
 class SubprocessOutputPoller:

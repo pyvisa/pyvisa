@@ -3,7 +3,6 @@
 
 """
 import logging
-import contextlib
 from io import StringIO
 
 import pyvisa

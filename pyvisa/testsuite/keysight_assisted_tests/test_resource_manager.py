@@ -3,12 +3,12 @@
 
 """
 import gc
-import unittest
 import logging
+import unittest
 
-from pyvisa import ResourceManager, InvalidSession, VisaIOError, errors, logger
+from pyvisa import InvalidSession, ResourceManager, VisaIOError, errors, logger
+from pyvisa.constants import AccessModes, InterfaceType, StatusCode
 from pyvisa.highlevel import VisaLibraryBase
-from pyvisa.constants import StatusCode, AccessModes, InterfaceType
 from pyvisa.rname import ResourceName
 from pyvisa.testsuite import BaseTestCase
 

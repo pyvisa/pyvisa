@@ -8,9 +8,8 @@ This file is part of PyVISA.
 
 """
 from .. import constants
-
+from .messagebased import ControlRenMixin, MessageBasedResource
 from .resource import Resource
-from .messagebased import MessageBasedResource, ControlRenMixin
 
 
 @Resource.register(constants.InterfaceType.tcpip, "INSTR")
