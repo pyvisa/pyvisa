@@ -145,7 +145,7 @@ class TestVisaShell(BaseTestCase):
         for l, m in zip(lines, msg):
             self.assertIn(m.encode("ascii"), l)
 
-    # XXX fix argument handling to allow filtering
+    # TODO fix argument handling to allow filtering
 
     def test_list_handle_error(self):
         """Test handling an error in listing resources.
@@ -260,7 +260,7 @@ class TestVisaShell(BaseTestCase):
         """
         self.open_resource()
         lines = self.communicate("query *IDN?")
-        self.assertIn(b"Response: ", lines[0])
+        self.assertIn(b"Response:", lines[0])
 
     def test_query_handle_error(self):
         """Test handling an error in query.

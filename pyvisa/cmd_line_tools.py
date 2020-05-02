@@ -53,6 +53,10 @@ def visa_main(command: Optional[str] = None) -> None:
         shell.main("@" + args.backend if args.backend else "")
 
         shell.main("@" + args.backend if args.backend else "")
+    else:
+        raise ValueError(
+            f"Unknown command {args.command}. Valid values are: info and shell"
+        )
 
 
 def visa_shell() -> None:

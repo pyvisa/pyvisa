@@ -1517,6 +1517,10 @@ class DataWidth(enum.IntEnum):
     @classmethod
     def from_literal(cls, value: Literal[8, 16, 32, 64]) -> "DataWidth":
         """Convert a literal width in the proper enum value."""
+        if value not in (8, 16, 32, 64):
+            raise ValueError(
+                f"Invalid datawidth {value} specified. Valid values are (8, 16, 32, 64"
+            )
         return cls(value // 8)
 
 

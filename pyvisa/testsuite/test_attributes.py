@@ -140,6 +140,9 @@ class TestAttributeClasses(BaseTestCase):
         with self.assertRaises(ValueError):
             r.attr = 3
 
+        with self.assertRaises(ValueError):
+            r.attr = ""
+
     def test_IntAttribute(self):
         """Test IntAttribute.
 

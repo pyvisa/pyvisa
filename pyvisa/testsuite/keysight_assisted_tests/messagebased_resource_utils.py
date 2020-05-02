@@ -7,6 +7,7 @@ import gc
 import time
 
 from pyvisa import constants, errors
+from pyvisa.resources import Resource
 
 from .resource_utils import ResourceTestCase
 
@@ -58,8 +59,8 @@ class EventHandler:
         if event_type == constants.EventType.service_request:
             self.event_success = True
             self.srq_success = True
-            return None  # was 0
-        if event_type == constants.EventType.io_completion:
+            return None
+        elif event_type == constants.EventType.io_completion:
             self.event_success = True
             self.io_completed = True
             return None
@@ -163,7 +164,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         for ch in b"test\n":
             self.assertEqual(self.instr.read_bytes(1), ch.to_bytes(1, "little"))
 
-        # Breaking on termchar XXX handle the case of breaking on end of message
+        # Breaking on termchar
         self.instr.read_termination = "\r"
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"te\rst\r\n")
@@ -254,7 +255,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write("SEND", termination="\n")
             self.assertEqual(self.instr.read(), "test\r\r")
 
-        # XXX not sure how to test encoding
+        # TODO not sure how to test encoding
 
     def test_handling_exception_in_read_raw(self):
         """Test handling exception in read_bytes (monkeypatching)
@@ -396,7 +397,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """Test reading binary data.
 
         """
-        # XXX test handling binary decoding issue (troublesome)
+        # TODO test handling binary decoding issue (troublesome)
         self.instr.read_termination = "\r"
         # 3328 in binary short is \x00\r this way we can interrupt the
         # transmission midway to test some corner cases
@@ -569,8 +570,18 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertIs(type(values[0]), float)
         self.assertEqual(values, [1.0, 2.0, 3.0, 4.0, 5.0])
 
-    def test_delay_in_query_binary(self):
-        """Test handling of the delay argument in query_ascii_values.
+        # Test specifying a 0 delay
+        self.instr.query_delay = 1.0
+        self.instr.write("RECEIVE")
+        self.instr.write("1,2,3,4,5")
+        tic = time.perf_counter()
+        values = self.instr.query_ascii_values("SEND", delay=0.0)
+        self.assertLess(time.perf_counter() - tic, 1.0)
+        self.assertIs(type(values[0]), float)
+        self.assertEqual(values, [1.0, 2.0, 3.0, 4.0, 5.0])
+
+    def test_instrument_wide_delay_in_query_binary(self):
+        """Test handling delay in query_ascii_values.
 
         """
         header = "#10"
@@ -596,7 +607,12 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertGreater(time.perf_counter() - tic, 1.0)
         self.assertEqual(data, new)
 
-        # Test specifying the delay
+    def test_delay_args_in_query_binary(self):
+        """Test handling of the delay argument in query_ascii_values.
+
+        """
+        header = "#10"
+        data = [1, 2, 3328, 3, 4, 5]
         self.instr.query_delay = 0.0
         self.instr.write("RECEIVE")
         self.instr.write(
@@ -616,6 +632,33 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         )
 
         self.assertGreater(time.perf_counter() - tic, 1.0)
+        self.assertEqual(data, new)
+
+    def test_no_delay_args_in_query_binary(self):
+        """Test handling of the delay argument in query_ascii_values.
+
+        """
+        header = "#10"
+        data = [1, 2, 3328, 3, 4, 5]
+        self.instr.query_delay = 1.0
+        self.instr.write("RECEIVE")
+        self.instr.write(
+            header + "\x00\x01\x00\x02\r\x00\x00\x03\x00\x04\x00\x05",
+            termination="\r\n",
+        )
+        tic = time.perf_counter()
+        new = self.instr.query_binary_values(
+            "SEND",
+            datatype="h",
+            header_fmt="ieee",
+            is_big_endian=True,
+            expect_termination=False,
+            chunk_size=6,
+            data_points=6,
+            delay=0.0,
+        )
+
+        self.assertLess(time.perf_counter() - tic, 1.0)
         self.assertEqual(data, new)
 
     def test_stb(self):
@@ -722,6 +765,16 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
     def test_wrapping_handler(self):
         """Test wrapping a handler using a Resource."""
+
+        class FalseResource(Resource):
+            session = None
+            _session = None
+
+            def __init__(self):
+                pass
+
+        fres = FalseResource()
+
         handler = EventHandler()
         event_type = constants.EventType.service_request
         event_mech = constants.EventMechanism.handler
@@ -742,10 +795,32 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.disable_event(event_type, event_mech)
             self.instr.uninstall_handler(event_type, wrapped_handler, user_handle)
 
-        self.assertEqual(handler.session, self.instr.session)
         self.assertTrue(self.compare_user_handle(handler.handle, user_handle))
         self.assertTrue(handler.srq_success)
         self.assertEqual(self.instr.read(), "1")
+
+    def test_manually_called_handlers(self):
+        """Test calling manually even handler."""
+
+        class FalseResource(Resource):
+            session = None
+            visalib = None
+            _session = None
+
+            def __init__(self):
+                pass
+
+        fres = FalseResource()
+        fres2 = FalseResource()
+        fres2.session = 1
+
+        handler = EventHandler()
+        false_wrapped_handler = fres.wrap_handler(handler.simplified_handler)
+        false_wrapped_handler(None, constants.EventType.clear, 1, 1)
+        self.assertTrue(handler.event_success)
+
+        with self.assertRaises(RuntimeError):
+            false_wrapped_handler(1, constants.EventType.clear, 1, 1)
 
     def test_handling_invalid_handler(self):
         """Test handling an error related to a wrong handler type."""
@@ -818,6 +893,12 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.assertEqual(bytes(response.event.data), b"test\n")
         self.assertEqual(response.event.return_count, 5)
         self.assertEqual(response.event.operation_name, "viReadAsync")
+
+    def test_getting_unknown_buffer(self):
+        """Test getting a buffer with a wrong ID.
+
+        """
+        self.assertIs(self.instr.visalib.get_buffer_from_id(1), None)
 
     def test_shared_locking(self):
         """Test locking/unlocking a resource.

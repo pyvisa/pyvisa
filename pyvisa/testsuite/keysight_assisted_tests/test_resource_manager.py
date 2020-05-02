@@ -31,9 +31,10 @@ class TestResourceManager(unittest.TestCase):
         """Close the ResourceManager.
 
         """
-        self.rm.close()
-        del self.rm
-        gc.collect()
+        if self.rm is not None:
+            self.rm.close()
+            del self.rm
+            gc.collect()
 
     def test_lifecycle(self):
         """Test creation and closing of the resource manager.
@@ -59,13 +60,13 @@ class TestResourceManager(unittest.TestCase):
         """
         # The test seems to assert what it should even though the coverage report
         # seems wrong
-        # XXX
-        rm = ResourceManager()
-        # with self.assertLogs(level=logging.DEBUG, logger=logger) as log:
-        #     del rm
-        #     gc.collect()
+        rm = self.rm
+        self.rm = None
+        with self.assertLogs(level=logging.DEBUG, logger=logger) as log:
+            del rm
+            gc.collect()
 
-        # self.assertIn("Closing ResourceManager", log.output)
+        self.assertIn("Closing ResourceManager", log.output[0])
 
     def test_resource_manager_unicity(self):
         """Test the resource manager is unique per backend as expected.
@@ -211,8 +212,10 @@ class TestResourceManager(unittest.TestCase):
 
         # Success to access an unlocked resource.
         rsc.unlock()
-        self.rm.open_resource(rname, access_mode=AccessModes.exclusive_lock)
-        self.assertEqual(len(self.rm.list_opened_resources()), 2)
+        with self.rm.open_resource(
+            rname, access_mode=AccessModes.exclusive_lock
+        ) as rsc2:
+            self.assertEqual(len(self.rm.list_opened_resources()), 2)
 
     def test_opening_resource_specific_class(self):
         """Test opening a resource requesting a specific class.
@@ -236,18 +239,15 @@ class TestResourceManager(unittest.TestCase):
                 raise RuntimeError()
 
         rc[(InterfaceType.unknown, "")] = FakeResource
+        del rc[(InterfaceType.tcpip, "INSTR")]
 
-        # XXX
-        # rm = ResourceManager()
-        # try:
-        #     with self.assertLogs(level=logging.WARNING):
-        #         rm.open_resource("TCPIP::192.168.0.1::UNKNOWN")
-        #     self.assertIs(
-        #         ResourceManager._resource_classes[(InterfaceType.tcpip, "INSTR")],
-        #         object,
-        #     )
-        # finally:
-        #     ResourceManager._resource_classes = old
+        rm = ResourceManager()
+        try:
+            with self.assertLogs(level=logging.DEBUG, logger=logger):
+                with self.assertRaises(RuntimeError):
+                    rm.open_resource("TCPIP::192.168.0.1::INSTR")
+        finally:
+            ResourceManager._resource_classes = old
 
     def test_opening_resource_unknown_attribute(self):
         """Test opening a resource and attempting to set an unknown attr.

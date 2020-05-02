@@ -9,11 +9,13 @@ This file is part of PyVISA.
 """
 import atexit
 import contextlib
+import copy
 import os
 import pkgutil
 import warnings
 from collections import defaultdict
 from importlib import import_module
+from itertools import chain
 from types import ModuleType
 from typing import (
     TYPE_CHECKING,
@@ -34,11 +36,11 @@ from typing import (
     Union,
     cast,
 )
-from weakref import WeakMethod, WeakSet
+from weakref import WeakMethod, WeakSet, WeakValueDictionary
 
 from typing_extensions import ClassVar, DefaultDict, Literal
 
-from . import constants, errors, logger, rname
+from . import attributes, constants, errors, logger, rname
 from .typing import (
     VISAEventContext,
     VISAHandler,
@@ -50,7 +52,7 @@ from .typing import (
 from .util import LibraryPath
 
 if TYPE_CHECKING:
-    from .resources import Resource
+    from .resources import Resource  # pragma: no cover
 
 #: Resource extended information
 #:
@@ -109,7 +111,7 @@ class VisaLibraryBase(object):
     #: Maps library path to VisaLibrary object
     _registry: ClassVar[
         Dict[Tuple[Type["VisaLibraryBase"], LibraryPath], "VisaLibraryBase"]
-    ] = dict()
+    ] = WeakValueDictionary()
 
     #: Last return value of the library.
     _last_status: constants.StatusCode = constants.StatusCode(0)
@@ -1973,7 +1975,7 @@ class VisaLibraryBase(object):
 
         """
         ri, status = self.parse_resource_extended(session, resource_name)
-        if ri:
+        if status == constants.StatusCode.success:
             return (
                 ResourceInfo(
                     ri.interface_type, ri.interface_board_number, None, None, None
@@ -2923,6 +2925,26 @@ class ResourceManager(object):
                 "%s is already registered in the ResourceManager. "
                 "Overwriting with %s" % ((interface_type, resource_class), python_class)
             )
+
+        # If the class already has this attribute, it means that a parent class
+        # was registered first. We need to copy the current set and extend it.
+        attrs = copy.copy(getattr(python_class, "visa_attributes_classes", set()))
+
+        for attr in chain(
+            attributes.AttributesPerResource[(interface_type, resource_class)],
+            attributes.AttributesPerResource[attributes.AllSessionTypes],
+        ):
+            attrs.add(attr)
+            # Error on non-properly set descriptor (this ensures that we are
+            # consistent)
+            if attr.py_name != "" and not hasattr(python_class, attr.py_name):
+                raise TypeError(
+                    "%s was expected to have a visa attribute %s"
+                    % (python_class, attr.py_name)
+                )
+
+        setattr(python_class, "visa_attributes_classes", attrs)
+
         cls._resource_classes[(interface_type, resource_class)] = python_class
 
     def __new__(

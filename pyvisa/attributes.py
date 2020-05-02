@@ -35,8 +35,8 @@ from typing_extensions import ClassVar, DefaultDict
 from . import constants, util
 
 if TYPE_CHECKING:
-    from .events import Event, IOCompletionEvent  # noqa
-    from .resources import Resource  # noqa
+    from .events import Event, IOCompletionEvent  # noqa  # pragma: no cover
+    from .resources import Resource  # noqa  # pragma: no cover
 
 #: Not available value.
 NotAvailable = object()
@@ -46,7 +46,7 @@ NotAvailable = object()
 class AllSessionTypes:  # We use a class to simplify typing
     """Class used as a placeholder to indicate an attribute exist on all resources."""
 
-    ...
+    pass
 
 
 #: Map resource to attribute
@@ -159,11 +159,11 @@ class Attribute(Generic[T]):
 
     @overload
     def __get__(self, instance: None, owner) -> "Attribute":
-        ...
+        pass
 
     @overload  # noqa: F811
     def __get__(self, instance: Union["Resource", "Event"], owner) -> T:
-        ...
+        pass
 
     def __get__(self, instance, owner):  # noqa: F811
         """Access a VISA attribute and convert to a nice Python representation."""
@@ -227,17 +227,10 @@ class EnumAttribute(Attribute):
 
     def pre_set(self, value: enum.IntEnum) -> Any:
         """Validate the value passed against the enum."""
-        # Allow to pass bare integer (for backward compatibility)
-        if isinstance(value, int):
-            value = self.enum_type(value)
         # Python 3.8 raise if a non-Enum is used for value
         try:
-            if value not in self.enum_type:
-                raise ValueError(
-                    "%r is an invalid value for attribute %s, "
-                    "should be a %r" % (value, self.visa_name, self.enum_type)
-                )
-        except TypeError:
+            value = self.enum_type(value)
+        except ValueError:
             raise ValueError(
                 "%r is an invalid value for attribute %s, "
                 "should be a %r" % (value, self.visa_name, self.enum_type)

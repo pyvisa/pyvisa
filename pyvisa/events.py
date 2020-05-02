@@ -16,7 +16,7 @@ from .attributes import Attribute
 from .typing import Any, VISAEventContext, VISAJobID
 
 if TYPE_CHECKING:
-    from . import highlevel
+    from . import highlevel  # pragma: no cover
 
 
 class Event:
@@ -60,7 +60,6 @@ class Event:
                     "%s is already registered. "
                     "Overwriting with %s" % (event_type, python_class)
                 )
-            cls._event_classes[event_type] = python_class
 
             for attr in attributes.AttributesPerResource[event_type]:
                 if not hasattr(python_class, attr.py_name):
@@ -68,6 +67,8 @@ class Event:
                         "%s is expected to have an attribute %s"
                         % (python_class, attr.py_name)
                     )
+
+            cls._event_classes[event_type] = python_class
 
             return python_class
 

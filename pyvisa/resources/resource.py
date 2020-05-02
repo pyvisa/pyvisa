@@ -8,11 +8,9 @@ This file is part of PyVISA.
 
 """
 import contextlib
-import copy
 import time
 import warnings
 from functools import update_wrapper
-from itertools import chain
 from typing import (
     Any,
     Callable,
@@ -141,29 +139,11 @@ class Resource(object):
         """
 
         def _internal(python_class):
+
             highlevel.ResourceManager.register_resource_class(
                 interface_type, resource_class, python_class
             )
 
-            # If the class already has this attribute,
-            # it means that a parent class was registered first.
-            # We need to copy the current set and extend it.
-            attrs = copy.copy(getattr(python_class, "visa_attributes_classes", set()))
-
-            for attr in chain(
-                attributes.AttributesPerResource[(interface_type, resource_class)],
-                attributes.AttributesPerResource[attributes.AllSessionTypes],
-            ):
-                attrs.add(attr)
-                # Error on non-properly set descriptor (this ensures that we are
-                # consistent)
-                if attr.py_name != "" and not hasattr(python_class, attr.py_name):
-                    raise TypeError(
-                        "%s was expected to have a visa attribute %s"
-                        % (python_class, attr.py_name)
-                    )
-
-            setattr(python_class, "visa_attributes_classes", attrs)
             return python_class
 
         return _internal
@@ -453,9 +433,9 @@ class Resource(object):
         The handler is expected to have the following signature:
         handler(resource: Resource, event: Event, user_handle: Any) -> None.
 
-        The wrapped handler should only be used for event occuring on the resource
+        The wrapped handler will be called only for event occuring on the resource
         used to wrap the handler, this is enforced by checking the session of the
-        resource against the session passed to the callback.
+        resource against the session passed to the callback. If a target event
 
         """
 
@@ -465,9 +445,14 @@ class Resource(object):
             event_context: typing.VISAEventContext,
             user_handle: Any,
         ) -> None:
-            assert session == self.session
+            if session != self.session:
+                raise RuntimeError(
+                    "When wrapping a handler, the resource used to wrap the handler"
+                    "must be the same on which the handler will be installed."
+                    f"Wrapping session: {self.session}, event on session: {session}"
+                )
+            event = Event(self.visalib, event_type, event_context)
             try:
-                event = Event(self.visalib, event_type, event_context)
                 return callable(self, event, user_handle)
             finally:
                 event.close()

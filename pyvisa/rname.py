@@ -23,7 +23,7 @@ from typing import (
 from . import constants, errors, logger
 
 if TYPE_CHECKING:
-    from .resources import Resource  # noqa
+    from .resources import Resource  # noqa  # pragma: no cover
 
 #: Interface types for which a subclass of ResourName exists
 _INTERFACE_TYPES: Set[str] = set()
@@ -243,7 +243,7 @@ class ResourceName(object):
     # Implemented when building concrete subclass in build_rn_class
     @classmethod
     def from_parts(cls, *parts):
-        ...
+        pass
 
     def __str__(self):
         return self._canonical_fmt.format(self)

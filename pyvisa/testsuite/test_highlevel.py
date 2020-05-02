@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-from pyvisa import constants, highlevel, rname
+from pyvisa import constants, highlevel, rname, resources
 from pyvisa.ctwrapper import IVIVisaLibrary
 
 from . import BaseTestCase
@@ -46,6 +46,17 @@ class TestHighlevel(BaseTestCase):
             ),
         ):
             self.assertEqual(parsed, value)
+
+    def test_base_class_parse_resource_error(self):
+        """Test errors in the base class implementation of parse_resource.
+
+        """
+        lib = highlevel.VisaLibraryBase("test")
+        rsc_name = "UNKNOWN::1::INSTR"
+        info, ret_code = lib.parse_resource(None, rsc_name)
+
+        self.assertEqual(ret_code, constants.StatusCode.error_invalid_resource_name)
+        self.assertEqual(info[0], constants.InterfaceType.unknown)
 
     def test_specifying_path_open_visa_library(self):
         """Test handling a specified path in open_visa_library.
@@ -166,11 +177,34 @@ class TestHighlevel(BaseTestCase):
         """
         old = highlevel.ResourceManager._resource_classes.copy()
         try:
+
+            class SubTCPIP(resources.TCPIPInstrument):
+                pass
+
             with self.assertLogs(level=logging.WARNING):
+                highlevel.ResourceManager.register_resource_class(
+                    constants.InterfaceType.tcpip, "INSTR", SubTCPIP
+                )
+            self.assertIs(
+                highlevel.ResourceManager._resource_classes[
+                    (constants.InterfaceType.tcpip, "INSTR")
+                ],
+                SubTCPIP,
+            )
+        finally:
+            highlevel.ResourceManager._resource_classes = old
+
+    def test_register_resource_class_missing_attr(self):
+        """Test registering resource classes.
+
+        """
+        old = highlevel.ResourceManager._resource_classes.copy()
+        try:
+            with self.assertRaises(TypeError):
                 highlevel.ResourceManager.register_resource_class(
                     constants.InterfaceType.tcpip, "INSTR", object
                 )
-            self.assertIs(
+            self.assertIsNot(
                 highlevel.ResourceManager._resource_classes[
                     (constants.InterfaceType.tcpip, "INSTR")
                 ],

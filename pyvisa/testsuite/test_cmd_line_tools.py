@@ -2,6 +2,7 @@
 """Test the behavior of the command line tools.
 
 """
+import sys
 from subprocess import PIPE, Popen, run
 
 from pyvisa import util
@@ -32,6 +33,19 @@ class TestCmdLineTools(BaseTestCase):
             stdout, _ = p.communicate(b"exit")
         self.assertIn(b"Welcome to the VISA shell", stdout)
 
+    def test_visa_main_argument_handling(self):
+        """Test we reject invalid values in visa_main.
+
+        """
+        from pyvisa.cmd_line_tools import visa_main
+
+        old = sys.argv = ["python"]
+        try:
+            with self.assertRaises(ValueError):
+                visa_main("unknown")
+        finally:
+            sys.argv = old
+
     def test_visa_info(self):
         """Test the visa info command line tool.
 
@@ -40,7 +54,7 @@ class TestCmdLineTools(BaseTestCase):
         details = util.system_details_to_str(util.get_system_details())
         self.assertMultiLineEqual(result.stdout.strip(), details.strip())
 
-    # XXX test backend selection: this not easy at all to assert
+    # TODO test backend selection: this not easy at all to assert
     @require_visa_lib
     def test_visa_shell(self):
         """Test the visa shell function.
