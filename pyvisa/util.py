@@ -64,6 +64,7 @@ def read_user_library_path():
 
         [Paths]
         visa library=/my/path/visa.so
+        dependency paths=/my/otherpath/;/my/otherpath2
 
     Return `None` if  configuration files or keys are not present.
 
@@ -82,6 +83,12 @@ def read_user_library_path():
 
     logger.debug('User defined library files: %s' % files)
     try:
+        try:
+            dependencyPaths = config_parser.get("Paths", "dependency paths")
+            for path in dependencyPaths.split(";"):
+                os.add_dll_directory(path)
+        except (NoOptionError, NoSectionError):
+            logger.debug('NoOptionError or NoSectionError while reading config file for dependency paths')
         return config_parser.get("Paths", "visa library")
     except (NoOptionError, NoSectionError):
         logger.debug('NoOptionError or NoSectionError while reading config file')
