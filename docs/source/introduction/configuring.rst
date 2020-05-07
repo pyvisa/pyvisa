@@ -66,11 +66,11 @@ contain the following::
    [Paths]
 
    VISA library: /usr/lib/libvisa.so.7
-   dependency paths=/my/otherpath/;/my/otherpath2
+   dll_extra_paths=/my/otherpath/;/my/otherpath2
 
 Please note that `[Paths]` is treated case-sensitively.
 
-`dependency paths` can be used to specify folders to search for library dependencies
+`dll_extra_paths` can be used to specify folders to search for library dependencies
 
 You can define a site-wide configuration file at
 :file:`/usr/share/pyvisa/.pyvisarc` (It may also be
