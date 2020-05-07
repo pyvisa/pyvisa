@@ -83,16 +83,50 @@ def read_user_library_path():
 
     logger.debug('User defined library files: %s' % files)
     try:
-        try:
-            dependencyPaths = config_parser.get("Paths", "dll_extra_paths")
-            for path in dependencyPaths.split(";"):
-                os.add_dll_directory(path)
-        except (NoOptionError, NoSectionError):
-            logger.debug('NoOptionError or NoSectionError while reading config file for dll_extra_paths')
         return config_parser.get("Paths", "visa library")
     except (NoOptionError, NoSectionError):
         logger.debug('NoOptionError or NoSectionError while reading config file')
         return None
+
+def add_user_dll_extra_paths():
+    """Add paths to search for .dll dependencies on Windows
+    stored in one of the following configuration files:
+
+        <sys prefix>/share/pyvisa/.pyvisarc
+        ~/.pyvisarc
+
+    <sys prefix> is the site-specific directory prefix where the platform
+    independent Python files are installed.
+
+    Example configuration file:
+
+        [Paths]
+        visa library=/my/path/visa.so
+        dll_extra_paths=/my/otherpath/;/my/otherpath2
+
+    """
+    from configparser import ConfigParser, NoSectionError, NoOptionError
+
+    config_parser = ConfigParser()
+    files = config_parser.read([os.path.join(sys.prefix, "share", "pyvisa",
+                                             ".pyvisarc"),
+                                os.path.join(os.path.expanduser("~"),
+                                             ".pyvisarc")])
+
+    if not files:
+        logger.debug('No user defined configuration')
+        return
+
+    logger.debug('User defined configuration files: %s' % files)
+
+    this_platform = sys.platform
+    if this_platform.startswith('win'):
+        try:
+            dll_extra_paths = config_parser.get("Paths", "dll_extra_paths")
+            for path in dll_extra_paths.split(";"):
+                os.add_dll_directory(path)
+        except (NoOptionError, NoSectionError):
+            logger.debug('NoOptionError or NoSectionError while reading config file for dll_extra_paths')
 
 
 class LibraryPath(str):

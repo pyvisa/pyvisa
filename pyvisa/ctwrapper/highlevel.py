@@ -72,7 +72,10 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         :rtype: tuple
         """
 
-        from ..util import LibraryPath, read_user_library_path
+        from ..util import LibraryPath, read_user_library_path, add_user_dll_extra_paths
+
+        # Add extra .dll dependency search paths before attempting to load libraries
+        add_user_dll_extra_paths()
 
         # Try to find IVI libraries using known names.
         tmp = [find_library(library_path)
