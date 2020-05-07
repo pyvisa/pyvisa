@@ -66,11 +66,15 @@ contain the following::
    [Paths]
 
    VISA library: /usr/lib/libvisa.so.7
-   dll_extra_paths=/my/otherpath/;/my/otherpath2
 
 Please note that `[Paths]` is treated case-sensitively.
 
-`dll_extra_paths` can be used to specify folders to search for library dependencies
+To specify extra .dll search paths on Windows, use a `.pyvisarc` file like the following::
+
+   [Paths]
+
+   dll_extra_paths: C:\Program Files\Keysight\IO Libraries Suite\bin;C:\Program Files (x86)\Keysight\IO Libraries Suite\bin
+
 
 You can define a site-wide configuration file at
 :file:`/usr/share/pyvisa/.pyvisarc` (It may also be
