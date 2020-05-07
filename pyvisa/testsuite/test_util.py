@@ -77,6 +77,49 @@ class TestConfigFile(BaseTestCase):
             self.assertIsNone(util.read_user_library_path())
         self.assertIn("No user defined", cm.output[0])
 
+    """Test reading dll_extra_paths.
+
+    """
+    def test_reading_config_file_not_windows(self):
+        sys.platform='darwin'
+        with self.assertLogs(level='DEBUG') as cm:
+            self.assertIsNone(util.add_user_dll_extra_paths())
+        self.assertIn("Not loading dll_extra_paths because it is not Windows", cm.output[0])
+
+    def test_reading_config_file_for_dll_extra_paths(self):
+        sys.platform='win32'
+        config = ConfigParser()
+        config['Paths'] = {}
+        config['Paths']["dll_extra_paths"] = "C:\Program Files;C:\Program Files (x86)"
+        with open(self.config_path, "w") as f:
+            config.write(f)
+        self.assertEqual(util.add_user_dll_extra_paths(), "C:\Program Files;C:\Program Files (x86)")
+
+    def test_no_section_for_dll_extra_paths(self):
+        sys.platform='win32'
+        config = ConfigParser()
+        with open(self.config_path, "w") as f:
+            config.write(f)
+        with self.assertLogs(level='DEBUG') as cm:
+            self.assertIsNone(util.add_user_dll_extra_paths())
+        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+
+    def test_no_key_for_dll_extra_paths(self):
+        sys.platform='win32'
+        config = ConfigParser()
+        config['Paths'] = {}
+        with open(self.config_path, "w") as f:
+            config.write(f)
+        with self.assertLogs(level='DEBUG') as cm:
+            self.assertIsNone(util.add_user_dll_extra_paths())
+        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+
+    def test_no_config_file_for_dll_extra_paths(self):
+        sys.platform='win32'
+        with self.assertLogs(level='DEBUG') as cm:
+            self.assertIsNone(util.add_user_dll_extra_paths())
+        self.assertIn("No user defined", cm.output[0])
+
 class TestParser(BaseTestCase):
 
     def test_parse_binary(self):
