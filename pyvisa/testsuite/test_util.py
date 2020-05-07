@@ -13,6 +13,7 @@ from configparser import ConfigParser
 from io import StringIO
 from functools import partial
 from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from pyvisa import util, highlevel
 from pyvisa.ctwrapper import IVIVisaLibrary
@@ -87,6 +88,9 @@ class TestConfigFile(BaseTestCase):
             self.assertIsNone(util.add_user_dll_extra_paths())
         self.assertIn("Not loading dll_extra_paths because it is not Windows", cm.output[0])
 
+    def fake_add_dll_directory(value):
+        return value
+
     def test_reading_config_file_for_dll_extra_paths(self):
         sys.platform='win32'
         config = ConfigParser()
@@ -94,9 +98,12 @@ class TestConfigFile(BaseTestCase):
         config['Paths']["dll_extra_paths"] = "C:\Program Files;C:\Program Files (x86)"
         with open(self.config_path, "w") as f:
             config.write(f)
-        with patch('os.add_dll_directory') as mock:
-            mock.method.return_value = None
-            self.assertEqual(util.add_user_dll_extra_paths(), "C:\Program Files;C:\Program Files (x86)")
+        # Linux Python doesn't have os.add_dll_directory(), so it will fail when it tries to call it,
+        # so we mock it instead
+        mock = MagicMock()
+        mock.__str__.return_value=''
+        os.add_dll_directory = mock
+        self.assertEqual(util.add_user_dll_extra_paths(), "C:\Program Files;C:\Program Files (x86)")
 
     def test_no_section_for_dll_extra_paths(self):
         sys.platform='win32'
