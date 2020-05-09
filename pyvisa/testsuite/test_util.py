@@ -11,9 +11,8 @@ import tempfile
 import unittest
 from configparser import ConfigParser
 from functools import partial
-from unittest.mock import patch
-from unittest.mock import MagicMock
 from io import StringIO
+from unittest.mock import MagicMock
 
 from pyvisa import highlevel, util
 from pyvisa.ctwrapper import IVIVisaLibrary
