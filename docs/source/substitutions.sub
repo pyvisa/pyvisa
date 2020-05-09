@@ -17,6 +17,8 @@
 
 .. |visalib| replace:: :attr:`~pyvisa.highlevel.ResourceManager.visalib`
 
+.. |Event| replace:: :class:`~pyvisa.events.Event`
+
 .. |Resource| replace:: :class:`~pyvisa.resources.Resource`
 
 .. |MessageBasedResource| replace:: :class:`~pyvisa.resources.MessageBasedResource`
@@ -42,6 +44,8 @@
 .. |get_visa_attribute| replace:: :attr:`~pyvisa.resources.Resource.get_visa_attribute`
 
 .. |set_visa_attribute| replace:: :attr:`~pyvisa.resources.Resource.set_visa_attribute`
+
+.. |wrap_handler| replace:: :attr:`~pyvisa.resources.Resource.wrap_handler`
 
 .. |RegisterBasedResource| replace:: :class:`~pyvisa.resources.RegisterBasedResource`
 

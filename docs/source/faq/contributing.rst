@@ -46,9 +46,32 @@ Or, download the zipball::
     $ curl -OL https://github.com/pyvisa/pyvisa/zipball/master
 
 Once you have a copy of the source, you can embed it in your Python package,
-or install it into your site-packages easily::
+or install it in develop mode easily::
 
-    $ python setup.py install
+    $ python setup.py develop
+
+Installing in development mode means that any change you make will be immediately
+reflected when you run pyvisa.
+
+PyVISA uses a number of tools to ensure a consistent code style and quality. The
+code is checked as part of the CIs system but you may want to run those locally before
+submitting a patch. You have multiple options to do so:
+
+Install and run each tool independently. You can a look at the CIs configurations
+(in .github/workflows/ci.yml). Thoses tools are:
+
+    - black: Code formatting
+    - isort: Import sorting
+    - flake8: Code quality
+    - mypy: Typing
+
+Alternatively, you can install `pre-commit` (using pip for example) and run::
+
+    $pre-commit install
+
+This will run all the above mentioned tools run when you commit your changes.
+
+Finally if editing docstring, please note that PyVISA uses Numpy style docstring.
 
 
 .. note:: If you have an old system installation of Python and you don't want to
@@ -81,5 +104,3 @@ thread in the `issue tracker`_ and we will be happy to help you.
 .. _`National Instruments's VISA`: http://ni.com/visa/
 .. _github: http://github.com/pyvisa/pyvisa
 .. _`issue tracker`: https://github.com/pyvisa/pyvisa/issues
-
-
