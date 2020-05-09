@@ -766,15 +766,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
     def test_wrapping_handler(self):
         """Test wrapping a handler using a Resource."""
 
-        class FalseResource(Resource):
-            session = None
-            _session = None
-
-            def __init__(self):
-                pass
-
-        fres = FalseResource()
-
         handler = EventHandler()
         event_type = constants.EventType.service_request
         event_mech = constants.EventMechanism.handler
@@ -795,9 +786,49 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.disable_event(event_type, event_mech)
             self.instr.uninstall_handler(event_type, wrapped_handler, user_handle)
 
+        self.assertEqual(self.instr.session, handler.session)
         self.assertTrue(self.compare_user_handle(handler.handle, user_handle))
         self.assertTrue(handler.srq_success)
         self.assertEqual(self.instr.read(), "1")
+
+    def test_bare_handler(self):
+        """Test using a bare handler passing raw backend values."""
+        from pyvisa import ctwrapper
+
+        if not isinstance(self.instr.visalib, ctwrapper.IVIVisaLibrary):
+            return
+
+        ctwrapper.WRAP_HANDLER = False
+        try:
+            handler = EventHandler()
+            event_type = constants.EventType.service_request
+            event_mech = constants.EventMechanism.handler
+            user_handle = self.instr.install_handler(
+                event_type, handler.handle_event, 1
+            )
+            self.instr.enable_event(event_type, event_mech, None)
+            self.instr.write("RCVSLOWSRQ")
+            self.instr.write("1")
+            self.instr.write("SENDSLOWSRQ")
+
+            try:
+                t1 = time.time()
+                while not handler.event_success:
+                    if (time.time() - t1) > 2:
+                        break
+                    time.sleep(0.1)
+            finally:
+                self.instr.disable_event(event_type, event_mech)
+                self.instr.uninstall_handler(
+                    event_type, handler.handle_event, user_handle
+                )
+
+            self.assertEqual(self.instr.session, handler.session.value)
+            self.assertTrue(self.compare_user_handle(handler.handle, user_handle))
+            self.assertTrue(handler.srq_success)
+            self.assertEqual(self.instr.read(), "1")
+        finally:
+            ctwrapper.WRAP_HANDLER = True
 
     def test_manually_called_handlers(self):
         """Test calling manually even handler."""

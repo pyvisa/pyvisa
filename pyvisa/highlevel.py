@@ -111,7 +111,7 @@ class VisaLibraryBase(object):
     #: Maps library path to VisaLibrary object
     _registry: ClassVar[
         Dict[Tuple[Type["VisaLibraryBase"], LibraryPath], "VisaLibraryBase"]
-    ] = WeakValueDictionary()
+    ] = WeakValueDictionary()  # type: ignore
 
     #: Last return value of the library.
     _last_status: constants.StatusCode = constants.StatusCode(0)

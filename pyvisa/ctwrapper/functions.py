@@ -22,7 +22,7 @@ from functools import update_wrapper
 from threading import Lock
 from typing import Any, Callable, Optional, Tuple
 
-from pyvisa import attributes, constants, typing
+from pyvisa import attributes, constants, typing, ctwrapper
 from pyvisa.highlevel import ResourceInfo
 
 from . import types
@@ -1182,19 +1182,24 @@ def install_handler(
 
     with set_user_handle_type(library, converted_user_handle):
 
-        # Wrap the handler to provide a non-wrapper specific interface
-        def handler_wrapper(
-            ctype_session, ctype_event_type, ctype_event_context, ctype_user_handle
-        ):
-            handler(
-                ctype_session.value,
-                ctype_event_type,
-                ctype_event_context.value,
-                ctype_user_handle.contents if ctype_user_handle else ctype_user_handle,
-            )
-            return 0
+        if ctwrapper.WRAP_HANDLER:
+            # Wrap the handler to provide a non-wrapper specific interface
+            def handler_wrapper(
+                ctype_session, ctype_event_type, ctype_event_context, ctype_user_handle
+            ):
+                handler(
+                    ctype_session.value,
+                    ctype_event_type,
+                    ctype_event_context.value,
+                    ctype_user_handle.contents
+                    if ctype_user_handle
+                    else ctype_user_handle,
+                )
+                return 0
 
-        update_wrapper(handler_wrapper, handler)
+            update_wrapper(handler_wrapper, handler)
+        else:
+            handler_wrapper = handler
 
         converted_handler = ViHndlr(handler_wrapper)
         if user_handle is None:

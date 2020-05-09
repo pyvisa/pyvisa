@@ -215,6 +215,7 @@ class TestResourceManager(unittest.TestCase):
         with self.rm.open_resource(
             rname, access_mode=AccessModes.exclusive_lock
         ) as rsc2:
+            self.assertNotEqual(rsc.session, rsc2.session)
             self.assertEqual(len(self.rm.list_opened_resources()), 2)
 
     def test_opening_resource_specific_class(self):

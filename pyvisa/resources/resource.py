@@ -433,9 +433,8 @@ class Resource(object):
         The handler is expected to have the following signature:
         handler(resource: Resource, event: Event, user_handle: Any) -> None.
 
-        The wrapped handler will be called only for event occuring on the resource
-        used to wrap the handler, this is enforced by checking the session of the
-        resource against the session passed to the callback. If a target event
+        The wrapped handler should be used only to handle events on the resource
+        used to wrap the handler.
 
         """
 
