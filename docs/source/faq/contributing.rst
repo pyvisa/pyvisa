@@ -57,22 +57,24 @@ PyVISA uses a number of tools to ensure a consistent code style and quality. The
 code is checked as part of the CIs system but you may want to run those locally before
 submitting a patch. You have multiple options to do so:
 
-Install and run each tool independently. You can a look at the CIs configurations
-(in .github/workflows/ci.yml). Thoses tools are:
+- You can install `pre-commit` (using pip for example) and run::
+
+      $pre-commit install
+
+This will run all the above mentioned tools run when you commit your changes.
+
+- Install and run each tool independently. You can install all of them using pip
+  and the `dev_requirements.txt` file. You can a look at the CIs configurations
+  (in .github/workflows/ci.yml). Thoses tools are:
 
     - black: Code formatting
     - isort: Import sorting
     - flake8: Code quality
     - mypy: Typing
 
-Alternatively, you can install `pre-commit` (using pip for example) and run::
-
-    $pre-commit install
-
-This will run all the above mentioned tools run when you commit your changes.
-
 Finally if editing docstring, please note that PyVISA uses Numpy style docstring.
-
+In order to build the documentation you will need to install `sphinx` and
+`sphinx_rtd_theme`. Both are listed in `dev_requirements.txt`.
 
 .. note:: If you have an old system installation of Python and you don't want to
    mess with it, you can try `Anaconda`_. It is a free Python distribution by
