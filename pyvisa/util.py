@@ -764,7 +764,6 @@ def get_arch(filename):
 
     out = subprocess.run(["file", filename], capture_output=True)
     out = out.stdout.decode("ascii")
-    print(out)
     ret = []
     if this_platform.startswith('linux'):
         if '32-bit' in out:
