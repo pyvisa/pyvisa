@@ -152,6 +152,16 @@ or
      You can also create a `virtual environment`_ for this.
 
 
+OSError: Could not open VISA library: function 'viOpen' not found
+-----------------------------------------------------------------
+
+Starting with Python 3.8, the .dll load behavior has changed on Windows (see
+`https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew`_). This causes
+some versions of Keysight VISA to fail to load because it cannot find its .dll
+dependencies. You can solve it by creating a configuration file and setting `dll_extra_paths`
+as described in :ref:`intro-configuring`.
+
+
 Where can I get more information about VISA?
 --------------------------------------------
 
@@ -186,3 +196,6 @@ Where can I get more information about VISA?
 .. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/master/AUTHORS
 .. _`Issue Tracker`: https://github.com/pyvisa/pyvisa/issues
 .. _`virtual environment`: http://www.virtualenv.org/en/latest/
+
+.. _`https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew`:
+       https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew

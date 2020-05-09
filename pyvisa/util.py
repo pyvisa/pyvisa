@@ -64,6 +64,7 @@ def read_user_library_path():
 
         [Paths]
         visa library=/my/path/visa.so
+        dll_extra_paths=/my/otherpath/;/my/otherpath2
 
     Return `None` if  configuration files or keys are not present.
 
@@ -87,6 +88,50 @@ def read_user_library_path():
         logger.debug('NoOptionError or NoSectionError while reading config file')
         return None
 
+def add_user_dll_extra_paths():
+    """Add paths to search for .dll dependencies on Windows
+    stored in one of the following configuration files:
+
+        <sys prefix>/share/pyvisa/.pyvisarc
+        ~/.pyvisarc
+
+    <sys prefix> is the site-specific directory prefix where the platform
+    independent Python files are installed.
+
+    Example configuration file:
+
+        [Paths]
+        visa library=/my/path/visa.so
+        dll_extra_paths=/my/otherpath/;/my/otherpath2
+
+    """
+    from configparser import ConfigParser, NoSectionError, NoOptionError
+
+    this_platform = sys.platform
+    if this_platform.startswith('win'):
+        config_parser = ConfigParser()
+        files = config_parser.read([os.path.join(sys.prefix, "share", "pyvisa",
+                                                ".pyvisarc"),
+                                    os.path.join(os.path.expanduser("~"),
+                                                ".pyvisarc")])
+
+        if not files:
+            logger.debug('No user defined configuration')
+            return None
+
+        logger.debug('User defined configuration files: %s' % files)
+
+        try:
+            dll_extra_paths = config_parser.get("Paths", "dll_extra_paths")
+            for path in dll_extra_paths.split(";"):
+                os.add_dll_directory(path)
+            return dll_extra_paths
+        except (NoOptionError, NoSectionError):
+            logger.debug('NoOptionError or NoSectionError while reading config file for dll_extra_paths')
+            return None
+    else:
+        logger.debug('Not loading dll_extra_paths because it is not Windows')
+        return None
 
 class LibraryPath(str):
 
@@ -719,7 +764,6 @@ def get_arch(filename):
 
     out = subprocess.run(["file", filename], capture_output=True)
     out = out.stdout.decode("ascii")
-    print(out)
     ret = []
     if this_platform.startswith('linux'):
         if '32-bit' in out:

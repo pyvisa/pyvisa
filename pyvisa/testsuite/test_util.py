@@ -12,6 +12,8 @@ import unittest
 from configparser import ConfigParser
 from io import StringIO
 from functools import partial
+from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from pyvisa import util, highlevel
 from pyvisa.ctwrapper import IVIVisaLibrary
@@ -31,21 +33,32 @@ class TestConfigFile(BaseTestCase):
 
     def setUp(self):
         # Skip if a real config file exists
-        if any(os.path.isfile(p)
-               for p in [os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
-                         os.path.join(os.path.expanduser("~"), ".pyvisarc")]
-              ):
+        if any(
+            os.path.isfile(p)
+            for p in [
+                os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
+                os.path.join(os.path.expanduser("~"), ".pyvisarc"),
+            ]
+        ):
             self.skipTest(".pyvisarc file exists cannot properly test in this case")
         self.temp_dir = tempfile.TemporaryDirectory()
         os.makedirs(os.path.join(self.temp_dir.name, "share", "pyvisa"))
-        self.config_path = os.path.join(self.temp_dir.name, "share", "pyvisa",
-                                        ".pyvisarc")
+        self.config_path = os.path.join(
+            self.temp_dir.name, "share", "pyvisa", ".pyvisarc"
+        )
         self._prefix = sys.prefix
         sys.prefix = self.temp_dir.name
+        self._platform = sys.platform
+        self._add_dll = os.add_dll_directory if self._platform == "win32" else None
 
     def tearDown(self):
         self.temp_dir.cleanup()
         sys.prefix = self._prefix
+        sys.platform = self._platform
+        if self._add_dll:
+            os.add_dll_directory = self._add_dll
+        elif hasattr(os, "add_dll_directory"):
+            del os.add_dll_directory
 
     def test_reading_config_file(self):
         config = ConfigParser()
@@ -75,6 +88,66 @@ class TestConfigFile(BaseTestCase):
     def test_no_config_file(self):
         with self.assertLogs(level='DEBUG') as cm:
             self.assertIsNone(util.read_user_library_path())
+        self.assertIn("No user defined", cm.output[0])
+
+    # --- Test reading dll_extra_paths.
+
+    def mock_add_dll(self):
+        """os.add_dll_directory() exists only on windows, mock it on other platform.
+
+        The teardown takes care of restoring the proper value.
+
+        """
+        mock = MagicMock()
+        mock.__str__.return_value = ""
+        os.add_dll_directory = mock
+
+    def test_reading_config_file_not_windows(self):
+        sys.platform = "darwin"
+        with self.assertLogs(level="DEBUG") as cm:
+            self.assertIsNone(util.add_user_dll_extra_paths())
+        self.assertIn(
+            "Not loading dll_extra_paths because it is not Windows", cm.output[0]
+        )
+
+    def test_reading_config_file_for_dll_extra_paths(self):
+        sys.platform = "win32"
+        self.mock_add_dll()
+        config = ConfigParser()
+        config["Paths"] = {}
+        config["Paths"]["dll_extra_paths"] = r"C:\Program Files;C:\Program Files (x86)"
+        with open(self.config_path, "w") as f:
+            config.write(f)
+        self.assertEqual(
+            util.add_user_dll_extra_paths(), r"C:\Program Files;C:\Program Files (x86)"
+        )
+
+    def test_no_section_for_dll_extra_paths(self):
+        sys.platform = "win32"
+        self.mock_add_dll()
+        config = ConfigParser()
+        with open(self.config_path, "w") as f:
+            config.write(f)
+        with self.assertLogs(level="DEBUG") as cm:
+            self.assertIsNone(util.add_user_dll_extra_paths())
+        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+
+    def test_no_key_for_dll_extra_paths(self):
+        sys.platform = "win32"
+        self.mock_add_dll()
+        config = ConfigParser()
+        config["Paths"] = {}
+        with open(self.config_path, "w") as f:
+            config.write(f)
+        with self.assertLogs(level="DEBUG") as cm:
+            self.assertIsNone(util.add_user_dll_extra_paths())
+        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+
+    def test_no_config_file_for_dll_extra_paths(self):
+        sys.platform = "win32"
+        self.mock_add_dll()
+        with self.assertLogs(level="DEBUG") as cm:
+            self.assertIsNone(util.add_user_dll_extra_paths())
         self.assertIn("No user defined", cm.output[0])
 
 class TestParser(BaseTestCase):

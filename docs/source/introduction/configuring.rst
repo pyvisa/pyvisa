@@ -69,6 +69,13 @@ contain the following::
 
 Please note that `[Paths]` is treated case-sensitively.
 
+To specify extra .dll search paths on Windows, use a `.pyvisarc` file like the following::
+
+   [Paths]
+
+   dll_extra_paths: C:\Program Files\Keysight\IO Libraries Suite\bin;C:\Program Files (x86)\Keysight\IO Libraries Suite\bin
+
+
 You can define a site-wide configuration file at
 :file:`/usr/share/pyvisa/.pyvisarc` (It may also be
 :file:`/usr/local/...` depending on the location of your Python).
