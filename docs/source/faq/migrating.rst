@@ -288,7 +288,4 @@ In PyVISA 1.6, ``term_chars`` is replaced by ``read_termination` and
 ``write_termination``. In this way, you can set independently the termination
 for each operation. Automatic removal of ``CR + LF`` is also gone in 1.6.
 
-
-
-
 .. _Lantz: https://lantz.readthedocs.org/

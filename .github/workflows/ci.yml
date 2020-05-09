@@ -38,6 +38,9 @@ jobs:
       - name: Flake8
         run: |
           flake8 pyvisa
+      - name: Mypy
+        run: |
+          mypy pyvisa
   tests:
     name: Unit tests
     runs-on: ${{ matrix.os }}
