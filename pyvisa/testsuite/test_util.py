@@ -47,6 +47,7 @@ class TestConfigFile(BaseTestCase):
         self._prefix = sys.prefix
         sys.prefix = self.temp_dir.name
         self._platform = sys.platform
+        self._version_info = sys.version_info
         self._add_dll = (
             os.add_dll_directory
             if sys.version_info >= (3, 8) and self._platform == "win32"
@@ -57,6 +58,7 @@ class TestConfigFile(BaseTestCase):
         self.temp_dir.cleanup()
         sys.prefix = self._prefix
         sys.platform = self._platform
+        sys.version_info = self._version_info
         if self._add_dll:
             os.add_dll_directory = self._add_dll
         elif hasattr(os, "add_dll_directory"):
@@ -106,14 +108,21 @@ class TestConfigFile(BaseTestCase):
 
     def test_reading_config_file_not_windows(self):
         sys.platform = "darwin"
+        sys.version_info = (3, 8, 1)
         with self.assertLogs(level="DEBUG") as cm:
             self.assertIsNone(util.add_user_dll_extra_paths())
-        self.assertIn(
-            "Not loading dll_extra_paths because it is not Windows", cm.output[0]
-        )
+        self.assertIn("Not loading dll_extra_paths", cm.output[0])
+
+    def test_reading_config_file_old_python(self):
+        sys.platform = "win32"
+        sys.version_info = (3, 7, 1)
+        with self.assertLogs(level="DEBUG") as cm:
+            self.assertIsNone(util.add_user_dll_extra_paths())
+        self.assertIn("Not loading dll_extra_paths", cm.output[0])
 
     def test_reading_config_file_for_dll_extra_paths(self):
         sys.platform = "win32"
+        sys.version_info = (3, 8, 1)
         self.mock_add_dll()
         config = ConfigParser()
         config["Paths"] = {}
@@ -121,11 +130,13 @@ class TestConfigFile(BaseTestCase):
         with open(self.config_path, "w") as f:
             config.write(f)
         self.assertEqual(
-            util.add_user_dll_extra_paths(), r"C:\Program Files;C:\Program Files (x86)"
+            util.add_user_dll_extra_paths(),
+            [r"C:\Program Files", r"C:\Program Files (x86)"],
         )
 
     def test_no_section_for_dll_extra_paths(self):
         sys.platform = "win32"
+        sys.version_info = (3, 8, 1)
         self.mock_add_dll()
         config = ConfigParser()
         with open(self.config_path, "w") as f:
@@ -136,6 +147,7 @@ class TestConfigFile(BaseTestCase):
 
     def test_no_key_for_dll_extra_paths(self):
         sys.platform = "win32"
+        sys.version_info = (3, 8, 1)
         self.mock_add_dll()
         config = ConfigParser()
         config["Paths"] = {}
@@ -147,6 +159,7 @@ class TestConfigFile(BaseTestCase):
 
     def test_no_config_file_for_dll_extra_paths(self):
         sys.platform = "win32"
+        sys.version_info = (3, 8, 1)
         self.mock_add_dll()
         with self.assertLogs(level="DEBUG") as cm:
             self.assertIsNone(util.add_user_dll_extra_paths())

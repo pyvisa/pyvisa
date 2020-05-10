@@ -150,7 +150,10 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
             )
             return None
     else:
-        logger.debug("Not loading dll_extra_paths because it is not Windows")
+        logger.debug(
+            "Not loading dll_extra_paths because we are not on Windows "
+            "or Python < 3.8"
+        )
         return None
 
 

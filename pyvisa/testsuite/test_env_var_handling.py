@@ -2,6 +2,7 @@
 """Test the reading of env vars.
 
 """
+import os
 import sys
 from subprocess import PIPE, Popen
 
@@ -18,9 +19,9 @@ class TestEnvVarHandling(BaseTestCase):
             )
         self.assertSequenceEqual(b"True", stdout.rstrip())
 
-        with Popen(
-            [sys.executable], stdin=PIPE, stdout=PIPE, env={"PYVISA_WRAP_HANDLER": "0"},
-        ) as p:
+        env = os.environ.copy()
+        env["PYVISA_WRAP_HANDLER"] = "0"
+        with Popen([sys.executable], stdin=PIPE, stdout=PIPE, env=env,) as p:
             stdout, _ = p.communicate(
                 b"from pyvisa import ctwrapper;print(ctwrapper.WRAP_HANDLER);exit()"
             )
