@@ -32,18 +32,10 @@ Contribute code
 To contribute fixes, code or documentation to PyVISA, send us a patch, or fork
 PyVISA in github_ and submit the changes using a pull request.
 
-You can also get the code from PyPI_ or GitHub_. You can either clone the
+You can also get the code from PyPI_ or GitHub_. You can clone the
 public repository::
 
     $ git clone git://github.com/pyvisa/pyvisa.git
-
-Download the tarball::
-
-    $ curl -OL https://github.com/pyvisa/pyvisa/tarball/master
-
-Or, download the zipball::
-
-    $ curl -OL https://github.com/pyvisa/pyvisa/zipball/master
 
 Once you have a copy of the source, you can embed it in your Python package,
 or install it in develop mode easily::
