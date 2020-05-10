@@ -122,7 +122,8 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
     """
     from configparser import ConfigParser, NoSectionError, NoOptionError
 
-    if sys.platform == "win32":
+    # os.add_dll_library_path has been added in Python 3.8
+    if sys.version_info >= (3, 8) and sys.platform == "win32":
         config_parser = ConfigParser()
         files = config_parser.read(
             [

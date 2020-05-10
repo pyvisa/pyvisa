@@ -16,7 +16,7 @@ class TestEnvVarHandling(BaseTestCase):
             stdout, _ = p.communicate(
                 b"from pyvisa import ctwrapper;print(ctwrapper.WRAP_HANDLER);exit()"
             )
-        self.assertSequenceEqual(b"True\n", stdout)
+        self.assertSequenceEqual(b"True", stdout.rstrip())
 
         with Popen(
             [sys.executable], stdin=PIPE, stdout=PIPE, env={"PYVISA_WRAP_HANDLER": "0"},
@@ -24,4 +24,4 @@ class TestEnvVarHandling(BaseTestCase):
             stdout, _ = p.communicate(
                 b"from pyvisa import ctwrapper;print(ctwrapper.WRAP_HANDLER);exit()"
             )
-        self.assertSequenceEqual(b"False\n", stdout)
+        self.assertSequenceEqual(b"False", stdout.rstrip())

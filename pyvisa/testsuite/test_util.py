@@ -47,7 +47,11 @@ class TestConfigFile(BaseTestCase):
         self._prefix = sys.prefix
         sys.prefix = self.temp_dir.name
         self._platform = sys.platform
-        self._add_dll = os.add_dll_directory if self._platform == "win32" else None
+        self._add_dll = (
+            os.add_dll_directory
+            if sys.version_info >= (3, 8) and self._platform == "win32"
+            else None
+        )
 
     def tearDown(self):
         self.temp_dir.cleanup()

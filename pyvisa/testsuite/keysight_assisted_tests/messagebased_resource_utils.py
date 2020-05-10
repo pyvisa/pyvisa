@@ -824,7 +824,9 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                 )
 
             self.assertEqual(self.instr.session, handler.session.value)
-            self.assertTrue(self.compare_user_handle(handler.handle, user_handle))
+            self.assertTrue(
+                self.compare_user_handle(handler.handle.contents, user_handle)
+            )
             self.assertTrue(handler.srq_success)
             self.assertEqual(self.instr.read(), "1")
         finally:
