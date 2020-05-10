@@ -22,7 +22,7 @@ from functools import update_wrapper
 from threading import Lock
 from typing import Any, Callable, Optional, Tuple
 
-from pyvisa import attributes, constants, typing, ctwrapper
+from pyvisa import attributes, constants, ctwrapper, typing
 from pyvisa.highlevel import ResourceInfo
 
 from . import types

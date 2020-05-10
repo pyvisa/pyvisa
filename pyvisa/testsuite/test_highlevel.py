@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-from pyvisa import constants, highlevel, rname, resources
+from pyvisa import constants, highlevel, resources, rname
 from pyvisa.ctwrapper import IVIVisaLibrary
 
 from . import BaseTestCase

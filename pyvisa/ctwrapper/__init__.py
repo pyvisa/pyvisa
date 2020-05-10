@@ -8,6 +8,7 @@ This file is part of PyVISA.
 
 """
 import os
+
 from .highlevel import IVIVisaLibrary
 
 WRAPPER_CLASS = IVIVisaLibrary

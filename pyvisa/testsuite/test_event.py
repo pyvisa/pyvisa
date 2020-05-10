@@ -9,7 +9,7 @@ This file is part of PyVISA.
 """
 import logging
 
-from pyvisa import logger, constants, errors
+from pyvisa import constants, errors, logger
 from pyvisa.events import Event
 
 from . import BaseTestCase
