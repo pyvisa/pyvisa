@@ -13,6 +13,8 @@ on:
     paths:
       - .github/workflows/ci.yml
       - pyvisa/*
+      - pyproject.toml
+      - setup.cfg
       - setup.py
 
 jobs:
