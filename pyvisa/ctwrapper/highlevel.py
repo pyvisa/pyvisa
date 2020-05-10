@@ -27,7 +27,7 @@ from typing import (
 
 from pyvisa import constants, errors, highlevel, logger, typing
 
-from ..util import LibraryPath, read_user_library_path
+from ..util import LibraryPath, add_user_dll_extra_paths, read_user_library_path
 from . import functions, types
 from .cthelper import Library, find_library
 
@@ -81,9 +81,6 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
     @staticmethod
     def get_library_paths() -> Tuple[LibraryPath, ...]:
         """Return a tuple of possible library paths."""
-
-        from ..util import LibraryPath, read_user_library_path, add_user_dll_extra_paths
-
         # Add extra .dll dependency search paths before attempting to load libraries
         add_user_dll_extra_paths()
 

@@ -23,6 +23,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    List,
     Optional,
     Sequence,
     Tuple,
@@ -100,9 +101,11 @@ def read_user_library_path() -> Optional[str]:
         logger.debug("NoOptionError or NoSectionError while reading config file")
         return None
 
-def add_user_dll_extra_paths():
-    """Add paths to search for .dll dependencies on Windows
-    stored in one of the following configuration files:
+
+def add_user_dll_extra_paths() -> Optional[List[str]]:
+    """Add paths to search for .dll dependencies on Windows.
+
+    The configuration files are expected to be stored in one of the following location:
 
         <sys prefix>/share/pyvisa/.pyvisarc
         ~/.pyvisarc
@@ -119,31 +122,36 @@ def add_user_dll_extra_paths():
     """
     from configparser import ConfigParser, NoSectionError, NoOptionError
 
-    this_platform = sys.platform
-    if this_platform.startswith('win'):
+    if sys.platform == "win32":
         config_parser = ConfigParser()
-        files = config_parser.read([os.path.join(sys.prefix, "share", "pyvisa",
-                                                ".pyvisarc"),
-                                    os.path.join(os.path.expanduser("~"),
-                                                ".pyvisarc")])
+        files = config_parser.read(
+            [
+                os.path.join(sys.prefix, "share", "pyvisa", ".pyvisarc"),
+                os.path.join(os.path.expanduser("~"), ".pyvisarc"),
+            ]
+        )
 
         if not files:
-            logger.debug('No user defined configuration')
+            logger.debug("No user defined configuration")
             return None
 
-        logger.debug('User defined configuration files: %s' % files)
+        logger.debug("User defined configuration files: %s" % files)
 
         try:
-            dll_extra_paths = config_parser.get("Paths", "dll_extra_paths")
-            for path in dll_extra_paths.split(";"):
+            dll_extra_paths = config_parser.get("Paths", "dll_extra_paths").split(";")
+            for path in dll_extra_paths:
                 os.add_dll_directory(path)
             return dll_extra_paths
         except (NoOptionError, NoSectionError):
-            logger.debug('NoOptionError or NoSectionError while reading config file for dll_extra_paths')
+            logger.debug(
+                "NoOptionError or NoSectionError while reading config file for"
+                " dll_extra_paths."
+            )
             return None
     else:
-        logger.debug('Not loading dll_extra_paths because it is not Windows')
+        logger.debug("Not loading dll_extra_paths because it is not Windows")
         return None
+
 
 class LibraryPath(str):
     """Object encapsulating information about a VISA dynamic library."""
