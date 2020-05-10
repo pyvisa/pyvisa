@@ -11,8 +11,8 @@
 # serve to show the default.
 
 import os
-import pkg_resources
 import datetime
+from importlib.metadata import version as get_version
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -56,7 +56,7 @@ author = "PyVISA Authors"
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-version = pkg_resources.get_distribution(project).version
+version = get_version(project)
 release = version
 this_year = datetime.date.today().year
 copyright = "%s, %s" % (this_year, author)

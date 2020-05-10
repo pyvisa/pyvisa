@@ -8,12 +8,11 @@ This file is part of PyVISA.
 
 """
 import logging
+from importlib.metadata import version, PackageNotFoundError
 
 # Defined here since it is imported in other pyvisa modules
 logger = logging.getLogger("pyvisa")
 logger.addHandler(logging.NullHandler())
-
-import pkg_resources
 
 from .errors import (
     Error,
@@ -49,12 +48,11 @@ def log_to_stream(stream_output, level=logging.DEBUG) -> None:
 
 
 __version__ = "unknown"
-try:  # pragma: no cover
-    __version__ = pkg_resources.get_distribution("pyvisa").version
-except Exception:  # pragma: no cover
+try:
+    __version__ = version(__name__)
+except PackageNotFoundError:
+    # package is not installed
     pass
-    # we seem to have a local copy without any repository control or installed
-    # without setuptools. So the reported version will be __unknown__
 
 
 __all__ = [
