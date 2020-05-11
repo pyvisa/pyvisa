@@ -8,7 +8,11 @@ This file is part of PyVISA.
 
 """
 import logging
-from importlib.metadata import version, PackageNotFoundError
+
+try:
+    from importlib.metadata import version, PackageNotFoundError
+except ImportError:
+    from importlib_metadata import version, PackageNotFoundError
 
 # Defined here since it is imported in other pyvisa modules
 logger = logging.getLogger("pyvisa")
