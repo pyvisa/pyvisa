@@ -162,7 +162,7 @@ class Attribute(Generic[T]):
         pass
 
     @overload  # noqa: F811
-    def __get__(self, instance: Union["Resource", "Event"], owner) -> T:
+    def __get__(self, instance: Union["Resource", "Event"], owner) -> T:  # noqa: F811
         pass
 
     def __get__(self, instance, owner):  # noqa: F811

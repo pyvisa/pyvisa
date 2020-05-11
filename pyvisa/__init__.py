@@ -12,7 +12,7 @@ import logging
 try:
     from importlib.metadata import version, PackageNotFoundError
 except ImportError:
-    from importlib_metadata import version, PackageNotFoundError
+    from importlib_metadata import version, PackageNotFoundError  # type: ignore
 
 # Defined here since it is imported in other pyvisa modules
 logger = logging.getLogger("pyvisa")
