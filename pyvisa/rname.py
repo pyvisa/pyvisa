@@ -18,6 +18,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
 )
 
 from . import constants, errors, logger
@@ -94,7 +95,10 @@ class InvalidResourceName(ValueError):
         return self.msg
 
 
-def register_subclass(cls: Type["ResourceName"]) -> Type["ResourceName"]:
+T = TypeVar("T", bound=Type["ResourceName"])
+
+
+def register_subclass(cls: T) -> T:
     """Register a subclass for a given interface type and resource class."""
 
     key = cls.interface_type, cls.resource_class

@@ -301,7 +301,9 @@ def from_ascii_block(
     ascii_data: str,
     converter: ASCII_CONVERTER = "f",
     separator: Union[str, Callable[[str], Iterable[str]]] = ",",
-    container: Union[Type, Callable[[Iterable], Sequence]] = list,
+    container: Callable[
+        [Iterable[Union[int, float]]], Sequence[Union[int, float]]
+    ] = list,
 ) -> Sequence:
     """Parse ascii data and return an iterable of numbers.
 
@@ -538,7 +540,9 @@ def from_ieee_block(
     block: Union[bytes, bytearray],
     datatype: BINARY_DATATYPES = "f",
     is_big_endian: bool = False,
-    container: Type = list,
+    container: Callable[
+        [Iterable[Union[int, float]]], Sequence[Union[int, float]]
+    ] = list,
 ) -> Sequence[Union[int, float]]:
     """Convert a block in the IEEE format into an iterable of numbers.
 
@@ -591,7 +595,9 @@ def from_hp_block(
     block: Union[bytes, bytearray],
     datatype: BINARY_DATATYPES = "f",
     is_big_endian: bool = False,
-    container=list,
+    container: Callable[
+        [Iterable[Union[int, float]]], Sequence[Union[int, float]]
+    ] = list,
 ) -> Sequence[Union[int, float]]:
     """Convert a block in the HP format into an iterable of numbers.
 
@@ -643,7 +649,9 @@ def from_binary_block(
     data_length: Optional[int] = None,
     datatype: BINARY_DATATYPES = "f",
     is_big_endian: bool = False,
-    container=list,
+    container: Callable[
+        [Iterable[Union[int, float]]], Sequence[Union[int, float]]
+    ] = list,
 ) -> Sequence[Union[int, float]]:
     """Convert a binary block into an iterable of numbers.
 
