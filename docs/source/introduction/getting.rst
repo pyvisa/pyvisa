@@ -5,7 +5,7 @@ Installation
 
 .. include:: ../substitutions.sub
 
-PyVISA is a frontend to the VISA library. It runs on Python 2.7 and 3.4+.
+PyVISA is a frontend to the VISA library. It runs on Python 3.6+.
 
 You can install it using pip_::
 
@@ -66,7 +66,7 @@ Using the development version
 You can install the latest development version (at your own risk) directly
 form GitHub_::
 
-    $ pip install -U https://github.com/pyvisa/pyvisa/zipball/master
+    $ pip install -U git+https://github.com/pyvisa/pyvisa.git
 
 
 .. note::
