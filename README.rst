@@ -2,9 +2,12 @@ PyVISA
 ======
 
 
-.. image:: https://travis-ci.org/pyvisa/pyvisa.svg?branch=master
-    :target: https://travis-ci.org/pyvisa/pyvisa
-    :alt: Build Status
+.. image:: https://github.com/pyvisa/pyvisa/workflows/Continuous%20Integration/badge.svg
+    :target: https://github.com/pyvisa/pyvisa/actions
+    :alt: Continuous integration
+.. image:: https://github.com/pyvisa/pyvisa/workflows/Documentation%20building/badge.svg
+    :target: https://github.com/pyvisa/pyvisa/actions
+    :alt: Documentation building
 .. image:: https://codecov.io/gh/pyvisa/pyvisa/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/pyvisa/pyvisa
     :alt: Code Coverage
@@ -70,15 +73,8 @@ controlling:
 Requirements
 ------------
 
-- Python (tested with 2.7 and 3.4+)
-- VISA (tested with NI-VISA 17.5, Win7, from www.ni.com/visa)
-
-Python 2 support
-----------------
-
-Python 2 EOL is now near (January 1st 2020), and given the limited time
-maintainers have, the next release of PyVISA (1.10) to be released around July
-2019 will be the last version of PyVISA supporting Python 2.
+- Python (tested with 3.6+)
+- VISA (tested with NI-VISA 17.5, Win7, from www.ni.com/visa and Keysight-VISA )
 
 Installation
 --------------
