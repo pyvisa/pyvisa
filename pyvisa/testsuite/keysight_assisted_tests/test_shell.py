@@ -43,9 +43,9 @@ class SubprocessOutputPoller:
         When no new data arrive after 1s consider that the data are ready.
 
         """
-        for l in iter(self.process.stdout.readline, b""):
+        for line in iter(self.process.stdout.readline, b""):
             with self._lines_lock:
-                self._lines.append(l.rstrip())
+                self._lines.append(line.rstrip())
                 self._last_seen = time.monotonic()
 
     def check_ready(self):
@@ -142,8 +142,8 @@ class TestVisaShell(BaseTestCase):
             if rsc in ALIASES:
                 msg.append(f"     alias: {ALIASES[rsc]}")
 
-        for l, m in zip(lines, msg):
-            self.assertIn(m.encode("ascii"), l)
+        for line, m in zip(lines, msg):
+            self.assertIn(m.encode("ascii"), line)
 
     # TODO fix argument handling to allow filtering
 
@@ -495,7 +495,7 @@ class TestVisaShell(BaseTestCase):
 
         """
         self.open_resource()
-        msg = f"attr VI_ATTR_TERMCHAR_EN Test"
+        msg = "attr VI_ATTR_TERMCHAR_EN Test"
         lines = self.communicate(msg)
         self.assertIn(b"Error", lines[0])
 
@@ -513,7 +513,7 @@ class TestVisaShell(BaseTestCase):
 
         """
         self.open_resource()
-        msg = f"attr VI_ATTR_TERMCHAR -1"
+        msg = "attr VI_ATTR_TERMCHAR -1"
         lines = self.communicate(msg)
         self.assertIn(b"VI_ERROR_NSUP_ATTR_STATE", lines[0])
 
@@ -522,7 +522,7 @@ class TestVisaShell(BaseTestCase):
 
         """
         self.open_resource()
-        msg = f"attr allow_dma Test"
+        msg = "attr allow_dma Test"
         lines = self.communicate(msg)
         self.assertIn(
             b"Setting Resource Attributes by python name is not yet " b"supported.",
