@@ -5,10 +5,17 @@
 import enum
 
 from pyvisa import constants
-from pyvisa.attributes import (Attribute, BooleanAttribute, CharAttribute,
-                               EnumAttribute, IntAttribute, RangeAttribute,
-                               ValuesAttribute, AttrVI_ATTR_INTF_INST_NAME,
-                               AttrVI_ATTR_ASRL_BAUD)
+from pyvisa.attributes import (
+    Attribute,
+    AttrVI_ATTR_ASRL_BAUD,
+    AttrVI_ATTR_INTF_INST_NAME,
+    BooleanAttribute,
+    CharAttribute,
+    EnumAttribute,
+    IntAttribute,
+    RangeAttribute,
+    ValuesAttribute,
+)
 
 from . import BaseTestCase
 
@@ -35,8 +42,9 @@ class FakeResource:
             raise ValueError()
 
 
-def create_resource_cls(attribute_name, attribute_type, read=True, write=True,
-                        attrs={}):
+def create_resource_cls(
+    attribute_name, attribute_type, read=True, write=True, attrs={}
+):
     """Create a new attribute class and a resource using it.
 
     """
@@ -57,8 +65,7 @@ class TestAttributeClasses(BaseTestCase):
         """
         self.assertTrue(AttrVI_ATTR_INTF_INST_NAME.in_resource(object()))
         self.assertTrue(
-            AttrVI_ATTR_ASRL_BAUD.in_resource((constants.InterfaceType.asrl,
-                                               "INSTR"))
+            AttrVI_ATTR_ASRL_BAUD.in_resource((constants.InterfaceType.asrl, "INSTR"))
         )
         self.assertFalse(AttrVI_ATTR_ASRL_BAUD.in_resource(object()))
 
@@ -117,6 +124,7 @@ class TestAttributeClasses(BaseTestCase):
         """Test EnumAttribute
 
         """
+
         @enum.unique
         class E(enum.IntEnum):
             a = 1
@@ -132,6 +140,9 @@ class TestAttributeClasses(BaseTestCase):
         with self.assertRaises(ValueError):
             r.attr = 3
 
+        with self.assertRaises(ValueError):
+            r.attr = ""
+
     def test_IntAttribute(self):
         """Test IntAttribute.
 
@@ -144,9 +155,9 @@ class TestAttributeClasses(BaseTestCase):
         """Test RangeAttribute
 
         """
-        rc = create_resource_cls("attr_id", RangeAttribute,
-                                 attrs={"min_value": 0,
-                                        "max_value": 2})
+        rc = create_resource_cls(
+            "attr_id", RangeAttribute, attrs={"min_value": 0, "max_value": 2}
+        )
         r = rc("attr_id", 1)
         r.attr = 0
         self.assertEqual(r.attr_value, 0)
@@ -167,10 +178,11 @@ class TestAttributeClasses(BaseTestCase):
         self.assertIn("invalid value", str(cm.exception))
         self.assertNotIn(" or ", str(cm.exception))
 
-        rc = create_resource_cls("attr_id", RangeAttribute,
-                                 attrs={"min_value": 0,
-                                        "max_value": 2,
-                                        "values": [10]})
+        rc = create_resource_cls(
+            "attr_id",
+            RangeAttribute,
+            attrs={"min_value": 0, "max_value": 2, "values": [10]},
+        )
         r = rc("attr_id", 1)
         r.attr = 10
         self.assertEqual(r.attr_value, 10)
@@ -185,8 +197,7 @@ class TestAttributeClasses(BaseTestCase):
         """Test ValuesAttribute
 
         """
-        rc = create_resource_cls("attr_id", ValuesAttribute,
-                                 attrs={"values": [10, 20]})
+        rc = create_resource_cls("attr_id", ValuesAttribute, attrs={"values": [10, 20]})
         r = rc("attr_id", 1)
         r.attr = 10
         self.assertEqual(r.attr_value, 10)

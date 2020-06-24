@@ -3,7 +3,6 @@
 
 """
 import logging
-import contextlib
 from io import StringIO
 
 import pyvisa
@@ -14,6 +13,7 @@ class TestLoggingUtilities(BaseTestCase):
     """Test standard logging utilities for pyvisa.
 
     """
+
     def tearDown(self):
         for h in pyvisa.logger.handlers:
             if not isinstance(h, logging.NullHandler):

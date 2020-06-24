@@ -6,22 +6,23 @@ import os
 import time
 from contextlib import redirect_stdout
 from io import StringIO
-from subprocess import Popen, PIPE
-from threading import Thread, Event, Lock
+from subprocess import PIPE, Popen
+from threading import Event, Lock, Thread
 
 from pyvisa import constants, errors
 from pyvisa.resources import Resource
-from pyvisa.shell import VisaShell
 from pyvisa.rname import to_canonical_name
+from pyvisa.shell import VisaShell
 
 from .. import BaseTestCase
-from . import RESOURCE_ADDRESSES, ALIASES, require_virtual_instr
+from . import ALIASES, RESOURCE_ADDRESSES, require_virtual_instr
 
 
 class SubprocessOutputPoller:
     """Continuously check the stdout of a subprocess.
 
     """
+
     def __init__(self, process):
         super().__init__()
         self.process = process
@@ -42,9 +43,9 @@ class SubprocessOutputPoller:
         When no new data arrive after 1s consider that the data are ready.
 
         """
-        for l in iter(self.process.stdout.readline, b''):
+        for line in iter(self.process.stdout.readline, b""):
             with self._lines_lock:
-                self._lines.append(l.rstrip())
+                self._lines.append(line.rstrip())
                 self._last_seen = time.monotonic()
 
     def check_ready(self):
@@ -82,6 +83,7 @@ class TestVisaShell(BaseTestCase):
     """Test the VISA shell.
 
     """
+
     def setUp(self):
         """Start the shell in a subprocess.
 
@@ -93,8 +95,7 @@ class TestVisaShell(BaseTestCase):
         self.reader.get_lines()
 
     def open_resource(self):
-        lines = self.communicate(
-            f"open {list(RESOURCE_ADDRESSES.values())[0]}")
+        lines = self.communicate(f"open {list(RESOURCE_ADDRESSES.values())[0]}")
         self.assertIn(b"has been opened.", lines[0])
 
     def communicate(self, msg):
@@ -108,7 +109,7 @@ class TestVisaShell(BaseTestCase):
 
     def tearDown(self):
         if self.shell:
-            self.shell.stdin.write(b'exit\n')
+            self.shell.stdin.write(b"exit\n")
             self.shell.stdin.flush()
             self.shell.stdin.close()
             self.shell.terminate()
@@ -120,12 +121,14 @@ class TestVisaShell(BaseTestCase):
 
         """
         shell = VisaShell()
-        completions = shell.complete_open("TCPIP::", 0, 0, 0)
-        self.assertIn(RESOURCE_ADDRESSES["TCPIP::INSTR"], completions)
+        completions = shell.complete_open("TCPIP", 0, 0, 0)
+        self.assertIn(
+            to_canonical_name(RESOURCE_ADDRESSES["TCPIP::INSTR"]), completions
+        )
 
         # Test getting an alias from the completion
         completions = shell.complete_open("tcp", 0, 0, 0)
-        self.assertIn('tcpip', completions)
+        self.assertIn("tcpip", completions)
 
     def test_list(self):
         """Test listing the connected resources.
@@ -139,10 +142,10 @@ class TestVisaShell(BaseTestCase):
             if rsc in ALIASES:
                 msg.append(f"     alias: {ALIASES[rsc]}")
 
-        for l, m in zip(lines, msg):
-            self.assertIn(m.encode('ascii'), l)
+        for line, m in zip(lines, msg):
+            self.assertIn(m.encode("ascii"), line)
 
-    # XXX fix argument handling to allow filtering
+    # TODO fix argument handling to allow filtering
 
     def test_list_handle_error(self):
         """Test handling an error in listing resources.
@@ -154,7 +157,7 @@ class TestVisaShell(BaseTestCase):
         with redirect_stdout(temp_stdout):
             shell.do_list("")
         output = temp_stdout.getvalue()
-        self.assertIn('no attribute', output)
+        self.assertIn("no attribute", output)
 
     def test_open_no_args(self):
         """Test opening without any argument.
@@ -168,22 +171,23 @@ class TestVisaShell(BaseTestCase):
 
         """
         lines = self.communicate("open 0")
-        self.assertIn(b'Not a valid resource number. Use the command "list".',
-                         lines[0])
+        self.assertIn(b'Not a valid resource number. Use the command "list".', lines[0])
 
         lines = self.communicate("list")
         lines = self.communicate("open 0")
         rsc = list(RESOURCE_ADDRESSES.values())[0]
         self.assertIn(
-            f"{to_canonical_name(rsc)} has been opened.".encode('ascii'),
-            lines[0]
+            f"{to_canonical_name(rsc)} has been opened.".encode("ascii"), lines[0]
         )
 
         lines = self.communicate("open 0")
         self.assertIn(
-            (b'You can only open one resource at a time. '
-             b'Please close the current one first.'),
-            lines[0])
+            (
+                b"You can only open one resource at a time. "
+                b"Please close the current one first."
+            ),
+            lines[0],
+        )
 
     def test_open_by_address(self):
         """Test opening based on the resource address.
@@ -191,10 +195,7 @@ class TestVisaShell(BaseTestCase):
         """
         rsc = list(RESOURCE_ADDRESSES.values())[0]
         lines = self.communicate(f"open {rsc}")
-        self.assertIn(
-            f"{rsc} has been opened.".encode('ascii'),
-            lines[0]
-        )
+        self.assertIn(f"{rsc} has been opened.".encode("ascii"), lines[0])
 
     def test_open_handle_exception(self):
         """Test handling an exception during opening.
@@ -208,24 +209,15 @@ class TestVisaShell(BaseTestCase):
 
         """
         rsc = list(RESOURCE_ADDRESSES.values())[0]
-        lines = self.communicate(f'open {rsc}')
-        lines = self.communicate(f'open {rsc}')
+        lines = self.communicate(f"open {rsc}")
+        lines = self.communicate(f"open {rsc}")
         self.assertIn(
-            (b'You can only open one resource at a time. '
-             b'Please close the current one first.'),
-            lines[0])
-
-    def test_complete_open(self):
-        """Test providing auto-completion for open.
-
-        """
-        shell = VisaShell()
-        completions = shell.complete_open("TCPIP::", 0, 0, 0)
-        self.assertIn(RESOURCE_ADDRESSES["TCPIP::INSTR"], completions)
-
-        # Test getting an alias from the completion
-        completions = shell.complete_open("tcp", 0, 0, 0)
-        self.assertIn('tcpip', completions)
+            (
+                b"You can only open one resource at a time. "
+                b"Please close the current one first."
+            ),
+            lines[0],
+        )
 
     def test_command_on_closed_resource(self):
         """Test all the commands that cannot be run without opening a resource.
@@ -234,8 +226,7 @@ class TestVisaShell(BaseTestCase):
         for cmd in ("close", "write", "read", "query", "termchar", "timeout", "attr"):
             lines = self.communicate(cmd)
             self.assertIn(
-                b'There are no resources in use. Use the command "open".',
-                lines[0]
+                b'There are no resources in use. Use the command "open".', lines[0]
             )
 
     def test_close(self):
@@ -246,9 +237,9 @@ class TestVisaShell(BaseTestCase):
         lines = self.communicate(f"open {rsc}")
         self.assertIn(b"has been opened.", lines[0])
         lines = self.communicate("close")
-        self.assertIn(b'The resource has been closed.', lines[0])
+        self.assertIn(b"The resource has been closed.", lines[0])
 
-        lines = self.communicate(f'open {rsc}')
+        lines = self.communicate(f"open {rsc}")
         self.assertIn(b"has been opened.", lines[0])
 
     def test_close_handle_error(self):
@@ -261,7 +252,7 @@ class TestVisaShell(BaseTestCase):
         with redirect_stdout(temp_stdout):
             shell.do_close("")
         output = temp_stdout.getvalue()
-        self.assertIn('no attribute', output)
+        self.assertIn("no attribute", output)
 
     def test_query(self):
         """querying a value from the instrument.
@@ -269,7 +260,7 @@ class TestVisaShell(BaseTestCase):
         """
         self.open_resource()
         lines = self.communicate("query *IDN?")
-        self.assertIn(b"Response: ", lines[0])
+        self.assertIn(b"Response:", lines[0])
 
     def test_query_handle_error(self):
         """Test handling an error in query.
@@ -281,7 +272,7 @@ class TestVisaShell(BaseTestCase):
         with redirect_stdout(temp_stdout):
             shell.do_query("")
         output = temp_stdout.getvalue()
-        self.assertIn('no attribute', output)
+        self.assertIn("no attribute", output)
 
     def test_read_write(self):
         """Test writing/reading values from the resource.
@@ -302,7 +293,7 @@ class TestVisaShell(BaseTestCase):
         with redirect_stdout(temp_stdout):
             shell.do_read("")
         output = temp_stdout.getvalue()
-        self.assertIn('no attribute', output)
+        self.assertIn("no attribute", output)
 
     def test_write_handle_error(self):
         """Test handling an error in write.
@@ -314,7 +305,7 @@ class TestVisaShell(BaseTestCase):
         with redirect_stdout(temp_stdout):
             shell.do_write("")
         output = temp_stdout.getvalue()
-        self.assertIn('no attribute', output)
+        self.assertIn("no attribute", output)
 
     def test_timeout_get(self):
         """Test accessing the timeout.
@@ -334,7 +325,7 @@ class TestVisaShell(BaseTestCase):
         with redirect_stdout(temp_stdout):
             shell.do_timeout("")
         output = temp_stdout.getvalue()
-        self.assertIn('no attribute', output)
+        self.assertIn("no attribute", output)
 
     def test_timeout_set(self):
         """Test setting the timeout.
@@ -356,24 +347,24 @@ class TestVisaShell(BaseTestCase):
         with redirect_stdout(temp_stdout):
             shell.do_timeout("1000")
         output = temp_stdout.getvalue()
-        self.assertIn('no attribute', output)
+        self.assertIn("no attribute", output)
 
     def test_print_attr_list(self):
         """Test printing attribute list.
 
         """
-        class FalseResource:
 
+        class FalseResource:
             @classmethod
             def get_visa_attribute(cls, id):
                 if id == constants.VI_ATTR_TMO_VALUE:
                     raise errors.VisaIOError(constants.VI_ERROR_NSUP_ATTR)
-                elif id == constants.VI_ATTR_DMA_ALLOW_EN:
+                elif id == constants.VI_ATTR_INTF_NUM:
                     raise Exception("Long text: aaaaaaaaaaaaaaaaaaaa")
                 else:
                     raise Exception("Test")
 
-        FalseResource.visa_attributes_classes = Resource.visa_attribute_classes
+        FalseResource.visa_attributes_classes = Resource.visa_attributes_classes
 
         shell = VisaShell()
         shell.current = FalseResource
@@ -383,7 +374,7 @@ class TestVisaShell(BaseTestCase):
             shell.print_attribute_list()
 
         output = temp_stdout.getvalue()
-        self.assertIn('Long text:...', output)
+        self.assertIn("Long text:...", output)
 
     def test_attr_no_args(self):
         """Test getting the list of attributes
@@ -399,45 +390,48 @@ class TestVisaShell(BaseTestCase):
         """
         self.open_resource()
         lines = self.communicate("attr 1 2 3")
-        self.assertIn(b"Invalid syntax, use `attr <name>` to get;"
-                      b" or `attr <name> <value>` to set", lines[0])
+        self.assertIn(
+            b"Invalid syntax, use `attr <name>` to get;"
+            b" or `attr <name> <value>` to set",
+            lines[0],
+        )
 
     def test_issue_in_getting_attr(self):
         """Test handling exception in getting an attribute.
 
         """
         shell = VisaShell()
-        shell.current = shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
+        shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
 
-        def broken_get_visa_attribute(self, name):
-            raise Exception()
+        def broken_get_visa_attribute(self, name=""):
+            raise Exception("Exception")
 
         # Issue on VI_
         old = Resource.get_visa_attribute
         Resource.get_visa_attribute = broken_get_visa_attribute
-
-        temp_stdout = StringIO()
-        with contextlib.redirect_stdout(temp_stdout):
-            try:
-               shell.do_attr("VI_ATTR_TERMCHAR")
-            finally:
-                Resource.get_visa_attribute = old
-        output = temp_stdout.getvalue()
-        self.assertIn("Exception", details)
+        try:
+            temp_stdout = StringIO()
+            with redirect_stdout(temp_stdout):
+                try:
+                    shell.do_attr("VI_ATTR_TERMCHAR")
+                finally:
+                    Resource.get_visa_attribute = old
+            output = temp_stdout.getvalue()
+            self.assertIn("Exception", output)
+        finally:
+            Resource.get_visa_attribute = old
 
         # Issue on aliased attr
         old = type(shell.current).allow_dma
         type(shell.current).allow_dma = property(broken_get_visa_attribute)
-
-        temp_stdout = StringIO()
-        with contextlib.redirect_stdout(temp_stdout):
-            try:
-               shell.do_attr("allow_dma")
-            finally:
-                Resource.get_visa_attribute = old
-        output = temp_stdout.getvalue()
-        self.assertIn("Exception", details)
-
+        try:
+            temp_stdout = StringIO()
+            with redirect_stdout(temp_stdout):
+                shell.do_attr("allow_dma")
+            output = temp_stdout.getvalue()
+            self.assertIn("Exception", output)
+        finally:
+            type(shell.current).allow_dma = old
 
     def test_attr_get_set_by_VI_non_boolean(self):
         """Test getting/setting an attr using the VI_ name (int value)
@@ -501,7 +495,7 @@ class TestVisaShell(BaseTestCase):
 
         """
         self.open_resource()
-        msg = f"attr VI_ATTR_TERMCHAR_EN Test"
+        msg = "attr VI_ATTR_TERMCHAR_EN Test"
         lines = self.communicate(msg)
         self.assertIn(b"Error", lines[0])
 
@@ -519,7 +513,7 @@ class TestVisaShell(BaseTestCase):
 
         """
         self.open_resource()
-        msg = f"attr VI_ATTR_TERMCHAR -1"
+        msg = "attr VI_ATTR_TERMCHAR -1"
         lines = self.communicate(msg)
         self.assertIn(b"VI_ERROR_NSUP_ATTR_STATE", lines[0])
 
@@ -528,23 +522,25 @@ class TestVisaShell(BaseTestCase):
 
         """
         self.open_resource()
-        msg = f"attr allow_dma Test"
+        msg = "attr allow_dma Test"
         lines = self.communicate(msg)
-        self.assertIn(b"Setting Resource Attributes by python name is not yet "
-                      b"supported.", lines[0])
+        self.assertIn(
+            b"Setting Resource Attributes by python name is not yet " b"supported.",
+            lines[0],
+        )
 
     def test_complete_attr(self):
         """Test providing auto-completion for attrs.
 
         """
         shell = VisaShell()
-        shell.current = shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
+        shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
         completions = shell.complete_attr("VI_ATTR_TERM", 0, 0, 0)
-        self.assertIn('VI_ATTR_TERMCHAR', completions)
-        self.assertIn('VI_ATTR_TERMCHAR_EN', completions)
+        self.assertIn("VI_ATTR_TERMCHAR", completions)
+        self.assertIn("VI_ATTR_TERMCHAR_EN", completions)
 
         completions = shell.complete_attr("allow_d", 0, 0, 0)
-        self.assertIn('allow_dma', completions)
+        self.assertIn("allow_dma", completions)
 
     def test_termchar_get_handle_error(self):
         """Test handling error when getting the termchars.
@@ -556,20 +552,21 @@ class TestVisaShell(BaseTestCase):
         with redirect_stdout(temp_stdout):
             shell.do_termchar("")
         output = temp_stdout.getvalue()
-        self.assertIn('no attribute', output)
+        self.assertIn("no attribute", output)
 
     def test_getting_termchar_absent_mapping(self):
         """Test getting a termchar that does not map to something with a representation.
 
         """
         shell = VisaShell()
-        shell.current = shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
+        shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
         shell.current.read_termination = "X"
         shell.current.write_termination = "Z"
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
             shell.do_termchar("")
-        self.assertSequenceEqual('Termchar read: X write: Z', output)
+        output = temp_stdout.getvalue()
+        self.assertSequenceEqual("Termchar read: X write: Z", output.split("\n")[0])
 
     def test_termchar_get_set_both_identical(self):
         """Test setting both termchars to the same value.
@@ -619,7 +616,7 @@ class TestVisaShell(BaseTestCase):
         with redirect_stdout(temp_stdout):
             shell.do_termchar("CR")
         output = temp_stdout.getvalue()
-        self.assertIn('no attribute', output)
+        self.assertIn("no attribute", output)
 
     def test_eof(self):
         """Test handling an EOF.

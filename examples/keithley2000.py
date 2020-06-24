@@ -6,9 +6,9 @@
 #    Copyright © 2005, 2006, 2007, 2008
 #                Torsten Bronger <bronger@physik.rwth-aachen.de>,
 #                Gregor Thalhammer <gth@users.sourceforge.net>.
-#                     
+#
 #    This file is part of PyVISA.
-#  
+#
 #    PyVISA is free software; you can redistribute it and/or modify it under
 #    the terms of the MIT licence:
 #
@@ -35,14 +35,17 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import visa
 
+
 def test_keithley2000(monkeypatch):
-    monkeypatch.setattr(visa.GpibInstrument, 'interface_type', VI_INTF_GPIB)
-    monkeypatch.setattr(visa.GpibInstrument, 'stb', 0x40)
+    monkeypatch.setattr(visa.GpibInstrument, "interface_type", VI_INTF_GPIB)
+    monkeypatch.setattr(visa.GpibInstrument, "stb", 0x40)
     print("Test start")
     keithley = visa.GpibInstrument(12)
     milliseconds = 500
     number_of_values = 10
-    keithley.write(("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values)).encode('ascii'))
+    keithley.write(
+        ("F0B2M2G0T2Q%dI%dX" % (milliseconds, number_of_values)).encode("ascii")
+    )
     keithley.trigger()
     keithley.wait_for_srq()
     voltages = keithley.read_floats()

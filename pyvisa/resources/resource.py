@@ -1,85 +1,156 @@
 # -*- coding: utf-8 -*-
-"""
-    pyvisa.resources.resource
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+"""High level wrapper for a Resource.
 
-    High level wrapper for a Resource.
+This file is part of PyVISA.
 
-    This file is part of PyVISA.
+:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
 """
 import contextlib
-import copy
-import math
 import time
+import warnings
+from functools import update_wrapper
+from typing import (
+    Any,
+    Callable,
+    ContextManager,
+    Iterator,
+    Optional,
+    Set,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
-from .. import constants
-from .. import errors
-from .. import logger
-from .. import highlevel
-from .. import attributes
-from .. import rname
+from typing_extensions import ClassVar, Literal
+
+from .. import attributes, constants, errors, highlevel, logger, rname, typing, util
+from ..attributes import Attribute
+from ..events import Event
+from ..typing import VISAEventContext, VISAHandler, VISASession
 
 
-class WaitResponse(object):
-    """Class used in return of wait_on_event. It properly closes the context upon delete.
-       A call with event_type of 0 (normally used when timed_out is True) will be
-       recorded as None, otherwise it records the proper EventType enum.
+class WaitResponse:
+    """Class used in return of wait_on_event.
+
+    It properly closes the context upon delete.
+
+    A call with event_type of 0 (normally used when timed_out is True) will store
+    None as the event and event type, otherwise it records the proper Event.
 
     """
-    def __init__(self, event_type, context, ret, visalib, timed_out=False):
-        if event_type == 0:
-            self.event_type = None
-        else:
-            self.event_type = constants.EventType(event_type)
-        self.context = context
+
+    #: Reference to the event object that was waited for.
+    event: Event
+
+    #: Status code returned by the VISA library
+    ret: constants.StatusCode
+
+    #: Did a timeout occurs
+    timed_out: bool
+
+    def __init__(
+        self,
+        event_type: constants.EventType,
+        context: Optional[VISAEventContext],
+        ret: constants.StatusCode,
+        visalib: highlevel.VisaLibraryBase,
+        timed_out: bool = False,
+    ):
+        self.event = Event(visalib, event_type, context)
+        self._event_type = constants.EventType(event_type)
+        self._context = context
         self.ret = ret
         self._visalib = visalib
         self.timed_out = timed_out
 
-    def __del__(self):
-        if self.context != None:
+    @property
+    def event_type(self) -> Optional[constants.EventType]:
+        warnings.warn(
+            "event_type is deprecated and will be removed in 1.12. "
+            "Use the event object instead.",
+            FutureWarning,
+        )
+        return self._event_type
+
+    @property
+    def context(self) -> Optional[VISAEventContext]:
+        warnings.warn(
+            "context is deprecated and will be removed in 1.12. "
+            "Use the event object instead to access the event attributes.",
+            FutureWarning,
+        )
+        return self._context
+
+    def __del__(self) -> None:
+        if self.event._context is not None:
             try:
-                self._visalib.close(self.context)
+                self.event.close()
+                self._visalib.close(self.event._context)
             except errors.VisaIOError:
                 pass
+
+
+T = TypeVar("T", bound="Resource")
 
 
 class Resource(object):
     """Base class for resources.
 
-    Do not instantiate directly, use :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
 
-    :param resource_manager: A resource manager instance.
-    :param resource_name: the VISA name for the resource (eg. "GPIB::10")
     """
 
+    #: Reference to the resource manager used by this resource
+    resource_manager: highlevel.ResourceManager
+
+    #: Reference to the VISA library instance used by the resource
+    visalib: highlevel.VisaLibraryBase
+
+    #: VISA attribute descriptor classes that can be used to introspect the
+    #: supported attributes and the possible values. The "often used" ones
+    #: are generally directly available on the resource.
+    visa_attributes_classes: ClassVar[Set[Type[attributes.Attribute]]]
+
     @classmethod
-    def register(cls, interface_type, resource_class):
+    def register(
+        cls, interface_type: constants.InterfaceType, resource_class: str
+    ) -> Callable[[Type[T]], Type[T]]:
+        """Create a decorator to register a class.
+
+        The class is associated to an interface type, resource class pair.
+
+        Parameters
+        ----------
+        interface_type : constants.InterfaceType
+            Interface type for which to register a wrapper class.
+        resource_class : str
+            Resource class for which to register a wrapper class.
+
+        Returns
+        -------
+        Callable[[Type[T]], Type[T]]
+            Decorator registering the class. Raises TypeError if some VISA
+            attributes are missing on the registered class.
+
+        """
+
         def _internal(python_class):
-            highlevel.ResourceManager.register_resource_class(interface_type, resource_class, python_class)
 
-            # If the class already has this attribute,
-            # it means that a parent class was registered first.
-            # We need to copy the current list and extended it.
-            attrs = copy.copy(getattr(python_class, 'visa_attributes_classes', []))
+            highlevel.ResourceManager.register_resource_class(
+                interface_type, resource_class, python_class
+            )
 
-            for attr in attributes.AttributesPerResource[(interface_type, resource_class)]:
-                attrs.append(attr)
-                if not hasattr(python_class, attr.py_name) and attr.py_name != '':
-                    setattr(python_class, attr.py_name, attr())
-            for attr in attributes.AttributesPerResource[attributes.AllSessionTypes]:
-                attrs.append(attr)
-                if not hasattr(python_class, attr.py_name) and attr.py_name != '':
-                    setattr(python_class, attr.py_name, attr())
-
-            setattr(python_class, 'visa_attributes_classes', attrs)
             return python_class
+
         return _internal
 
-    def __init__(self, resource_manager, resource_name):
+    def __init__(
+        self, resource_manager: highlevel.ResourceManager, resource_name: str
+    ) -> None:
         self._resource_manager = resource_manager
         self.visalib = self._resource_manager.visalib
 
@@ -88,145 +159,146 @@ class Resource(object):
         # requires a live instance the VISA library, which means it is much
         # slower but also can cause issue in error reporting when accessing the
         # repr
+        self._resource_name: str
         try:
             # Attempt to normalize the resource name. Can fail for aliases
             self._resource_name = str(rname.ResourceName.from_string(resource_name))
         except rname.InvalidResourceName:
             self._resource_name = resource_name
 
-        self._logging_extra = {'library_path': self.visalib.library_path,
-                               'resource_manager.session': self._resource_manager.session,
-                               'resource_name': self._resource_name,
-                               'session': None}
+        self._logging_extra = {
+            "library_path": self.visalib.library_path,
+            "resource_manager.session": self._resource_manager.session,
+            "resource_name": self._resource_name,
+            "session": None,
+        }
 
         #: Session handle.
-        self._session = None
+        self._session: Optional[VISASession] = None
 
     @property
-    def session(self):
+    def session(self) -> VISASession:
         """Resource session handle.
 
-        :raises: :class:`pyvisa.errors.InvalidSession` if session is closed.
+        Raises
+        ------
+        errors.InvalidSession
+            Raised if session is closed.
+
         """
         if self._session is None:
             raise errors.InvalidSession()
         return self._session
 
     @session.setter
-    def session(self, value):
+    def session(self, value: Optional[VISASession]) -> None:
         self._session = value
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self._session is not None:
             self.close()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "%s at %s" % (self.__class__.__name__, self._resource_name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<%r(%r)>" % (self.__class__.__name__, self._resource_name)
 
-    def __enter__(self):
+    def __enter__(self) -> "Resource":
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args) -> None:
         self.close()
 
     @property
-    def last_status(self):
-        """Last status code for this session.
-
-        :rtype: :class:`pyvisa.constants.StatusCode`
-        """
+    def last_status(self) -> constants.StatusCode:
+        """Last status code for this session."""
         return self.visalib.get_last_status_in_session(self.session)
 
-    def _cleanup_timeout(self, timeout):
-        if timeout is None or math.isinf(timeout):
-            timeout = constants.VI_TMO_INFINITE
-
-        elif timeout < 1:
-            timeout = constants.VI_TMO_IMMEDIATE
-
-        elif not (1 <= timeout <= 4294967294):
-            raise ValueError("timeout value is invalid")
-
-        else:
-            timeout = int(timeout)
-
-        return timeout
-
     @property
-    def timeout(self):
-        """The timeout in milliseconds for all resource I/O operations.
+    def resource_info(self) -> highlevel.ResourceInfo:
+        """Get the extended information of this resource."""
+        return self.visalib.parse_resource_extended(
+            self._resource_manager.session, self._resource_name
+        )[0]
 
-        Special values:
+    # --- VISA attributes --------------------------------------------------------------
 
-        - **immediate** (``VI_TMO_IMMEDIATE``): 0
-          (for convenience, any value smaller than 1 is considered as 0)
-        - **infinite** (``VI_TMO_INFINITE``): ``float('+inf')``
-          (for convenience, None is considered as ``float('+inf')``)
+    #: VISA attributes require the resource to be opened in order to get accessed.
+    #: Please have a look at the attributes definition for more details
 
-        To set an **infinite** timeout, you can also use:
+    #: Interface type of the given session.
+    interface_type: Attribute[
+        constants.InterfaceType
+    ] = attributes.AttrVI_ATTR_INTF_TYPE()
 
-        >>> del instrument.timeout
+    #: Board number for the given interface.
+    interface_number: Attribute[int] = attributes.AttrVI_ATTR_INTF_NUM()
 
-        """
-        timeout = self.get_visa_attribute(constants.VI_ATTR_TMO_VALUE)
-        if timeout == constants.VI_TMO_INFINITE:
-            return float('+inf')
-        return timeout
+    #: Resource class (for example, "INSTR") as defined by the canonical resource name.
+    resource_class: Attribute[str] = attributes.AttrVI_ATTR_RSRC_CLASS()
 
-    @timeout.setter
-    def timeout(self, timeout):
-        timeout = self._cleanup_timeout(timeout)
-        self.set_visa_attribute(constants.VI_ATTR_TMO_VALUE, timeout)
+    #: Unique identifier for a resource compliant with the address structure.
+    resource_name: Attribute[str] = attributes.AttrVI_ATTR_RSRC_NAME()
 
-    @timeout.deleter
-    def timeout(self):
-        self.set_visa_attribute(constants.VI_ATTR_TMO_VALUE, constants.VI_TMO_INFINITE)
+    #: Resource version that identifies the revisions or implementations of a resource.
+    implementation_version: Attribute[int] = attributes.AttrVI_ATTR_RSRC_IMPL_VERSION()
 
-    @property
-    def resource_info(self):
-        """Get the extended information of this resource.
+    #: Current locking state of the resource.
+    lock_state: Attribute[
+        constants.AccessModes
+    ] = attributes.AttrVI_ATTR_RSRC_LOCK_STATE()
 
-        :param resource_name: Unique symbolic name of a resource.
+    #: Version of the VISA specification to which the implementation is compliant.
+    spec_version: Attribute[int] = attributes.AttrVI_ATTR_RSRC_SPEC_VERSION()
 
-        :rtype: :class:`pyvisa.highlevel.ResourceInfo`
-        """
-        return self.visalib.parse_resource_extended(self._resource_manager.session, self._resource_name)
+    #: Manufacturer name of the vendor that implemented the VISA library.
+    resource_manufacturer_name: Attribute[str] = attributes.AttrVI_ATTR_RSRC_MANF_NAME()
 
-    @property
-    def interface_type(self):
-        """The interface type of the resource as a number.
+    #: Timeout in milliseconds for all resource I/O operations.
+    timeout: Attribute[float] = attributes.AttrVI_ATTR_TMO_VALUE()
 
-        """
-        return self.visalib.parse_resource(self._resource_manager.session,
-                                           self._resource_name)[0].interface_type
-
-    def ignore_warning(self, *warnings_constants):
+    def ignore_warning(
+        self, *warnings_constants: constants.StatusCode
+    ) -> ContextManager:
         """Ignoring warnings context manager for the current resource.
 
-        :param warnings_constants: constants identifying the warnings to ignore.
+        Parameters
+        ----------
+        warnings_constants : constants.StatusCode
+            Constants identifying the warnings to ignore.
 
         """
         return self.visalib.ignore_warning(self.session, *warnings_constants)
 
-    def open(self, access_mode=constants.AccessModes.no_lock, open_timeout=5000):
+    def open(
+        self,
+        access_mode: constants.AccessModes = constants.AccessModes.no_lock,
+        open_timeout: int = 5000,
+    ) -> None:
         """Opens a session to the specified resource.
 
-        :param access_mode: Specifies the mode by which the resource is to be accessed.
-        :type access_mode: :class:`pyvisa.constants.AccessModes`
-        :param open_timeout: If the ``access_mode`` parameter requests a lock, then this parameter specifies the
-                             absolute time period (in milliseconds) that the resource waits to get unlocked before this
-                             operation returns an error.
-        :type open_timeout: int
+        Parameters
+        ----------
+        access_mode : constants.AccessModes, optional
+            Specifies the mode by which the resource is to be accessed.
+            Defaults to constants.AccessModes.no_lock.
+        open_timeout : int, optional
+            If the ``access_mode`` parameter requests a lock, then this parameter
+            specifies the absolute time period (in milliseconds) that the
+            resource waits to get unlocked before this operation returns an error.
+            Defaults to 5000.
+
         """
+        logger.debug("%s - opening ...", self._resource_name, extra=self._logging_extra)
+        with self._resource_manager.ignore_warning(
+            constants.StatusCode.success_device_not_present
+        ):
+            self.session, status = self._resource_manager.open_bare_resource(
+                self._resource_name, access_mode, open_timeout
+            )
 
-        logger.debug('%s - opening ...', self._resource_name, extra=self._logging_extra)
-        with self._resource_manager.ignore_warning(constants.VI_SUCCESS_DEV_NPRESENT):
-            self.session, status = self._resource_manager.open_bare_resource(self._resource_name, access_mode, open_timeout)
-
-            if status == constants.VI_SUCCESS_DEV_NPRESENT:
+            if status == constants.StatusCode.success_device_not_present:
                 # The device was not ready when we opened the session.
                 # Now it gets five seconds more to become ready.
                 # Every 0.1 seconds we probe it with viClear.
@@ -239,182 +311,340 @@ class Resource(object):
                         self.clear()
                         break
                     except errors.VisaIOError as error:
-                        if error.error_code != constants.VI_ERROR_NLISTENERS:
+                        if error.error_code != constants.StatusCode.error_no_listeners:
                             raise
 
-        self._logging_extra['session'] = self.session
-        logger.debug('%s - is open with session %s',
-                     self._resource_name, self.session,
-                     extra=self._logging_extra)
+        self._logging_extra["session"] = self.session
+        logger.debug(
+            "%s - is open with session %s",
+            self._resource_name,
+            self.session,
+            extra=self._logging_extra,
+        )
 
-    def before_close(self):
-        """Called just before closing an instrument.
-        """
+    def before_close(self) -> None:
+        """Called just before closing an instrument."""
         self.__switch_events_off()
 
-    def close(self):
-        """Closes the VISA session and marks the handle as invalid.
-        """
+    def close(self) -> None:
+        """Closes the VISA session and marks the handle as invalid."""
         try:
-            logger.debug('%s - closing', self._resource_name,
-                         extra=self._logging_extra)
+            logger.debug("%s - closing", self._resource_name, extra=self._logging_extra)
             self.before_close()
             self.visalib.close(self.session)
-            logger.debug('%s - is closed', self._resource_name,
-                         extra=self._logging_extra)
-            self.session = None
+            logger.debug(
+                "%s - is closed", self._resource_name, extra=self._logging_extra
+            )
+            # Mypy is confused by the idea that we can set a value we cannot get
+            self.session = None  # type: ignore
         except errors.InvalidSession:
             pass
 
-    def __switch_events_off(self):
-        self.disable_event(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
-        self.discard_events(constants.VI_ALL_ENABLED_EVENTS, constants.VI_ALL_MECH)
+    def __switch_events_off(self) -> None:
+        """Switch off and discrads all events."""
+        self.disable_event(
+            constants.EventType.all_enabled, constants.EventMechanism.all
+        )
+        self.discard_events(
+            constants.EventType.all_enabled, constants.EventMechanism.all
+        )
         self.visalib.uninstall_all_visa_handlers(self.session)
 
-    def get_visa_attribute(self, name):
+    def get_visa_attribute(self, name: constants.ResourceAttribute) -> Any:
         """Retrieves the state of an attribute in this resource.
 
-        :param name: Resource attribute for which the state query is made (see Attributes.*)
-        :return: The state of the queried attribute for a specified resource.
-        :rtype: unicode (Py2) or str (Py3), list or other type
+        One should prefer the dedicated descriptor for often used attributes
+        since those perform checks and automatic conversion on the value.
+
+        Parameters
+        ----------
+        name : constants.ResourceAttribute
+            Resource attribute for which the state query is made.
+
+        Returns
+        -------
+        Any
+            The state of the queried attribute for a specified resource.
+
         """
         return self.visalib.get_attribute(self.session, name)[0]
 
-    def set_visa_attribute(self, name, state):
-        """Sets the state of an attribute.
+    def set_visa_attribute(
+        self, name: constants.ResourceAttribute, state: Any
+    ) -> constants.StatusCode:
+        """Set the state of an attribute.
 
-        :param name: Attribute for which the state is to be modified. (Attributes.*)
-        :param state: The state of the attribute to be set for the specified object.
-        :return: return value of the library call.
-        :rtype: :class:`pyvisa.constants.StatusCode`
+        One should prefer the dedicated descriptor for often used attributes
+        since those perform checks and automatic conversion on the value.
+
+        Parameters
+        ----------
+        name : constants.ResourceAttribute
+            Attribute for which the state is to be modified.
+        state : Any
+            The state of the attribute to be set for the specified object.
+
+        Returns
+        -------
+        constants.StatusCode
+            Return value of the library call.
+
         """
         return self.visalib.set_attribute(self.session, name, state)
 
-    def clear(self):
-        """Clears this resource
-        """
+    def clear(self) -> None:
+        """Clear this resource."""
         self.visalib.clear(self.session)
 
-    def install_handler(self, event_type, handler, user_handle=None):
-        """Installs handlers for event callbacks in this resource.
+    def install_handler(
+        self, event_type: constants.EventType, handler: VISAHandler, user_handle=None
+    ) -> Any:
+        """Install handlers for event callbacks in this resource.
 
-        :param event_type: Logical event identifier.
-        :param handler: Interpreted as a valid reference to a handler to be installed by a client application.
-        :param user_handle: A value specified by an application that can be used for identifying handlers
-                            uniquely for an event type.
-        :returns: user handle (a ctypes object)
+        Parameters
+        ----------
+        event_type : constants.EventType
+            Logical event identifier.
+        handler : VISAHandler
+            Handler function to be installed by a client application.
+        user_handle :
+            A value specified by an application that can be used for identifying
+            handlers uniquely for an event type. Depending on the backend they
+            may be restriction on the possible values. Look at the backend
+            `install_visa_handler` for more details.
+
+        Returns
+        -------
+        Any
+            User handle in a format amenable to the backend. This is this
+            representation of the handle that should be used when unistalling
+            a handler.
+
+        """
+        return self.visalib.install_visa_handler(
+            self.session, event_type, handler, user_handle
+        )
+
+    def wrap_handler(
+        self, callable: Callable[["Resource", Event, Any], None],
+    ) -> VISAHandler:
+        """Wrap an event handler to provide the signature expected by VISA.
+
+        The handler is expected to have the following signature:
+        handler(resource: Resource, event: Event, user_handle: Any) -> None.
+
+        The wrapped handler should be used only to handle events on the resource
+        used to wrap the handler.
+
         """
 
-        return self.visalib.install_visa_handler(self.session, event_type, handler, user_handle)
+        def event_handler(
+            session: VISASession,
+            event_type: constants.EventType,
+            event_context: typing.VISAEventContext,
+            user_handle: Any,
+        ) -> None:
+            if session != self.session:
+                raise RuntimeError(
+                    "When wrapping a handler, the resource used to wrap the handler"
+                    "must be the same on which the handler will be installed."
+                    f"Wrapping session: {self.session}, event on session: {session}"
+                )
+            event = Event(self.visalib, event_type, event_context)
+            try:
+                return callable(self, event, user_handle)
+            finally:
+                event.close()
 
-    def uninstall_handler(self, event_type, handler, user_handle=None):
+        update_wrapper(event_handler, callable)
+
+        return event_handler
+
+    def uninstall_handler(
+        self, event_type: constants.EventType, handler: VISAHandler, user_handle=None
+    ) -> None:
         """Uninstalls handlers for events in this resource.
 
-        :param event_type: Logical event identifier.
-        :param handler: Interpreted as a valid reference to a handler to be uninstalled by a client application.
-        :param user_handle: The user handle (ctypes object or None) returned by install_handler.
+        Parameters
+        ----------
+        event_type : constants.EventType
+            Logical event identifier.
+        handler : VISAHandler
+            Handler function to be uninstalled by a client application.
+        user_handle : Any
+            The user handle returned by install_handler.
+
         """
+        self.visalib.uninstall_visa_handler(
+            self.session, event_type, handler, user_handle
+        )
 
-        self.visalib.uninstall_visa_handler(self.session, event_type, handler, user_handle)
+    def disable_event(
+        self, event_type: constants.EventType, mechanism: constants.EventMechanism
+    ) -> None:
+        """Disable notification for an event type(s) via the specified mechanism(s).
 
-    def disable_event(self, event_type, mechanism):
-        """Disables notification of the specified event type(s) via the specified mechanism(s).
+        Parameters
+        ----------
+        event_type : constants.EventType
+            Logical event identifier.
+        mechanism : constants.EventMechanism
+            Specifies event handling mechanisms to be disabled.
 
-        :param event_type: Logical event identifier.
-        :param mechanism: Specifies event handling mechanisms to be disabled.
-                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
         """
         self.visalib.disable_event(self.session, event_type, mechanism)
 
-    def discard_events(self, event_type, mechanism):
-        """Discards event occurrences for specified event types and mechanisms in this resource.
+    def discard_events(
+        self, event_type: constants.EventType, mechanism: constants.EventMechanism
+    ) -> None:
+        """Discards event occurrences for an event type and mechanism in this resource.
 
-        :param event_type: Logical event identifier.
-        :param mechanism: Specifies event handling mechanisms to be discarded.
-                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR, .VI_ALL_MECH)
+        Parameters
+        ----------
+        event_type : constants.EventType
+            Logical event identifier.
+        mechanism : constants.EventMechanism
+            Specifies event handling mechanisms to be disabled.
+
         """
         self.visalib.discard_events(self.session, event_type, mechanism)
 
-    def enable_event(self, event_type, mechanism, context=None):
+    def enable_event(
+        self,
+        event_type: constants.EventType,
+        mechanism: constants.EventMechanism,
+        context: None = None,
+    ) -> None:
         """Enable event occurrences for specified event types and mechanisms in this resource.
 
-        :param event_type: Logical event identifier.
-        :param mechanism: Specifies event handling mechanisms to be enabled.
-                          (Constants.VI_QUEUE, .VI_HNDLR, .VI_SUSPEND_HNDLR)
-        :param context:  Not currently used, leave as None.
+        Parameters
+        ----------
+        event_type : constants.EventType
+            Logical event identifier.
+        mechanism : constants.EventMechanism
+            Specifies event handling mechanisms to be enabled
+        context : None
+            Not currently used, leave as None.
+
         """
         self.visalib.enable_event(self.session, event_type, mechanism, context)
 
-    def wait_on_event(self, in_event_type, timeout, capture_timeout=False):
+    def wait_on_event(
+        self,
+        in_event_type: constants.EventType,
+        timeout: int,
+        capture_timeout: bool = False,
+    ) -> WaitResponse:
         """Waits for an occurrence of the specified event in this resource.
 
-        :param in_event_type: Logical identifier of the event(s) to wait for.
-        :param timeout: Absolute time period in time units that the resource shall wait for a specified event to
-                        occur before returning the time elapsed error. The time unit is in milliseconds.
-                        None means waiting forever if necessary.
-        :param capture_timeout: When True will not produce a VisaIOError(VI_ERROR_TMO) but
-                                instead return a WaitResponse with timed_out=True
-        :return: A WaitResponse object that contains event_type, context and ret value.
+        in_event_type : constants.EventType
+            Logical identifier of the event(s) to wait for.
+        timeout : int
+            Absolute time period in time units that the resource shall wait for
+            a specified event to occur before returning the time elapsed error.
+            The time unit is in milliseconds. None means waiting forever if
+            necessary.
+        capture_timeout : bool, optional
+            When True will not produce a VisaIOError(VI_ERROR_TMO) but instead
+            return a WaitResponse with timed_out=True.
+
+        Returns
+        -------
+        WaitResponse
+            Object that contains event_type, context and ret value.
+
         """
         try:
-            event_type, context, ret = self.visalib.wait_on_event(self.session, in_event_type, timeout)
+            event_type, context, ret = self.visalib.wait_on_event(
+                self.session, in_event_type, timeout
+            )
         except errors.VisaIOError as exc:
             if capture_timeout and exc.error_code == constants.StatusCode.error_timeout:
-                return WaitResponse(in_event_type, None, exc.error_code, self.visalib, timed_out=True)
+                return WaitResponse(
+                    in_event_type,
+                    None,
+                    constants.StatusCode.error_timeout,
+                    self.visalib,
+                    timed_out=True,
+                )
             raise
         return WaitResponse(event_type, context, ret, self.visalib)
 
-    def lock(self, timeout='default', requested_key=None):
+    def lock(
+        self,
+        timeout: Union[float, Literal["default"]] = "default",
+        requested_key: Optional[str] = None,
+    ) -> str:
         """Establish a shared lock to the resource.
 
-        :param timeout: Absolute time period (in milliseconds) that a resource
-                        waits to get unlocked by the locking session before
-                        returning an error. (Defaults to self.timeout)
-        :param requested_key: Access key used by another session with which you
-                              want your session to share a lock or None to generate
-                              a new shared access key.
-        :returns: A new shared access key if requested_key is None,
-                  otherwise, same value as the requested_key
+        Parameters
+        ----------
+        timeout : Union[float, Literal["default"]], optional
+            Absolute time period (in milliseconds) that a resource waits to get
+            unlocked by the locking session before returning an error.
+            Defaults to "default' which means use self.timeout.
+        requested_key : Optional[str], optional
+            Access key used by another session with which you want your session
+            to share a lock or None to generate a new shared access key.
+
+        Returns
+        -------
+        str
+            A new shared access key if requested_key is None, otherwise, same
+            value as the requested_key
 
         """
-        timeout = self.timeout if timeout == 'default' else timeout
-        timeout = self._cleanup_timeout(timeout)
-        return self.visalib.lock(self.session, constants.AccessModes.shared_lock, timeout, requested_key)[0]
+        tout = cast(float, self.timeout if timeout == "default" else timeout)
+        clean_timeout = util.cleanup_timeout(tout)
+        return self.visalib.lock(
+            self.session, constants.Lock.shared, clean_timeout, requested_key
+        )[0]
 
-    def lock_excl(self, timeout='default'):
+    def lock_excl(self, timeout: Union[float, Literal["default"]] = "default") -> None:
         """Establish an exclusive lock to the resource.
 
-        :param timeout: Absolute time period (in milliseconds) that a resource
-                        waits to get unlocked by the locking session before
-                        returning an error. (Defaults to self.timeout)
+        Parameters
+        ----------
+        timeout : Union[float, Literal["default"]], optional
+            Absolute time period (in milliseconds) that a resource waits to get
+            unlocked by the locking session before returning an error.
+            Defaults to "default' which means use self.timeout.
 
         """
-        timeout = self.timeout if timeout == 'default' else timeout
-        timeout = self._cleanup_timeout(timeout)
-        self.visalib.lock(self.session, constants.AccessModes.exclusive_lock, timeout, None)
+        tout = cast(float, self.timeout if timeout == "default" else timeout)
+        clean_timeout = util.cleanup_timeout(tout)
+        self.visalib.lock(self.session, constants.Lock.exclusive, clean_timeout, None)
 
-    def unlock(self):
-        """Relinquishes a lock for the specified resource.
-
-        """
+    def unlock(self) -> None:
+        """Relinquishes a lock for the specified resource."""
         self.visalib.unlock(self.session)
 
     @contextlib.contextmanager
-    def lock_context(self, timeout='default', requested_key='exclusive'):
+    def lock_context(
+        self,
+        timeout: Union[float, Literal["default"]] = "default",
+        requested_key: Optional[str] = "exclusive",
+    ) -> Iterator[Optional[str]]:
         """A context that locks
 
-        :param timeout: Absolute time period (in milliseconds) that a resource
-                        waits to get unlocked by the locking session before
-                        returning an error. (Defaults to self.timeout)
-        :param requested_key: When using default of 'exclusive' the lock
-                              is an exclusive lock.
-                              Otherwise it is the access key for the shared lock or
-                              None to generate a new shared access key.
+        Parameters
+        ----------
+        timeout : Union[float, Literal["default"]], optional
+            Absolute time period (in milliseconds) that a resource waits to get
+            unlocked by the locking session before returning an error.
+            Defaults to "default' which means use self.timeout.
+        requested_key : Optional[str], optional
+            When using default of 'exclusive' the lock is an exclusive lock.
+            Otherwise it is the access key for the shared lock or None to
+            generate a new shared access key.
 
-        The returned context is the access_key if applicable.
+        Yields
+        ------
+        Optional[str]
+            The access_key if applicable.
 
         """
-        if requested_key == 'exclusive':
+        if requested_key == "exclusive":
             self.lock_excl(timeout)
             access_key = None
         else:
@@ -425,4 +655,4 @@ class Resource(object):
             self.unlock()
 
 
-Resource.register(constants.InterfaceType.unknown, '')(Resource)
+Resource.register(constants.InterfaceType.unknown, "")(Resource)

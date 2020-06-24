@@ -2,15 +2,12 @@
 """PyVISA testsuite.
 
 """
-import os
 import logging
-import warnings
+import os
 import unittest
-from contextlib import contextmanager
-
 from logging.handlers import BufferingHandler
 
-from pyvisa import logger, ResourceManager
+from pyvisa import ResourceManager, logger
 
 try:
     ResourceManager()
@@ -19,15 +16,12 @@ except ValueError:
 else:
     VISA_PRESENT = True
 
-require_visa_lib = (
-     unittest.skipUnless(VISA_PRESENT,
-                         "Requires an installed VISA library. Run on PyVISA "
-                         "buildbot.")
+require_visa_lib = unittest.skipUnless(
+    VISA_PRESENT, "Requires an installed VISA library. Run on PyVISA " "buildbot."
 )
 
 
 class TestHandler(BufferingHandler):
-
     def __init__(self, only_warnings=False):
         # BufferingHandler takes a "capacity" argument
         # so as to know when to flush. As we're overriding
@@ -50,18 +44,6 @@ class BaseTestCase(unittest.TestCase):
 
     CHECK_NO_WARNING = True
 
-    @contextmanager
-    def capture_log(self, level=logging.DEBUG):
-        th = TestHandler()
-        th.setLevel(level)
-        logger.addHandler(th)
-        if self._test_handler is None:
-            yield th.buffer
-        else:
-            l = len(self._test_handler.buffer)
-            yield th.buffer
-            self._test_handler.buffer = self._test_handler.buffer[:l]
-
     def setUp(self):
         self._test_handler = None
         if self.CHECK_NO_WARNING:
@@ -72,9 +54,10 @@ class BaseTestCase(unittest.TestCase):
     def tearDown(self):
         if self._test_handler is not None:
             buf = self._test_handler.buffer
-            l = len(buf)
-            msg = '\n'.join(record.get('msg', str(record)) for record in buf)
-            self.assertEqual(l, 0, msg='%d warnings raised.\n%s' % (l, msg))
+            length = len(buf)
+            msg = "\n".join(record.get("msg", str(record)) for record in buf)
+            self.assertEqual(length, 0, msg="%d warnings raised.\n%s" % (length, msg))
+
 
 def testsuite():
     """A testsuite that has all the pyvisa tests.
@@ -90,7 +73,7 @@ def main():
     try:
         unittest.main()
     except Exception as e:
-        print('Error: %s' % e)
+        print("Error: %s" % e)
 
 
 def run():

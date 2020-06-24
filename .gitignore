@@ -10,8 +10,11 @@ dist/
 MANIFEST
 .tox
 .coverage
+.eggs
+
 # WebDAV file system cache files
 .DAV/
 _test/
 .vscode
 htmlcov/
+.mypy_cache/
