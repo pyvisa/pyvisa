@@ -41,6 +41,7 @@ from weakref import WeakMethod, WeakSet, WeakValueDictionary
 from typing_extensions import ClassVar, DefaultDict, Literal
 
 from . import attributes, constants, errors, logger, rname
+from .constants import StatusCode
 from .typing import (
     VISAEventContext,
     VISAHandler,
@@ -117,7 +118,9 @@ class VisaLibraryBase(object):
     _last_status: constants.StatusCode = constants.StatusCode(0)
 
     #: Maps session handle to last status.
-    _last_status_in_session: Dict[int, constants.StatusCode]
+    _last_status_in_session: Dict[
+        Union[VISASession, VISARMSession, VISAEventContext], constants.StatusCode
+    ]
 
     #: Maps session handle to warnings to ignore.
     _ignore_warning_in_session: Dict[int, set]
@@ -220,6 +223,37 @@ class VisaLibraryBase(object):
     def __repr__(self) -> str:
         """str representation of the library including the type of the library."""
         return "<%s(%r)>" % (type(self).__name__, self.library_path)
+
+    def handle_return_value(
+        self,
+        session: Optional[Union[VISAEventContext, VISARMSession, VISASession]],
+        status_code: int,
+    ) -> StatusCode:
+        """Helper function handling the return code of a low-level operation.
+
+        Used when implementing concrete subclasses of VISALibraryBase.
+
+        """
+        rv: constants.StatusCode
+        try:
+            rv = constants.StatusCode(status_code)
+        except ValueError:
+            rv = cast(constants.StatusCode, status_code)
+
+        self._last_status = rv
+
+        if session is not None:
+            self._last_status_in_session[session] = rv
+
+        if rv < 0:
+            raise errors.VisaIOError(rv)
+
+        if rv in self.issue_warning_on:
+            if session and rv not in self._ignore_warning_in_session[session]:
+                warnings.warn(errors.VisaIOWarning(rv), stacklevel=2)
+
+        # Return the original value for further processing.
+        return rv
 
     @property
     def last_status(self) -> constants.StatusCode:

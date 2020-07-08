@@ -23,6 +23,8 @@ PyVISA implements convenient and Pythonic programming in three layers:
         backends. For broader compatibility, do no use this layer. All the
         functionality should is available via the next layer.
 
+        Alternative backends have no obligation to provide those functions.
+
 
  2. Middle-level: A wrapping Python function for each function of the shared
     visa library.
