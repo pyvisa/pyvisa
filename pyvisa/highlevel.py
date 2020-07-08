@@ -2790,12 +2790,26 @@ def get_wrapper_class(backend_name: str) -> Type[VisaLibraryBase]:
                 )
             return IVIVisaLibrary
 
+    pkg: PyVISAModule
     try:
-        pkg: PyVISAModule = cast(PyVISAModule, import_module("pyvisa-" + backend_name))
+        pkg = cast(PyVISAModule, import_module("pyvisa_" + backend_name))
         _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
         return cls
     except ImportError:
-        raise ValueError("Wrapper not found: No package named pyvisa-%s" % backend_name)
+        try:
+            pkg = cast(PyVISAModule, import_module("pyvisa-" + backend_name))
+            _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
+            warnings.warn(
+                "Backends packages should use an _ rather than a - ."
+                "Project can/should keep using a - (like pytest plugins)."
+                "Support for backends with - will be removed in 1.12",
+                FutureWarning,
+            )
+            return cls
+        except ImportError:
+            raise ValueError(
+                "Wrapper not found: No package named pyvisa_%s" % backend_name
+            )
 
 
 def _get_default_wrapper() -> str:
