@@ -2,6 +2,10 @@
 """Test test the resource name parsing.
 
 """
+from dataclasses import dataclass
+
+from typing_extensions import ClassVar
+
 from pyvisa import constants, errors, rname
 from pyvisa.testsuite import BaseTestCase
 
@@ -72,9 +76,14 @@ class TestRegisteringSubclass(BaseTestCase):
 
         """
         with self.assertRaises(ValueError) as e:
-            rname.build_rn_class(
-                "TCPIP", (("address", None),), "HISLIP", is_rc_optional=True
-            )
+
+            @dataclass
+            class R(rname.ResourceName):
+                interface_type: ClassVar[str] = "TCPIP"
+                resource_class: ClassVar[str] = "HISLIP"
+                is_rc_optional: ClassVar[bool] = True
+
+            rname.register_subclass(R)
         self.assertIn("Default already specified for", e.exception.args[0])
 
 
@@ -153,7 +162,7 @@ class TestResourceName(BaseTestCase):
         # Test bad resource from kwargs
         with self.assertRaises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_kwargs(
-                interface_type="GPIB", address=1, resource_class="INSTR"
+                interface_type="GPIB", resource_class="INSTR"
             )
         self.assertIn("required parameter", e.exception.args[0])
 

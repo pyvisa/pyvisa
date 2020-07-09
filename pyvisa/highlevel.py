@@ -2048,7 +2048,13 @@ class VisaLibraryBase(object):
             return (
                 ResourceInfo(
                     parsed.interface_type_const,
-                    int(parsed.board),  # match IVI-VISA
+                    # We can only get concrete classes which have one of those
+                    # attributes
+                    int(
+                        parsed.board  # type: ignore
+                        if hasattr(parsed, "board")
+                        else parsed.interface  # type: ignore
+                    ),
                     parsed.resource_class,
                     str(parsed),
                     None,
