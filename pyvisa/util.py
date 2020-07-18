@@ -80,7 +80,7 @@ def read_user_library_path() -> Optional[str]:
     Return `None` if  configuration files or keys are not present.
 
     """
-    from configparser import ConfigParser, NoSectionError, NoOptionError
+    from configparser import ConfigParser, NoOptionError, NoSectionError
 
     config_parser = ConfigParser()
     files = config_parser.read(
@@ -120,7 +120,7 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
         dll_extra_paths=/my/otherpath/;/my/otherpath2
 
     """
-    from configparser import ConfigParser, NoSectionError, NoOptionError
+    from configparser import ConfigParser, NoOptionError, NoSectionError
 
     # os.add_dll_library_path has been added in Python 3.8
     if sys.version_info >= (3, 8) and sys.platform == "win32":

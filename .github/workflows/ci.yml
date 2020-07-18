@@ -33,7 +33,7 @@ jobs:
           pip install flake8 black isort mypy
       - name: Isort
         run: |
-          isort pyvisa -rc -c;
+          isort pyvisa -c;
       - name: Black
         run: |
           black pyvisa --check;

@@ -22,9 +22,9 @@ if os.name == "posix" and sys.platform.startswith("linux"):
 
     # Andreas Degert's find functions, using gcc, /sbin/ldconfig, objdump
     def define_find_libary():
+        import errno
         import re
         import tempfile
-        import errno
 
         def _findlib_gcc(name):
             expr = r"[^\(\)\s]*lib%s\.[^\(\)\s]*" % re.escape(name)
