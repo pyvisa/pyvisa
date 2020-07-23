@@ -3095,6 +3095,8 @@ class ResourceManager(object):
         Thus the default query, '?*::INSTR', matches any sequences of characters
         ending ending with '::INSTR'.
 
+        On some platforms, devices that are already open are not returned.
+
         """
 
         return self.visalib.list_resources(self.session, query)
