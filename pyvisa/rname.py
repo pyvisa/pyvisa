@@ -7,7 +7,8 @@
 """
 import contextlib
 import re
-from collections import defaultdict, namedtuple
+from collections import defaultdict
+from dataclasses import dataclass, field, fields
 from typing import (
     TYPE_CHECKING,
     Callable,
@@ -20,6 +21,8 @@ from typing import (
     Type,
     TypeVar,
 )
+
+from typing_extensions import ClassVar
 
 from . import constants, errors, logger
 
@@ -101,6 +104,30 @@ T = TypeVar("T", bound=Type["ResourceName"])
 def register_subclass(cls: T) -> T:
     """Register a subclass for a given interface type and resource class."""
 
+    # Assemble the format string based on the resource parts
+    fmt = cls.interface_type
+    syntax = cls.interface_type
+    for ndx, f in enumerate(fields(cls)):
+
+        sep = "::" if ndx else ""
+
+        fmt += sep + "{0.%s}" % f.name
+
+        if not f.default:
+            syntax += sep + f.name.replace("_", " ")
+        else:
+            syntax += "[" + sep + f.name.replace("_", " ") + "]"
+
+    fmt += "::" + cls.resource_class
+
+    if not cls.is_rc_optional:
+        syntax += "::" + cls.resource_class
+    else:
+        syntax += "[" + "::" + cls.resource_class + "]"
+
+    cls._visa_syntax = syntax
+    cls._canonical_fmt = fmt
+
     key = cls.interface_type, cls.resource_class
 
     if key in _SUBCLASSES:
@@ -119,29 +146,36 @@ def register_subclass(cls: T) -> T:
     return cls
 
 
-class ResourceName(object):
+class ResourceName:
     """Base class for ResourceNames to be used as a mixin."""
 
     #: Interface type string
-    interface_type: str = ""
+    interface_type: ClassVar[str]
 
     #: Resource class string
-    resource_class: str = ""
+    resource_class: ClassVar[str]
 
     #: Specifices if the resource class part of the string is optional.
-    is_rc_optional: bool = False
+    is_rc_optional: ClassVar[bool] = False
 
     #: Formatting string for canonical
-    _canonical_fmt: str = ""
+    _canonical_fmt: str = field(init=False)
 
     #: VISA syntax for resource
-    _visa_syntax: str = ""
+    _visa_syntax: str = field(init=False)
+
+    #: VISA syntax for resource
+    _fields: Tuple[str, ...] = field(init=False)
 
     #: Resource name provided by the user (not empty only when parsing)
-    user: str = ""
+    user: str = field(init=False)
 
-    #: Common field to all resources
-    board: str
+    def __post_init__(self):
+        # Ensure that all mandatory arguments have been passed
+        for f in fields(self):
+            if not getattr(self, f.name):
+                raise TypeError(f.name + " is a required parameter")
+        self._fields = tuple(f.name for f in fields(self))
 
     @property
     def interface_type_const(self) -> constants.InterfaceType:
@@ -207,7 +241,7 @@ class ResourceName(object):
                 rn = subclass.from_parts(*parts)
                 rn.user = resource_name
                 return rn
-            except ValueError as ex:
+            except (ValueError, TypeError) as ex:
                 raise InvalidResourceName.bad_syntax(
                     subclass._visa_syntax, resource_name, ex
                 )
@@ -241,232 +275,334 @@ class ResourceName(object):
         try:
             # Always use for subclasses that do take arguments
             return subclass(**kwargs)  # type: ignore
-        except ValueError as ex:
+        except (ValueError, TypeError) as ex:
             raise InvalidResourceName(str(ex))
 
     # Implemented when building concrete subclass in build_rn_class
     @classmethod
     def from_parts(cls, *parts):
-        pass
+        """Construct a resource name from a list of parts."""
+
+        resource_parts = fields(cls)
+        if len(parts) < sum(1 for f in resource_parts if f.default):
+            raise ValueError("not enough parts")
+        elif len(parts) > len(resource_parts):
+            raise ValueError("too many parts")
+
+        k, rp = resource_parts[0], resource_parts[1:]
+
+        # The first part (just after the interface_type) is the only
+        # optional part which can be empty and therefore the
+        # default value should be used.
+        p, pending = parts[0], parts[1:]
+        kwargs = {k.name: k.default if p == "" else p}
+
+        # The rest of the parts are consumed when mandatory elements are required.
+        while len(pending) < len(rp):
+            k, rp = rp[0], rp[1:]
+            if not k.default:
+                # This is impossible as far as I can tell for currently implemented
+                # resource names
+                if not pending:
+                    raise ValueError(k.name + " part is mandatory")  # pragma: no cover
+                p, pending = pending[0], pending[1:]
+                if not p:
+                    raise ValueError(k.name + " part is mandatory")
+                kwargs[k.name] = p
+            else:
+                kwargs[k.name] = k.default
+
+        # When the length of the pending provided and resource parts
+        # are equal, we just consume everything.
+        kwargs.update((k.name, p) for k, p in zip(rp, pending))
+
+        return cls(**kwargs)
 
     def __str__(self):
         return self._canonical_fmt.format(self)
 
 
-def build_rn_class(
-    interface_type: str,
-    resource_parts: Tuple[Tuple[str, Optional[str]], ...],
-    resource_class: str,
-    is_rc_optional: bool = True,
-) -> Type[ResourceName]:
-    """Builds a resource name class by mixing a named tuple and ResourceName.
+# Build subclasses for each resource
 
-    It also registers the class.
 
-    The field names are changed to lower case and the spaces replaced
-    by underscores ('_').
+@register_subclass
+@dataclass
+class GPIBInstr(ResourceName):
+    """GPIB INSTR
 
-    Parameters
-    -----------
-    interface_type : str
-        The interface type the built class will be used for.
-    resource_parts : Tuple[Tuple[str, Optional[str]], ...]
-        Each of the parts of the resource name indicating name and default
-        value. Use None for mandatory fields.
-    resource_class : str
-        The resource class the built class will be used for.
-    is_rc_optional : bool, optional
-        Indicates if the resource class part is optional.
-
-    Returns
-    -------
-    Type[ResourceName]
-        ResourceName subclass customized for the specified interface type and
-        resource class.
+    The syntax is:
+    GPIB[board]::primary_address[::secondary_address][::INSTR]
 
     """
 
-    interface_type = interface_type.upper()
-    resource_class = resource_class.upper()
+    #: GPIB board to use.
+    board: str = "0"
 
-    syntax = interface_type
-    fmt = interface_type
-    fields: List[str] = []
+    #: Primary address of the device to connect to
+    primary_address: str = ""
 
-    # Contains the resource parts but using python friendly names
-    # (all lower case and replacing spaces by underscores)
-    p_resource_parts = []
+    #: Secondary address of the device to connect to
+    # Reference for the GPIB secondary address
+    # https://www.mathworks.com/help/instrument/secondaryaddress.html
+    secondary_address: str = "0"
 
-    kwdoc = []
-
-    # Assemble the syntax and format string based on the resource parts
-    for ndx, (name, default_value) in enumerate(resource_parts):
-        pname = name.lower().replace(" ", "_")
-        fields.append(pname)
-        p_resource_parts.append((pname, default_value))
-
-        sep = "::" if ndx else ""
-
-        fmt += sep + "{0.%s}" % pname
-
-        if default_value is None:
-            syntax += sep + name
-        else:
-            syntax += "[" + sep + name + "]"
-
-        kwdoc.append(
-            "- %s (%s)"
-            % (pname, "required" if default_value is None else default_value)
-        )
-
-    fmt += "::" + resource_class
-
-    if not is_rc_optional:
-        syntax += "::" + resource_class
-    else:
-        syntax += "[" + "::" + resource_class + "]"
-
-    # too dynamic for Mypy
-    class _C(namedtuple("Internal", fields), ResourceName):  # type: ignore
-        """%s %s"
-
-        Can be created with the following keyword only arguments:
-            %s
-
-        Format :
-            %s
-
-        """ % (
-            resource_class,
-            interface_type,
-            "    \n".join(kwdoc),
-            syntax,
-        )
-
-        def __new__(cls, **kwargs):
-            new_kwargs = dict(p_resource_parts, **kwargs)
-
-            for key, value in new_kwargs.items():
-                if value is None:
-                    raise ValueError(key + " is a required parameter")
-
-            return super(_C, cls).__new__(cls, **new_kwargs)
-
-        @classmethod
-        def from_parts(cls, *parts):
-            """Construct a resource name from a list of parts."""
-
-            if len(parts) < sum(1 for _, v in p_resource_parts if v is not None):
-                raise ValueError("not enough parts")
-            elif len(parts) > len(p_resource_parts):
-                raise ValueError("too many parts")
-
-            (k, default), rp = p_resource_parts[0], p_resource_parts[1:]
-
-            # The first part (just after the interface_type) is the only
-            # optional part which can be empty and therefore the
-            # default value should be used.
-            p, pending = parts[0], parts[1:]
-            kwargs = {k: default if p == "" else p}
-
-            # The rest of the parts are consumed when mandatory elements are required.
-            while len(pending) < len(rp):
-                (k, default), rp = rp[0], rp[1:]
-                if default is None:
-                    # This is impossible as far as I can tell for currently implemented
-                    # resource names
-                    if not parts:
-                        raise ValueError(k + " part is mandatory")  # pragma: no cover
-                    p, pending = pending[0], pending[1:]
-                    if not p:
-                        raise ValueError(k + " part is mandatory")
-                    kwargs[k] = p
-                else:
-                    kwargs[k] = default
-
-            # When the length of the pending provided and resource parts
-            # are equal, we just consume everything.
-            kwargs.update((k, p) for (k, v), p in zip(rp, pending))
-
-            return cls(**kwargs)
-
-    _C.interface_type = interface_type
-    _C.resource_class = resource_class
-    _C.is_rc_optional = is_rc_optional
-    _C._canonical_fmt = fmt
-    _C._visa_syntax = syntax
-
-    _C.__name__ = str(interface_type + resource_class.title())
-
-    return register_subclass(_C)
+    interface_type: ClassVar[str] = "GPIB"
+    resource_class: ClassVar[str] = "INSTR"
+    is_rc_optional: ClassVar[bool] = True
 
 
-# Build subclasses for each resource
+@register_subclass
+@dataclass
+class GPIBIntfc(ResourceName):
+    """GPIB INTFC
 
-# Reference for the GPIB secondary address
-# https://www.mathworks.com/help/instrument/secondaryaddress.html
-GPIBInstr = build_rn_class(
-    "GPIB",
-    (("board", "0"), ("primary address", None), ("secondary address", "0")),
-    "INSTR",
-)
+    The syntax is:
+    GPIB[board]::INTFC
 
-GPIBIntfc = build_rn_class("GPIB", (("board", "0"),), "INTFC", False)
+    """
 
-ASRLInstr = build_rn_class("ASRL", (("board", "0"),), "INSTR")
+    #: GPIB board to use.
+    board: str = "0"
 
-TCPIPInstr = build_rn_class(
-    "TCPIP",
-    (("board", "0"), ("host address", None), ("LAN device name", "inst0"),),
-    "INSTR",
-)
+    interface_type: ClassVar[str] = "GPIB"
+    resource_class: ClassVar[str] = "INTFC"
 
-TCPIPSocket = build_rn_class(
-    "TCPIP", (("board", "0"), ("host address", None), ("port", None),), "SOCKET", False
-)
 
-USBInstr = build_rn_class(
-    "USB",
-    (
-        ("board", "0"),
-        ("manufacturer ID", None),
-        ("model code", None),
-        ("serial number", None),
-        ("USB interface number", "0"),
-    ),
-    "INSTR",
-)
+@register_subclass
+@dataclass
+class ASRLInstr(ResourceName):
+    """ASRL INSTR
 
-USBRaw = build_rn_class(
-    "USB",
-    (
-        ("board", "0"),
-        ("manufacturer ID", None),
-        ("model code", None),
-        ("serial number", None),
-        ("USB interface number", "0"),
-    ),
-    "RAW",
-    False,
-)
+    The syntax is:
+    ASRL[board]::INSTR
 
-PXIBackplane = build_rn_class(
-    "PXI", (("interface", "0"), ("chassis number", None)), "BACKPLANE", False
-)
+    """
 
-PXIMemacc = build_rn_class("PXI", (("interface", "0"),), "MEMACC", False)
+    #: Serial connection to use.
+    board: str = "0"
 
-VXIBackplane = build_rn_class(
-    "VXI", (("board", "0"), ("VXI logical address", "0")), "BACKPLANE", False
-)
+    interface_type: ClassVar[str] = "ASRL"
+    resource_class: ClassVar[str] = "INSTR"
+    is_rc_optional: ClassVar[bool] = True
 
-VXIInstr = build_rn_class(
-    "VXI", (("board", "0"), ("VXI logical address", None)), "INSTR", True
-)
 
-VXIMemacc = build_rn_class("VXI", (("board", "0"),), "MEMACC", False)
+@register_subclass
+@dataclass
+class TCPIPInstr(ResourceName):
+    """TCPIP INSTR
 
-VXIServant = build_rn_class("VXI", (("board", "0"),), "SERVANT", False)
+    The syntax is:
+    TCPIP[board]::host address[::LAN device name][::INSTR]
+
+    """
+
+    #: Board to use.
+    board: str = "0"
+
+    #: Host address of the device (IPv4 or host name)
+    host_address: str = ""
+
+    #: LAN device name of the device
+    lan_device_name: str = "inst0"
+
+    interface_type: ClassVar[str] = "TCPIP"
+    resource_class: ClassVar[str] = "INSTR"
+    is_rc_optional: ClassVar[bool] = True
+
+
+@register_subclass
+@dataclass
+class TCPIPSocket(ResourceName):
+    """TCPIP SOCKET
+
+    The syntax is:
+    TCPIP[board]::host address[::port]::SOCKET
+
+    """
+
+    #: Board to use
+    board: str = "0"
+
+    #: Host address of the device (IPv4 or host name)
+    host_address: str = ""
+
+    #: Port on which to establish the connection
+    port: str = ""
+
+    interface_type: ClassVar[str] = "TCPIP"
+    resource_class: ClassVar[str] = "SOCKET"
+
+
+@register_subclass
+@dataclass
+class USBInstr(ResourceName):
+    """USB INSTR
+
+    The syntax is:
+    USB[board]::manufacturer ID::model code::serial number[::USB interface number][::INSTR]
+
+    """
+
+    #: USB board to use.
+    board: str = "0"
+
+    #: ID of the instrument manufacturer.
+    manufacturer_id: str = ""
+
+    #: Code identifying the model of the instrument.
+    model_code: str = ""
+
+    #: Serial number of the instrument.
+    serial_number: str = ""
+
+    #: USB interface number.
+    usb_interface_number: str = "0"
+
+    interface_type: ClassVar[str] = "USB"
+    resource_class: ClassVar[str] = "INSTR"
+    is_rc_optional: ClassVar[bool] = True
+
+
+@register_subclass
+@dataclass
+class USBRaw(ResourceName):
+    """USB RAW
+
+    The syntax is:
+    USB[board]::manufacturer ID::model code::serial number[::USB interface number]::RAW
+
+    """
+
+    #: USB board to use.
+    board: str = "0"
+
+    #: ID of the instrument manufacturer.
+    manufacturer_id: str = ""
+
+    #: Code identifying the model of the instrument.
+    model_code: str = ""
+
+    #: Serial number of the instrument.
+    serial_number: str = ""
+
+    #: USB interface number.
+    usb_interface_number: str = "0"
+
+    interface_type: ClassVar[str] = "USB"
+    resource_class: ClassVar[str] = "RAW"
+
+
+@register_subclass
+@dataclass
+class PXIBackplane(ResourceName):
+    """PXI BACKPLANE
+
+    The syntax is:
+    PXI[interface]::chassis number::BACKPLANE
+
+    """
+
+    #: PXI interface number.
+    interface: str = "0"
+
+    #: PXI chassis number
+    chassis_number: str = ""
+
+    interface_type: ClassVar[str] = "PXI"
+    resource_class: ClassVar[str] = "BACKPLANE"
+
+
+@register_subclass
+@dataclass
+class PXIMemacc(ResourceName):
+    """PXI MEMACC
+
+    The syntax is:
+    PXI[interface]::MEMACC
+
+    """
+
+    #: PXI interface number
+    interface: str = "0"
+
+    interface_type: ClassVar[str] = "PXI"
+    resource_class: ClassVar[str] = "MEMACC"
+
+
+@register_subclass
+@dataclass
+class VXIBackplane(ResourceName):
+    """VXI BACKPLANE
+
+    The syntax is:
+    VXI[board]::VXI logical address::BACKPLANE
+
+    """
+
+    #: VXI board
+    board: str = "0"
+
+    #: VXI logical address
+    vxi_logical_address: str = ""
+
+    interface_type: ClassVar[str] = "VXI"
+    resource_class: ClassVar[str] = "BACKPLANE"
+
+
+@register_subclass
+@dataclass
+class VXIInstr(ResourceName):
+    """VXI INSTR
+
+    The syntax is:
+    VXI[board]::VXI logical address[::INSTR]
+
+    """
+
+    #: VXI board
+    board: str = "0"
+
+    #: VXI logical address
+    vxi_logical_address: str = ""
+
+    interface_type: ClassVar[str] = "VXI"
+    resource_class: ClassVar[str] = "INSTR"
+    is_rc_optional: ClassVar[bool] = True
+
+
+@register_subclass
+@dataclass
+class VXIMemacc(ResourceName):
+    """VXI MEMACC
+
+    The syntax is:
+    VXI[board]::MEMACC
+
+    """
+
+    #: VXI board
+    board: str = "0"
+
+    interface_type: ClassVar[str] = "VXI"
+    resource_class: ClassVar[str] = "MEMACC"
+
+
+@register_subclass
+@dataclass
+class VXIServant(ResourceName):
+    """VXI SERVANT
+
+    The syntax is:
+    VXI[board]::SERVANT
+
+    """
+
+    #: VXI board
+    board: str = "0"
+
+    interface_type: ClassVar[str] = "VXI"
+    resource_class: ClassVar[str] = "SERVANT"
+
 
 # TODO 3 types of PXI INSTR
 # TODO ENET-Serial INSTR
@@ -577,7 +713,10 @@ class _AttrGetter:
 
     def __getattr__(self, item):  # noqa: C901
         if item == "VI_ATTR_INTF_NUM":
-            return int(self.parsed.board)
+            try:
+                return int(self.parsed.board)
+            except AttributeError:
+                return int(self.interface)
         elif item == "VI_ATTR_MANF_ID":
             if not isinstance(self.parsed, (USBInstr, USBRaw)):
                 raise self.raise_missing_attr(item)

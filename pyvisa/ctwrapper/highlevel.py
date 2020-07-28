@@ -22,7 +22,6 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    cast,
 )
 
 from pyvisa import constants, errors, highlevel, logger, typing
@@ -188,14 +187,6 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
             extra=self._logging_extra,
         )
 
-        rv: constants.StatusCode
-        try:
-            rv = constants.StatusCode(ret_value)
-        except ValueError:
-            rv = cast(constants.StatusCode, ret_value)
-
-        self._last_status = rv
-
         # The first argument of almost all registered visa functions is a session.
         # We store the error code per session
         session = None
@@ -210,13 +201,10 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
 
             # Functions that use the first parameter to get a session value.
             if func.__name__ in ("viOpenDefaultRM",):
-                # noinspection PyProtectedMember
                 session = session._obj.value
 
-            if isinstance(session, int):
-                self._last_status_in_session[session] = rv
-            else:
-                # Functions that might or might have a session in the first argument.
+            if not isinstance(session, int):
+                # Functions that might or might not have a session in the first argument.
                 if func.__name__ not in (
                     "viClose",
                     "viGetAttribute",
@@ -228,14 +216,10 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
                         "visa function (type args[0] %r)" % (func, type(session))
                     )
 
-        if ret_value < 0:
-            raise errors.VisaIOError(rv)
+                # Set session back to a safe value
+                session = None
 
-        if rv in self.issue_warning_on:
-            if session and ret_value not in self._ignore_warning_in_session[session]:
-                warnings.warn(errors.VisaIOWarning(ret_value), stacklevel=2)
-
-        return ret_value
+        return self.handle_return_value(session, ret_value)  # type: ignore
 
     def list_resources(
         self, session: typing.VISARMSession, query: str = "?*::INSTR"
