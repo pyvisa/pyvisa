@@ -2,8 +2,7 @@
 """Test the TCPIP based resources.
 
 """
-import unittest
-
+import pytest
 from pyvisa import constants, errors
 
 from . import require_virtual_instr
@@ -11,7 +10,7 @@ from .messagebased_resource_utils import MessagebasedResourceTestCase
 
 
 @require_virtual_instr
-class TCPIPInstrTestCase(MessagebasedResourceTestCase, unittest.TestCase):
+class TestTCPIPInstr(MessagebasedResourceTestCase):
     """Test pyvisa against a TCPIP INSTR resource.
 
     """
@@ -36,14 +35,15 @@ class TCPIPInstrTestCase(MessagebasedResourceTestCase, unittest.TestCase):
         try:
             self.instr.read_stb()
             # XXX note sure what is the actual issue here
-            with self.assertRaises(errors.VisaIOError):
+            with pytest.raises(errors.VisaIOError):
                 self.instr.set_visa_attribute(
                     constants.VI_ATTR_IO_PROT, constants.IOProtocol.hs488
                 )
             # self.instr.read_stb()
-            # self.assertEqual(
-            #     self.instr.get_visa_attribute(constants.VI_ATTR_IO_PROT),
-            #     constants.IOProtocol.hs488)
+            # assert (
+            #     self.instr.get_visa_attribute(constants.VI_ATTR_IO_PROT)
+            #     == constants.IOProtocol.hs488
+            # )
         finally:
             self.instr.set_visa_attribute(
                 constants.VI_ATTR_IO_PROT, constants.IOProtocol.normal
@@ -51,7 +51,7 @@ class TCPIPInstrTestCase(MessagebasedResourceTestCase, unittest.TestCase):
 
 
 @require_virtual_instr
-class TCPIPSocket(MessagebasedResourceTestCase):
+class TestTCPIPSocket(MessagebasedResourceTestCase):
     """Test pyvisa against a TCPIP SOCKET resource.
 
     """

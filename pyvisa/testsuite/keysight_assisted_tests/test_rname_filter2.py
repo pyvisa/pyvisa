@@ -4,7 +4,7 @@
 """
 import logging
 
-from pyvisa import ResourceManager, logger, rname
+from pyvisa import ResourceManager, rname
 from pyvisa.resources import Resource
 
 from .. import BaseTestCase
@@ -13,13 +13,13 @@ from . import require_virtual_instr
 
 @require_virtual_instr
 class TestFilter2(BaseTestCase):
-    def setUp(self):
+    def setup_method(self):
         """Create a ResourceManager with the default backend library.
 
         """
         self.rm = ResourceManager()
 
-    def tearDown(self):
+    def teardown_method(self):
         """Close the ResourceManager.
 
         """
@@ -32,9 +32,9 @@ class TestFilter2(BaseTestCase):
         filtered = rname.filter2(
             resources, expr, lambda rsc: self.rm.open_resource(rsc)
         )
-        self.assertSequenceEqual(filtered, ok)
+        assert filtered == ok
 
-    def test_filter2_optional_clause_with_connection(self):
+    def test_filter2_optional_clause_with_connection(self, caplog, monkeypatch):
         self._test_filter2(
             "?*::INSTR{VI_ATTR_TERMCHAR_EN == 1 && VI_ATTR_TERMCHAR == 0}"
         )
@@ -45,13 +45,12 @@ class TestFilter2(BaseTestCase):
         def broken_get_visa_attribute(self, name):
             raise Exception()
 
-        old = Resource.get_visa_attribute
-        Resource.get_visa_attribute = broken_get_visa_attribute
+        monkeypatch.setattr(Resource, "get_visa_attribute", broken_get_visa_attribute)
 
         # Using any other log level will cause the test to fail for no apparent
         # good reason
-        with self.assertLogs(level=logging.DEBUG, logger=logger):
-            try:
-                self._test_filter2("TCPIP::?*::INSTR{VI_ATTR_TERMCHAR == 10}")
-            finally:
-                Resource.get_visa_attribute = old
+        caplog.clear()
+        with caplog.at_level(logging.DEBUG, logger="pyvisa"):
+            self._test_filter2("TCPIP::?*::INSTR{VI_ATTR_TERMCHAR == 10}")
+
+        assert caplog.records
