@@ -18,3 +18,4 @@ _test/
 .vscode
 htmlcov/
 .mypy_cache/
+pip-wheel-metadata/
