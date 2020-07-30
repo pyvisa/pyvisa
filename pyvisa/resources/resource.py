@@ -87,8 +87,8 @@ class WaitResponse:
     def __del__(self) -> None:
         if self.event._context is not None:
             try:
-                self.event.close()
                 self._visalib.close(self.event._context)
+                self.event.close()
             except errors.VisaIOError:
                 pass
 
