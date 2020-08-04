@@ -95,5 +95,7 @@ for meth_name in (
         TestTCPIPSocket,
         meth_name,
         # Copy since the mark is applied in-place
-        pytest.mark.xfail(copy.copy(getattr(MessagebasedResourceTestCase, meth_name))),
+        pytest.mark.xfail(
+            copy.deepcopy(getattr(MessagebasedResourceTestCase, meth_name))
+        ),
     )

@@ -838,7 +838,7 @@ class SRQMessagebasedResourceTestCase(MessagebasedResourceTestCase):
         """Test waiting on a VISA event.
 
         """
-        event_type = EventType.exception
+        event_type = EventType.service_request
         event_mech = constants.EventMechanism.queue
         # Emit a clear to avoid dealing with previous requests
         self.instr.clear()
