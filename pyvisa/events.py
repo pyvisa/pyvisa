@@ -135,7 +135,7 @@ for event in (
 class ExceptionEvent(Event):
     """Event corresponding to an exception."""
 
-    #: Status code of the opertion that generated the exception
+    #: Status code of the operation that generated the exception
     status: Attribute[constants.StatusCode] = attributes.AttrVI_ATTR_STATUS()
 
     #: Name of the operation that led to the exception

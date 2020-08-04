@@ -473,6 +473,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                 chunk_size=8,
             )
 
+    # Not sure how to test this
+    @pytest.mark.skip
     def test_handling_malformed_binary(self):
         """
 
@@ -667,6 +669,188 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert 0 <= self.instr.stb <= 256
         assert 0 <= self.instr.read_stb() <= 256
 
+    def test_wait_on_event_timeout(self):
+        """Test waiting on a VISA event.
+
+        """
+        event_type = EventType.exception
+        event_mech = constants.EventMechanism.queue
+        # Emit a clear to avoid dealing with previous requests
+        self.instr.clear()
+        self.instr.enable_event(event_type, event_mech, None)
+        try:
+            response = self.instr.wait_on_event(event_type, 10, capture_timeout=True)
+        finally:
+            self.instr.disable_event(event_type, event_mech)
+        assert response.timed_out
+        assert response.event.event_type == event_type
+
+        with pytest.raises(errors.VisaIOError):
+            self.instr.enable_event(event_type, event_mech, None)
+            try:
+                response = self.instr.wait_on_event(event_type, 10)
+            finally:
+                self.instr.disable_event(event_type, event_mech)
+
+    def test_manually_called_handlers(self):
+        """Test calling manually even handler."""
+
+        class FalseResource(Resource):
+            session = None
+            visalib = None
+            _session = None
+
+            def __init__(self):
+                pass
+
+        fres = FalseResource()
+        fres2 = FalseResource()
+        fres2.session = 1
+
+        handler = EventHandler()
+        false_wrapped_handler = fres.wrap_handler(handler.simplified_handler)
+        false_wrapped_handler(None, EventType.clear, 1, 1)
+        assert handler.event_success
+
+        with pytest.raises(RuntimeError):
+            false_wrapped_handler(1, EventType.clear, 1, 1)
+
+    def test_handling_invalid_handler(self):
+        """Test handling an error related to a wrong handler type."""
+        with pytest.raises(errors.VisaTypeError):
+            event_type = EventType.exception
+            self.instr.install_handler(event_type, 1, object())
+
+    def test_uninstalling_missing_visa_handler(self):
+        """Test uninstalling a visa handler that was not registered."""
+        handler1 = EventHandler()
+        handler2 = EventHandler()
+        event_type = EventType.exception
+        self.instr.install_handler(event_type, handler1.handle_event)
+        with pytest.raises(errors.UnknownHandler):
+            self.instr.uninstall_handler(event_type, handler2.handle_event)
+
+        self.instr.uninstall_handler(event_type, handler1.handle_event)
+
+        with pytest.raises(errors.UnknownHandler):
+            self.instr.uninstall_handler(event_type, handler2.handle_event)
+
+    def test_handler_clean_up_on_resource_del(self):
+        """Test that handlers are properly cleaned when a resource is deleted.
+
+        """
+        handler = EventHandler()
+        event_type = EventType.exception
+        self.instr.install_handler(event_type, handler.handle_event)
+
+        self.instr = None
+        gc.collect()
+        assert not self.rm.visalib.handlers
+
+    def test_uninstall_all_handlers(self):
+        """Test uninstall all handlers from all sessions.
+
+        """
+        handler = EventHandler()
+        event_type = EventType.exception
+        self.instr.install_handler(event_type, handler.handle_event)
+
+        self.rm.visalib.uninstall_all_visa_handlers(None)
+        assert not self.rm.visalib.handlers
+
+    def test_manual_async_read(self):
+        """Test handling IOCompletion event which has extra attributes."""
+        # Prepare message
+        self.instr.write_raw(b"RECEIVE\n")
+        self.instr.write_raw(b"test\n")
+        self.instr.write_raw(b"SEND\n")
+
+        # Enable event handling
+        event_type = EventType.io_completion
+        event_mech = constants.EventMechanism.queue
+        wait_time = 2000  # set time that program waits to receive event
+        self.instr.enable_event(event_type, event_mech, None)
+
+        try:
+            visalib = self.instr.visalib
+            buffer, job_id, status_code = visalib.read_asynchronously(
+                self.instr.session, 10
+            )
+            assert buffer is visalib.get_buffer_from_id(job_id)
+            response = self.instr.wait_on_event(event_type, wait_time)
+        finally:
+            self.instr.disable_event(event_type, event_mech)
+
+        assert response.event.status == constants.StatusCode.success
+        assert bytes(buffer) == bytes(response.event.buffer)
+        assert bytes(response.event.data) == b"test\n"
+        assert response.event.return_count == 5
+        assert response.event.operation_name == "viReadAsync"
+
+    def test_getting_unknown_buffer(self):
+        """Test getting a buffer with a wrong ID.
+
+        """
+        assert self.instr.visalib.get_buffer_from_id(1) is None
+
+    def test_shared_locking(self):
+        """Test locking/unlocking a resource.
+
+        """
+        instr2 = self.rm.open_resource(str(self.rname))
+        instr3 = self.rm.open_resource(str(self.rname))
+
+        key = self.instr.lock()
+        instr2.lock(requested_key=key)
+
+        assert self.instr.query("*IDN?")
+        assert instr2.query("*IDN?")
+        with pytest.raises(errors.VisaIOError):
+            instr3.query("*IDN?")
+
+        # Share the lock for a limited time
+        with instr3.lock_context(requested_key=key) as key2:
+            assert instr3.query("*IDN?")
+            assert key == key2
+
+        # Stop sharing the lock
+        instr2.unlock()
+
+        with pytest.raises(errors.VisaIOError):
+            instr2.query("*IDN?")
+        with pytest.raises(errors.VisaIOError):
+            instr3.query("*IDN?")
+
+        self.instr.unlock()
+
+        assert instr3.query("*IDN?")
+
+    def test_exclusive_locking(self):
+        """Test locking/unlocking a resource.
+
+        """
+        instr2 = self.rm.open_resource(str(self.rname))
+
+        self.instr.lock_excl()
+        with pytest.raises(errors.VisaIOError):
+            instr2.query("*IDN?")
+
+        self.instr.unlock()
+
+        assert instr2.query("*IDN?")
+
+        # Share the lock for a limited time
+        with self.instr.lock_context(requested_key="exclusive") as key:
+            assert key is None
+            with pytest.raises(errors.VisaIOError):
+                instr2.query("*IDN?")
+
+
+class SRQMessagebasedResourceTestCase(MessagebasedResourceTestCase):
+    """Base test case for message based resources supporting Service Request.
+
+    """
+
     def test_wait_on_event(self):
         """Test waiting on a VISA event.
 
@@ -691,29 +875,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             response.event_type
         with pytest.warns(FutureWarning):
             response.context
-
-    def test_wait_on_event_timeout(self):
-        """Test waiting on a VISA event.
-
-        """
-        event_type = EventType.service_request
-        event_mech = constants.EventMechanism.queue
-        # Emit a clear to avoid dealing with previous requests
-        self.instr.clear()
-        self.instr.enable_event(event_type, event_mech, None)
-        try:
-            response = self.instr.wait_on_event(event_type, 10, capture_timeout=True)
-        finally:
-            self.instr.disable_event(event_type, event_mech)
-        assert response.timed_out
-        assert response.event.event_type == event_type
-
-        with pytest.raises(errors.VisaIOError):
-            self.instr.enable_event(event_type, event_mech, None)
-            try:
-                response = self.instr.wait_on_event(event_type, 10)
-            finally:
-                self.instr.disable_event(event_type, event_mech)
 
     def test_managing_visa_handler(self):
         """Test using visa handlers.
@@ -828,156 +989,3 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             assert self.instr.read() == "1"
         finally:
             ctwrapper.WRAP_HANDLER = True
-
-    def test_manually_called_handlers(self):
-        """Test calling manually even handler."""
-
-        class FalseResource(Resource):
-            session = None
-            visalib = None
-            _session = None
-
-            def __init__(self):
-                pass
-
-        fres = FalseResource()
-        fres2 = FalseResource()
-        fres2.session = 1
-
-        handler = EventHandler()
-        false_wrapped_handler = fres.wrap_handler(handler.simplified_handler)
-        false_wrapped_handler(None, EventType.clear, 1, 1)
-        assert handler.event_success
-
-        with pytest.raises(RuntimeError):
-            false_wrapped_handler(1, EventType.clear, 1, 1)
-
-    def test_handling_invalid_handler(self):
-        """Test handling an error related to a wrong handler type."""
-        with pytest.raises(errors.VisaTypeError):
-            event_type = EventType.service_request
-            self.instr.install_handler(event_type, 1, object())
-
-    def test_uninstalling_missing_visa_handler(self):
-        """Test uninstalling a visa handler that was not registered."""
-        handler1 = EventHandler()
-        handler2 = EventHandler()
-        event_type = EventType.service_request
-        self.instr.install_handler(event_type, handler1.handle_event)
-        with pytest.raises(errors.UnknownHandler):
-            self.instr.uninstall_handler(event_type, handler2.handle_event)
-
-        self.instr.uninstall_handler(event_type, handler1.handle_event)
-
-        with pytest.raises(errors.UnknownHandler):
-            self.instr.uninstall_handler(event_type, handler2.handle_event)
-
-    def test_handler_clean_up_on_resource_del(self):
-        """Test that handlers are properly cleaned when a resource is deleted.
-
-        """
-        handler = EventHandler()
-        event_type = EventType.service_request
-        self.instr.install_handler(event_type, handler.handle_event)
-
-        self.instr = None
-        gc.collect()
-        assert not self.rm.visalib.handlers
-
-    def test_uninstall_all_handlers(self):
-        """Test uninstall all handlers from all sessions.
-
-        """
-        handler = EventHandler()
-        event_type = EventType.service_request
-        self.instr.install_handler(event_type, handler.handle_event)
-
-        self.rm.visalib.uninstall_all_visa_handlers(None)
-        assert not self.rm.visalib.handlers
-
-    def test_manual_async_read(self):
-        """Test handling IOCompletion event which has extra attributes."""
-        # Prepare message
-        self.instr.write_raw(b"RECEIVE\n")
-        self.instr.write_raw(b"test\n")
-        self.instr.write_raw(b"SEND\n")
-
-        # Enable event handling
-        event_type = EventType.io_completion
-        event_mech = constants.EventMechanism.queue
-        wait_time = 2000  # set time that program waits to receive event
-        self.instr.enable_event(event_type, event_mech, None)
-
-        try:
-            visalib = self.instr.visalib
-            buffer, job_id, status_code = visalib.read_asynchronously(
-                self.instr.session, 10
-            )
-            assert buffer is visalib.get_buffer_from_id(job_id)
-            response = self.instr.wait_on_event(event_type, wait_time)
-        finally:
-            self.instr.disable_event(event_type, event_mech)
-
-        assert response.event.status == constants.StatusCode.success
-        assert bytes(buffer) == bytes(response.event.buffer)
-        assert bytes(response.event.data) == b"test\n"
-        assert response.event.return_count == 5
-        assert response.event.operation_name == "viReadAsync"
-
-    def test_getting_unknown_buffer(self):
-        """Test getting a buffer with a wrong ID.
-
-        """
-        assert self.instr.visalib.get_buffer_from_id(1) is None
-
-    def test_shared_locking(self):
-        """Test locking/unlocking a resource.
-
-        """
-        instr2 = self.rm.open_resource(str(self.rname))
-        instr3 = self.rm.open_resource(str(self.rname))
-
-        key = self.instr.lock()
-        instr2.lock(requested_key=key)
-
-        assert self.instr.query("*IDN?")
-        assert instr2.query("*IDN?")
-        with pytest.raises(errors.VisaIOError):
-            instr3.query("*IDN?")
-
-        # Share the lock for a limited time
-        with instr3.lock_context(requested_key=key) as key2:
-            assert instr3.query("*IDN?")
-            assert key == key2
-
-        # Stop sharing the lock
-        instr2.unlock()
-
-        with pytest.raises(errors.VisaIOError):
-            instr2.query("*IDN?")
-        with pytest.raises(errors.VisaIOError):
-            instr3.query("*IDN?")
-
-        self.instr.unlock()
-
-        assert instr3.query("*IDN?")
-
-    def test_exclusive_locking(self):
-        """Test locking/unlocking a resource.
-
-        """
-        instr2 = self.rm.open_resource(str(self.rname))
-
-        self.instr.lock_excl()
-        with pytest.raises(errors.VisaIOError):
-            instr2.query("*IDN?")
-
-        self.instr.unlock()
-
-        assert instr2.query("*IDN?")
-
-        # Share the lock for a limited time
-        with self.instr.lock_context(requested_key="exclusive") as key:
-            assert key is None
-            with pytest.raises(errors.VisaIOError):
-                instr2.query("*IDN?")
