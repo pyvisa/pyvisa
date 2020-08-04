@@ -2,6 +2,8 @@
 """Test the TCPIP based resources.
 
 """
+import copy
+
 import pytest
 from pyvisa import constants, errors
 
@@ -92,5 +94,6 @@ for meth_name in (
     setattr(
         TestTCPIPSocket,
         meth_name,
-        pytest.mark.xfail(getattr(MessagebasedResourceTestCase, meth_name)),
+        # Copy since the mark is applied in-place
+        pytest.mark.xfail(copy.copy(getattr(MessagebasedResourceTestCase, meth_name))),
     )

@@ -669,29 +669,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert 0 <= self.instr.stb <= 256
         assert 0 <= self.instr.read_stb() <= 256
 
-    def test_wait_on_event_timeout(self):
-        """Test waiting on a VISA event.
-
-        """
-        event_type = EventType.exception
-        event_mech = constants.EventMechanism.queue
-        # Emit a clear to avoid dealing with previous requests
-        self.instr.clear()
-        self.instr.enable_event(event_type, event_mech, None)
-        try:
-            response = self.instr.wait_on_event(event_type, 10, capture_timeout=True)
-        finally:
-            self.instr.disable_event(event_type, event_mech)
-        assert response.timed_out
-        assert response.event.event_type == event_type
-
-        with pytest.raises(errors.VisaIOError):
-            self.instr.enable_event(event_type, event_mech, None)
-            try:
-                response = self.instr.wait_on_event(event_type, 10)
-            finally:
-                self.instr.disable_event(event_type, event_mech)
-
     def test_manually_called_handlers(self):
         """Test calling manually even handler."""
 
@@ -845,11 +822,40 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             with pytest.raises(errors.VisaIOError):
                 instr2.query("*IDN?")
 
+    # Skipped since I do not know how to test those without service request.
+    test_wait_on_event = pytest.mark.skip(ResourceTestCase.test_wait_on_event)
+    test_managing_visa_handler = pytest.mark.skip(
+        ResourceTestCase.test_managing_visa_handler
+    )
+
 
 class SRQMessagebasedResourceTestCase(MessagebasedResourceTestCase):
-    """Base test case for message based resources supporting Service Request.
+    """Base tests for message based resources supporting Service Request and queue.
 
     """
+
+    def test_wait_on_event_timeout(self):
+        """Test waiting on a VISA event.
+
+        """
+        event_type = EventType.exception
+        event_mech = constants.EventMechanism.queue
+        # Emit a clear to avoid dealing with previous requests
+        self.instr.clear()
+        self.instr.enable_event(event_type, event_mech, None)
+        try:
+            response = self.instr.wait_on_event(event_type, 10, capture_timeout=True)
+        finally:
+            self.instr.disable_event(event_type, event_mech)
+        assert response.timed_out
+        assert response.event.event_type == event_type
+
+        with pytest.raises(errors.VisaIOError):
+            self.instr.enable_event(event_type, event_mech, None)
+            try:
+                response = self.instr.wait_on_event(event_type, 10)
+            finally:
+                self.instr.disable_event(event_type, event_mech)
 
     def test_wait_on_event(self):
         """Test waiting on a VISA event.
