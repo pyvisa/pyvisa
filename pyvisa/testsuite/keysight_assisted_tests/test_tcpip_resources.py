@@ -2,12 +2,10 @@
 """Test the TCPIP based resources.
 
 """
-import copy
-
 import pytest
 from pyvisa import constants, errors
 
-from . import require_virtual_instr
+from . import require_virtual_instr, copy_func
 from .messagebased_resource_utils import (
     MessagebasedResourceTestCase,
     SRQMessagebasedResourceTestCase,
@@ -71,31 +69,58 @@ class TestTCPIPSocket(MessagebasedResourceTestCase):
     #: different value depending on the values supported by the resource.
     MINIMAL_TIMEOUT = 1
 
-
-# Mark some tests as expected failure due to a bug in Glider
-for meth_name in (
-    "test_write_raw_read_bytes",
-    "test_write_raw_read_raw",
-    "test_write_read",
-    "test_write_ascii_values",
-    "test_write_binary_values",
-    "test_read_ascii_values",
-    "test_read_binary_values",
-    "test_read_query_binary_values_invalid_header",
-    "test_read_binary_values_unreported_length",
-    "test_delay_in_query_ascii",
-    "test_instrument_wide_delay_in_query_binary",
-    "test_delay_args_in_query_binary",
-    "test_no_delay_args_in_query_binary",
-    "test_manual_async_read",
-    "test_shared_locking",
-    "test_exclusive_locking",
-):
-    setattr(
-        TestTCPIPSocket,
-        meth_name,
-        # Copy since the mark is applied in-place
-        pytest.mark.xfail(
-            copy.deepcopy(getattr(MessagebasedResourceTestCase, meth_name))
-        ),
+    # Copy functions since the marker is applied in-place
+    test_write_raw_read_bytes = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_raw_read_bytes)
+    )
+    test_write_raw_read_raw = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_raw_read_raw)
+    )
+    test_write_read = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_read)
+    )
+    test_write_ascii_values = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_ascii_values)
+    )
+    test_write_binary_values = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_binary_values)
+    )
+    test_read_ascii_values = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_read_ascii_values)
+    )
+    test_read_binary_values = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_read_binary_values)
+    )
+    test_read_query_binary_values_invalid_header = pytest.mark.xfail(
+        copy_func(
+            MessagebasedResourceTestCase.test_read_query_binary_values_invalid_header
+        )
+    )
+    test_read_binary_values_unreported_length = pytest.mark.xfail(
+        copy_func(
+            MessagebasedResourceTestCase.test_read_binary_values_unreported_length
+        )
+    )
+    test_delay_in_query_ascii = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_delay_in_query_ascii)
+    )
+    test_instrument_wide_delay_in_query_binary = pytest.mark.xfail(
+        copy_func(
+            MessagebasedResourceTestCase.test_instrument_wide_delay_in_query_binary
+        )
+    )
+    test_delay_args_in_query_binary = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_delay_args_in_query_binary)
+    )
+    test_no_delay_args_in_query_binary = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_no_delay_args_in_query_binary)
+    )
+    test_manual_async_read = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_manual_async_read)
+    )
+    test_shared_locking = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_shared_locking)
+    )
+    test_exclusive_locking = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_exclusive_locking)
     )
