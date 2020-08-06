@@ -72,7 +72,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
           name: codecov-umbrella
-          yml: ./codecov.yml
           fail_ci_if_error: true
 
   # Added to summarize the matrix (otherwise we would need to list every single
