@@ -8,6 +8,7 @@ This file is part of PyVISA.
 
 """
 import pytest
+
 from pyvisa.constants import DataWidth
 
 from . import BaseTestCase

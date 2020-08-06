@@ -3,9 +3,10 @@
 
 """
 import pytest
+
 from pyvisa import constants, errors
 
-from . import require_virtual_instr, copy_func
+from . import copy_func, require_virtual_instr
 from .messagebased_resource_utils import (
     MessagebasedResourceTestCase,
     SRQMessagebasedResourceTestCase,

@@ -6,6 +6,7 @@ import logging
 from logging.handlers import BufferingHandler
 
 import pytest
+
 from pyvisa import ResourceManager, logger
 
 try:

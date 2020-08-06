@@ -7,6 +7,7 @@ import logging
 import re
 
 import pytest
+
 from pyvisa import InvalidSession, ResourceManager, VisaIOError, errors
 from pyvisa.constants import AccessModes, InterfaceType, StatusCode
 from pyvisa.highlevel import VisaLibraryBase

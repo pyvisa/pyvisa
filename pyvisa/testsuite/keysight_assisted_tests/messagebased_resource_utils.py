@@ -8,6 +8,7 @@ import logging
 import time
 
 import pytest
+
 from pyvisa import constants, errors
 from pyvisa.constants import EventType, ResourceAttribute
 from pyvisa.resources import Resource

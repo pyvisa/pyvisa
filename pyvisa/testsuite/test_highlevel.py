@@ -7,6 +7,7 @@ import os
 import sys
 
 import pytest
+
 from pyvisa import constants, highlevel, resources, rname
 from pyvisa.ctwrapper import IVIVisaLibrary
 

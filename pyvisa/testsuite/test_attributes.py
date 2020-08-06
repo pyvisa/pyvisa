@@ -5,6 +5,7 @@
 import enum
 
 import pytest
+
 from pyvisa import constants
 from pyvisa.attributes import (
     Attribute,

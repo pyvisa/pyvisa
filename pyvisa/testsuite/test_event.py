@@ -10,6 +10,7 @@ This file is part of PyVISA.
 import logging
 
 import pytest
+
 from pyvisa import constants, errors
 from pyvisa.events import Event
 

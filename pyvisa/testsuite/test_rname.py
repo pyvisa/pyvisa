@@ -5,9 +5,9 @@
 import logging
 from dataclasses import dataclass
 
+import pytest
 from typing_extensions import ClassVar
 
-import pytest
 from pyvisa import constants, errors, rname
 from pyvisa.testsuite import BaseTestCase
 

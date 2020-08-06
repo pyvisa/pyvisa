@@ -14,6 +14,7 @@ from functools import partial
 from io import StringIO
 
 import pytest
+
 from pyvisa import highlevel, util
 from pyvisa.ctwrapper import IVIVisaLibrary
 from pyvisa.testsuite import BaseTestCase

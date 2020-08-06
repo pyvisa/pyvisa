@@ -8,6 +8,7 @@ import re
 from typing import Union
 
 import pytest
+
 from pyvisa import InvalidSession, ResourceManager
 from pyvisa.constants import InterfaceType, ResourceAttribute, StatusCode, Timeouts
 from pyvisa.resources.resource import Resource

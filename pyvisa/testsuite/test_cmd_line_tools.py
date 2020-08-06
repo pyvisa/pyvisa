@@ -6,6 +6,7 @@ import sys
 from subprocess import PIPE, Popen, run
 
 import pytest
+
 from pyvisa import util
 
 from . import BaseTestCase, require_visa_lib
