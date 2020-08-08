@@ -14,6 +14,13 @@ to the old behavior by setting the environment variable PYVISA_WRAP_HANDLER=0 or
 set ctwrapper.WRAP_HANDLER to False but please consider updating to the new
 behavior.
 
+- Convert the testsuite to use pytest PR #531
+  This is motivated by the possibility to re-use it in PyVISA-py. However since
+  unittest use inheritance to detect tests, doing so would have been clunky, pytest
+  name base detection works better for that purpose.
+- Setup Azure pipelines for self-hosted runner using Keysight tools to run an
+  extended set of tests. PR #531
+- INtroduce an enumeration for special VISA timeout values PR #531
 - Provide VisaLibraryBase.handle_return_value to ease the handling of return values
   in alternative backends PR #525
 - Transition to using dataclasses for resource name PR #525
