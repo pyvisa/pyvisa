@@ -582,7 +582,7 @@ class Resource(object):
         timeout : Union[float, Literal["default"]], optional
             Absolute time period (in milliseconds) that a resource waits to get
             unlocked by the locking session before returning an error.
-            Defaults to "default' which means use self.timeout.
+            Defaults to "default" which means use self.timeout.
         requested_key : Optional[str], optional
             Access key used by another session with which you want your session
             to share a lock or None to generate a new shared access key.
