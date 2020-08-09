@@ -575,7 +575,7 @@ class Resource(object):
         timeout: Union[float, Literal["default"]] = "default",
         requested_key: Optional[str] = None,
     ) -> str:
-        """Establish a shared lock to the resource.
+        r"""Establish a shared lock to the resource.
 
         Parameters
         ----------
