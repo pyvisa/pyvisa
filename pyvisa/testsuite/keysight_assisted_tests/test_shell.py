@@ -140,8 +140,8 @@ class TestVisaShell(BaseTestCase):
             if rsc in ALIASES:
                 msg.append(f"     alias: {ALIASES[rsc]}")
 
-        for line, m in zip(lines, msg):
-            assert m.encode("ascii") in line
+        for m in msg:
+            assert any(m.encode("ascii") in line for line in lines)
 
     # TODO fix argument handling to allow filtering
 

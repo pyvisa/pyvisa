@@ -115,18 +115,14 @@ class TestResourceManager:
 
         """
         # Default settings
-        assert sorted(self.rm.list_resources()) == sorted(
-            [
-                str(ResourceName.from_string(v))
-                for v in RESOURCE_ADDRESSES.values()
-                if v.endswith("INSTR")
-            ]
-        )
+        resources = self.rm.list_resources()
+        for v in (v for v in RESOURCE_ADDRESSES.values() if v.endswith("INSTR")):
+            assert str(ResourceName.from_string(v)) in resources
 
         # All resources
-        assert sorted(self.rm.list_resources("?*")) == sorted(
-            [str(ResourceName.from_string(v)) for v in RESOURCE_ADDRESSES.values()]
-        )
+        resources = self.rm.list_resources("?*")
+        for v in RESOURCE_ADDRESSES.values():
+            assert str(ResourceName.from_string(v)) in resources
 
     def test_accessing_resource_infos(self):
         """Test accessing resource infos.
