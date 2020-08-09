@@ -33,8 +33,9 @@ jobs:
       - name: Install graphviz
         uses: kamiazya/setup-graphviz@v1
       - name: Install doc building tools
+        # Skip 3.2 since there is weird issue with " in Parameters
         run: |
-          pip install sphinx sphinx_rtd_theme
+          pip install sphinx!=3.2 sphinx_rtd_theme
       - name: Build documentation
         run: |
           mkdir docs_output;
