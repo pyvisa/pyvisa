@@ -136,6 +136,8 @@ class TestVisaShell(BaseTestCase):
 
         msg = []
         for i, rsc in enumerate(RESOURCE_ADDRESSES.values()):
+            if not rsc.endswith("INSTR"):
+                continue
             msg.append(f"({i:2d}) {to_canonical_name(rsc)}")
             if rsc in ALIASES:
                 msg.append(f"     alias: {ALIASES[rsc]}")
