@@ -575,7 +575,7 @@ class Resource(object):
         timeout: Union[float, Literal["default"]] = "default",
         requested_key: Optional[str] = None,
     ) -> str:
-        r"""Establish a shared lock to the resource.
+        """Establish a shared lock to the resource.
 
         Parameters
         ----------
@@ -608,7 +608,7 @@ class Resource(object):
         timeout : Union[float, Literal["default"]], optional
             Absolute time period (in milliseconds) that a resource waits to get
             unlocked by the locking session before returning an error.
-            Defaults to "default' which means use self.timeout.
+            Defaults to "default" which means use self.timeout.
 
         """
         tout = cast(float, self.timeout if timeout == "default" else timeout)
@@ -632,7 +632,7 @@ class Resource(object):
         timeout : Union[float, Literal["default"]], optional
             Absolute time period (in milliseconds) that a resource waits to get
             unlocked by the locking session before returning an error.
-            Defaults to "default' which means use self.timeout.
+            Defaults to "default" which means use self.timeout.
         requested_key : Optional[str], optional
             When using default of 'exclusive' the lock is an exclusive lock.
             Otherwise it is the access key for the shared lock or None to
