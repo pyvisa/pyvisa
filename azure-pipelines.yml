@@ -9,11 +9,6 @@ trigger:
     - master
     - staging
     - trying
-  paths:
-    include:
-    - pyvisa
-    - setup.py
-    - azure-pipelines.yml
 
 pr:
 - master
