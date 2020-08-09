@@ -1,0 +1,67 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+  branches:
+    include:
+    - master
+    - staging
+    - trying
+
+pr:
+- master
+
+variables:
+  PYVISA_KEYSIGHT_VIRTUAL_INSTR: 1
+
+
+pool:
+  name: default
+  demands: KEYSIGHT -equals TCPIP
+
+steps:
+- script: |
+    echo Activate conda
+    call $(CONDA_PATH)\activate.bat
+    echo Create environment
+    conda create -n test_ python=3.7 numpy --yes
+  displayName: 'Create environment'
+
+- script: |
+    echo Activate conda
+    call $(CONDA_PATH)\activate.bat
+    echo Activate environment
+    call conda activate test_
+    echo Install project
+    pip install -e .
+  displayName: 'Install dependencies'
+
+- script: |
+    echo Activate conda
+    call $(CONDA_PATH)\activate.bat
+    echo Activate environment
+    call conda activate test_
+    echo Install pytest and co
+    pip install pytest pytest-azurepipelines pytest-cov
+    echo Run pytest
+    python -X dev -m pytest --pyargs pyvisa --cov pyvisa --cov-report xml
+  displayName: 'Run tests'
+
+- script: |
+    echo Activate conda
+    call $(CONDA_PATH)\activate.bat
+    echo Activate environment
+    call conda activate test_
+    echo Install codecov
+    pip install codecov
+    echo Run codecov
+    codecov --file coverage.xml --token $(CODECOV_TOKEN) --env PYVISA_KEYSIGHT_VIRTUAL_INSTR --tries 5 --required -F unittest --name codecov-umbrella
+  displayName: 'Upload test coverage results'
+
+- script: |
+    call $(CONDA_PATH)\activate.bat
+    conda remove -n test_ --all --yes
+  displayName: 'Remove test environment'
+  condition: always()

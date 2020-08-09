@@ -8,6 +8,9 @@ PyVISA
 .. image:: https://github.com/pyvisa/pyvisa/workflows/Documentation%20building/badge.svg
     :target: https://github.com/pyvisa/pyvisa/actions
     :alt: Documentation building
+.. image:: https://dev.azure.com/pyvisa/pyvisa/_apis/build/status/pyvisa.keysight-assisted?branchName=master
+    :target: https://github.com/pyvisa/pyvisa/actions
+    :alt: Keysight assisted testing
 .. image:: https://codecov.io/gh/pyvisa/pyvisa/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/pyvisa/pyvisa
     :alt: Code Coverage

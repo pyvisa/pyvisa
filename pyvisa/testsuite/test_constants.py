@@ -7,6 +7,8 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+import pytest
+
 from pyvisa.constants import DataWidth
 
 from . import BaseTestCase
@@ -19,7 +21,7 @@ class TestDataWidth(BaseTestCase):
             (8, 16, 32, 64),
             (DataWidth.bit_8, DataWidth.bit_16, DataWidth.bit_32, DataWidth.bit_64),
         ):
-            self.assertEqual(DataWidth.from_literal(v), e)
+            assert DataWidth.from_literal(v) == e
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             DataWidth.from_literal(0)

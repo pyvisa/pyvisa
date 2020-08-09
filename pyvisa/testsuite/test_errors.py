@@ -12,9 +12,9 @@ class TestPicleUnpickle(BaseTestCase):
     def _test_pickle_unpickle(self, instance):
         pickled = pickle.dumps(instance)
         unpickled = pickle.loads(pickled)
-        self.assertIsInstance(unpickled, type(instance))
+        assert isinstance(unpickled, type(instance))
         for attr in instance.__dict__:
-            self.assertEqual(getattr(instance, attr), getattr(unpickled, attr))
+            assert getattr(instance, attr) == getattr(unpickled, attr)
 
     def test_VisaIOError(self):
         self._test_pickle_unpickle(errors.VisaIOError(0))
@@ -48,7 +48,7 @@ class TestLibraryError(BaseTestCase):
         exc = errors.LibraryError.from_exception(
             ValueError("visa.dll: image not found"), "visa.dll"
         )
-        self.assertIn("File not found", str(exc))
+        assert "File not found" in str(exc)
 
     def test_from_exception_wrong_arch(self):
         """Test handling a library that report the wrong bitness.
@@ -58,7 +58,7 @@ class TestLibraryError(BaseTestCase):
             ValueError("visa.dll: no suitable image found. no matching architecture"),
             "visa.dll",
         )
-        self.assertIn("No matching architecture", str(exc))
+        assert "No matching architecture" in str(exc)
 
     def test_from_exception_wrong_filetype(self):
         """Test handling a library file of the wrong type.
@@ -67,7 +67,7 @@ class TestLibraryError(BaseTestCase):
         exc = errors.LibraryError.from_exception(
             ValueError("visa.dll: no suitable image found."), "visa.dll"
         )
-        self.assertIn("Could not determine filetype", str(exc))
+        assert "Could not determine filetype" in str(exc)
 
     def test_from_exception_wrong_ELF(self):
         """Test handling a library file with a wrong ELF.
@@ -76,14 +76,14 @@ class TestLibraryError(BaseTestCase):
         exc = errors.LibraryError.from_exception(
             ValueError("visa.dll: wrong ELF class"), "visa.dll"
         )
-        self.assertIn("No matching architecture", str(exc))
+        assert "No matching architecture" in str(exc)
 
     def test_from_exception_random(self):
         """Test handling a library for which the error is not a usual one.
 
         """
         exc = errors.LibraryError.from_exception(ValueError("visa.dll"), "visa.dll")
-        self.assertIn("Error while accessing", str(exc))
+        assert "Error while accessing" in str(exc)
 
     def test_from_exception_decode_error(self):
         """Test handling an error that decode to string.
@@ -97,6 +97,6 @@ class TestLibraryError(BaseTestCase):
         exc = errors.LibraryError.from_exception(
             DummyExc("visa.dll: wrong ELF class"), "visa.dll"
         )
-        self.assertEqual("Error while accessing visa.dll.", str(exc))
+        assert "Error while accessing visa.dll." == str(exc)
 
     # from_wrong_arch is exercised through the above tests.

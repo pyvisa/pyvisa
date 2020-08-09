@@ -5,6 +5,8 @@
 import sys
 from subprocess import PIPE, Popen, run
 
+import pytest
+
 from pyvisa import util
 
 from . import BaseTestCase, require_visa_lib
@@ -27,11 +29,14 @@ class TestCmdLineTools(BaseTestCase):
             ["python", "-m", "visa", "info"], stdout=PIPE, universal_newlines=True
         )
         details = util.system_details_to_str(util.get_system_details())
-        self.assertSequenceEqual(result.stdout.strip(), details.strip())
+        print(result.stdout.strip())
+        print()
+        print(details.strip())
+        assert result.stdout.strip() == details.strip()
 
         with Popen(["python", "-m", "visa", "shell"], stdin=PIPE, stdout=PIPE) as p:
             stdout, _ = p.communicate(b"exit")
-        self.assertIn(b"Welcome to the VISA shell", stdout)
+        assert b"Welcome to the VISA shell" in stdout
 
     def test_visa_main_argument_handling(self):
         """Test we reject invalid values in visa_main.
@@ -41,7 +46,7 @@ class TestCmdLineTools(BaseTestCase):
 
         old = sys.argv = ["python"]
         try:
-            with self.assertRaises(ValueError):
+            with pytest.raises(ValueError):
                 visa_main("unknown")
         finally:
             sys.argv = old
@@ -52,7 +57,7 @@ class TestCmdLineTools(BaseTestCase):
         """
         result = run("pyvisa-info", stdout=PIPE, universal_newlines=True)
         details = util.system_details_to_str(util.get_system_details())
-        self.assertMultiLineEqual(result.stdout.strip(), details.strip())
+        assert result.stdout.strip() == details.strip()
 
     # TODO test backend selection: this not easy at all to assert
     @require_visa_lib
@@ -62,4 +67,4 @@ class TestCmdLineTools(BaseTestCase):
         """
         with Popen(["pyvisa-shell"], stdin=PIPE, stdout=PIPE) as p:
             stdout, stderr = p.communicate(b"exit")
-        self.assertIn(b"Welcome to the VISA shell", stdout)
+        assert b"Welcome to the VISA shell" in stdout

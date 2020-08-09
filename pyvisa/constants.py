@@ -742,6 +742,17 @@ class VisaBoolean(enum.IntEnum):
 
 
 @enum.unique
+class Timeouts(enum.IntEnum):
+    """Special timeout values."""
+
+    #: Minimal timeout value
+    immediate = VI_TMO_IMMEDIATE
+
+    #: Infinite timeout
+    infinite = VI_TMO_INFINITE
+
+
+@enum.unique
 class Lock(enum.IntEnum):
     """Kind of lock to use when locking a resource."""
 

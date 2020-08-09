@@ -2,8 +2,10 @@
 """Test test the resource name parsing.
 
 """
+import logging
 from dataclasses import dataclass
 
+import pytest
 from typing_extensions import ClassVar
 
 from pyvisa import constants, errors, rname
@@ -20,41 +22,32 @@ class TestInvalidResourceName(BaseTestCase):
 
         """
         e = rname.InvalidResourceName.bad_syntax("syntax", "resource")
-        self.assertEqual(str(e), "Could not parse 'resource'. The syntax is 'syntax'.")
+        assert str(e) == "Could not parse 'resource'. The syntax is 'syntax'."
 
         e = rname.InvalidResourceName.bad_syntax("syntax", "resource", "ex")
-        self.assertEqual(
-            str(e), "Could not parse 'resource'. The syntax is 'syntax' (ex)."
-        )
+        assert str(e) == "Could not parse 'resource'. The syntax is 'syntax' (ex)."
 
     def test_subclass_notfound(self):
         """Test creating a subclass not found error
 
         """
         e = rname.InvalidResourceName.subclass_notfound("inter")
-        self.assertEqual(str(e), "Parser not found for: inter.")
+        assert str(e) == "Parser not found for: inter."
 
         e = rname.InvalidResourceName.subclass_notfound("inter", "resource")
-        self.assertEqual(
-            str(e), "Could not parse 'resource'. Parser not found for: inter."
-        )
+        assert str(e) == "Could not parse 'resource'. Parser not found for: inter."
 
     def test_rc_notfound(self):
         """Test creating a resource not found error.
 
         """
         e = rname.InvalidResourceName.rc_notfound("inter")
-        self.assertEqual(
-            str(e), "Resource class for inter not provided and default not found."
-        )
+        assert str(e) == "Resource class for inter not provided and default not found."
 
         e = rname.InvalidResourceName.rc_notfound("inter", "resource")
-        self.assertEqual(
-            str(e),
-            (
-                "Could not parse 'resource'. "
-                "Resource class for inter not provided and default not found."
-            ),
+        assert str(e) == (
+            "Could not parse 'resource'. "
+            "Resource class for inter not provided and default not found."
         )
 
 
@@ -67,15 +60,15 @@ class TestRegisteringSubclass(BaseTestCase):
         """Test we reject class for existing interface_type and resource class.
 
         """
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError) as e:
             rname.register_subclass(rname.GPIBInstr)
-        self.assertIn("Class already registered for", e.exception.args[0])
+        assert "Class already registered for" in e.exconly()
 
     def test_handling_duplicate_default(self):
         """Test we enforce the unicity of default resource class per interface.
 
         """
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError) as e:
 
             @dataclass
             class R(rname.ResourceName):
@@ -84,7 +77,7 @@ class TestRegisteringSubclass(BaseTestCase):
                 is_rc_optional: ClassVar[bool] = True
 
             rname.register_subclass(R)
-        self.assertIn("Default already specified for", e.exception.args[0])
+        assert "Default already specified for" in e.exconly()
 
 
 class TestResourceName(BaseTestCase):
@@ -100,75 +93,75 @@ class TestResourceName(BaseTestCase):
 
         """
         # No interface class registered
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_string("RJ45::1")
-        self.assertIn("unknown interface type", e.exception.args[0])
+        assert "unknown interface type" in e.exconly()
 
         # No default resource class registered
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_string("PXI::1")
-        self.assertIn("not provided and default not found", e.exception.args[0])
+        assert "not provided and default not found" in e.exconly()
 
         # No resource class registered, this cannot really happen...
         try:
             rname._RESOURCE_CLASSES["GPIB"].add("RAW")
-            with self.assertRaises(rname.InvalidResourceName) as e:
+            with pytest.raises(rname.InvalidResourceName) as e:
                 rname.ResourceName.from_string("GPIB::1::RAW")
-            self.assertIn("Parser not found for:", e.exception.args[0])
+            assert "Parser not found for:" in e.exconly()
         finally:
             rname._RESOURCE_CLASSES["GPIB"].remove("RAW")
 
         # Test handling less than required parts
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_string("GPIB::INSTR")
-        self.assertIn("not enough parts", e.exception.args[0])
+        assert "not enough parts" in e.exconly()
 
         # Test handling more than possible parts
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_string("GPIB1::1::1::1::INSTR")
-        self.assertIn("too many parts", e.exception.args[0])
+        assert "too many parts" in e.exconly()
 
         # Test handling missing mandatory part
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_string("GPIB::::INSTR")
-        self.assertIn("The syntax is", e.exception.args[0])
+        assert "The syntax is" in e.exconly()
 
         # Test handling no part situation
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_string("ASRL")
-        self.assertIn("The syntax is", e.exception.args[0])
+        assert "The syntax is" in e.exconly()
 
     def test_creation_from_kwargs(self):
         """Test error handling when creating a name from a kwargs.
 
         """
         # No interface class registered
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_kwargs(interface_type="RJ45")
-        self.assertIn("Unknown interface type:", e.exception.args[0])
+        assert "Unknown interface type:" in e.exconly()
 
         # No default resource class registered
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_kwargs(interface_type="PXI", chassis_number="1")
-        self.assertIn("not provided and default not found", e.exception.args[0])
+        assert "not provided and default not found" in e.exconly()
 
         # No resource class registered
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_kwargs(
                 interface_type="GPIB", address=1, resource_class="RAW"
             )
-        self.assertIn("Parser not found for:", e.exception.args[0])
+        assert "Parser not found for:" in e.exconly()
 
         # Test bad resource from kwargs
-        with self.assertRaises(rname.InvalidResourceName) as e:
+        with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_kwargs(
                 interface_type="GPIB", resource_class="INSTR"
             )
-        self.assertIn("required parameter", e.exception.args[0])
+        assert "required parameter" in e.exconly()
 
         # Test assembling from kwargs
         rn = rname.ResourceName.from_kwargs(interface_type="GPIB", primary_address="1")
-        self.assertEqual(str(rn), rname.to_canonical_name("GPIB::1"))
+        assert str(rn) == rname.to_canonical_name("GPIB::1")
 
     def test_accessing_interface_type(self):
         """Test converting the interface to a VISA constant
@@ -181,11 +174,11 @@ class TestResourceName(BaseTestCase):
         ):
             rn = rname.ResourceName()
             rn.interface_type = it
-            self.assertEqual(rn.interface_type_const, itc)
+            assert rn.interface_type_const == itc
 
         rn = rname.ResourceName()
         rn.interface_type = "none"
-        self.assertEqual(rn.interface_type_const, constants.InterfaceType.unknown)
+        assert rn.interface_type_const == constants.InterfaceType.unknown
 
 
 class TestParsers(BaseTestCase):
@@ -195,7 +188,7 @@ class TestParsers(BaseTestCase):
             (k, getattr(p, k)) for k in p._fields + ("interface_type", "resource_class")
         )
         r["canonical_resource_name"] = rname.assemble_canonical_name(**r)
-        self.assertEqual(r, kwargs, rn)
+        assert r == kwargs, rn
 
     # @unittest.expectedFailure
     # def test_asrl_ethernet(self):
@@ -479,7 +472,7 @@ class TestFilters(BaseTestCase):
 
     def _test_filter(self, expr, *correct):
         ok = tuple(self.run_list[n] for n in correct)
-        self.assertEqual(rname.filter(self.run_list, expr), ok)
+        assert rname.filter(self.run_list, expr) == ok
 
     def _test_filter2(self, expr, *correct):
         class MockedResource(object):
@@ -494,19 +487,20 @@ class TestFilters(BaseTestCase):
 
         ok = tuple(self.run_list[n] for n in correct)
         filtered = rname.filter2(self.run_list, expr, lambda x: MockedResource())
-        self.assertSequenceEqual(filtered, ok)
+        assert filtered == ok
 
-    def test_filter(self):
+    def test_filter(self, caplog):
         self._test_filter("?*::INSTR", 0, 1, 2, 4, 5, 7, 8, 9, 14)
         self._test_filter("GPIB?+INSTR", 0, 7)
         self._test_filter("GPIB[0-8]*::?*INSTR", 0)
         self._test_filter("GPIB[^0]::?*INSTR", 7)
         self._test_filter("ASRL1+::INSTR", 2, 8)
         self._test_filter("(GPIB|VXI)?*INSTR", 0, 7, 14)
-        with self.assertLogs() as cm:
+        with caplog.at_level(logging.DEBUG):
             self._test_filter("?*{}", *tuple(range(len(self.run_list))))
-        self.assertIn(
-            "optional part of the query expression not supported.", cm.output[0]
+        assert (
+            "optional part of the query expression not supported."
+            in caplog.records[0].message
         )
         # Not sure why this is needed
         self._test_handler = None
@@ -535,11 +529,11 @@ class TestFilters(BaseTestCase):
         self._test_filter2("?*{VI_ATTR_MAINFRAME_LA == 1 && VI_test == 1}", 13, 14)
 
     def test_bad_filter(self):
-        with self.assertRaises(errors.VisaIOError) as e:
+        with pytest.raises(errors.VisaIOError) as e:
             rname.filter([], "?*(")
-        self.assertIn("VI_ERROR_INV_EXPR", e.exception.args[0])
+        assert "VI_ERROR_INV_EXPR" in e.exconly()
 
     def test_bad_filter2(self):
-        with self.assertRaises(errors.VisaIOError) as e:
+        with pytest.raises(errors.VisaIOError) as e:
             rname.filter2([], "?*{", lambda x: None)
-        self.assertIn("VI_ERROR_INV_EXPR", e.exception.args[0])
+        assert "VI_ERROR_INV_EXPR" in e.exconly()

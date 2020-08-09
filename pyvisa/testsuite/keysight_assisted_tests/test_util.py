@@ -16,4 +16,4 @@ class TestSystemDetailsAnalysis(BaseTestCase):
 
         """
         details = util.get_system_details(True)
-        self.assertTrue(details["backends"])
+        assert details["backends"]

@@ -16,12 +16,15 @@ coverage.process_startup()
 See https://coverage.readthedocs.io/en/v4.5.x/subprocess.html for details.
 
 """
+import functools
 import os
-import unittest
+import types
 
-require_virtual_instr = unittest.skipUnless(
-    "PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ,
-    "Requires the Keysight virtual instrument. Run on PyVISA " "buildbot.",
+import pytest
+
+require_virtual_instr = pytest.mark.skipif(
+    "PYVISA_KEYSIGHT_VIRTUAL_INSTR" not in os.environ,
+    reason="Requires the Keysight virtual instrument. Run on PyVISA " "buildbot.",
 )
 
 
@@ -35,3 +38,18 @@ RESOURCE_ADDRESSES = {
 ALIASES = {
     "TCPIP::127.0.0.1::INSTR": "tcpip",
 }
+
+
+# Even a deepcopy is not a true copy of a function.
+def copy_func(f):
+    """Based on http://stackoverflow.com/a/6528148/190597 (Glenn Maynard)"""
+    g = types.FunctionType(
+        f.__code__,
+        f.__globals__,
+        name=f.__name__,
+        argdefs=f.__defaults__,
+        closure=f.__closure__,
+    )
+    g = functools.update_wrapper(g, f)
+    g.__kwdefaults__ = f.__kwdefaults__
+    return g

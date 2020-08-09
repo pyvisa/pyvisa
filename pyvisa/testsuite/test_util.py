@@ -4,15 +4,16 @@
 """
 import array
 import contextlib
+import logging
 import os
 import subprocess
 import sys
 import tempfile
-import unittest
 from configparser import ConfigParser
 from functools import partial
 from io import StringIO
-from unittest.mock import MagicMock
+
+import pytest
 
 from pyvisa import highlevel, util
 from pyvisa.ctwrapper import IVIVisaLibrary
@@ -29,7 +30,7 @@ class TestConfigFile(BaseTestCase):
 
     """
 
-    def setUp(self):
+    def setup_method(self):
         # Skip if a real config file exists
         if any(
             os.path.isfile(p)
@@ -48,21 +49,12 @@ class TestConfigFile(BaseTestCase):
         sys.prefix = self.temp_dir.name
         self._platform = sys.platform
         self._version_info = sys.version_info
-        self._add_dll = (
-            os.add_dll_directory
-            if sys.version_info >= (3, 8) and self._platform == "win32"
-            else None
-        )
 
-    def tearDown(self):
+    def teardown_method(self):
         self.temp_dir.cleanup()
         sys.prefix = self._prefix
         sys.platform = self._platform
         sys.version_info = self._version_info
-        if self._add_dll:
-            os.add_dll_directory = self._add_dll
-        elif hasattr(os, "add_dll_directory"):
-            del os.add_dll_directory
 
     def test_reading_config_file(self):
         config = ConfigParser()
@@ -70,100 +62,98 @@ class TestConfigFile(BaseTestCase):
         config["Paths"]["visa library"] = "test"
         with open(self.config_path, "w") as f:
             config.write(f)
-        self.assertEqual(util.read_user_library_path(), "test")
+        assert util.read_user_library_path() == "test"
 
-    def test_no_section(self):
+    def test_no_section(self, caplog):
         config = ConfigParser()
         with open(self.config_path, "w") as f:
             config.write(f)
-        with self.assertLogs(level="DEBUG") as cm:
-            self.assertIsNone(util.read_user_library_path())
-        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+        with caplog.at_level(level=logging.DEBUG):
+            assert util.read_user_library_path() is None
+        assert "NoOptionError or NoSectionError" in caplog.records[1].message
 
-    def test_no_key(self):
+    def test_no_key(self, caplog):
         config = ConfigParser()
         config["Paths"] = {}
         with open(self.config_path, "w") as f:
             config.write(f)
-        with self.assertLogs(level="DEBUG") as cm:
-            self.assertIsNone(util.read_user_library_path())
-        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+        with caplog.at_level(level=logging.DEBUG):
+            assert util.read_user_library_path() is None
+        assert "NoOptionError or NoSectionError" in caplog.records[1].message
 
-    def test_no_config_file(self):
-        with self.assertLogs(level="DEBUG") as cm:
-            self.assertIsNone(util.read_user_library_path())
-        self.assertIn("No user defined", cm.output[0])
+    def test_no_config_file(self, caplog):
+        with caplog.at_level(level=logging.DEBUG):
+            assert util.read_user_library_path() is None
+        assert "No user defined" in caplog.records[0].message
 
     # --- Test reading dll_extra_paths.
 
-    def mock_add_dll(self):
-        """os.add_dll_directory() exists only on windows, mock it on other platform.
-
-        The teardown takes care of restoring the proper value.
-
-        """
-        mock = MagicMock()
-        mock.__str__.return_value = ""
-        os.add_dll_directory = mock
-
-    def test_reading_config_file_not_windows(self):
+    def test_reading_config_file_not_windows(self, caplog):
         sys.platform = "darwin"
         sys.version_info = (3, 8, 1)
-        with self.assertLogs(level="DEBUG") as cm:
-            self.assertIsNone(util.add_user_dll_extra_paths())
-        self.assertIn("Not loading dll_extra_paths", cm.output[0])
+        with caplog.at_level(level=logging.DEBUG):
+            assert util.add_user_dll_extra_paths() is None
+        assert "Not loading dll_extra_paths" in caplog.records[0].message
 
-    def test_reading_config_file_old_python(self):
+    def test_reading_config_file_old_python(self, caplog):
         sys.platform = "win32"
         sys.version_info = (3, 7, 1)
-        with self.assertLogs(level="DEBUG") as cm:
-            self.assertIsNone(util.add_user_dll_extra_paths())
-        self.assertIn("Not loading dll_extra_paths", cm.output[0])
+        with caplog.at_level(level=logging.DEBUG):
+            assert util.add_user_dll_extra_paths() is None
+        assert "Not loading dll_extra_paths" in caplog.records[0].message
 
-    def test_reading_config_file_for_dll_extra_paths(self):
+    def test_reading_config_file_for_dll_extra_paths(self, monkeypatch):
         sys.platform = "win32"
         sys.version_info = (3, 8, 1)
-        self.mock_add_dll()
+        monkeypatch.setattr(
+            os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
+        )
         config = ConfigParser()
         config["Paths"] = {}
         config["Paths"]["dll_extra_paths"] = r"C:\Program Files;C:\Program Files (x86)"
         with open(self.config_path, "w") as f:
             config.write(f)
-        self.assertEqual(
-            util.add_user_dll_extra_paths(),
-            [r"C:\Program Files", r"C:\Program Files (x86)"],
-        )
+        assert util.add_user_dll_extra_paths() == [
+            r"C:\Program Files",
+            r"C:\Program Files (x86)",
+        ]
 
-    def test_no_section_for_dll_extra_paths(self):
+    def test_no_section_for_dll_extra_paths(self, monkeypatch, caplog):
         sys.platform = "win32"
         sys.version_info = (3, 8, 1)
-        self.mock_add_dll()
+        monkeypatch.setattr(
+            os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
+        )
         config = ConfigParser()
         with open(self.config_path, "w") as f:
             config.write(f)
-        with self.assertLogs(level="DEBUG") as cm:
-            self.assertIsNone(util.add_user_dll_extra_paths())
-        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+        with caplog.at_level(level=logging.DEBUG):
+            assert util.add_user_dll_extra_paths() is None
+        assert "NoOptionError or NoSectionError" in caplog.records[1].message
 
-    def test_no_key_for_dll_extra_paths(self):
+    def test_no_key_for_dll_extra_paths(self, monkeypatch, caplog):
         sys.platform = "win32"
         sys.version_info = (3, 8, 1)
-        self.mock_add_dll()
+        monkeypatch.setattr(
+            os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
+        )
         config = ConfigParser()
         config["Paths"] = {}
         with open(self.config_path, "w") as f:
             config.write(f)
-        with self.assertLogs(level="DEBUG") as cm:
-            self.assertIsNone(util.add_user_dll_extra_paths())
-        self.assertIn("NoOptionError or NoSectionError", cm.output[1])
+        with caplog.at_level(level=logging.DEBUG):
+            assert util.add_user_dll_extra_paths() is None
+        assert "NoOptionError or NoSectionError" in caplog.records[1].message
 
-    def test_no_config_file_for_dll_extra_paths(self):
+    def test_no_config_file_for_dll_extra_paths(self, monkeypatch, caplog):
         sys.platform = "win32"
         sys.version_info = (3, 8, 1)
-        self.mock_add_dll()
-        with self.assertLogs(level="DEBUG") as cm:
-            self.assertIsNone(util.add_user_dll_extra_paths())
-        self.assertIn("No user defined", cm.output[0])
+        monkeypatch.setattr(
+            os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
+        )
+        with caplog.at_level(level=logging.DEBUG):
+            assert util.add_user_dll_extra_paths() is None
+        assert "No user defined" in caplog.records[0].message
 
 
 class TestParser(BaseTestCase):
@@ -193,12 +183,12 @@ class TestParser(BaseTestCase):
         # Test handling indefinite length block
         p = util.from_ieee_block(s, datatype="f", is_big_endian=False)
         for a, b in zip(p, e):
-            self.assertAlmostEqual(a, b)
+            assert a == pytest.approx(b)
 
         # Test handling definite length block
         p = util.from_ieee_block(b"#214" + s[2:], datatype="f", is_big_endian=False)
         for a, b in zip(p, e):
-            self.assertAlmostEqual(a, b)
+            assert a == pytest.approx(b)
 
         p = util.from_hp_block(
             b"#A\x0e\x00" + s[2:],
@@ -207,7 +197,7 @@ class TestParser(BaseTestCase):
             container=partial(array.array, "f"),
         )
         for a, b in zip(p, e):
-            self.assertAlmostEqual(a, b)
+            assert a == pytest.approx(b)
 
     def test_integer_ascii_block(self):
         values = list(range(99))
@@ -229,12 +219,12 @@ class TestParser(BaseTestCase):
             self.round_trip_block_conversion(values, tb, fb, msg)
 
     def test_invalid_string_converter(self):
-        with self.assertRaises(ValueError) as ex:
+        with pytest.raises(ValueError) as ex:
             util.to_ascii_block([1, 2], "m")
-        self.assertIn("unsupported format character", ex.exception.args[0])
-        with self.assertRaises(ValueError) as ex:
+        assert "unsupported format character" in ex.exconly()
+        with pytest.raises(ValueError) as ex:
             util.from_ascii_block("1,2,3", "m")
-        self.assertIn("Invalid code for converter", ex.exception.args[0])
+        assert "Invalid code for converter" in ex.exconly()
 
     def test_function_separator(self):
         values = list(range(99))
@@ -294,10 +284,10 @@ class TestParser(BaseTestCase):
         ):
             block = tb(values, "h", False)
             bad_block = block[1:]
-            with self.assertRaises(ValueError) as e:
+            with pytest.raises(ValueError) as e:
                 fb(bad_block, "h", False, list)
 
-            self.assertIn("(#", e.exception.args[0])
+            assert "(#" in e.exconly()
 
     def test_weird_binary_block_header(self):
         values = list(range(100))
@@ -311,7 +301,7 @@ class TestParser(BaseTestCase):
             if header == "hp":
                 index = bad_block.find(b"#")
                 bad_block = bad_block[:index] + b"#A" + bad_block[index + 2 :]
-            with self.assertWarns(UserWarning):
+            with pytest.warns(UserWarning):
                 fb(bad_block, "h", False, list)
 
     def test_weird_binary_block_header_raise(self):
@@ -332,7 +322,7 @@ class TestParser(BaseTestCase):
                 else partial(util.parse_hp_block_header, is_big_endian=False)
             )
 
-            with self.assertRaises(RuntimeError):
+            with pytest.raises(RuntimeError):
                 parse(bad_block, raise_on_late_block=True)
 
             parse(bad_block, length_before_block=1000)
@@ -354,10 +344,10 @@ class TestParser(BaseTestCase):
                 )
             else:
                 block = block[:2] + b"\xff\xff\xff\xff" + block[2 + 4 :]
-            with self.assertRaises(ValueError) as e:
+            with pytest.raises(ValueError) as e:
                 fb(block, "h", False, list)
 
-            self.assertIn("Binary data is incomplete", e.exception.args[0])
+            assert "Binary data is incomplete" in e.exconly()
 
     def test_guessing_block_length(self):
         values = list(range(99))
@@ -372,7 +362,7 @@ class TestParser(BaseTestCase):
                 block = block[:2] + b"0" * header_length + block[2 + header_length :]
             else:
                 block = block[:2] + b"\x00\x00\x00\x00" + block[2 + 4 :]
-            self.assertListEqual(fb(block, "h", False, list), values)
+            assert fb(block, "h", False, list) == values
 
     def test_handling_malformed_binary(self):
         containers = (list, tuple) + ((np.array, np.ndarray) if np else ())
@@ -384,11 +374,10 @@ class TestParser(BaseTestCase):
                 return 10
 
         for container in containers:
-            with self.assertRaises(ValueError) as e:
+            with pytest.raises(ValueError) as e:
                 util.from_binary_block(DumbBytes(b"\x00\x00\x00"), container=container)
-            self.assertIn(
-                "malformed" if container in (list, tuple) else "buffer",
-                e.exception.args[0],
+            assert (
+                "malformed" if container in (list, tuple) else "buffer" in e.exconly()
             )
 
     def round_trip_block_conversion(self, values, to_block, from_block, msg):
@@ -409,7 +398,7 @@ class TestParser(BaseTestCase):
             if np and cont in (np.array,):
                 np.testing.assert_array_equal(conv, parsed, msg)
             else:
-                self.assertEqual(conv, parsed, msg)
+                assert conv == parsed, msg
 
 
 class TestSystemDetailsAnalysis(BaseTestCase):
@@ -417,10 +406,10 @@ class TestSystemDetailsAnalysis(BaseTestCase):
 
     """
 
-    def setUp(self):
+    def setup_method(self):
         self._unicode_size = sys.maxunicode
 
-    def tearDown(self):
+    def teardown_method(self):
         sys.maxunicode = self._unicode_size
 
     def test_getting_system_details(self):
@@ -431,22 +420,22 @@ class TestSystemDetailsAnalysis(BaseTestCase):
             details = util.get_system_details(True)
         finally:
             sys.path.remove(path)
-        self.assertTrue(details["backends"])
-        self.assertEqual(details["unicode"], "UCS2")
+        assert details["backends"]
+        assert details["unicode"] == "UCS2"
 
         sys.maxunicode = 1114111
         details = util.get_system_details(False)
-        self.assertFalse(details["backends"])
-        self.assertEqual(details["unicode"], "UCS4")
+        assert not details["backends"]
+        assert details["unicode"] == "UCS4"
 
     def test_get_debug_info(self):
         details = util.system_details_to_str(util.get_system_details())
-        self.assertSequenceEqual(util.get_debug_info(False), details)
+        assert util.get_debug_info(False) == details
         temp_stdout = StringIO()
         with contextlib.redirect_stdout(temp_stdout):
             util.get_debug_info()
         output = temp_stdout.getvalue()
-        self.assertSequenceEqual(output.strip(), details.strip())
+        assert output.strip() == details.strip()
 
     def test_system_details_for_plugins(self):
         """Test reporting on plugins.
@@ -492,10 +481,10 @@ class TestSystemDetailsAnalysis(BaseTestCase):
             highlevel.list_backends = old_lb
             highlevel.get_wrapper_class = old_gwc
 
-        self.assertIn("Could not instantiate", details["backends"]["test3"][0])
-        self.assertIn("Could not obtain", details["backends"]["test2"][0])
-        self.assertIn("Version", details["backends"]["test1"])
-        self.assertIn("", details["backends"]["test4"])
+        assert "Could not instantiate" in details["backends"]["test3"][0]
+        assert "Could not obtain" in details["backends"]["test2"][0]
+        assert "Version" in details["backends"]["test1"]
+        assert "" in details["backends"]["test4"]
 
         # Test converting the details to string
         util.system_details_to_str(details)
@@ -515,20 +504,20 @@ class TestLibraryAnalysis(BaseTestCase):
             arch = util.get_shared_library_arch(
                 os.path.join(dirname, "fakelib_good%s.dll" % f)
             )
-            self.assertEqual(arch, a)
+            assert arch == a
 
         arch = util.get_shared_library_arch(
             os.path.join(dirname, "fakelib_good_unknown.dll")
         )
-        self.assertEqual(arch, "UNKNOWN")
+        assert arch == "UNKNOWN"
 
-        with self.assertRaises(Exception) as e:
+        with pytest.raises(Exception) as e:
             util.get_shared_library_arch(os.path.join(dirname, "fakelib_bad_magic.dll"))
-        self.assertIn("Not an executable", e.exception.args[0])
+        assert "Not an executable" in e.exconly()
 
-        with self.assertRaises(Exception) as e:
+        with pytest.raises(Exception) as e:
             util.get_shared_library_arch(os.path.join(dirname, "fakelib_not_pe.dll"))
-        self.assertIn("Not a PE executable", e.exception.args[0])
+        assert "Not a PE executable" in e.exconly()
 
     def test_get_arch_windows(self):
         """Test identifying the computer architecture on windows.
@@ -545,19 +534,19 @@ class TestLibraryAnalysis(BaseTestCase):
                 print(f, a)
                 path = os.path.join(dirname, "fakelib_good%s.dll" % f)
                 lib = util.LibraryPath(path)
-                self.assertEqual(lib.arch, a)
+                assert lib.arch == a
                 if f != "_unknown":
-                    self.assertTrue(lib.is_32bit if 32 in a else not lib.is_32bit)
-                    self.assertTrue(lib.is_64bit if 64 in a else not lib.is_64bit)
-                    self.assertEqual(lib.bitness, ", ".join(str(b) for b in a))
+                    assert lib.is_32bit if 32 in a else not lib.is_32bit
+                    assert lib.is_64bit if 64 in a else not lib.is_64bit
+                    assert lib.bitness == ", ".join(str(b) for b in a)
                 else:
-                    self.assertEqual(lib.is_32bit, "n/a")
-                    self.assertTrue(lib.is_64bit, "n/a")
-                    self.assertEqual(lib.bitness, "n/a")
+                    assert lib.is_32bit == "n/a"
+                    assert lib.is_64bit == "n/a"
+                    assert lib.bitness == "n/a"
         finally:
             sys.platform = platform
 
-    @unittest.skipUnless(sys.version_info >= (3, 7), "Fails weirdly on Python 3.6")
+    @pytest.mark.skipif(sys.version_info < (3, 7), reason="Fails weirdly on Python 3.6")
     def test_get_arch_unix(self):
         """Test identifying the computer architecture on linux and Mac.
 
@@ -582,10 +571,10 @@ class TestLibraryAnalysis(BaseTestCase):
             ]:
                 sys.platform = p
                 lib = util.LibraryPath(f)
-                self.assertEqual(lib.arch, a)
-                self.assertTrue(lib.is_32bit if 32 in a else not lib.is_32bit)
-                self.assertTrue(lib.is_64bit if 64 in a else not lib.is_64bit)
-                self.assertEqual(lib.bitness, ", ".join(str(b) for b in a))
+                assert lib.arch == a
+                assert lib.is_32bit if 32 in a else not lib.is_32bit
+                assert lib.is_64bit if 64 in a else not lib.is_64bit
+                assert lib.bitness == ", ".join(str(b) for b in a)
 
         finally:
             sys.platform = platform
@@ -600,10 +589,10 @@ class TestLibraryAnalysis(BaseTestCase):
         try:
             sys.platform = "darwin"
             lib = util.LibraryPath("")
-            self.assertEqual(lib.arch, ())
-            self.assertEqual(lib.is_32bit, "n/a")
-            self.assertTrue(lib.is_64bit, "n/a")
-            self.assertEqual(lib.bitness, "n/a")
+            assert lib.arch == ()
+            assert lib.is_32bit == "n/a"
+            assert lib.is_64bit == "n/a"
+            assert lib.bitness == "n/a"
         finally:
             sys.platform = platform
             subprocess.run = run
@@ -617,10 +606,10 @@ class TestLibraryAnalysis(BaseTestCase):
         try:
             sys.platform = "test"
             lib = util.LibraryPath("")
-            self.assertEqual(lib.arch, ())
-            self.assertEqual(lib.is_32bit, "n/a")
-            self.assertTrue(lib.is_64bit, "n/a")
-            self.assertEqual(lib.bitness, "n/a")
+            assert lib.arch == ()
+            assert lib.is_32bit == "n/a"
+            assert lib.is_64bit == "n/a"
+            assert lib.bitness == "n/a"
         finally:
             sys.platform = platform
             subprocess.run = run

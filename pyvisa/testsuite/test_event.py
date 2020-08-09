@@ -9,7 +9,9 @@ This file is part of PyVISA.
 """
 import logging
 
-from pyvisa import constants, errors, logger
+import pytest
+
+from pyvisa import constants, errors
 from pyvisa.events import Event
 
 from . import BaseTestCase
@@ -20,39 +22,41 @@ class TestEvent(BaseTestCase):
 
     """
 
-    def setUp(self):
+    def setup_method(self):
         self.old = Event._event_classes.copy()
 
-    def tearDown(self):
+    def teardown_method(self):
         Event._event_classes = self.old
 
     def test_register(self):
 
-        self.assertIs(Event._event_classes[constants.EventType.clear], Event)
+        assert Event._event_classes[constants.EventType.clear] is Event
 
-    def test_double_register_event_cls(self):
+    def test_double_register_event_cls(self, caplog):
         class SubEvent(Event):
             pass
 
-        with self.assertLogs(level=logging.DEBUG, logger=logger):
+        with caplog.at_level(logging.DEBUG, logger="pyvisa"):
             Event.register(constants.EventType.clear)(SubEvent)
 
-        self.assertIs(Event._event_classes[constants.EventType.clear], SubEvent)
+        assert caplog.records
+
+        assert Event._event_classes[constants.EventType.clear] is SubEvent
 
     def test_register_event_cls_missing_attr(self):
         class SubEvent(Event):
             pass
 
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             Event.register(constants.EventType.exception)(SubEvent)
 
-        self.assertIsNot(Event._event_classes[constants.EventType.exception], SubEvent)
+        assert Event._event_classes[constants.EventType.exception] is not SubEvent
 
     def test_event_context(self):
 
         event = Event(None, constants.EventType.clear, 1)
-        self.assertEqual(event.context, 1)
+        assert event.context == 1
 
         event.close()
-        with self.assertRaises(errors.InvalidSession):
+        with pytest.raises(errors.InvalidSession):
             event.context

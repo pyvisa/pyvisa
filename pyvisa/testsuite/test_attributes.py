@@ -4,6 +4,8 @@
 """
 import enum
 
+import pytest
+
 from pyvisa import constants
 from pyvisa.attributes import (
     Attribute,
@@ -63,11 +65,11 @@ class TestAttributeClasses(BaseTestCase):
         """Test the in_resource class method.
 
         """
-        self.assertTrue(AttrVI_ATTR_INTF_INST_NAME.in_resource(object()))
-        self.assertTrue(
-            AttrVI_ATTR_ASRL_BAUD.in_resource((constants.InterfaceType.asrl, "INSTR"))
+        assert AttrVI_ATTR_INTF_INST_NAME.in_resource(object())
+        assert AttrVI_ATTR_ASRL_BAUD.in_resource(
+            (constants.InterfaceType.asrl, "INSTR")
         )
-        self.assertFalse(AttrVI_ATTR_ASRL_BAUD.in_resource(object()))
+        assert not AttrVI_ATTR_ASRL_BAUD.in_resource(object())
 
     def test_Attribute(self):
         """Test the base class Attribute.
@@ -75,27 +77,27 @@ class TestAttributeClasses(BaseTestCase):
         """
         rc = create_resource_cls("attr_id", Attribute)
         r = rc("attr_id", 1)
-        self.assertEqual(r.attr, 1)
+        assert r.attr == 1
         r.attr = 2
-        self.assertEqual(r.attr, 2)
+        assert r.attr == 2
 
         # Check we do pass the write ID
         r.attr_id = "dummy"
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             r.attr
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             r.attr = 2
 
         # Un-readable attribute
         rc = create_resource_cls("attr_id", Attribute, read=False)
         r = rc("attr_id", 1)
-        with self.assertRaises(AttributeError):
+        with pytest.raises(AttributeError):
             r.attr
 
         # Un-writable attribute
         rc = create_resource_cls("attr_id", Attribute, write=False)
         r = rc("attr_id", 1)
-        with self.assertRaises(AttributeError):
+        with pytest.raises(AttributeError):
             r.attr = 1
 
     def test_BooleanAttribute(self):
@@ -104,10 +106,10 @@ class TestAttributeClasses(BaseTestCase):
         """
         rc = create_resource_cls("attr_id", BooleanAttribute)
         r = rc("attr_id", constants.VI_TRUE)
-        self.assertEqual(r.attr, True)
+        assert r.attr is True
         r.attr = False
-        self.assertEqual(r.attr, False)
-        self.assertEqual(r.attr_value, constants.VI_FALSE)
+        assert r.attr is False
+        assert r.attr_value == constants.VI_FALSE
 
     def test_CharAttribute(self):
         """Test CharAttribute.
@@ -115,10 +117,10 @@ class TestAttributeClasses(BaseTestCase):
         """
         rc = create_resource_cls("attr_id", CharAttribute)
         r = rc("attr_id", ord("\n"))
-        self.assertEqual(r.attr, "\n")
+        assert r.attr == "\n"
         r.attr = "\r"
-        self.assertEqual(r.attr, "\r")
-        self.assertEqual(r.attr_value, 13)
+        assert r.attr == "\r"
+        assert r.attr_value == 13
 
     def test_EnumAttribute(self):
         """Test EnumAttribute
@@ -132,15 +134,15 @@ class TestAttributeClasses(BaseTestCase):
 
         rc = create_resource_cls("attr_id", EnumAttribute, attrs={"enum_type": E})
         r = rc("attr_id", 1)
-        self.assertEqual(r.attr, E.a)
+        assert r.attr == E.a
         r.attr = E.b
-        self.assertEqual(r.attr, E.b)
-        self.assertEqual(r.attr_value, 2)
+        assert r.attr == E.b
+        assert r.attr_value == 2
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             r.attr = 3
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             r.attr = ""
 
     def test_IntAttribute(self):
@@ -149,7 +151,7 @@ class TestAttributeClasses(BaseTestCase):
         """
         rc = create_resource_cls("attr_id", IntAttribute)
         r = rc("attr_id", "1")
-        self.assertEqual(r.attr, 1)
+        assert r.attr == 1
 
     def test_RangeAttribute(self):
         """Test RangeAttribute
@@ -160,23 +162,23 @@ class TestAttributeClasses(BaseTestCase):
         )
         r = rc("attr_id", 1)
         r.attr = 0
-        self.assertEqual(r.attr_value, 0)
+        assert r.attr_value == 0
         r.attr = 2
-        self.assertEqual(r.attr_value, 2)
+        assert r.attr_value == 2
         r.attr = 1
-        self.assertEqual(r.attr_value, 1)
+        assert r.attr_value == 1
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             r.attr = -1
 
-        self.assertIn("invalid value", str(cm.exception))
-        self.assertNotIn(" or ", str(cm.exception))
+        assert "invalid value" in str(cm.exconly())
+        assert " or " not in str(cm.exconly())
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             r.attr = 3
 
-        self.assertIn("invalid value", str(cm.exception))
-        self.assertNotIn(" or ", str(cm.exception))
+        assert "invalid value" in str(cm.exconly())
+        assert " or " not in str(cm.exconly())
 
         rc = create_resource_cls(
             "attr_id",
@@ -185,13 +187,13 @@ class TestAttributeClasses(BaseTestCase):
         )
         r = rc("attr_id", 1)
         r.attr = 10
-        self.assertEqual(r.attr_value, 10)
+        assert r.attr_value == 10
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             r.attr = 3
 
-        self.assertIn("invalid value", str(cm.exception))
-        self.assertIn(" or ", str(cm.exception))
+        assert "invalid value" in str(cm.exconly())
+        assert " or " in str(cm.exconly())
 
     def test_ValuesAttribute(self):
         """Test ValuesAttribute
@@ -200,8 +202,8 @@ class TestAttributeClasses(BaseTestCase):
         rc = create_resource_cls("attr_id", ValuesAttribute, attrs={"values": [10, 20]})
         r = rc("attr_id", 1)
         r.attr = 10
-        self.assertEqual(r.attr_value, 10)
+        assert r.attr_value == 10
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             r.attr = 3
-        self.assertIn("invalid value", str(cm.exception))
+        assert "invalid value" in str(cm.exconly())

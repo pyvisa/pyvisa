@@ -11,3 +11,4 @@ In particular, it will explain in details how PyVISA manage backends.
 
     architecture
     backends
+    continuous_integration

@@ -3,9 +3,9 @@
 
 """
 import logging
-import os
-import unittest
 from logging.handlers import BufferingHandler
+
+import pytest
 
 from pyvisa import ResourceManager, logger
 
@@ -16,8 +16,9 @@ except ValueError:
 else:
     VISA_PRESENT = True
 
-require_visa_lib = unittest.skipUnless(
-    VISA_PRESENT, "Requires an installed VISA library. Run on PyVISA " "buildbot."
+require_visa_lib = pytest.mark.skipif(
+    not VISA_PRESENT,
+    reason="Requires an installed VISA library. Run on PyVISA buildbot.",
 )
 
 
@@ -40,47 +41,20 @@ class TestHandler(BufferingHandler):
         self.buffer.append(record.__dict__)
 
 
-class BaseTestCase(unittest.TestCase):
+class BaseTestCase:
 
     CHECK_NO_WARNING = True
 
-    def setUp(self):
+    def setup_method(self):
         self._test_handler = None
         if self.CHECK_NO_WARNING:
             self._test_handler = th = TestHandler()
             th.setLevel(logging.WARNING)
             logger.addHandler(th)
 
-    def tearDown(self):
+    def teardown_method(self):
         if self._test_handler is not None:
             buf = self._test_handler.buffer
             length = len(buf)
             msg = "\n".join(record.get("msg", str(record)) for record in buf)
-            self.assertEqual(length, 0, msg="%d warnings raised.\n%s" % (length, msg))
-
-
-def testsuite():
-    """A testsuite that has all the pyvisa tests.
-
-    """
-    return unittest.TestLoader().discover(os.path.dirname(__file__))
-
-
-def main():
-    """Runs the testsuite as command line application.
-
-    """
-    try:
-        unittest.main()
-    except Exception as e:
-        print("Error: %s" % e)
-
-
-def run():
-    """Run all tests.
-
-    :return: a :class:`unittest.TestResult` object
-
-    """
-    test_runner = unittest.TextTestRunner()
-    return test_runner.run(testsuite())
+            assert length == 0, "%d warnings raised.\n%s" % (length, msg)

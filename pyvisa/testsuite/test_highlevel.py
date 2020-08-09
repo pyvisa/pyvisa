@@ -6,6 +6,8 @@ import logging
 import os
 import sys
 
+import pytest
+
 from pyvisa import constants, highlevel, resources, rname
 from pyvisa.ctwrapper import IVIVisaLibrary
 
@@ -31,7 +33,7 @@ class TestHighlevel(BaseTestCase):
         for parsed, value in zip(
             info, (constants.InterfaceType.tcpip, 0, None, None, None)
         ):
-            self.assertEqual(parsed, value)
+            assert parsed == value
 
         info, ret_code = lib.parse_resource_extended(None, rsc_name)
         # interface_type interface_board_number resource_class resource_name alias
@@ -45,7 +47,7 @@ class TestHighlevel(BaseTestCase):
                 None,
             ),
         ):
-            self.assertEqual(parsed, value)
+            assert parsed == value
 
     def test_base_class_parse_resource_error(self):
         """Test errors in the base class implementation of parse_resource.
@@ -55,21 +57,21 @@ class TestHighlevel(BaseTestCase):
         rsc_name = "UNKNOWN::1::INSTR"
         info, ret_code = lib.parse_resource(None, rsc_name)
 
-        self.assertEqual(ret_code, constants.StatusCode.error_invalid_resource_name)
-        self.assertEqual(info[0], constants.InterfaceType.unknown)
+        assert ret_code == constants.StatusCode.error_invalid_resource_name
+        assert info[0] == constants.InterfaceType.unknown
 
-    def test_specifying_path_open_visa_library(self):
+    def test_specifying_path_open_visa_library(self, caplog):
         """Test handling a specified path in open_visa_library.
 
         """
-        with self.assertLogs(level=logging.DEBUG) as cm:
-            with self.assertRaises(Exception):
+        with caplog.at_level(logging.DEBUG):
+            with pytest.raises(Exception):
                 highlevel.open_visa_library("non/existent/file")
 
-        self.assertIn("Could not open VISA wrapper", cm.output[0])
-        self.assertIn("non/existent/file", cm.output[0])
+        assert "Could not open VISA wrapper" in caplog.records[0].message
+        assert "non/existent/file" in caplog.records[0].message
 
-    def test_handling_error_in_opening_library(self):
+    def test_handling_error_in_opening_library(self, caplog):
         """Test handling errors when trying to open a Visa library.
 
         """
@@ -85,16 +87,16 @@ class TestHighlevel(BaseTestCase):
                 else:
                     raise Exception("error")
 
-        with self.assertLogs(level=logging.DEBUG) as cml:
-            with self.assertRaises(OSError) as cm:
+        with caplog.at_level(logging.DEBUG):
+            with pytest.raises(OSError) as cm:
                 FakeLibrary()
 
-        self.assertIn("oserror", cml.output[0])
+        assert "oserror" in caplog.records[0].message
 
-        msg = str(cm.exception).split("\n")
-        self.assertEqual(len(msg), 3)
-        self.assertIn("oserror", msg[1])
-        self.assertIn("error", msg[2])
+        msg = str(cm.exconly()).split("\n")
+        assert len(msg) == 3
+        assert "oserror" in msg[1]
+        assert "error" in msg[2]
 
     def test_get_wrapper_class(self):
         """Test retrieving a wrapper class.
@@ -102,9 +104,9 @@ class TestHighlevel(BaseTestCase):
         """
         highlevel._WRAPPERS.clear()
 
-        with self.assertWarns(FutureWarning):
+        with pytest.warns(FutureWarning):
             highlevel.get_wrapper_class("ni")
-        self.assertIn("ivi", highlevel._WRAPPERS)
+        assert "ivi" in highlevel._WRAPPERS
 
         path = os.path.join(os.path.dirname(__file__), "fake-extensions")
         sys.path.append(path)
@@ -113,12 +115,12 @@ class TestHighlevel(BaseTestCase):
         finally:
             sys.path.remove(path)
 
-        self.assertIn("test", highlevel._WRAPPERS)
+        assert "test" in highlevel._WRAPPERS
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             highlevel.get_wrapper_class("dummy")
 
-    def test_get_default_wrapper(self):
+    def test_get_default_wrapper(self, caplog):
         """Test retrieving the default wrapper.
 
         """
@@ -142,36 +144,38 @@ class TestHighlevel(BaseTestCase):
             IVIVisaLibrary.get_library_paths = staticmethod(no_visa_found)
             highlevel.get_wrapper_class = no_py_wrapper_class
 
-            with self.assertRaises(ValueError) as exc:
-                with self.assertLogs(level=logging.DEBUG) as log:
+            with pytest.raises(ValueError) as exc:
+                with caplog.at_level(logging.DEBUG):
                     highlevel._get_default_wrapper()
 
-            self.assertIn("VISA implementation", exc.exception.args[0])
-            self.assertIn("IVI binary", log.output[0])
-            self.assertIn("find pyvisa-py", log.output[1])
+            assert "VISA implementation" in exc.exconly()
+            assert "IVI binary" in caplog.records[0].message
+            assert "find pyvisa-py" in caplog.records[1].message
 
+            caplog.clear()
             # Pyvisa-py found
             highlevel.get_wrapper_class = py_wrapper_class
 
-            with self.assertLogs(level=logging.DEBUG) as log:
-                self.assertEqual(highlevel._get_default_wrapper(), "py")
+            with caplog.at_level(logging.DEBUG):
+                assert highlevel._get_default_wrapper() == "py"
 
-            self.assertIn("IVI binary", log.output[0])
-            self.assertIn("pyvisa-py is available", log.output[1])
+            assert "IVI binary" in caplog.records[0].message
+            assert "pyvisa-py is available" in caplog.records[1].message
 
+            caplog.clear()
             # IVI visa found
             IVIVisaLibrary.get_library_paths = staticmethod(visa_found)
 
-            with self.assertLogs(level=logging.DEBUG) as log:
-                self.assertEqual(highlevel._get_default_wrapper(), "ivi")
+            with caplog.at_level(logging.DEBUG):
+                assert highlevel._get_default_wrapper() == "ivi"
 
-            self.assertIn("IVI implementation available", log.output[0])
+            assert "IVI implementation available" in caplog.records[0].message
 
         finally:
             IVIVisaLibrary.get_library_paths = old_lib
             highlevel.get_wrapper_class = no_py_wrapper_class = old_wrap
 
-    def test_register_resource_class(self):
+    def test_register_resource_class(self, caplog):
         """Test registering resource classes.
 
         """
@@ -181,15 +185,18 @@ class TestHighlevel(BaseTestCase):
             class SubTCPIP(resources.TCPIPInstrument):
                 pass
 
-            with self.assertLogs(level=logging.WARNING):
+            with caplog.at_level(logging.WARNING):
                 highlevel.ResourceManager.register_resource_class(
                     constants.InterfaceType.tcpip, "INSTR", SubTCPIP
                 )
-            self.assertIs(
+
+            assert caplog.records
+
+            assert (
                 highlevel.ResourceManager._resource_classes[
                     (constants.InterfaceType.tcpip, "INSTR")
-                ],
-                SubTCPIP,
+                ]
+                is SubTCPIP
             )
         finally:
             highlevel.ResourceManager._resource_classes = old
@@ -200,15 +207,15 @@ class TestHighlevel(BaseTestCase):
         """
         old = highlevel.ResourceManager._resource_classes.copy()
         try:
-            with self.assertRaises(TypeError):
+            with pytest.raises(TypeError):
                 highlevel.ResourceManager.register_resource_class(
                     constants.InterfaceType.tcpip, "INSTR", object
                 )
-            self.assertIsNot(
+            assert (
                 highlevel.ResourceManager._resource_classes[
                     (constants.InterfaceType.tcpip, "INSTR")
-                ],
-                object,
+                ]
+                is not object
             )
         finally:
             highlevel.ResourceManager._resource_classes = old
@@ -217,10 +224,10 @@ class TestHighlevel(BaseTestCase):
         """Test the base class implementation of get_library_paths.
 
         """
-        self.assertEqual((), highlevel.VisaLibraryBase.get_library_paths())
+        assert () == highlevel.VisaLibraryBase.get_library_paths()
 
     def test_base_get_debug_info(self):
         """Test the base class implementation of get_debug_info.
 
         """
-        self.assertEqual(len(highlevel.VisaLibraryBase.get_debug_info()), 1)
+        assert len(highlevel.VisaLibraryBase.get_debug_info()) == 1

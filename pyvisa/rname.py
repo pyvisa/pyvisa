@@ -784,7 +784,7 @@ class _AttrGetter:
 
 def filter2(
     resources: Iterable[str], query: str, open_resource: Callable[[str], "Resource"],
-) -> List[str]:
+) -> Tuple[str, ...]:
     """Filter a list of resources according to a query expression.
 
     It accepts the optional part of the expression.
@@ -817,7 +817,7 @@ def filter2(
     filtered = filter(resources, query)
 
     if not optional:
-        return list(filtered)
+        return tuple(filtered)
 
     optional = optional.replace("&&", "and").replace("||", "or").replace("!", "not ")
     optional = optional.replace("VI_", "res.VI_")
@@ -838,4 +838,4 @@ def filter2(
             except Exception:
                 logger.exception("Failed to evaluate %s on %s", optional, rn)
 
-    return selected
+    return tuple(selected)

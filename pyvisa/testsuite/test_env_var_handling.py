@@ -17,7 +17,7 @@ class TestEnvVarHandling(BaseTestCase):
             stdout, _ = p.communicate(
                 b"from pyvisa import ctwrapper;print(ctwrapper.WRAP_HANDLER);exit()"
             )
-        self.assertSequenceEqual(b"True", stdout.rstrip())
+        assert b"True" == stdout.rstrip()
 
         env = os.environ.copy()
         env["PYVISA_WRAP_HANDLER"] = "0"
@@ -25,4 +25,4 @@ class TestEnvVarHandling(BaseTestCase):
             stdout, _ = p.communicate(
                 b"from pyvisa import ctwrapper;print(ctwrapper.WRAP_HANDLER);exit()"
             )
-        self.assertSequenceEqual(b"False", stdout.rstrip())
+        assert b"False" == stdout.rstrip()

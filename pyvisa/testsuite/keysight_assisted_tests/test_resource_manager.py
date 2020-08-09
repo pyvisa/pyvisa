@@ -4,9 +4,11 @@
 """
 import gc
 import logging
-import unittest
+import re
 
-from pyvisa import InvalidSession, ResourceManager, VisaIOError, errors, logger
+import pytest
+
+from pyvisa import InvalidSession, ResourceManager, VisaIOError, errors
 from pyvisa.constants import AccessModes, InterfaceType, StatusCode
 from pyvisa.highlevel import VisaLibraryBase
 from pyvisa.rname import ResourceName
@@ -16,18 +18,18 @@ from . import RESOURCE_ADDRESSES, require_virtual_instr
 
 
 @require_virtual_instr
-class TestResourceManager(unittest.TestCase):
+class TestResourceManager:
     """Test the pyvisa ResourceManager.
 
     """
 
-    def setUp(self):
+    def setup_method(self):
         """Create a ResourceManager with the default backend library.
 
         """
         self.rm = ResourceManager()
 
-    def tearDown(self):
+    def teardown_method(self):
         """Close the ResourceManager.
 
         """
@@ -36,25 +38,27 @@ class TestResourceManager(unittest.TestCase):
             del self.rm
             gc.collect()
 
-    def test_lifecycle(self):
+    def test_lifecycle(self, caplog):
         """Test creation and closing of the resource manager.
 
         """
-        self.assertIsNotNone(self.rm.session)
-        self.assertIsNotNone(self.rm.visalib)
-        self.assertIs(self.rm, self.rm.visalib.resource_manager)
-        self.assertFalse(self.rm.list_opened_resources())
+        assert self.rm.session is not None
+        assert self.rm.visalib is not None
+        assert self.rm is self.rm.visalib.resource_manager
+        assert not self.rm.list_opened_resources()
 
-        self.assertIs(self.rm.visalib, ResourceManager(self.rm.visalib).visalib)
+        assert self.rm.visalib is ResourceManager(self.rm.visalib).visalib
 
-        with self.assertLogs(level=logging.DEBUG, logger=logger):
+        with caplog.at_level(level=logging.DEBUG, logger="pyvisa"):
             self.rm.close()
 
-        with self.assertRaises(InvalidSession):
-            self.rm.session
-        self.assertIsNone(self.rm.visalib.resource_manager)
+        assert caplog.records
 
-    def test_cleanup_on_del(self):
+        with pytest.raises(InvalidSession):
+            self.rm.session
+        assert self.rm.visalib.resource_manager is None
+
+    def test_cleanup_on_del(self, caplog):
         """Test that deleting the rm does clean the VISA session
 
         """
@@ -62,73 +66,63 @@ class TestResourceManager(unittest.TestCase):
         # seems wrong
         rm = self.rm
         self.rm = None
-        with self.assertLogs(level=logging.DEBUG, logger=logger) as log:
+        with caplog.at_level(logging.DEBUG, logger="pyvisa"):
             del rm
             gc.collect()
 
-        self.assertIn("Closing ResourceManager", log.output[0])
+        assert "Closing ResourceManager" in caplog.records[0].message
 
     def test_resource_manager_unicity(self):
         """Test the resource manager is unique per backend as expected.
 
         """
         new_rm = ResourceManager()
-        self.assertIs(self.rm, new_rm)
-        self.assertEqual(self.rm.session, new_rm.session)
+        assert self.rm is new_rm
+        assert self.rm.session == new_rm.session
 
     def test_str(self):
         """Test computing the string representation of the resource manager
 
         """
-        self.assertRegex(str(self.rm), r"Resource Manager of .*")
+        assert re.match(r"Resource Manager of .*", str(self.rm))
         self.rm.close()
-        self.assertRegex(str(self.rm), r"Resource Manager of .*")
+        assert re.match(r"Resource Manager of .*", str(self.rm))
 
     def test_repr(self):
         """Test computing the repr of the resource manager
 
         """
-        self.assertRegex(repr(self.rm), r"<ResourceManager\(<.*>\)>")
+        assert re.match(r"<ResourceManager\(<.*>\)>", repr(self.rm))
         self.rm.close()
-        self.assertRegex(repr(self.rm), r"<ResourceManager\(<.*>\)>")
+        assert re.match(r"<ResourceManager\(<.*>\)>", repr(self.rm))
 
     def test_last_status(self):
         """Test accessing the status of the last operation.
 
         """
-        self.assertEqual(self.rm.last_status, StatusCode.success)
+        assert self.rm.last_status == StatusCode.success
 
         # Access the generic last status through the visalib
-        self.assertEqual(self.rm.last_status, self.rm.visalib.last_status)
+        assert self.rm.last_status == self.rm.visalib.last_status
 
         # Test accessing the status for an invalid session
-        with self.assertRaises(errors.Error) as cm:
+        with pytest.raises(errors.Error) as cm:
             self.rm.visalib.get_last_status_in_session("_nonexisting_")
-        self.assertIn("The session", cm.exception.args[0])
+        assert "The session" in cm.exconly()
 
     def test_list_resource(self):
         """Test listing the available resources.
 
         """
         # Default settings
-        self.assertSequenceEqual(
-            sorted(self.rm.list_resources()),
-            sorted(
-                [
-                    str(ResourceName.from_string(v))
-                    for v in RESOURCE_ADDRESSES.values()
-                    if v.endswith("INSTR")
-                ]
-            ),
-        )
+        resources = self.rm.list_resources()
+        for v in (v for v in RESOURCE_ADDRESSES.values() if v.endswith("INSTR")):
+            assert str(ResourceName.from_string(v)) in resources
 
         # All resources
-        self.assertSequenceEqual(
-            sorted(self.rm.list_resources("?*")),
-            sorted(
-                [str(ResourceName.from_string(v)) for v in RESOURCE_ADDRESSES.values()]
-            ),
-        )
+        resources = self.rm.list_resources("?*")
+        for v in RESOURCE_ADDRESSES.values():
+            assert str(ResourceName.from_string(v)) in resources
 
     def test_accessing_resource_infos(self):
         """Test accessing resource infos.
@@ -139,18 +133,17 @@ class TestResourceManager(unittest.TestCase):
         rinfo = self.rm.resource_info(rname, extended=False)
 
         rname = ResourceName().from_string(rname)
-        self.assertEqual(
-            rinfo_ext.interface_type,
-            getattr(InterfaceType, rname.interface_type.lower()),
+        assert rinfo_ext.interface_type == getattr(
+            InterfaceType, rname.interface_type.lower()
         )
-        self.assertEqual(rinfo_ext.interface_board_number, int(rname.board))
-        self.assertEqual(rinfo_ext.resource_class, rname.resource_class)
-        self.assertEqual(rinfo_ext.resource_name, str(rname))
+        assert rinfo_ext.interface_board_number == int(rname.board)
+        assert rinfo_ext.resource_class == rname.resource_class
+        assert rinfo_ext.resource_name == str(rname)
 
-        self.assertEqual(
-            rinfo.interface_type, getattr(InterfaceType, rname.interface_type.lower())
+        assert rinfo.interface_type == getattr(
+            InterfaceType, rname.interface_type.lower()
         )
-        self.assertEqual(rinfo.interface_board_number, int(rname.board))
+        assert rinfo.interface_board_number == int(rname.board)
 
     def test_listing_resource_infos(self):
         """Test listing resource infos.
@@ -160,13 +153,12 @@ class TestResourceManager(unittest.TestCase):
 
         for rname, rinfo_ext in infos.items():
             rname = ResourceName().from_string(rname)
-            self.assertEqual(
-                rinfo_ext.interface_type,
-                getattr(InterfaceType, rname.interface_type.lower()),
+            assert rinfo_ext.interface_type == getattr(
+                InterfaceType, rname.interface_type.lower()
             )
-            self.assertEqual(rinfo_ext.interface_board_number, int(rname.board))
-            self.assertEqual(rinfo_ext.resource_class, rname.resource_class)
-            self.assertEqual(rinfo_ext.resource_name, str(rname))
+            assert rinfo_ext.interface_board_number == int(rname.board)
+            assert rinfo_ext.resource_class == rname.resource_class
+            assert rinfo_ext.resource_name == str(rname)
 
     def test_opening_resource(self):
         """Test opening and closing resources.
@@ -176,14 +168,14 @@ class TestResourceManager(unittest.TestCase):
         rsc = self.rm.open_resource(rname, timeout=1234)
 
         # Check the resource is listed as opened and the attributes are right.
-        self.assertIn(rsc, self.rm.list_opened_resources())
-        self.assertEqual(rsc.timeout, 1234)
+        assert rsc in self.rm.list_opened_resources()
+        assert rsc.timeout == 1234
 
         # Close the rm to check that we close all resources.
         self.rm.close()
 
-        self.assertFalse(self.rm.list_opened_resources())
-        with self.assertRaises(InvalidSession):
+        assert not self.rm.list_opened_resources()
+        with pytest.raises(InvalidSession):
             rsc.session
 
     def test_opening_resource_bad_open_timeout(self):
@@ -192,10 +184,10 @@ class TestResourceManager(unittest.TestCase):
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             self.rm.open_resource(rname, open_timeout="")
 
-        self.assertIn("integer (or compatible type)", str(cm.exception))
+        assert "integer (or compatible type)" in str(cm.exconly())
 
     def test_opening_resource_with_lock(self):
         """Test opening a locked resource
@@ -203,32 +195,32 @@ class TestResourceManager(unittest.TestCase):
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
         rsc = self.rm.open_resource(rname, access_mode=AccessModes.exclusive_lock)
-        self.assertEqual(len(self.rm.list_opened_resources()), 1)
+        assert len(self.rm.list_opened_resources()) == 1
 
         # Timeout when accessing a locked resource
-        with self.assertRaises(VisaIOError):
+        with pytest.raises(VisaIOError):
             self.rm.open_resource(rname, access_mode=AccessModes.exclusive_lock)
-        self.assertEqual(len(self.rm.list_opened_resources()), 1)
+        assert len(self.rm.list_opened_resources()) == 1
 
         # Success to access an unlocked resource.
         rsc.unlock()
         with self.rm.open_resource(
             rname, access_mode=AccessModes.exclusive_lock
         ) as rsc2:
-            self.assertNotEqual(rsc.session, rsc2.session)
-            self.assertEqual(len(self.rm.list_opened_resources()), 2)
+            assert rsc.session != rsc2.session
+            assert len(self.rm.list_opened_resources()) == 2
 
     def test_opening_resource_specific_class(self):
         """Test opening a resource requesting a specific class.
 
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.rm.open_resource(rname, resource_pyclass=object)
 
-        self.assertEqual(len(self.rm.list_opened_resources()), 0)
+        assert len(self.rm.list_opened_resources()) == 0
 
-    def test_open_resource_unknown_resource_type(self):
+    def test_open_resource_unknown_resource_type(self, caplog):
         """Test opening a resource for which no registered class exist.
 
         """
@@ -244,9 +236,11 @@ class TestResourceManager(unittest.TestCase):
 
         rm = ResourceManager()
         try:
-            with self.assertLogs(level=logging.DEBUG, logger=logger):
-                with self.assertRaises(RuntimeError):
+            caplog.clear()
+            with caplog.at_level(level=logging.DEBUG, logger="pyvisa"):
+                with pytest.raises(RuntimeError):
                     rm.open_resource("TCPIP::192.168.0.1::INSTR")
+            assert caplog.records
         finally:
             ResourceManager._resource_classes = old
 
@@ -255,17 +249,17 @@ class TestResourceManager(unittest.TestCase):
 
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.rm.open_resource(rname, unknown_attribute=None)
 
-        self.assertEqual(len(self.rm.list_opened_resources()), 0)
+        assert len(self.rm.list_opened_resources()) == 0
 
     def test_get_instrument(self):
         """Check that we get the expected deprecation warning.
 
         """
         rname = list(RESOURCE_ADDRESSES.values())[0]
-        with self.assertWarns(FutureWarning):
+        with pytest.warns(FutureWarning):
             self.rm.get_instrument(rname)
 
 
@@ -278,13 +272,13 @@ class TestResourceParsing(BaseTestCase):
 
     """
 
-    def setUp(self):
+    def setup_method(self):
         """Create a ResourceManager with the default backend library.
 
         """
         self.rm = ResourceManager()
 
-    def tearDown(self):
+    def teardown_method(self):
         """Close the ResourceManager.
 
         """
@@ -305,7 +299,7 @@ class TestResourceParsing(BaseTestCase):
         pb = VisaLibraryBase.parse_resource_extended(
             self.rm.visalib, self.rm.session, rn
         )
-        self.assertEqual(p, pb)
+        assert p == pb
 
         # Non-extended parsing
         # Visa lib
@@ -313,4 +307,4 @@ class TestResourceParsing(BaseTestCase):
 
         # Internal
         pb = VisaLibraryBase.parse_resource(self.rm.visalib, self.rm.session, rn)
-        self.assertEqual(p, pb)
+        assert p == pb

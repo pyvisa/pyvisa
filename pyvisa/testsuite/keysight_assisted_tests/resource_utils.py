@@ -3,15 +3,14 @@
 
 """
 import gc
+import logging
+import re
+from typing import Union
+
+import pytest
 
 from pyvisa import InvalidSession, ResourceManager
-from pyvisa.constants import (
-    VI_ATTR_TMO_VALUE,
-    VI_TMO_IMMEDIATE,
-    VI_TMO_INFINITE,
-    InterfaceType,
-    StatusCode,
-)
+from pyvisa.constants import InterfaceType, ResourceAttribute, StatusCode, Timeouts
 from pyvisa.resources.resource import Resource
 from pyvisa.rname import ResourceName
 
@@ -29,11 +28,11 @@ class ResourceTestCase:
     RESOURCE_TYPE = ""
 
     #: Minimal timeout value accepted by the resource. When setting the timeout
-    #: to VI_TMO_IMMEDIATE, Visa (Keysight at least) may actually use a
+    #: to Timeouts.immediate, Visa (Keysight at least) may actually use a
     #: different value depending on the values supported by the resource.
-    MINIMAL_TIMEOUT = VI_TMO_IMMEDIATE
+    MINIMAL_TIMEOUT: Union[int, Timeouts] = Timeouts.immediate
 
-    def setUp(self):
+    def setup_method(self):
         """Create a resource using the address matching the type.
 
         """
@@ -43,7 +42,7 @@ class ResourceTestCase:
         self.instr = self.rm.open_resource(name)
         self.instr.clear()
 
-    def tearDown(self):
+    def teardown_method(self):
         """Close the resource at the end of the test.
 
         """
@@ -56,81 +55,84 @@ class ResourceTestCase:
         """Test the lifecyle of a resource and the use as a context manager.
 
         """
-        self.assertIsNotNone(self.instr.session)
-        self.assertIsNotNone(self.instr.visalib)
-        self.assertEqual(self.instr.last_status, StatusCode.success)
+        assert self.instr.session is not None
+        assert self.instr.visalib is not None
+        assert self.instr.last_status == StatusCode.success
 
         self.instr.close()
 
-        with self.assertRaises(InvalidSession):
+        with pytest.raises(InvalidSession):
             self.instr.session
 
         with self.rm.open_resource(str(self.rname), read_termination="\0") as instr:
-            self.assertEqual(len(self.rm.list_opened_resources()), 1)
-            self.assertEqual(instr.read_termination, "\0")
-        self.assertEqual(len(self.rm.list_opened_resources()), 0)
+            assert len(self.rm.list_opened_resources()) == 1
+            assert instr.read_termination == "\0"
+        assert len(self.rm.list_opened_resources()) == 0
 
-    def test_close_on_del(self):
+    def test_close_on_del(self, caplog):
         """Test the lifecyle of a resource and the use as a context manager.
 
         """
-        with self.assertLogs(level="DEBUG") as cm:
+        with caplog.at_level(logging.DEBUG):
             self.instr = None
             gc.collect()
 
-        self.assertIn("- closing", cm.output[0])
-        self.assertIn("- is closed", cm.output[-1])
+        assert "- closing" in caplog.records[0].message
+        assert "- is closed", caplog.output[-1].message
 
     def test_alias_bypassing(self):
         """Test that a resource that cannot normalize an alias keep the alias.
 
         """
         instr = Resource(self.rm, "visa_alias")
-        self.assertRegex(str(instr), r".* at %s" % "visa_alias")
+        assert re.match(r".* at %s" % "visa_alias", str(instr))
 
     def test_str(self):
         """Test the string representation of a resource.
 
         """
-        self.assertRegex(str(self.instr), r".* at %s" % str(self.rname))
+        assert re.match(r".* at %s" % str(self.rname), str(self.instr))
         self.instr.close()
-        self.assertRegex(str(self.instr), r".* at %s" % str(self.rname))
+        assert re.match(r".* at %s" % str(self.rname), str(self.instr))
 
     def test_repr(self):
         """Test the repr of a resource.
 
         """
-        self.assertRegex(repr(self.instr), r"<.*\('%s'\)>" % str(self.rname))
+        assert re.match(r"<.*\('%s'\)>" % str(self.rname), repr(self.instr))
         self.instr.close()
-        self.assertRegex(repr(self.instr), r"<.*\('%s'\)>" % str(self.rname))
+        assert re.match(r"<.*\('%s'\)>" % str(self.rname), repr(self.instr))
 
     def test_timeout(self):
         """Test setting the timeout attribute.
 
         """
         self.instr.timeout = None
-        self.assertEqual(self.instr.timeout, float("+inf"))
-        self.assertEqual(
-            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), VI_TMO_INFINITE
+        assert self.instr.timeout == float("+inf")
+        assert (
+            self.instr.get_visa_attribute(ResourceAttribute.timeout_value)
+            == Timeouts.infinite
         )
 
         self.instr.timeout = 0.1
-        self.assertEqual(self.instr.timeout, 1)
-        self.assertEqual(
-            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), self.MINIMAL_TIMEOUT
+        assert self.instr.timeout == 1
+        assert (
+            self.instr.get_visa_attribute(ResourceAttribute.timeout_value)
+            == self.MINIMAL_TIMEOUT
         )
 
         self.instr.timeout = 10
-        self.assertEqual(self.instr.timeout, 10)
-        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), 10)
+        assert self.instr.timeout == 10
+        assert self.instr.get_visa_attribute(ResourceAttribute.timeout_value) == 10
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.instr.timeout = 10000000000
 
         del self.instr.timeout
-        self.assertEqual(self.instr.timeout, float("+inf"))
-        self.assertEqual(
-            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), VI_TMO_INFINITE
+        assert self.instr.timeout == float("+inf")
+        assert (
+            self.instr.get_visa_attribute(ResourceAttribute.timeout_value)
+            == Timeouts.infinite
         )
 
     def test_resource_info(self):
@@ -138,21 +140,20 @@ class ResourceTestCase:
 
         """
         rinfo = self.instr.resource_info
-        self.assertEqual(
-            rinfo.interface_type,
-            getattr(InterfaceType, self.rname.interface_type.lower()),
+        assert rinfo.interface_type == getattr(
+            InterfaceType, self.rname.interface_type.lower()
         )
-        self.assertEqual(rinfo.interface_board_number, int(self.rname.board))
-        self.assertEqual(rinfo.resource_class, self.rname.resource_class)
-        self.assertEqual(rinfo.resource_name, str(self.rname))
+
+        assert rinfo.interface_board_number == int(self.rname.board)
+        assert rinfo.resource_class == self.rname.resource_class
+        assert rinfo.resource_name == str(self.rname)
 
     def test_interface_type(self):
         """Test accessing the resource interface_type.
 
         """
-        self.assertEqual(
-            self.instr.interface_type,
-            getattr(InterfaceType, self.rname.interface_type.lower()),
+        assert self.instr.interface_type == getattr(
+            InterfaceType, self.rname.interface_type.lower()
         )
 
     def test_attribute_handling(self):
@@ -162,21 +163,27 @@ class ResourceTestCase:
         attributes.
 
         """
-        self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, 10)
-        self.assertEqual(self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), 10)
-        self.assertEqual(self.instr.timeout, 10)
+        self.instr.set_visa_attribute(ResourceAttribute.timeout_value, 10)
+        assert self.instr.get_visa_attribute(ResourceAttribute.timeout_value) == 10
+        assert self.instr.timeout == 10
 
-        self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_IMMEDIATE)
-        self.assertEqual(
-            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), self.MINIMAL_TIMEOUT
+        self.instr.set_visa_attribute(
+            ResourceAttribute.timeout_value, Timeouts.immediate
         )
-        self.assertEqual(self.instr.timeout, 1)
+        assert (
+            self.instr.get_visa_attribute(ResourceAttribute.timeout_value)
+            == self.MINIMAL_TIMEOUT
+        )
+        assert self.instr.timeout == 1
 
-        self.instr.set_visa_attribute(VI_ATTR_TMO_VALUE, VI_TMO_INFINITE)
-        self.assertEqual(
-            self.instr.get_visa_attribute(VI_ATTR_TMO_VALUE), VI_TMO_INFINITE
+        self.instr.set_visa_attribute(
+            ResourceAttribute.timeout_value, Timeouts.infinite
         )
-        self.assertEqual(self.instr.timeout, float("+inf"))
+        assert (
+            self.instr.get_visa_attribute(ResourceAttribute.timeout_value)
+            == Timeouts.infinite
+        )
+        assert self.instr.timeout == float("+inf")
 
     def test_wait_on_event(self):
         """Test waiting on a VISA event.

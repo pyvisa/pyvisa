@@ -87,8 +87,8 @@ class WaitResponse:
     def __del__(self) -> None:
         if self.event._context is not None:
             try:
-                self.event.close()
                 self._visalib.close(self.event._context)
+                self.event.close()
             except errors.VisaIOError:
                 pass
 
@@ -582,7 +582,7 @@ class Resource(object):
         timeout : Union[float, Literal["default"]], optional
             Absolute time period (in milliseconds) that a resource waits to get
             unlocked by the locking session before returning an error.
-            Defaults to "default' which means use self.timeout.
+            Defaults to "default" which means use self.timeout.
         requested_key : Optional[str], optional
             Access key used by another session with which you want your session
             to share a lock or None to generate a new shared access key.
@@ -608,7 +608,7 @@ class Resource(object):
         timeout : Union[float, Literal["default"]], optional
             Absolute time period (in milliseconds) that a resource waits to get
             unlocked by the locking session before returning an error.
-            Defaults to "default' which means use self.timeout.
+            Defaults to "default" which means use self.timeout.
 
         """
         tout = cast(float, self.timeout if timeout == "default" else timeout)
@@ -632,7 +632,7 @@ class Resource(object):
         timeout : Union[float, Literal["default"]], optional
             Absolute time period (in milliseconds) that a resource waits to get
             unlocked by the locking session before returning an error.
-            Defaults to "default' which means use self.timeout.
+            Defaults to "default" which means use self.timeout.
         requested_key : Optional[str], optional
             When using default of 'exclusive' the lock is an exclusive lock.
             Otherwise it is the access key for the shared lock or None to

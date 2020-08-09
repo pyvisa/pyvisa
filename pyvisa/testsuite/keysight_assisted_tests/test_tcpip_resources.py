@@ -2,16 +2,19 @@
 """Test the TCPIP based resources.
 
 """
-import unittest
+import pytest
 
 from pyvisa import constants, errors
 
-from . import require_virtual_instr
-from .messagebased_resource_utils import MessagebasedResourceTestCase
+from . import copy_func, require_virtual_instr
+from .messagebased_resource_utils import (
+    MessagebasedResourceTestCase,
+    SRQMessagebasedResourceTestCase,
+)
 
 
 @require_virtual_instr
-class TCPIPInstrTestCase(MessagebasedResourceTestCase, unittest.TestCase):
+class TestTCPIPInstr(SRQMessagebasedResourceTestCase):
     """Test pyvisa against a TCPIP INSTR resource.
 
     """
@@ -36,14 +39,15 @@ class TCPIPInstrTestCase(MessagebasedResourceTestCase, unittest.TestCase):
         try:
             self.instr.read_stb()
             # XXX note sure what is the actual issue here
-            with self.assertRaises(errors.VisaIOError):
+            with pytest.raises(errors.VisaIOError):
                 self.instr.set_visa_attribute(
                     constants.VI_ATTR_IO_PROT, constants.IOProtocol.hs488
                 )
             # self.instr.read_stb()
-            # self.assertEqual(
-            #     self.instr.get_visa_attribute(constants.VI_ATTR_IO_PROT),
-            #     constants.IOProtocol.hs488)
+            # assert (
+            #     self.instr.get_visa_attribute(constants.VI_ATTR_IO_PROT)
+            #     == constants.IOProtocol.hs488
+            # )
         finally:
             self.instr.set_visa_attribute(
                 constants.VI_ATTR_IO_PROT, constants.IOProtocol.normal
@@ -51,7 +55,7 @@ class TCPIPInstrTestCase(MessagebasedResourceTestCase, unittest.TestCase):
 
 
 @require_virtual_instr
-class TCPIPSocket(MessagebasedResourceTestCase):
+class TestTCPIPSocket(MessagebasedResourceTestCase):
     """Test pyvisa against a TCPIP SOCKET resource.
 
     """
@@ -65,3 +69,59 @@ class TCPIPSocket(MessagebasedResourceTestCase):
     #: to VI_TMO_IMMEDIATE, Visa (Keysight at least) may actually use a
     #: different value depending on the values supported by the resource.
     MINIMAL_TIMEOUT = 1
+
+    # Copy functions since the marker is applied in-place
+    test_write_raw_read_bytes = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_raw_read_bytes)
+    )
+    test_write_raw_read_raw = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_raw_read_raw)
+    )
+    test_write_read = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_read)
+    )
+    test_write_ascii_values = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_ascii_values)
+    )
+    test_write_binary_values = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_write_binary_values)
+    )
+    test_read_ascii_values = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_read_ascii_values)
+    )
+    test_read_binary_values = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_read_binary_values)
+    )
+    test_read_query_binary_values_invalid_header = pytest.mark.xfail(
+        copy_func(
+            MessagebasedResourceTestCase.test_read_query_binary_values_invalid_header
+        )
+    )
+    test_read_binary_values_unreported_length = pytest.mark.xfail(
+        copy_func(
+            MessagebasedResourceTestCase.test_read_binary_values_unreported_length
+        )
+    )
+    test_delay_in_query_ascii = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_delay_in_query_ascii)
+    )
+    test_instrument_wide_delay_in_query_binary = pytest.mark.xfail(
+        copy_func(
+            MessagebasedResourceTestCase.test_instrument_wide_delay_in_query_binary
+        )
+    )
+    test_delay_args_in_query_binary = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_delay_args_in_query_binary)
+    )
+    test_no_delay_args_in_query_binary = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_no_delay_args_in_query_binary)
+    )
+    test_manual_async_read = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_manual_async_read)
+    )
+    test_shared_locking = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_shared_locking)
+    )
+    test_exclusive_locking = pytest.mark.xfail(
+        copy_func(MessagebasedResourceTestCase.test_exclusive_locking)
+    )

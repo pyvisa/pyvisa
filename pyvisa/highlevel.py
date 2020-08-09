@@ -115,11 +115,11 @@ class VisaLibraryBase(object):
     ] = WeakValueDictionary()  # type: ignore
 
     #: Last return value of the library.
-    _last_status: constants.StatusCode = constants.StatusCode(0)
+    _last_status: StatusCode = StatusCode(0)
 
     #: Maps session handle to last status.
     _last_status_in_session: Dict[
-        Union[VISASession, VISARMSession, VISAEventContext], constants.StatusCode
+        Union[VISASession, VISARMSession, VISAEventContext], StatusCode
     ]
 
     #: Maps session handle to warnings to ignore.
@@ -138,7 +138,7 @@ class VisaLibraryBase(object):
     handlers: DefaultDict[VISASession, List[Tuple[VISAHandler, Any, Any, Any]]]
 
     #: Set error codes on which to issue a warning.
-    issue_warning_on: Set[constants.StatusCode]
+    issue_warning_on: Set[StatusCode]
 
     def __new__(
         cls: Type[T], library_path: Union[str, LibraryPath] = ""
@@ -234,11 +234,11 @@ class VisaLibraryBase(object):
         Used when implementing concrete subclasses of VISALibraryBase.
 
         """
-        rv: constants.StatusCode
+        rv: StatusCode
         try:
-            rv = constants.StatusCode(status_code)
+            rv = StatusCode(status_code)
         except ValueError:
-            rv = cast(constants.StatusCode, status_code)
+            rv = cast(StatusCode, status_code)
 
         self._last_status = rv
 
@@ -256,13 +256,13 @@ class VisaLibraryBase(object):
         return rv
 
     @property
-    def last_status(self) -> constants.StatusCode:
+    def last_status(self) -> StatusCode:
         """Last return value of the library."""
         return self._last_status
 
     def get_last_status_in_session(
         self, session: Union[VISASession, VISARMSession]
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Last status in session.
 
         Helper function to be called by resources properties.
@@ -280,7 +280,7 @@ class VisaLibraryBase(object):
     def ignore_warning(
         self,
         session: Union[VISASession, VISARMSession],
-        *warnings_constants: constants.StatusCode,
+        *warnings_constants: StatusCode,
     ) -> Iterator:
         """Ignore warnings for a session for the duration of the context.
 
@@ -288,7 +288,7 @@ class VisaLibraryBase(object):
         ----------
         session : Union[VISASession, VISARMSession]
             Unique logical identifier to a session.
-        warnings_constants : constants.StatusCode
+        warnings_constants : StatusCode
             Constants identifying the warnings to ignore.
 
         """
@@ -397,7 +397,7 @@ class VisaLibraryBase(object):
         offset: int,
         width: Union[Literal[8, 16, 32, 64], constants.DataWidth],
         extended: bool = False,
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Read a value from the specified memory space and offset.
 
         Corresponds to viIn* functions of the VISA library.
@@ -419,7 +419,7 @@ class VisaLibraryBase(object):
         -------
         data : int
             Data read from memory
-        status_code : constants.StatusCode
+        status_code : StatusCode
             Return value of the library call.
 
         Raises
@@ -444,7 +444,7 @@ class VisaLibraryBase(object):
         data: int,
         width: Union[Literal[8, 16, 32, 64], constants.DataWidth],
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Write a value to the specified memory space and offset.
 
         Parameters
@@ -464,7 +464,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         Raises
@@ -489,7 +489,7 @@ class VisaLibraryBase(object):
         length: int,
         width: Union[Literal[8, 16, 32, 64], constants.DataWidth],
         extended: bool = False,
-    ) -> Tuple[List[int], constants.StatusCode]:
+    ) -> Tuple[List[int], StatusCode]:
         """Move a block of data to local memory from the given address space and offset.
 
         Corresponds to viMoveIn* functions of the VISA library.
@@ -514,7 +514,7 @@ class VisaLibraryBase(object):
         -------
         data : List[int]
             Data read from the bus
-        status_code : constants.StatusCode
+        status_code : StatusCode
             Return value of the library call.
 
         Raises
@@ -540,7 +540,7 @@ class VisaLibraryBase(object):
         data: Iterable[int],
         width: Union[Literal[8, 16, 32, 64], constants.DataWidth],
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Move a block of data from local memory to the given address space and offset.
 
         Corresponds to viMoveOut* functions of the VISA library.
@@ -565,7 +565,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         Raises
@@ -589,7 +589,7 @@ class VisaLibraryBase(object):
         session: VISASession,
         address: VISAMemoryAddress,
         width: Union[Literal[8, 16, 32, 64], constants.DataWidth],
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Read an 8, 16, 32, or 64-bit value from the specified address.
 
         Corresponds to viPeek* functions of the VISA library.
@@ -607,7 +607,7 @@ class VisaLibraryBase(object):
         -------
         data : int
             Data read from bus
-        status_code : constants.StatusCode
+        status_code : StatusCode
             Return value of the library call.
 
         Raises
@@ -630,7 +630,7 @@ class VisaLibraryBase(object):
         address: VISAMemoryAddress,
         width: Union[Literal[8, 16, 32, 64], constants.DataWidth],
         data: int,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Writes an 8, 16, 32, or 64-bit value from the specified address.
 
         Corresponds to viPoke* functions of the VISA library.
@@ -648,7 +648,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        status_code : constants.StatusCode
+        status_code : StatusCode
             Return value of the library call.
 
         Raises
@@ -672,7 +672,7 @@ class VisaLibraryBase(object):
         session: VISASession,
         mode: constants.AssertSignalInterrupt,
         status_id: int,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Asserts the specified interrupt or signal.
 
         Corresponds to viAssertIntrSignal function of the VISA library.
@@ -688,7 +688,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -696,7 +696,7 @@ class VisaLibraryBase(object):
 
     def assert_trigger(
         self, session: VISASession, protocol: constants.TriggerProtocol
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Assert software or hardware trigger.
 
         Corresponds to viAssertTrigger function of the VISA library.
@@ -710,7 +710,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -718,7 +718,7 @@ class VisaLibraryBase(object):
 
     def assert_utility_signal(
         self, session: VISASession, line: constants.UtilityBusSignal
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Assert or deassert the specified utility bus signal.
 
         Corresponds to viAssertUtilSignal function of the VISA library.
@@ -732,15 +732,13 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
-    def buffer_read(
-        self, session: VISASession, count: int
-    ) -> Tuple[bytes, constants.StatusCode]:
+    def buffer_read(self, session: VISASession, count: int) -> Tuple[bytes, StatusCode]:
         """Reads data through the use of a formatted I/O read buffer.
 
         The data can be read from a device or an interface.
@@ -758,15 +756,13 @@ class VisaLibraryBase(object):
         -------
         dbytes
             Data read
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
-    def buffer_write(
-        self, session: VISASession, data: bytes
-    ) -> Tuple[int, constants.StatusCode]:
+    def buffer_write(self, session: VISASession, data: bytes) -> Tuple[int, StatusCode]:
         """Writes data to a formatted I/O write buffer synchronously.
 
         Corresponds to viBufWrite function of the VISA library.
@@ -782,13 +778,13 @@ class VisaLibraryBase(object):
         -------
         int
             number of written bytes
-        constants.StatusCode
+        StatusCode
             return value of the library call.
 
         """
         raise NotImplementedError
 
-    def clear(self, session: VISASession) -> constants.StatusCode:
+    def clear(self, session: VISASession) -> StatusCode:
         """Clears a device.
 
         Corresponds to viClear function of the VISA library.
@@ -800,7 +796,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -808,7 +804,7 @@ class VisaLibraryBase(object):
 
     def close(
         self, session: Union[VISASession, VISAEventContext, VISARMSession]
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Closes the specified session, event, or find list.
 
         Corresponds to viClose function of the VISA library.
@@ -820,7 +816,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -831,7 +827,7 @@ class VisaLibraryBase(object):
         session: VISASession,
         event_type: constants.EventType,
         mechanism: constants.EventMechanism,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Disable notification for an event type(s) via the specified mechanism(s).
 
         Corresponds to viDisableEvent function of the VISA library.
@@ -847,7 +843,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -858,7 +854,7 @@ class VisaLibraryBase(object):
         session: VISASession,
         event_type: constants.EventType,
         mechanism: constants.EventMechanism,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Discard event occurrences for a given type and mechanisms in a session.
 
         Corresponds to viDiscardEvents function of the VISA library.
@@ -874,7 +870,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -886,7 +882,7 @@ class VisaLibraryBase(object):
         event_type: constants.EventType,
         mechanism: constants.EventMechanism,
         context: None = None,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Enable event occurrences for specified event types and mechanisms in a session.
 
         Corresponds to viEnableEvent function of the VISA library.
@@ -904,7 +900,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -912,7 +908,7 @@ class VisaLibraryBase(object):
 
     def flush(
         self, session: VISASession, mask: constants.BufferOperation
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Flush the specified buffers.
 
         The buffers can be associated with formatted I/O operations and/or
@@ -931,7 +927,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -941,7 +937,7 @@ class VisaLibraryBase(object):
         self,
         session: Union[VISASession, VISAEventContext, VISARMSession],
         attribute: Union[constants.ResourceAttribute, constants.EventAttribute],
-    ) -> Tuple[Any, constants.StatusCode]:
+    ) -> Tuple[Any, StatusCode]:
         """Retrieves the state of an attribute.
 
         Corresponds to viGetAttribute function of the VISA library.
@@ -957,15 +953,13 @@ class VisaLibraryBase(object):
         -------
         Any
             State of the queried attribute for a specified resource
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
-    def gpib_command(
-        self, session: VISASession, data: bytes
-    ) -> Tuple[int, constants.StatusCode]:
+    def gpib_command(self, session: VISASession, data: bytes) -> Tuple[int, StatusCode]:
         """Write GPIB command bytes on the bus.
 
         Corresponds to viGpibCommand function of the VISA library.
@@ -981,7 +975,7 @@ class VisaLibraryBase(object):
         -------
         int
             Number of written bytes
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -989,7 +983,7 @@ class VisaLibraryBase(object):
 
     def gpib_control_atn(
         self, session: VISASession, mode: constants.ATNLineOperation
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Specifies the state of the ATN line and the local active controller state.
 
         Corresponds to viGpibControlATN function of the VISA library.
@@ -1003,7 +997,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1011,7 +1005,7 @@ class VisaLibraryBase(object):
 
     def gpib_control_ren(
         self, session: VISASession, mode: constants.RENLineOperation
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Controls the state of the GPIB Remote Enable (REN) interface line.
 
         Optionally the remote/local state of the device can also be set.
@@ -1027,7 +1021,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1035,7 +1029,7 @@ class VisaLibraryBase(object):
 
     def gpib_pass_control(
         self, session: VISASession, primary_address: int, secondary_address: int
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Tell a GPIB device to become controller in charge (CIC).
 
         Corresponds to viGpibPassControl function of the VISA library.
@@ -1053,13 +1047,13 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
-    def gpib_send_ifc(self, session: VISASession) -> constants.StatusCode:
+    def gpib_send_ifc(self, session: VISASession) -> StatusCode:
         """Pulse the interface clear line (IFC) for at least 100 microseconds.
 
         Corresponds to viGpibSendIFC function of the VISA library.
@@ -1071,7 +1065,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1083,7 +1077,7 @@ class VisaLibraryBase(object):
         space: constants.AddressSpace,
         offset: int,
         extended: bool = False,
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Reads in an 8-bit value from the specified memory space and offset.
 
         Corresponds to viIn8* function of the VISA library.
@@ -1103,7 +1097,7 @@ class VisaLibraryBase(object):
         -------
         int
             Data read from memory
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1115,7 +1109,7 @@ class VisaLibraryBase(object):
         space: constants.AddressSpace,
         offset: int,
         extended: bool = False,
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Reads in an 16-bit value from the specified memory space and offset.
 
         Corresponds to viIn16* function of the VISA library.
@@ -1135,7 +1129,7 @@ class VisaLibraryBase(object):
         -------
         int
             Data read from memory
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1147,7 +1141,7 @@ class VisaLibraryBase(object):
         space: constants.AddressSpace,
         offset: int,
         extended: bool = False,
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Reads in an 32-bit value from the specified memory space and offset.
 
         Corresponds to viIn32* function of the VISA library.
@@ -1167,7 +1161,7 @@ class VisaLibraryBase(object):
         -------
         int
             Data read from memory
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1179,7 +1173,7 @@ class VisaLibraryBase(object):
         space: constants.AddressSpace,
         offset: int,
         extended: bool = False,
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Reads in an 64-bit value from the specified memory space and offset.
 
         Corresponds to viIn64* function of the VISA library.
@@ -1199,7 +1193,7 @@ class VisaLibraryBase(object):
         -------
         int
             Data read from memory
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1211,7 +1205,7 @@ class VisaLibraryBase(object):
         event_type: constants.EventType,
         handler: VISAHandler,
         user_handle: Any,
-    ) -> Tuple[VISAHandler, Any, Any, constants.StatusCode]:
+    ) -> Tuple[VISAHandler, Any, Any, StatusCode]:
         """Install handlers for event callbacks.
 
         Corresponds to viInstallHandler function of the VISA library.
@@ -1237,7 +1231,7 @@ class VisaLibraryBase(object):
             of the handle should be used in further call to the library.
         converted_handler :
             Converted version of the handler satisfying to backend library.
-        status_code : constants.StatusCode
+        status_code : StatusCode
             Return value of the library call
 
         """
@@ -1269,7 +1263,7 @@ class VisaLibraryBase(object):
         lock_type: constants.Lock,
         timeout: int,
         requested_key: Optional[str] = None,
-    ) -> Tuple[str, constants.StatusCode]:
+    ) -> Tuple[str, StatusCode]:
         """Establishes an access mode to the specified resources.
 
         Corresponds to viLock function of the VISA library.
@@ -1292,7 +1286,7 @@ class VisaLibraryBase(object):
         Optional[str]
             Key that can then be passed to other sessions to share the lock, or
             None for an exclusive lock.
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1306,7 +1300,7 @@ class VisaLibraryBase(object):
         map_size: int,
         access: Literal[False] = False,
         suggested: Optional[int] = None,
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Maps the specified memory space into the process's address space.
 
         Corresponds to viMapAddress function of the VISA library.
@@ -1333,7 +1327,7 @@ class VisaLibraryBase(object):
         -------
         int
             Address in your process space where the memory was mapped
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1345,7 +1339,7 @@ class VisaLibraryBase(object):
         trigger_source: constants.InputTriggerLine,
         trigger_destination: constants.OutputTriggerLine,
         mode: None = None,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Map the specified trigger source line to the specified destination line.
 
         Corresponds to viMapTrigger function of the VISA library.
@@ -1363,7 +1357,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1371,7 +1365,7 @@ class VisaLibraryBase(object):
 
     def memory_allocation(
         self, session: VISASession, size: int, extended: bool = False
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Allocate memory from a resource's memory region.
 
         Corresponds to viMemAlloc* functions of the VISA library.
@@ -1389,7 +1383,7 @@ class VisaLibraryBase(object):
         -------
         int
             offset of the allocated memory
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1397,7 +1391,7 @@ class VisaLibraryBase(object):
 
     def memory_free(
         self, session: VISASession, offset: int, extended: bool = False
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Frees memory previously allocated using the memory_allocation() operation.
 
         Corresponds to viMemFree* function of the VISA library.
@@ -1413,7 +1407,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1429,7 +1423,7 @@ class VisaLibraryBase(object):
         destination_offset: int,
         destination_width: constants.DataWidth,
         length: int,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Moves a block of data.
 
         Corresponds to viMove function of the VISA library.
@@ -1456,7 +1450,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1472,7 +1466,7 @@ class VisaLibraryBase(object):
         destination_offset: int,
         destination_width: constants.DataWidth,
         length: int,
-    ) -> Tuple[VISAJobID, constants.StatusCode]:
+    ) -> Tuple[VISAJobID, StatusCode]:
         """Moves a block of data asynchronously.
 
         Corresponds to viMoveAsync function of the VISA library.
@@ -1501,7 +1495,7 @@ class VisaLibraryBase(object):
         -------
         VISAJobID
             Job identifier of this asynchronous move operation
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1514,7 +1508,7 @@ class VisaLibraryBase(object):
         offset: int,
         length: int,
         extended: bool = False,
-    ) -> Tuple[List[int], constants.StatusCode]:
+    ) -> Tuple[List[int], StatusCode]:
         """Moves an 8-bit block of data to local memory.
 
         Corresponds to viMoveIn8* functions of the VISA library.
@@ -1537,7 +1531,7 @@ class VisaLibraryBase(object):
         -------
         data : List[int]
             Data read from the bus
-        status_code : constants.StatusCode
+        status_code : StatusCode
             Return value of the library call.
 
         """
@@ -1550,7 +1544,7 @@ class VisaLibraryBase(object):
         offset: int,
         length: int,
         extended: bool = False,
-    ) -> Tuple[List[int], constants.StatusCode]:
+    ) -> Tuple[List[int], StatusCode]:
         """Moves an 16-bit block of data to local memory.
 
         Corresponds to viMoveIn816 functions of the VISA library.
@@ -1573,7 +1567,7 @@ class VisaLibraryBase(object):
         -------
         data : List[int]
             Data read from the bus
-        status_code : constants.StatusCode
+        status_code : StatusCode
             Return value of the library call.
 
         """
@@ -1609,7 +1603,7 @@ class VisaLibraryBase(object):
         -------
         data : List[int]
             Data read from the bus
-        status_code : constants.StatusCode
+        status_code : StatusCode
             Return value of the library call.
 
         """
@@ -1622,7 +1616,7 @@ class VisaLibraryBase(object):
         offset: int,
         length: int,
         extended: bool = False,
-    ) -> Tuple[List[int], constants.StatusCode]:
+    ) -> Tuple[List[int], StatusCode]:
         """Moves an 64-bit block of data to local memory.
 
         Corresponds to viMoveIn8* functions of the VISA library.
@@ -1645,7 +1639,7 @@ class VisaLibraryBase(object):
         -------
         data : List[int]
             Data read from the bus
-        status_code : constants.StatusCode
+        status_code : StatusCode
             Return value of the library call.
 
         """
@@ -1659,7 +1653,7 @@ class VisaLibraryBase(object):
         length: int,
         data: Iterable[int],
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Moves an 8-bit block of data from local memory.
 
         Corresponds to viMoveOut8* functions of the VISA library.
@@ -1682,7 +1676,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1696,7 +1690,7 @@ class VisaLibraryBase(object):
         length: int,
         data: Iterable[int],
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Moves an 16-bit block of data from local memory.
 
         Corresponds to viMoveOut16* functions of the VISA library.
@@ -1719,7 +1713,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1733,7 +1727,7 @@ class VisaLibraryBase(object):
         length: int,
         data: Iterable[int],
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Moves an 32-bit block of data from local memory.
 
         Corresponds to viMoveOut32* functions of the VISA library.
@@ -1756,7 +1750,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
 
@@ -1771,7 +1765,7 @@ class VisaLibraryBase(object):
         length: int,
         data: Iterable[int],
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Moves an 64-bit block of data from local memory.
 
         Corresponds to viMoveOut64* functions of the VISA library.
@@ -1794,7 +1788,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1806,7 +1800,7 @@ class VisaLibraryBase(object):
         resource_name: str,
         access_mode: constants.AccessModes = constants.AccessModes.no_lock,
         open_timeout: int = constants.VI_TMO_IMMEDIATE,
-    ) -> Tuple[VISASession, constants.StatusCode]:
+    ) -> Tuple[VISASession, StatusCode]:
         """Opens a session to the specified resource.
 
         Corresponds to viOpen function of the VISA library.
@@ -1830,15 +1824,13 @@ class VisaLibraryBase(object):
         -------
         VISASession
             Unique logical identifier reference to a session
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
-    def open_default_resource_manager(
-        self,
-    ) -> Tuple[VISARMSession, constants.StatusCode]:
+    def open_default_resource_manager(self,) -> Tuple[VISARMSession, StatusCode]:
         """This function returns a session to the Default Resource Manager resource.
 
         Corresponds to viOpenDefaultRM function of the VISA library.
@@ -1847,7 +1839,7 @@ class VisaLibraryBase(object):
         -------
         VISARMSession
             Unique logical identifier to a Default Resource Manager session
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1860,7 +1852,7 @@ class VisaLibraryBase(object):
         offset: int,
         data: int,
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Write an 8-bit value to the specified memory space and offset.
 
         Corresponds to viOut8* functions of the VISA library.
@@ -1880,7 +1872,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1893,7 +1885,7 @@ class VisaLibraryBase(object):
         offset: int,
         data: int,
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Write a 16-bit value to the specified memory space and offset.
 
         Corresponds to viOut16* functions of the VISA library.
@@ -1913,7 +1905,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1926,7 +1918,7 @@ class VisaLibraryBase(object):
         offset: int,
         data: Iterable[int],
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Write a 32-bit value to the specified memory space and offset.
 
         Corresponds to viOut32* functions of the VISA library.
@@ -1946,7 +1938,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1959,7 +1951,7 @@ class VisaLibraryBase(object):
         offset: int,
         data: Iterable[int],
         extended: bool = False,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Write a 64-bit value to the specified memory space and offset.
 
         Corresponds to viOut64* functions of the VISA library.
@@ -1979,7 +1971,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -1987,7 +1979,7 @@ class VisaLibraryBase(object):
 
     def parse_resource(
         self, session: VISARMSession, resource_name: str
-    ) -> Tuple[ResourceInfo, constants.StatusCode]:
+    ) -> Tuple[ResourceInfo, StatusCode]:
         """Parse a resource string to get the interface information.
 
         Corresponds to viParseRsrc function of the VISA library.
@@ -2004,24 +1996,24 @@ class VisaLibraryBase(object):
         -------
         ResourceInfo
             Resource information with interface type and board number
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         ri, status = self.parse_resource_extended(session, resource_name)
-        if status == constants.StatusCode.success:
+        if status == StatusCode.success:
             return (
                 ResourceInfo(
                     ri.interface_type, ri.interface_board_number, None, None, None
                 ),
-                constants.StatusCode.success,
+                StatusCode.success,
             )
         else:
             return ri, status
 
     def parse_resource_extended(
         self, session: VISARMSession, resource_name: str
-    ) -> Tuple[ResourceInfo, constants.StatusCode]:
+    ) -> Tuple[ResourceInfo, StatusCode]:
         """Parse a resource string to get extended interface information.
 
         Corresponds to viParseRsrcEx function of the VISA library.
@@ -2038,7 +2030,7 @@ class VisaLibraryBase(object):
         -------
         ResourceInfo
             Resource information with interface type and board number
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2059,17 +2051,17 @@ class VisaLibraryBase(object):
                     str(parsed),
                     None,
                 ),
-                constants.StatusCode.success,
+                StatusCode.success,
             )
         except ValueError:
             return (
                 ResourceInfo(constants.InterfaceType.unknown, 0, None, None, None),
-                constants.StatusCode.error_invalid_resource_name,
+                StatusCode.error_invalid_resource_name,
             )
 
     def peek_8(
         self, session: VISASession, address: VISAMemoryAddress
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Read an 8-bit value from the specified address.
 
         Corresponds to viPeek8 function of the VISA library.
@@ -2085,7 +2077,7 @@ class VisaLibraryBase(object):
         -------
         int
             Data read from bus
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2093,7 +2085,7 @@ class VisaLibraryBase(object):
 
     def peek_16(
         self, session: VISASession, address: VISAMemoryAddress
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Read an 16-bit value from the specified address.
 
         Corresponds to viPeek16 function of the VISA library.
@@ -2109,7 +2101,7 @@ class VisaLibraryBase(object):
         -------
         int
             Data read from bus
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2117,7 +2109,7 @@ class VisaLibraryBase(object):
 
     def peek_32(
         self, session: VISASession, address: VISAMemoryAddress
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Read an 32-bit value from the specified address.
 
         Corresponds to viPeek32 function of the VISA library.
@@ -2133,7 +2125,7 @@ class VisaLibraryBase(object):
         -------
         int
             Data read from bus
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2141,7 +2133,7 @@ class VisaLibraryBase(object):
 
     def peek_64(
         self, session: VISASession, address: VISAMemoryAddress
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Read an 64-bit value from the specified address.
 
         Corresponds to viPeek64 function of the VISA library.
@@ -2157,7 +2149,7 @@ class VisaLibraryBase(object):
         -------
         int
             Data read from bus
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2165,7 +2157,7 @@ class VisaLibraryBase(object):
 
     def poke_8(
         self, session: VISASession, address: VISAMemoryAddress, data: int
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Write an 8-bit value to the specified address.
 
         Corresponds to viPoke8 function of the VISA library.
@@ -2181,7 +2173,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2189,7 +2181,7 @@ class VisaLibraryBase(object):
 
     def poke_16(
         self, session: VISASession, address: VISAMemoryAddress, data: int
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Write an 16-bit value to the specified address.
 
         Corresponds to viPoke16 function of the VISA library.
@@ -2205,7 +2197,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2213,7 +2205,7 @@ class VisaLibraryBase(object):
 
     def poke_32(
         self, session: VISASession, address: VISAMemoryAddress, data: int
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Write an 32-bit value to the specified address.
 
         Corresponds to viPoke32 function of the VISA library.
@@ -2229,7 +2221,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2237,7 +2229,7 @@ class VisaLibraryBase(object):
 
     def poke_64(
         self, session: VISASession, address: VISAMemoryAddress, data: int
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Write an 64-bit value to the specified address.
 
         Corresponds to viPoke64 function of the VISA library.
@@ -2253,15 +2245,13 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
-    def read(
-        self, session: VISASession, count: int
-    ) -> Tuple[bytes, constants.StatusCode]:
+    def read(self, session: VISASession, count: int) -> Tuple[bytes, StatusCode]:
         """Reads data from device or interface synchronously.
 
         Corresponds to viRead function of the VISA library.
@@ -2277,7 +2267,7 @@ class VisaLibraryBase(object):
         -------
         bytes
             Date read
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2285,7 +2275,7 @@ class VisaLibraryBase(object):
 
     def read_asynchronously(
         self, session: VISASession, count: int
-    ) -> Tuple[SupportsBytes, VISAJobID, constants.StatusCode]:
+    ) -> Tuple[SupportsBytes, VISAJobID, StatusCode]:
         """Reads data from device or interface asynchronously.
 
         Corresponds to viReadAsync function of the VISA library. Since the
@@ -2306,7 +2296,7 @@ class VisaLibraryBase(object):
             Buffer that will be filled during the asynchronous operation.
         VISAJobID
             Id of the asynchronous job
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2329,7 +2319,7 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def read_stb(self, session: VISASession) -> Tuple[int, constants.StatusCode]:
+    def read_stb(self, session: VISASession) -> Tuple[int, StatusCode]:
         """Reads a status byte of the service request.
 
         Corresponds to viReadSTB function of the VISA library.
@@ -2343,7 +2333,7 @@ class VisaLibraryBase(object):
         -------
         int
             Service request status byte
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2351,7 +2341,7 @@ class VisaLibraryBase(object):
 
     def read_to_file(
         self, session: VISASession, filename: str, count: int
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Read data synchronously, and store the transferred data in a file.
 
         Corresponds to viReadToFile function of the VISA library.
@@ -2369,7 +2359,7 @@ class VisaLibraryBase(object):
         -------
         int
             Number of bytes actually transferred
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2380,7 +2370,7 @@ class VisaLibraryBase(object):
         session: VISASession,
         attribute: constants.ResourceAttribute,
         attribute_state: Any,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Set the state of an attribute.
 
         Corresponds to viSetAttribute function of the VISA library.
@@ -2396,7 +2386,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2404,7 +2394,7 @@ class VisaLibraryBase(object):
 
     def set_buffer(
         self, session: VISASession, mask: constants.BufferType, size: int
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Set the size for the formatted I/O and/or low-level I/O communication buffer(s).
 
         Corresponds to viSetBuf function of the VISA library.
@@ -2420,15 +2410,15 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
     def status_description(
-        self, session: VISASession, status: constants.StatusCode
-    ) -> Tuple[str, constants.StatusCode]:
+        self, session: VISASession, status: StatusCode
+    ) -> Tuple[str, StatusCode]:
         """Return a user-readable description of the status code passed to the operation.
 
         Corresponds to viStatusDesc function of the VISA library.
@@ -2437,14 +2427,14 @@ class VisaLibraryBase(object):
         ----------
         session : VISASession
             Unique logical identifier to a session.
-        status : constants.StatusCode
+        status : StatusCode
             Status code to interpret.
 
         Returns
         -------
         str
             User-readable string interpretation of the status code.
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2452,7 +2442,7 @@ class VisaLibraryBase(object):
 
     def terminate(
         self, session: VISASession, degree: None, job_id: VISAJobID
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Request a VISA session to terminate normal execution of an operation.
 
         Corresponds to viTerminate function of the VISA library.
@@ -2471,7 +2461,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2483,7 +2473,7 @@ class VisaLibraryBase(object):
         event_type: constants.EventType,
         handler: VISAHandler,
         user_handle: Any = None,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Uninstall handlers for events.
 
         Corresponds to viUninstallHandler function of the VISA library.
@@ -2504,13 +2494,13 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
-    def unlock(self, session: VISASession) -> constants.StatusCode:
+    def unlock(self, session: VISASession) -> StatusCode:
         """Relinquish a lock for the specified resource.
 
         Corresponds to viUnlock function of the VISA library.
@@ -2522,13 +2512,13 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
-    def unmap_address(self, session: VISASession) -> constants.StatusCode:
+    def unmap_address(self, session: VISASession) -> StatusCode:
         """Unmap memory space previously mapped by map_address().
 
         Corresponds to viUnmapAddress function of the VISA library.
@@ -2540,7 +2530,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2551,7 +2541,7 @@ class VisaLibraryBase(object):
         session: VISASession,
         trigger_source: constants.InputTriggerLine,
         trigger_destination: constants.OutputTriggerLine,
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Undo a previous map between a trigger source line and a destination line.
 
         Corresponds to viUnmapTrigger function of the VISA library.
@@ -2567,7 +2557,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2581,7 +2571,7 @@ class VisaLibraryBase(object):
         request_value: int,
         index: int,
         length: int = 0,
-    ) -> Tuple[bytes, constants.StatusCode]:
+    ) -> Tuple[bytes, StatusCode]:
         """Perform a USB control pipe transfer from the device.
 
         Corresponds to viUsbControlIn function of the VISA library.
@@ -2609,7 +2599,7 @@ class VisaLibraryBase(object):
         bytes
             The data buffer that receives the data from the optional data stage
             of the control transfer
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2623,7 +2613,7 @@ class VisaLibraryBase(object):
         request_value: int,
         index: int,
         data: bytes = b"",
-    ) -> constants.StatusCode:
+    ) -> StatusCode:
         """Perform a USB control pipe transfer to the device.
 
         Corresponds to viUsbControlOut function of the VISA library.
@@ -2647,7 +2637,7 @@ class VisaLibraryBase(object):
 
         Returns
         -------
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2655,7 +2645,7 @@ class VisaLibraryBase(object):
 
     def vxi_command_query(
         self, session: VISASession, mode: constants.VXICommands, command: int
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Send the device a miscellaneous command or query and/or retrieves the response to a previous query.
 
         Corresponds to viVxiCommandQuery function of the VISA library.
@@ -2673,7 +2663,7 @@ class VisaLibraryBase(object):
         -------
         int
             The response retrieved from the device
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2681,7 +2671,7 @@ class VisaLibraryBase(object):
 
     def wait_on_event(
         self, session: VISASession, in_event_type: constants.EventType, timeout: int
-    ) -> Tuple[constants.EventType, VISAEventContext, constants.StatusCode]:
+    ) -> Tuple[constants.EventType, VISAEventContext, StatusCode]:
         """Wait for an occurrence of the specified event for a given session.
 
         Corresponds to viWaitOnEvent function of the VISA library.
@@ -2703,15 +2693,13 @@ class VisaLibraryBase(object):
             Logical identifier of the event actually received
         VISAEventContext
             A handle specifying the unique occurrence of an event
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
         raise NotImplementedError
 
-    def write(
-        self, session: VISASession, data: bytes
-    ) -> Tuple[int, constants.StatusCode]:
+    def write(self, session: VISASession, data: bytes) -> Tuple[int, StatusCode]:
         """Write data to device or interface synchronously.
 
         Corresponds to viWrite function of the VISA library.
@@ -2727,7 +2715,7 @@ class VisaLibraryBase(object):
         -------
         int
             Number of bytes actually transferred
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2735,7 +2723,7 @@ class VisaLibraryBase(object):
 
     def write_asynchronously(
         self, session: VISASession, data: bytes
-    ) -> Tuple[VISAJobID, constants.StatusCode]:
+    ) -> Tuple[VISAJobID, StatusCode]:
         """Write data to device or interface asynchronously.
 
         Corresponds to viWriteAsync function of the VISA library.
@@ -2751,7 +2739,7 @@ class VisaLibraryBase(object):
         -------
         VISAJobID
             Job ID of this asynchronous write operation
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -2759,7 +2747,7 @@ class VisaLibraryBase(object):
 
     def write_from_file(
         self, session: VISASession, filename: str, count: int
-    ) -> Tuple[int, constants.StatusCode]:
+    ) -> Tuple[int, StatusCode]:
         """Take data from a file and write it out synchronously.
 
         Corresponds to viWriteFromFile function of the VISA library.
@@ -2777,7 +2765,7 @@ class VisaLibraryBase(object):
         -------
         int
             Number of bytes actually transferred
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """
@@ -3072,21 +3060,19 @@ class ResourceManager(object):
         if self._session is not None:
             self.close()
 
-    def ignore_warning(
-        self, *warnings_constants: constants.StatusCode
-    ) -> ContextManager:
+    def ignore_warning(self, *warnings_constants: StatusCode) -> ContextManager:
         """Ignoring warnings context manager for the current resource.
 
         Parameters
         ----------
-        warnings_constants : constants.StatusCode
+        warnings_constants : StatusCode
             Constants identifying the warnings to ignore.
 
         """
         return self.visalib.ignore_warning(self.session, *warnings_constants)
 
     @property
-    def last_status(self) -> constants.StatusCode:
+    def last_status(self) -> StatusCode:
         """Last status code returned for an operation with this Resource Manager."""
         return self.visalib.get_last_status_in_session(self.session)
 
@@ -3209,7 +3195,7 @@ class ResourceManager(object):
         resource_name: str,
         access_mode: constants.AccessModes = constants.AccessModes.no_lock,
         open_timeout: int = constants.VI_TMO_IMMEDIATE,
-    ) -> Tuple[VISASession, constants.StatusCode]:
+    ) -> Tuple[VISASession, StatusCode]:
         """Open the specified resource without wrapping into a class.
 
         Parameters
@@ -3229,7 +3215,7 @@ class ResourceManager(object):
         -------
         VISASession
             Unique logical identifier reference to a session.
-        constants.StatusCode
+        StatusCode
             Return value of the library call.
 
         """

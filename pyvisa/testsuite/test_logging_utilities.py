@@ -14,7 +14,7 @@ class TestLoggingUtilities(BaseTestCase):
 
     """
 
-    def tearDown(self):
+    def teardown_method(self):
         for h in pyvisa.logger.handlers:
             if not isinstance(h, logging.NullHandler):
                 pyvisa.logger.removeHandler(h)
@@ -30,10 +30,10 @@ class TestLoggingUtilities(BaseTestCase):
         pyvisa.logger.debug("debug test")
         pyvisa.logger.info("info test")
 
-        self.assertIn("debug test", debug_stream.getvalue())
-        self.assertNotIn("debug test", stream.getvalue())
-        self.assertIn("info test", debug_stream.getvalue())
-        self.assertIn("info test", stream.getvalue())
+        assert "debug test" in debug_stream.getvalue()
+        assert "debug test" not in stream.getvalue()
+        assert "info test" in debug_stream.getvalue()
+        assert "info test" in stream.getvalue()
 
     def test_log_to_screen(self):
         """Test redirecting the log to stderr.
@@ -67,4 +67,4 @@ class TestLoggingUtilities(BaseTestCase):
                 pyvisa.log_to_screen()
         finally:
             pyvisa.log_to_stream = old
-        self.assertTupleEqual(faker.args, (None, level))
+        assert faker.args == (None, level)
