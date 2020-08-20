@@ -692,9 +692,14 @@ def from_binary_block(
     fullfmt = "%s%d%s" % (endianess, array_length, datatype)
 
     try:
-        return container(struct.unpack_from(fullfmt, block, offset))
+        raw_data = struct.unpack_from(fullfmt, block, offset)
     except struct.error:
         raise ValueError("Binary data was malformed")
+
+    if datatype in "sp":
+        raw_data = raw_data[0]
+
+    return container(raw_data)
 
 
 def to_binary_block(
@@ -723,14 +728,19 @@ def to_binary_block(
 
     """
     array_length = len(iterable)
-
     endianess = ">" if is_big_endian else "<"
     fullfmt = "%s%d%s" % (endianess, array_length, datatype)
 
     if isinstance(header, str):
         header = bytes(header, "ascii")
 
-    return header + struct.pack(fullfmt, *iterable)
+    if datatype in ("s", "p"):
+        block = struct.pack(fullfmt, iterable)
+
+    else:
+        block = struct.pack(fullfmt, *iterable)
+
+    return header + block
 
 
 def to_ieee_block(

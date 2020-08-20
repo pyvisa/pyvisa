@@ -275,6 +275,19 @@ class TestParser(BaseTestCase):
                     fblock = lambda block, cont: fb(block, fmt, endi, cont)
                     self.round_trip_block_conversion(values, tblock, fblock, msg)
 
+    def test_bytes_binary_block(self):
+        values = b"dbslbw cj saj \x00\x76"
+        for block, tb, fb in zip(
+            ("ieee", "hp"),
+            (util.to_ieee_block, util.to_hp_block),
+            (util.from_ieee_block, util.from_hp_block),
+        ):
+            for fmt in "sp":
+                block = tb(values, datatype="s")
+                print(block)
+                rt = fb(block, datatype="s", container=bytes)
+                assert values == rt
+
     def test_malformed_binary_block_header(self):
         values = list(range(10))
         for header, tb, fb in zip(
