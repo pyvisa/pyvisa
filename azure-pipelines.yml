@@ -57,7 +57,7 @@ steps:
     echo Install codecov
     pip install codecov
     echo Run codecov
-    codecov --file coverage.xml --token $(CODECOV_TOKEN) --env PYVISA_KEYSIGHT_VIRTUAL_INSTR --tries 5 --required -F unittest --name codecov-umbrella
+    codecov --file coverage.xml --token $(CODECOV_TOKEN) --env PYVISA_KEYSIGHT_VIRTUAL_INSTR --tries 5 --required -F unittests --name codecov-umbrella
   displayName: 'Upload test coverage results'
 
 - script: |
