@@ -14,6 +14,18 @@ to the old behavior by setting the environment variable PYVISA_WRAP_HANDLER=0 or
 set ctwrapper.WRAP_HANDLER to False but please consider updating to the new
 behavior.
 
+PyVISA 1.11 also removes deprecated functions and attributes that were supposed
+to be removed  in 1.10:
+- `ask`: use `query_instead
+- `ask_delay`: use `query_delay`
+- `ask_for_values`: use either `query_ascii_values` or `query_binary_values` as relevant
+- `write_values`: use either `write_ascii_values` or `write_binary_values` as relevant
+- `read_values`: use either `read_ascii_values` or `read_binary_values` as relevant
+- `query_values`: use either `query_ascii_values` or `query_binary_values` as relevant
+- `values_format`: has no equivalent simply pass the proper argument to either
+  the ascii or binary variant of the function (`read_xxxx_values`, `write_xxxx_values`,
+  `query_xxxx_values`)
+
 - Convert the testsuite to use pytest PR #531
   This is motivated by the possibility to re-use it in PyVISA-py. However since
   unittest use inheritance to detect tests, doing so would have been clunky, pytest
