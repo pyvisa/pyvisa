@@ -26,6 +26,8 @@ to be removed  in 1.10:
   the ascii or binary variant of the function (`read_xxxx_values`, `write_xxxx_values`,
   `query_xxxx_values`)
 
+- Add support for "s" and "p" binary format which can be used to retrieve binary files
+  from instruments. PR #536
 - Convert the testsuite to use pytest PR #531
   This is motivated by the possibility to re-use it in PyVISA-py. However since
   unittest use inheritance to detect tests, doing so would have been clunky, pytest

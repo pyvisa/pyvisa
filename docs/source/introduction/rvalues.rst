@@ -118,6 +118,9 @@ many bytes to expect. For those case, you can pass the expected number of
 points using the ``data_points`` keyword argument. The number of bytes will be
 inferred from the datatype of the block.
 
+Finally if you are reading a file for example and simply want to extract a bytes
+object, you can use the ``"s"`` datatype and pass ``bytes`` as container.
+
 
 Writing ASCII values
 --------------------
@@ -158,6 +161,8 @@ To upload a function shape to arbitrary wave generator, the command might be
 Again you can specify the ``datatype`` and ``endianness``.
 
     >>> inst.write_binary_values('WLISt:WAVeform:DATA somename,', values, datatype='d', is_big_endian=False)
+
+If your data are already in a ``bytes`` object you can use the ``"s"`` format.
 
 
 When things are not what they should be
