@@ -162,6 +162,18 @@ dependencies. You can solve it by creating a configuration file and setting `dll
 as described in :ref:`intro-configuring`.
 
 
+VisaIOError: VI_ERROR_SYSTEM_ERROR: Unknown system error:
+-----------------------------------------------------------------
+
+If you have an issue creating a pyvisa.ResourceManager object, first enable screen 
+logging (pyvisa.log_to_screen()) to ensure it is correctly finding the dll files.
+If it is correctly finding the dlls, you may see an error similar to:
+*  viOpenDefaultRM('<ViObject object at 0x000002B6CA4658C8>',) -> -1073807360
+This issue was resolved by reinstalling python. It seems that something within the ctypes
+may have been corrupted.
+[https://github.com/pyvisa/pyvisa/issues/538]
+
+
 Where can I get more information about VISA?
 --------------------------------------------
 
