@@ -163,7 +163,7 @@ as described in :ref:`intro-configuring`.
 
 
 VisaIOError: VI_ERROR_SYSTEM_ERROR: Unknown system error:
------------------------------------------------------------------
+---------------------------------------------------------
 
 If you have an issue creating a pyvisa.ResourceManager object, first enable screen 
 logging (pyvisa.log_to_screen()) to ensure it is correctly finding the dll files.
