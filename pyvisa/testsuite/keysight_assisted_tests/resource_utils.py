@@ -185,6 +185,10 @@ class ResourceTestCase:
         )
         assert self.instr.timeout == float("+inf")
 
+
+class EventAwareResourceTestCaseMixin:
+    """Mixing for resources supporting handling events."""
+
     def test_wait_on_event(self):
         """Test waiting on a VISA event.
 
@@ -202,6 +206,10 @@ class ResourceTestCase:
 
         """
         raise NotImplementedError()
+
+
+class LockableResourceTestCaseMixin:
+    """Mixing for resources supporting locking."""
 
     def test_shared_locking(self):
         """Test locking/unlocking a resource.

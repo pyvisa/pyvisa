@@ -13,7 +13,11 @@ from pyvisa import constants, errors
 from pyvisa.constants import EventType, ResourceAttribute
 from pyvisa.resources import Resource
 
-from .resource_utils import ResourceTestCase
+from .resource_utils import (
+    EventAwareResourceTestCaseMixin,
+    LockableResourceTestCaseMixin,
+    ResourceTestCase,
+)
 
 try:
     import numpy as np  # type: ignore
@@ -682,6 +686,12 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert 0 <= self.instr.stb <= 256
         assert 0 <= self.instr.read_stb() <= 256
 
+
+class EventAwareMessagebasedResourceTestCaseMixin(EventAwareResourceTestCaseMixin):
+    """Mixin for message based resources supporting events.
+
+    """
+
     def test_manually_called_handlers(self):
         """Test calling manually even handler."""
 
@@ -782,70 +792,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         """
         assert self.instr.visalib.get_buffer_from_id(1) is None
-
-    def test_shared_locking(self):
-        """Test locking/unlocking a resource.
-
-        """
-        instr2 = self.rm.open_resource(str(self.rname))
-        instr3 = self.rm.open_resource(str(self.rname))
-
-        key = self.instr.lock()
-        instr2.lock(requested_key=key)
-
-        assert self.instr.query("*IDN?")
-        assert instr2.query("*IDN?")
-        with pytest.raises(errors.VisaIOError):
-            instr3.query("*IDN?")
-
-        # Share the lock for a limited time
-        with instr3.lock_context(requested_key=key) as key2:
-            assert instr3.query("*IDN?")
-            assert key == key2
-
-        # Stop sharing the lock
-        instr2.unlock()
-
-        with pytest.raises(errors.VisaIOError):
-            instr2.query("*IDN?")
-        with pytest.raises(errors.VisaIOError):
-            instr3.query("*IDN?")
-
-        self.instr.unlock()
-
-        assert instr3.query("*IDN?")
-
-    def test_exclusive_locking(self):
-        """Test locking/unlocking a resource.
-
-        """
-        instr2 = self.rm.open_resource(str(self.rname))
-
-        self.instr.lock_excl()
-        with pytest.raises(errors.VisaIOError):
-            instr2.query("*IDN?")
-
-        self.instr.unlock()
-
-        assert instr2.query("*IDN?")
-
-        # Share the lock for a limited time
-        with self.instr.lock_context(requested_key="exclusive") as key:
-            assert key is None
-            with pytest.raises(errors.VisaIOError):
-                instr2.query("*IDN?")
-
-    # Skipped since I do not know how to test those without service request.
-    test_wait_on_event = pytest.mark.skip(ResourceTestCase.test_wait_on_event)
-    test_managing_visa_handler = pytest.mark.skip(
-        ResourceTestCase.test_managing_visa_handler
-    )
-
-
-class SRQMessagebasedResourceTestCase(MessagebasedResourceTestCase):
-    """Base tests for message based resources supporting Service Request and queue.
-
-    """
 
     def test_wait_on_event_timeout(self):
         """Test waiting on a VISA event.
@@ -1008,3 +954,59 @@ class SRQMessagebasedResourceTestCase(MessagebasedResourceTestCase):
             assert self.instr.read() == "1"
         finally:
             ctwrapper.WRAP_HANDLER = True
+
+
+class LockableMessagedBasedResourceTestCaseMixin(LockableResourceTestCaseMixin):
+    """Mixing for message based resources supporting locking."""
+
+    def test_shared_locking(self):
+        """Test locking/unlocking a resource.
+
+        """
+        instr2 = self.rm.open_resource(str(self.rname))
+        instr3 = self.rm.open_resource(str(self.rname))
+
+        key = self.instr.lock()
+        instr2.lock(requested_key=key)
+
+        assert self.instr.query("*IDN?")
+        assert instr2.query("*IDN?")
+        with pytest.raises(errors.VisaIOError):
+            instr3.query("*IDN?")
+
+        # Share the lock for a limited time
+        with instr3.lock_context(requested_key=key) as key2:
+            assert instr3.query("*IDN?")
+            assert key == key2
+
+        # Stop sharing the lock
+        instr2.unlock()
+
+        with pytest.raises(errors.VisaIOError):
+            instr2.query("*IDN?")
+        with pytest.raises(errors.VisaIOError):
+            instr3.query("*IDN?")
+
+        self.instr.unlock()
+
+        assert instr3.query("*IDN?")
+
+    def test_exclusive_locking(self):
+        """Test locking/unlocking a resource.
+
+        """
+        instr2 = self.rm.open_resource(str(self.rname))
+
+        self.instr.lock_excl()
+        with pytest.raises(errors.VisaIOError):
+            instr2.query("*IDN?")
+
+        self.instr.unlock()
+
+        assert instr2.query("*IDN?")
+
+        # Share the lock for a limited time
+        with self.instr.lock_context(requested_key="exclusive") as key:
+            assert key is None
+            with pytest.raises(errors.VisaIOError):
+                instr2.query("*IDN?")
