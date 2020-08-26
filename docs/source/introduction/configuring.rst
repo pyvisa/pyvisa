@@ -69,7 +69,8 @@ contain the following::
 
 Please note that `[Paths]` is treated case-sensitively.
 
-To specify extra .dll search paths on Windows, use a `.pyvisarc` file like the following::
+To specify extra .dll search paths on Windows, use a `.pyvisarc` file like the
+following::
 
    [Paths]
 
@@ -80,7 +81,7 @@ You can define a site-wide configuration file at
 :file:`/usr/share/pyvisa/.pyvisarc` (It may also be
 :file:`/usr/local/...` depending on the location of your Python).
 Under Windows, this file is usually placed at
-:file:`c:\\Python27\\share\\pyvisa\\.pyvisarc`.
+:file:`c:\\Python37\\share\\pyvisa\\.pyvisarc`.
 
 If you encounter any problem, take a look at the :ref:`faq`. There you will
 find the solutions to common problem as well as useful debugging techniques. If
