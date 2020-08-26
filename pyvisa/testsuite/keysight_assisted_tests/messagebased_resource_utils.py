@@ -205,6 +205,18 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write_raw(b"SEND\n")
         assert self.instr.read_raw(size=2) == b"test\n"
 
+    def test_clear(self):
+        """Test clearing the incoming buffer.
+
+        """
+        self.instr.write_raw(b"RECEIVE\n")
+        self.instr.write_raw(b"test\n")
+        self.instr.write_raw(b"SEND\n")
+        self.instr.clear()
+        self.instr.timeout = 10
+        with pytest.raises(errors.VisaIOError):
+            self.instr.read_raw()
+
     def test_write_read(self):
         """Test writing and reading.
 
