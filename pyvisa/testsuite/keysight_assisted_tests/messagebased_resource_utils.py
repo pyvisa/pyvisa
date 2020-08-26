@@ -26,9 +26,7 @@ except ImportError:
 
 
 class EventHandler:
-    """Event handler.
-
-    """
+    """Event handler."""
 
     def __init__(self) -> None:
         self.event_success = False
@@ -58,9 +56,7 @@ class EventHandler:
             return 0
 
     def simplified_handler(self, resource, event, handle=None):
-        """Simplified handler that can be wrapped.
-
-        """
+        """Simplified handler that can be wrapped."""
         self.session = resource.session
         self.handle = handle
         event_type = event.event_type
@@ -78,9 +74,7 @@ class EventHandler:
 
 
 class MessagebasedResourceTestCase(ResourceTestCase):
-    """Base test case for all message based resources.
-
-    """
+    """Base test case for all message based resources."""
 
     #: Type of resource being tested in this test case.
     #: See RESOURCE_ADDRESSES in the __init__.py file of this package for
@@ -91,9 +85,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
     # data then request it to send it back
 
     def setup_method(self):
-        """Create a resource using the address matching the type.
-
-        """
+        """Create a resource using the address matching the type."""
         super().setup_method()
         self.instr.write_termination = "\n"
         self.instr.read_termination = "\n"
@@ -114,9 +106,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             return all((i == j for i, j in zip(h1, h2)))
 
     def test_encoding(self):
-        """Tets setting the string encoding.
-
-        """
+        """Tets setting the string encoding."""
         assert self.instr.encoding == "ascii"
         self.instr.encoding = "utf-8"
 
@@ -124,9 +114,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.encoding = "test"
 
     def test_termchars(self):
-        """Test modifying the termchars.
-
-        """
+        """Test modifying the termchars."""
         # Write termination
         self.instr.write_termination = "\r\n"
         assert self.instr.write_termination == "\r\n"
@@ -146,9 +134,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.read_termination = "\n\n"
 
     def test_write_raw_read_bytes(self):
-        """Test writing raw data and reading a specific number of bytes.
-
-        """
+        """Test writing raw data and reading a specific number of bytes."""
         # Reading all bytes at once
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"test\n")
@@ -182,9 +168,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert self.instr.read_bytes(100, break_on_termchar=True) == b"test\n"
 
     def test_handling_exception_in_read_bytes(self, caplog):
-        """Test handling exception in read_bytes (monkeypatching)
-
-        """
+        """Test handling exception in read_bytes (monkeypatching)"""
 
         def false_read(session, size):
             raise errors.VisaIOError(constants.VI_ERROR_ABORT)
@@ -201,18 +185,14 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert "- exception while reading:" in caplog.records[1].message
 
     def test_write_raw_read_raw(self):
-        """Test writing raw data and reading an answer.
-
-        """
+        """Test writing raw data and reading an answer."""
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"test\n")
         self.instr.write_raw(b"SEND\n")
         assert self.instr.read_raw(size=2) == b"test\n"
 
     def test_clear(self):
-        """Test clearing the incoming buffer.
-
-        """
+        """Test clearing the incoming buffer."""
         self.instr.write_raw(b"RECEIVE\n")
         self.instr.write_raw(b"test\n")
         self.instr.write_raw(b"SEND\n")
@@ -222,9 +202,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.read_raw()
 
     def test_write_read(self):
-        """Test writing and reading.
-
-        """
+        """Test writing and reading."""
         self.instr.write_termination = "\n"
         self.instr.read_termination = "\r\n"
         self.instr.write("RECEIVE")
@@ -271,9 +249,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # TODO not sure how to test encoding
 
     def test_handling_exception_in_read_raw(self, caplog):
-        """Test handling exception in read_bytes (monkeypatching)
-
-        """
+        """Test handling exception in read_bytes (monkeypatching)"""
 
         def false_read(session, size):
             raise errors.VisaIOError(constants.VI_ERROR_ABORT)
@@ -291,9 +267,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert caplog.records
 
     def test_write_ascii_values(self):
-        """Test writing ascii values.
-
-        """
+        """Test writing ascii values."""
         # Standard separator
         values = [1, 2, 3, 4, 5]
         self.instr.write("RECEIVE")
@@ -327,9 +301,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         "hfmt, prefix", zip(("ieee", "hp", "empty"), (b"#212", b"#A\x0c\x00", b""))
     )
     def test_write_binary_values(self, hfmt, prefix):
-        """Test writing binary data.
-
-        """
+        """Test writing binary data."""
         values = [1, 2, 3, 4, 5, 6]
         self.instr.write_termination = "\n"
         self.instr.write("RECEIVE")
@@ -379,9 +351,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             self.instr.write_binary_values("", values, "h", header_fmt="zxz")
 
     def test_read_ascii_values(self):
-        """Test reading ascii values.
-
-        """
+        """Test reading ascii values."""
         # Standard separator
         self.instr.write("RECEIVE")
         self.instr.write("1,2,3,4,5")
@@ -413,9 +383,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
     @pytest.mark.parametrize("hfmt", ("ieee", "hp"))
     def test_read_binary_values(self, hfmt):
-        """Test reading binary data.
-
-        """
+        """Test reading binary data."""
         # TODO test handling binary decoding issue (troublesome)
         self.instr.read_termination = "\r"
         # 3328 in binary short is \x00\r this way we can interrupt the
@@ -458,9 +426,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             assert data == new
 
     def test_read_query_binary_values_invalid_header(self):
-        """Test we properly handle an invalid header.
-
-        """
+        """Test we properly handle an invalid header."""
         data = [1, 2, 3328, 3, 4, 5, 6, 7]
         self.instr.write("RECEIVE")
         self.instr.write_binary_values(
@@ -493,18 +459,14 @@ class MessagebasedResourceTestCase(ResourceTestCase):
     # Not sure how to test this
     @pytest.mark.skip
     def test_handling_malformed_binary(self):
-        """
-
-        """
+        """"""
         pass
 
     @pytest.mark.parametrize(
         "hfmt, header", zip(("ieee", "hp", "empty"), ("#10", "#A\x00\x00", ""))
     )
     def test_read_binary_values_unreported_length(self, hfmt, header):
-        """Test reading binary data.
-
-        """
+        """Test reading binary data."""
         self.instr.read_termination = "\r"
         # 3328 in binary short is \x00\r this way we can interrupt the
         # transmission midway to test some corner cases
@@ -565,9 +527,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             )
 
     def test_delay_in_query_ascii(self):
-        """Test handling of the delay argument in query_ascii_values.
-
-        """
+        """Test handling of the delay argument in query_ascii_values."""
         # Test using the instrument wide delay
         self.instr.query_delay = 1.0
         self.instr.write("RECEIVE")
@@ -599,9 +559,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert values == [1.0, 2.0, 3.0, 4.0, 5.0]
 
     def test_instrument_wide_delay_in_query_binary(self):
-        """Test handling delay in query_ascii_values.
-
-        """
+        """Test handling delay in query_ascii_values."""
         header = "#10"
         data = [1, 2, 3328, 3, 4, 5]
         # Test using the instrument wide delay
@@ -626,9 +584,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert data == new
 
     def test_delay_args_in_query_binary(self):
-        """Test handling of the delay argument in query_ascii_values.
-
-        """
+        """Test handling of the delay argument in query_ascii_values."""
         header = "#10"
         data = [1, 2, 3328, 3, 4, 5]
         self.instr.query_delay = 0.0
@@ -653,9 +609,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert data == new
 
     def test_no_delay_args_in_query_binary(self):
-        """Test handling of the delay argument in query_ascii_values.
-
-        """
+        """Test handling of the delay argument in query_ascii_values."""
         header = "#10"
         data = [1, 2, 3328, 3, 4, 5]
         self.instr.query_delay = 1.0
@@ -680,17 +634,13 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         assert data == new
 
     def test_stb(self):
-        """Test reading the status byte.
-
-        """
+        """Test reading the status byte."""
         assert 0 <= self.instr.stb <= 256
         assert 0 <= self.instr.read_stb() <= 256
 
 
 class EventAwareMessagebasedResourceTestCaseMixin(EventAwareResourceTestCaseMixin):
-    """Mixin for message based resources supporting events.
-
-    """
+    """Mixin for message based resources supporting events."""
 
     def test_manually_called_handlers(self):
         """Test calling manually even handler."""
@@ -736,9 +686,7 @@ class EventAwareMessagebasedResourceTestCaseMixin(EventAwareResourceTestCaseMixi
             self.instr.uninstall_handler(event_type, handler2.handle_event)
 
     def test_handler_clean_up_on_resource_del(self):
-        """Test that handlers are properly cleaned when a resource is deleted.
-
-        """
+        """Test that handlers are properly cleaned when a resource is deleted."""
         handler = EventHandler()
         event_type = EventType.exception
         self.instr.install_handler(event_type, handler.handle_event)
@@ -748,9 +696,7 @@ class EventAwareMessagebasedResourceTestCaseMixin(EventAwareResourceTestCaseMixi
         assert not self.rm.visalib.handlers
 
     def test_uninstall_all_handlers(self):
-        """Test uninstall all handlers from all sessions.
-
-        """
+        """Test uninstall all handlers from all sessions."""
         handler = EventHandler()
         event_type = EventType.exception
         self.instr.install_handler(event_type, handler.handle_event)
@@ -788,15 +734,11 @@ class EventAwareMessagebasedResourceTestCaseMixin(EventAwareResourceTestCaseMixi
         assert response.event.operation_name == "viReadAsync"
 
     def test_getting_unknown_buffer(self):
-        """Test getting a buffer with a wrong ID.
-
-        """
+        """Test getting a buffer with a wrong ID."""
         assert self.instr.visalib.get_buffer_from_id(1) is None
 
     def test_wait_on_event_timeout(self):
-        """Test waiting on a VISA event.
-
-        """
+        """Test waiting on a VISA event."""
         event_type = EventType.service_request
         event_mech = constants.EventMechanism.queue
         # Emit a clear to avoid dealing with previous requests
@@ -817,9 +759,7 @@ class EventAwareMessagebasedResourceTestCaseMixin(EventAwareResourceTestCaseMixi
                 self.instr.disable_event(event_type, event_mech)
 
     def test_wait_on_event(self):
-        """Test waiting on a VISA event.
-
-        """
+        """Test waiting on a VISA event."""
         event_type = EventType.service_request
         event_mech = constants.EventMechanism.queue
         wait_time = 2000  # set time that program waits to receive event
@@ -842,9 +782,7 @@ class EventAwareMessagebasedResourceTestCaseMixin(EventAwareResourceTestCaseMixi
             response.context
 
     def test_managing_visa_handler(self):
-        """Test using visa handlers.
-
-        """
+        """Test using visa handlers."""
 
         def _test(handle):
             handler = EventHandler()
@@ -960,9 +898,7 @@ class LockableMessagedBasedResourceTestCaseMixin(LockableResourceTestCaseMixin):
     """Mixing for message based resources supporting locking."""
 
     def test_shared_locking(self):
-        """Test locking/unlocking a resource.
-
-        """
+        """Test locking/unlocking a resource."""
         instr2 = self.rm.open_resource(str(self.rname))
         instr3 = self.rm.open_resource(str(self.rname))
 
@@ -992,9 +928,7 @@ class LockableMessagedBasedResourceTestCaseMixin(LockableResourceTestCaseMixin):
         assert instr3.query("*IDN?")
 
     def test_exclusive_locking(self):
-        """Test locking/unlocking a resource.
-
-        """
+        """Test locking/unlocking a resource."""
         instr2 = self.rm.open_resource(str(self.rname))
 
         self.instr.lock_excl()

@@ -13,14 +13,10 @@ from pyvisa.testsuite import BaseTestCase
 
 
 class TestInvalidResourceName(BaseTestCase):
-    """Test the creation of InvalidResourceName errors.
-
-    """
+    """Test the creation of InvalidResourceName errors."""
 
     def test_bad_syntax(self):
-        """Test creating a bad syntax error.
-
-        """
+        """Test creating a bad syntax error."""
         e = rname.InvalidResourceName.bad_syntax("syntax", "resource")
         assert str(e) == "Could not parse 'resource'. The syntax is 'syntax'."
 
@@ -28,9 +24,7 @@ class TestInvalidResourceName(BaseTestCase):
         assert str(e) == "Could not parse 'resource'. The syntax is 'syntax' (ex)."
 
     def test_subclass_notfound(self):
-        """Test creating a subclass not found error
-
-        """
+        """Test creating a subclass not found error"""
         e = rname.InvalidResourceName.subclass_notfound("inter")
         assert str(e) == "Parser not found for: inter."
 
@@ -38,9 +32,7 @@ class TestInvalidResourceName(BaseTestCase):
         assert str(e) == "Could not parse 'resource'. Parser not found for: inter."
 
     def test_rc_notfound(self):
-        """Test creating a resource not found error.
-
-        """
+        """Test creating a resource not found error."""
         e = rname.InvalidResourceName.rc_notfound("inter")
         assert str(e) == "Resource class for inter not provided and default not found."
 
@@ -52,22 +44,16 @@ class TestInvalidResourceName(BaseTestCase):
 
 
 class TestRegisteringSubclass(BaseTestCase):
-    """Test the validation of ResourceName subclass during registration.
-
-    """
+    """Test the validation of ResourceName subclass during registration."""
 
     def test_handling_duplicate(self):
-        """Test we reject class for existing interface_type and resource class.
-
-        """
+        """Test we reject class for existing interface_type and resource class."""
         with pytest.raises(ValueError) as e:
             rname.register_subclass(rname.GPIBInstr)
         assert "Class already registered for" in e.exconly()
 
     def test_handling_duplicate_default(self):
-        """Test we enforce the unicity of default resource class per interface.
-
-        """
+        """Test we enforce the unicity of default resource class per interface."""
         with pytest.raises(ValueError) as e:
 
             @dataclass
@@ -89,9 +75,7 @@ class TestResourceName(BaseTestCase):
     """
 
     def test_creation_from_string(self):
-        """Test error handling when creating a name from a string.
-
-        """
+        """Test error handling when creating a name from a string."""
         # No interface class registered
         with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_string("RJ45::1")
@@ -132,9 +116,7 @@ class TestResourceName(BaseTestCase):
         assert "The syntax is" in e.exconly()
 
     def test_creation_from_kwargs(self):
-        """Test error handling when creating a name from a kwargs.
-
-        """
+        """Test error handling when creating a name from a kwargs."""
         # No interface class registered
         with pytest.raises(rname.InvalidResourceName) as e:
             rname.ResourceName.from_kwargs(interface_type="RJ45")
@@ -164,9 +146,7 @@ class TestResourceName(BaseTestCase):
         assert str(rn) == rname.to_canonical_name("GPIB::1")
 
     def test_accessing_interface_type(self):
-        """Test converting the interface to a VISA constant
-
-        """
+        """Test converting the interface to a VISA constant"""
         types = constants.InterfaceType
         for it, itc in zip(
             ("ASRL", "USB", "GPIB", "TCPIP", "PXI", "VXI"),

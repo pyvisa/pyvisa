@@ -33,6 +33,4 @@ VISAMemoryAddress = NewType("VISAMemoryAddress", int)
 #: user handle specified when registering the handler. The value that will be
 #: passed to the handler is the value as interpreted by the backend and returned
 #: by the install_visa_handler method of the library object.
-VISAHandler = Callable[
-    [VISASession, constants.EventType, VISAEventContext, Any], None,
-]
+VISAHandler = Callable[[VISASession, constants.EventType, VISAEventContext, Any], None]

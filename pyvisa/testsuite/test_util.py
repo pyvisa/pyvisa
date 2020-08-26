@@ -26,9 +26,7 @@ except ImportError:
 
 
 class TestConfigFile(BaseTestCase):
-    """Test reading information from a user configuration file.
-
-    """
+    """Test reading information from a user configuration file."""
 
     def setup_method(self):
         # Skip if a real config file exists
@@ -394,9 +392,7 @@ class TestParser(BaseTestCase):
             )
 
     def round_trip_block_conversion(self, values, to_block, from_block, msg):
-        """Test that block conversion round trip as expected.
-
-        """
+        """Test that block conversion round trip as expected."""
         containers = (list, tuple) + ((np.array,) if np else ())
         for cont in containers:
             conv = cont(values)
@@ -415,9 +411,7 @@ class TestParser(BaseTestCase):
 
 
 class TestSystemDetailsAnalysis(BaseTestCase):
-    """Test getting the system details.
-
-    """
+    """Test getting the system details."""
 
     def setup_method(self):
         self._unicode_size = sys.maxunicode
@@ -451,9 +445,7 @@ class TestSystemDetailsAnalysis(BaseTestCase):
         assert output.strip() == details.strip()
 
     def test_system_details_for_plugins(self):
-        """Test reporting on plugins.
-
-        """
+        """Test reporting on plugins."""
 
         def dummy_list_backends():
             return ["test1", "test2", "test3", "test4"]
@@ -504,14 +496,10 @@ class TestSystemDetailsAnalysis(BaseTestCase):
 
 
 class TestLibraryAnalysis(BaseTestCase):
-    """Test (through monkey patching) the analysis of binary libraries.
-
-    """
+    """Test (through monkey patching) the analysis of binary libraries."""
 
     def test_get_shared_library_arch(self):
-        """Test analysing a library on Windows.
-
-        """
+        """Test analysing a library on Windows."""
         dirname = os.path.join(os.path.dirname(__file__), "fakelibs")
         for f, a in zip(["_32", "_64", "_64_2"], ["I386", "IA64", "AMD64"]):
             arch = util.get_shared_library_arch(
@@ -533,9 +521,7 @@ class TestLibraryAnalysis(BaseTestCase):
         assert "Not a PE executable" in e.exconly()
 
     def test_get_arch_windows(self):
-        """Test identifying the computer architecture on windows.
-
-        """
+        """Test identifying the computer architecture on windows."""
         dirname = os.path.join(os.path.dirname(__file__), "fakelibs")
 
         platform = sys.platform
@@ -561,9 +547,7 @@ class TestLibraryAnalysis(BaseTestCase):
 
     @pytest.mark.skipif(sys.version_info < (3, 7), reason="Fails weirdly on Python 3.6")
     def test_get_arch_unix(self):
-        """Test identifying the computer architecture on linux and Mac.
-
-        """
+        """Test identifying the computer architecture on linux and Mac."""
         platform = sys.platform
         run = subprocess.run
         try:
@@ -594,9 +578,7 @@ class TestLibraryAnalysis(BaseTestCase):
             subprocess.run = run
 
     def test_get_arch_unix_unreported(self):
-        """Test identifying the computer architecture on an unknown platform.
-
-        """
+        """Test identifying the computer architecture on an unknown platform."""
         platform = sys.platform
         run = subprocess.run
         try:
@@ -611,9 +593,7 @@ class TestLibraryAnalysis(BaseTestCase):
             subprocess.run = run
 
     def test_get_arch_unknown(self):
-        """Test identifying the computer architecture on an unknown platform.
-
-        """
+        """Test identifying the computer architecture on an unknown platform."""
         platform = sys.platform
         run = subprocess.run
         try:

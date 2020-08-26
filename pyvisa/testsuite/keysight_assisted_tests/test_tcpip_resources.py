@@ -20,9 +20,7 @@ class TestTCPIPInstr(
     EventAwareMessagebasedResourceTestCaseMixin,
     MessagebasedResourceTestCase,
 ):
-    """Test pyvisa against a TCPIP INSTR resource.
-
-    """
+    """Test pyvisa against a TCPIP INSTR resource."""
 
     #: Type of resource being tested in this test case.
     #: See RESOURCE_ADDRESSES in the __init__.py file of this package for
@@ -61,9 +59,7 @@ class TestTCPIPInstr(
 
 @require_virtual_instr
 class TestTCPIPSocket(MessagebasedResourceTestCase):
-    """Test pyvisa against a TCPIP SOCKET resource.
-
-    """
+    """Test pyvisa against a TCPIP SOCKET resource."""
 
     #: Type of resource being tested in this test case.
     #: See RESOURCE_ADDRESSES in the __init__.py file of this package for

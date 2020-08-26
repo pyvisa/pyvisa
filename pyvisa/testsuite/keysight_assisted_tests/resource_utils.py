@@ -18,9 +18,7 @@ from . import RESOURCE_ADDRESSES
 
 
 class ResourceTestCase:
-    """Base test case for all resources.
-
-    """
+    """Base test case for all resources."""
 
     #: Type of resource being tested in this test case.
     #: See RESOURCE_ADDRESSES in the __init__.py file of this package for
@@ -33,9 +31,7 @@ class ResourceTestCase:
     MINIMAL_TIMEOUT: Union[int, Timeouts] = Timeouts.immediate
 
     def setup_method(self):
-        """Create a resource using the address matching the type.
-
-        """
+        """Create a resource using the address matching the type."""
         name = RESOURCE_ADDRESSES[self.RESOURCE_TYPE]
         self.rname = ResourceName.from_string(name)
         self.rm = ResourceManager()
@@ -43,18 +39,14 @@ class ResourceTestCase:
         self.instr.clear()
 
     def teardown_method(self):
-        """Close the resource at the end of the test.
-
-        """
+        """Close the resource at the end of the test."""
         if self.instr:
             self.instr.close()
         if self.rm:
             self.rm.close()
 
     def test_lifecycle(self):
-        """Test the lifecyle of a resource and the use as a context manager.
-
-        """
+        """Test the lifecyle of a resource and the use as a context manager."""
         assert self.instr.session is not None
         assert self.instr.visalib is not None
         assert self.instr.last_status == StatusCode.success
@@ -70,9 +62,7 @@ class ResourceTestCase:
         assert len(self.rm.list_opened_resources()) == 0
 
     def test_close_on_del(self, caplog):
-        """Test the lifecyle of a resource and the use as a context manager.
-
-        """
+        """Test the lifecyle of a resource and the use as a context manager."""
         with caplog.at_level(logging.DEBUG):
             self.instr = None
             gc.collect()
@@ -81,32 +71,24 @@ class ResourceTestCase:
         assert "- is closed", caplog.output[-1].message
 
     def test_alias_bypassing(self):
-        """Test that a resource that cannot normalize an alias keep the alias.
-
-        """
+        """Test that a resource that cannot normalize an alias keep the alias."""
         instr = Resource(self.rm, "visa_alias")
         assert re.match(r".* at %s" % "visa_alias", str(instr))
 
     def test_str(self):
-        """Test the string representation of a resource.
-
-        """
+        """Test the string representation of a resource."""
         assert re.match(r".* at %s" % str(self.rname), str(self.instr))
         self.instr.close()
         assert re.match(r".* at %s" % str(self.rname), str(self.instr))
 
     def test_repr(self):
-        """Test the repr of a resource.
-
-        """
+        """Test the repr of a resource."""
         assert re.match(r"<.*\('%s'\)>" % str(self.rname), repr(self.instr))
         self.instr.close()
         assert re.match(r"<.*\('%s'\)>" % str(self.rname), repr(self.instr))
 
     def test_timeout(self):
-        """Test setting the timeout attribute.
-
-        """
+        """Test setting the timeout attribute."""
         self.instr.timeout = None
         assert self.instr.timeout == float("+inf")
         assert (
@@ -136,9 +118,7 @@ class ResourceTestCase:
         )
 
     def test_resource_info(self):
-        """Test accessing the resource info.
-
-        """
+        """Test accessing the resource info."""
         rinfo = self.instr.resource_info
         assert rinfo.interface_type == getattr(
             InterfaceType, self.rname.interface_type.lower()
@@ -149,9 +129,7 @@ class ResourceTestCase:
         assert rinfo.resource_name == str(self.rname)
 
     def test_interface_type(self):
-        """Test accessing the resource interface_type.
-
-        """
+        """Test accessing the resource interface_type."""
         assert self.instr.interface_type == getattr(
             InterfaceType, self.rname.interface_type.lower()
         )
@@ -212,13 +190,9 @@ class LockableResourceTestCaseMixin:
     """Mixing for resources supporting locking."""
 
     def test_shared_locking(self):
-        """Test locking/unlocking a resource.
-
-        """
+        """Test locking/unlocking a resource."""
         raise NotImplementedError()
 
     def test_exclusive_locking(self):
-        """Test locking/unlocking a resource.
-
-        """
+        """Test locking/unlocking a resource."""
         raise NotImplementedError()

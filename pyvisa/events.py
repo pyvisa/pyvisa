@@ -49,7 +49,7 @@ class Event:
 
     @classmethod
     def register(
-        cls, event_type: constants.EventType,
+        cls, event_type: constants.EventType
     ) -> Callable[[Type["Event"]], Type["Event"]]:
         """Register a class with a given event type."""
 
@@ -177,9 +177,7 @@ class IOCompletionEvent(Event):
 
     @property
     def data(self):
-        """Portion of the buffer that was actually filled during the call.
-
-        """
+        """Portion of the buffer that was actually filled during the call."""
         return bytes(self.buffer[: self.return_count])
 
 

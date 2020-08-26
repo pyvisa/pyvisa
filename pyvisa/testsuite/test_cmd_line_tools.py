@@ -13,9 +13,7 @@ from . import BaseTestCase, require_visa_lib
 
 
 class TestCmdLineTools(BaseTestCase):
-    """Test the cmd line tools functions and scripts.
-
-    """
+    """Test the cmd line tools functions and scripts."""
 
     @require_visa_lib
     def test_visa_main(self):
@@ -39,9 +37,7 @@ class TestCmdLineTools(BaseTestCase):
         assert b"Welcome to the VISA shell" in stdout
 
     def test_visa_main_argument_handling(self):
-        """Test we reject invalid values in visa_main.
-
-        """
+        """Test we reject invalid values in visa_main."""
         from pyvisa.cmd_line_tools import visa_main
 
         old = sys.argv = ["python"]
@@ -52,9 +48,7 @@ class TestCmdLineTools(BaseTestCase):
             sys.argv = old
 
     def test_visa_info(self):
-        """Test the visa info command line tool.
-
-        """
+        """Test the visa info command line tool."""
         result = run("pyvisa-info", stdout=PIPE, universal_newlines=True)
         details = util.system_details_to_str(util.get_system_details())
         assert result.stdout.strip() == details.strip()
@@ -62,9 +56,7 @@ class TestCmdLineTools(BaseTestCase):
     # TODO test backend selection: this not easy at all to assert
     @require_visa_lib
     def test_visa_shell(self):
-        """Test the visa shell function.
-
-        """
+        """Test the visa shell function."""
         with Popen(["pyvisa-shell"], stdin=PIPE, stdout=PIPE) as p:
             stdout, stderr = p.communicate(b"exit")
         assert b"Welcome to the VISA shell" in stdout

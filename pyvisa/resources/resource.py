@@ -426,7 +426,7 @@ class Resource(object):
         )
 
     def wrap_handler(
-        self, callable: Callable[["Resource", Event, Any], None],
+        self, callable: Callable[["Resource", Event, Any], None]
     ) -> VISAHandler:
         """Wrap an event handler to provide the signature expected by VISA.
 

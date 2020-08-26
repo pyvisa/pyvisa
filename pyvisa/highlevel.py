@@ -1830,7 +1830,7 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
-    def open_default_resource_manager(self,) -> Tuple[VISARMSession, StatusCode]:
+    def open_default_resource_manager(self) -> Tuple[VISARMSession, StatusCode]:
         """This function returns a session to the Default Resource Manager resource.
 
         Corresponds to viOpenDefaultRM function of the VISA library.

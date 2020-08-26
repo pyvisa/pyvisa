@@ -37,23 +37,17 @@ class TestPicleUnpickle(BaseTestCase):
 
 
 class TestLibraryError(BaseTestCase):
-    """Test the creation of Library errors.
-
-    """
+    """Test the creation of Library errors."""
 
     def test_from_exception_not_found(self):
-        """Test handling a missing library file.
-
-        """
+        """Test handling a missing library file."""
         exc = errors.LibraryError.from_exception(
             ValueError("visa.dll: image not found"), "visa.dll"
         )
         assert "File not found" in str(exc)
 
     def test_from_exception_wrong_arch(self):
-        """Test handling a library that report the wrong bitness.
-
-        """
+        """Test handling a library that report the wrong bitness."""
         exc = errors.LibraryError.from_exception(
             ValueError("visa.dll: no suitable image found. no matching architecture"),
             "visa.dll",
@@ -61,34 +55,26 @@ class TestLibraryError(BaseTestCase):
         assert "No matching architecture" in str(exc)
 
     def test_from_exception_wrong_filetype(self):
-        """Test handling a library file of the wrong type.
-
-        """
+        """Test handling a library file of the wrong type."""
         exc = errors.LibraryError.from_exception(
             ValueError("visa.dll: no suitable image found."), "visa.dll"
         )
         assert "Could not determine filetype" in str(exc)
 
     def test_from_exception_wrong_ELF(self):
-        """Test handling a library file with a wrong ELF.
-
-        """
+        """Test handling a library file with a wrong ELF."""
         exc = errors.LibraryError.from_exception(
             ValueError("visa.dll: wrong ELF class"), "visa.dll"
         )
         assert "No matching architecture" in str(exc)
 
     def test_from_exception_random(self):
-        """Test handling a library for which the error is not a usual one.
-
-        """
+        """Test handling a library for which the error is not a usual one."""
         exc = errors.LibraryError.from_exception(ValueError("visa.dll"), "visa.dll")
         assert "Error while accessing" in str(exc)
 
     def test_from_exception_decode_error(self):
-        """Test handling an error that decode to string.
-
-        """
+        """Test handling an error that decode to string."""
 
         class DummyExc(Exception):
             def __str__(self):

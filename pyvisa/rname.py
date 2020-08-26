@@ -64,11 +64,9 @@ class InvalidResourceName(ValueError):
 
     @classmethod
     def subclass_notfound(
-        cls, interface_type_resource_class: Tuple[str, str], resource_name: str = None,
+        cls, interface_type_resource_class: Tuple[str, str], resource_name: str = None
     ) -> "InvalidResourceName":
-        """Build an exception when no parser has been registered for a pair.
-
-        """
+        """Build an exception when no parser has been registered for a pair."""
 
         msg = "Parser not found for: %s." % (interface_type_resource_class,)
 
@@ -81,9 +79,7 @@ class InvalidResourceName(ValueError):
     def rc_notfound(
         cls, interface_type: str, resource_name: str = None
     ) -> "InvalidResourceName":
-        """Build an exception when no resource class is provided and no default is found.
-
-        """
+        """Build an exception when no resource class is provided and no default is found."""
 
         msg = (
             "Resource class for %s not provided and default not found." % interface_type
@@ -783,7 +779,7 @@ class _AttrGetter:
 
 
 def filter2(
-    resources: Iterable[str], query: str, open_resource: Callable[[str], "Resource"],
+    resources: Iterable[str], query: str, open_resource: Callable[[str], "Resource"]
 ) -> Tuple[str, ...]:
     """Filter a list of resources according to a query expression.
 

@@ -10,9 +10,7 @@ from pyvisa.testsuite import BaseTestCase
 
 
 class TestLoggingUtilities(BaseTestCase):
-    """Test standard logging utilities for pyvisa.
-
-    """
+    """Test standard logging utilities for pyvisa."""
 
     def teardown_method(self):
         for h in pyvisa.logger.handlers:
@@ -20,9 +18,7 @@ class TestLoggingUtilities(BaseTestCase):
                 pyvisa.logger.removeHandler(h)
 
     def test_log_to_stream(self):
-        """Test redirecting the log to a custom stream.
-
-        """
+        """Test redirecting the log to a custom stream."""
         stream = StringIO()
         debug_stream = StringIO()
         pyvisa.log_to_stream(stream, level=logging.INFO)
@@ -44,9 +40,7 @@ class TestLoggingUtilities(BaseTestCase):
         self._log_to_screen_helper(logging.DEBUG)
 
     def test_log_to_screen_custom_level(self):
-        """Test redirecting the log to stdout.
-
-        """
+        """Test redirecting the log to stdout."""
         self._log_to_screen_helper(logging.INFO)
 
     def _log_to_screen_helper(self, level):

@@ -15,16 +15,12 @@ from . import BaseTestCase
 
 
 class TestHighlevel(BaseTestCase):
-    """Test highlevel functionalities.
-
-    """
+    """Test highlevel functionalities."""
 
     CHECK_NO_WARNING = False
 
     def test_base_class_parse_resource(self):
-        """Test the base class implementation of parse_resource.
-
-        """
+        """Test the base class implementation of parse_resource."""
         lib = highlevel.VisaLibraryBase("test")
         rsc_name = "TCPIP::192.168.0.1::INSTR"
         info, ret_code = lib.parse_resource(None, rsc_name)
@@ -50,9 +46,7 @@ class TestHighlevel(BaseTestCase):
             assert parsed == value
 
     def test_base_class_parse_resource_error(self):
-        """Test errors in the base class implementation of parse_resource.
-
-        """
+        """Test errors in the base class implementation of parse_resource."""
         lib = highlevel.VisaLibraryBase("test")
         rsc_name = "UNKNOWN::1::INSTR"
         info, ret_code = lib.parse_resource(None, rsc_name)
@@ -61,9 +55,7 @@ class TestHighlevel(BaseTestCase):
         assert info[0] == constants.InterfaceType.unknown
 
     def test_specifying_path_open_visa_library(self, caplog):
-        """Test handling a specified path in open_visa_library.
-
-        """
+        """Test handling a specified path in open_visa_library."""
         with caplog.at_level(logging.DEBUG):
             with pytest.raises(Exception):
                 highlevel.open_visa_library("non/existent/file")
@@ -72,9 +64,7 @@ class TestHighlevel(BaseTestCase):
         assert "non/existent/file" in caplog.records[0].message
 
     def test_handling_error_in_opening_library(self, caplog):
-        """Test handling errors when trying to open a Visa library.
-
-        """
+        """Test handling errors when trying to open a Visa library."""
 
         class FakeLibrary(highlevel.VisaLibraryBase):
             @classmethod
@@ -99,9 +89,7 @@ class TestHighlevel(BaseTestCase):
         assert "error" in msg[2]
 
     def test_get_wrapper_class(self):
-        """Test retrieving a wrapper class.
-
-        """
+        """Test retrieving a wrapper class."""
         highlevel._WRAPPERS.clear()
 
         with pytest.warns(FutureWarning):
@@ -121,9 +109,7 @@ class TestHighlevel(BaseTestCase):
             highlevel.get_wrapper_class("dummy")
 
     def test_get_default_wrapper(self, caplog):
-        """Test retrieving the default wrapper.
-
-        """
+        """Test retrieving the default wrapper."""
         old_lib = IVIVisaLibrary.get_library_paths
         old_wrap = highlevel.get_wrapper_class
 
@@ -176,9 +162,7 @@ class TestHighlevel(BaseTestCase):
             highlevel.get_wrapper_class = no_py_wrapper_class = old_wrap
 
     def test_register_resource_class(self, caplog):
-        """Test registering resource classes.
-
-        """
+        """Test registering resource classes."""
         old = highlevel.ResourceManager._resource_classes.copy()
         try:
 
@@ -202,9 +186,7 @@ class TestHighlevel(BaseTestCase):
             highlevel.ResourceManager._resource_classes = old
 
     def test_register_resource_class_missing_attr(self):
-        """Test registering resource classes.
-
-        """
+        """Test registering resource classes."""
         old = highlevel.ResourceManager._resource_classes.copy()
         try:
             with pytest.raises(TypeError):
@@ -221,13 +203,9 @@ class TestHighlevel(BaseTestCase):
             highlevel.ResourceManager._resource_classes = old
 
     def test_base_get_library_paths(self):
-        """Test the base class implementation of get_library_paths.
-
-        """
+        """Test the base class implementation of get_library_paths."""
         assert () == highlevel.VisaLibraryBase.get_library_paths()
 
     def test_base_get_debug_info(self):
-        """Test the base class implementation of get_debug_info.
-
-        """
+        """Test the base class implementation of get_debug_info."""
         assert len(highlevel.VisaLibraryBase.get_debug_info()) == 1

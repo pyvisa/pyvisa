@@ -14,15 +14,11 @@ from . import require_virtual_instr
 @require_virtual_instr
 class TestFilter2(BaseTestCase):
     def setup_method(self):
-        """Create a ResourceManager with the default backend library.
-
-        """
+        """Create a ResourceManager with the default backend library."""
         self.rm = ResourceManager()
 
     def teardown_method(self):
-        """Close the ResourceManager.
-
-        """
+        """Close the ResourceManager."""
         self.rm.close()
 
     def _test_filter2(self, expr, *correct):

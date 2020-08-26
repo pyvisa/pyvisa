@@ -18,9 +18,7 @@ from . import BaseTestCase
 
 
 class TestEvent(BaseTestCase):
-    """Test Event functionalities.
-
-    """
+    """Test Event functionalities."""
 
     def setup_method(self):
         self.old = Event._event_classes.copy()

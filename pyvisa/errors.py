@@ -643,7 +643,7 @@ class UnknownHandler(Error):
     """
 
     def __init__(
-        self, event_type: EventType, handler: typing.VISAHandler, user_handle: Any,
+        self, event_type: EventType, handler: typing.VISAHandler, user_handle: Any
     ) -> None:
         super(UnknownHandler, self).__init__(
             "%s, %s, %s" % (event_type, handler, user_handle)

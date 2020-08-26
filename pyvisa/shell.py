@@ -378,9 +378,7 @@ class VisaShell(cmd.Cmd):
         return True
 
     def do_EOF(self, arg):
-        """Handle an EOF.
-
-        """
+        """Handle an EOF."""
         return True
 
 
