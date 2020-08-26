@@ -21,7 +21,7 @@ class TestEnvVarHandling(BaseTestCase):
 
         env = os.environ.copy()
         env["PYVISA_WRAP_HANDLER"] = "0"
-        with Popen([sys.executable], stdin=PIPE, stdout=PIPE, env=env,) as p:
+        with Popen([sys.executable], stdin=PIPE, stdout=PIPE, env=env) as p:
             stdout, _ = p.communicate(
                 b"from pyvisa import ctwrapper;print(ctwrapper.WRAP_HANDLER);exit()"
             )
