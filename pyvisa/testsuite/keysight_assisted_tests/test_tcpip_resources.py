@@ -8,13 +8,18 @@ from pyvisa import constants, errors
 
 from . import copy_func, require_virtual_instr
 from .messagebased_resource_utils import (
+    EventAwareMessagebasedResourceTestCaseMixin,
+    LockableMessagedBasedResourceTestCaseMixin,
     MessagebasedResourceTestCase,
-    SRQMessagebasedResourceTestCase,
 )
 
 
 @require_virtual_instr
-class TestTCPIPInstr(SRQMessagebasedResourceTestCase):
+class TestTCPIPInstr(
+    LockableMessagedBasedResourceTestCaseMixin,
+    EventAwareMessagebasedResourceTestCaseMixin,
+    MessagebasedResourceTestCase,
+):
     """Test pyvisa against a TCPIP INSTR resource.
 
     """
@@ -115,13 +120,4 @@ class TestTCPIPSocket(MessagebasedResourceTestCase):
     )
     test_no_delay_args_in_query_binary = pytest.mark.xfail(
         copy_func(MessagebasedResourceTestCase.test_no_delay_args_in_query_binary)
-    )
-    test_manual_async_read = pytest.mark.xfail(
-        copy_func(MessagebasedResourceTestCase.test_manual_async_read)
-    )
-    test_shared_locking = pytest.mark.xfail(
-        copy_func(MessagebasedResourceTestCase.test_shared_locking)
-    )
-    test_exclusive_locking = pytest.mark.xfail(
-        copy_func(MessagebasedResourceTestCase.test_exclusive_locking)
     )
