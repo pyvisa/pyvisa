@@ -187,6 +187,15 @@ up a couple of paragraph).
     the timeout value in which case increasing the timeout value should fix
     the issue.
 
+.. note::
+
+    It is possible to disable the use of teh termination character to detect
+    the end of an input message by setting |read_termination| to ``""``. Care
+    has to be taken for the case of serial instrument for which the method used
+    to determine the end of input is controlled by the |end_input| attribute
+    and is set by default to use the termination character. To fully disable
+    the use of the termination character its value should be changed.
+
 The above focused on using only PyVISA,  if you are running Windows, or MacOS
 you are likely to have access to third party tools that can help. Some tips to
 use them are given in the next section.

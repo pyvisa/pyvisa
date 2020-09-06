@@ -47,6 +47,8 @@
 
 .. |wrap_handler| replace:: :attr:`~pyvisa.resources.Resource.wrap_handler`
 
+.. |end_input| replace:: :attr:`~pyvisa.resources.serial.SerialInstrument.end_input`
+
 .. |RegisterBasedResource| replace:: :class:`~pyvisa.resources.RegisterBasedResource`
 
 .. |VisaIOError| replace:: :exc:`~pyvisa.errors.VisaIOError`
