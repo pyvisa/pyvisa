@@ -219,6 +219,10 @@ one of those tools you should be able, in most cases, to get it to work in
 PyVISA. However if it does not work using those tools, it won't work in
 PyVISA.
 
+For serial instruments (true or emulated over USB), you can also try to
+directly communicate with it using Putty or Tera Term on Windows, CoolTerm or
+Terminal / screen on macOS.
+
 
 Hopefully those simple tips will allow you to get through. In some cases, it
 may not be the case and you are always welcome to ask for help (but realize
