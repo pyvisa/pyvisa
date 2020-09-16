@@ -1,7 +1,7 @@
 PyVISA Changelog
 ================
 
-1.11 (unreleased)
+1.11 (16-09-2020)
 -----------------
 
 PyVISA 1.11 introduces a small backward incompatibility in the handling of
@@ -16,7 +16,7 @@ behavior.
 
 PyVISA 1.11 also removes deprecated functions and attributes that were supposed
 to be removed  in 1.10:
-- `ask`: use `query_instead
+- `ask`: use `query` instead
 - `ask_delay`: use `query_delay`
 - `ask_for_values`: use either `query_ascii_values` or `query_binary_values` as relevant
 - `write_values`: use either `write_ascii_values` or `write_binary_values` as relevant
