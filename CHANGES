@@ -16,6 +16,7 @@ behavior.
 
 PyVISA 1.11 also removes deprecated functions and attributes that were supposed
 to be removed  in 1.10:
+
 - `ask`: use `query` instead
 - `ask_delay`: use `query_delay`
 - `ask_for_values`: use either `query_ascii_values` or `query_binary_values` as relevant
