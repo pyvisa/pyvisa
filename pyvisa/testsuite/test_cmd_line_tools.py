@@ -49,6 +49,9 @@ class TestCmdLineTools(BaseTestCase):
 
     def test_visa_info(self):
         """Test the visa info command line tool."""
+        import sys
+
+        print(sys.path)
         result = run("pyvisa-info", stdout=PIPE, universal_newlines=True)
         details = util.system_details_to_str(util.get_system_details())
         assert result.stdout.strip() == details.strip()
