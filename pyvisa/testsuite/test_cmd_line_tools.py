@@ -53,7 +53,7 @@ class TestCmdLineTools(BaseTestCase):
         details = util.system_details_to_str(util.get_system_details())
         assert result.stdout.strip() == details.strip()
 
-    # TODO test backend selection: this not easy at all to assert
+    # TODO test backend selection: this is not easy at all to assert
     @require_visa_lib
     def test_visa_shell(self):
         """Test the visa shell function."""
