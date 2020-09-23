@@ -1,6 +1,12 @@
 PyVISA Changelog
 ================
 
+1.11.1 (unreleased)
+-------------------
+
+- fix the listing of available backends (Also not that we now return the backend
+  name as can be used to create a ResourceManger) PR #545
+
 1.11 (16-09-2020)
 -----------------
 
