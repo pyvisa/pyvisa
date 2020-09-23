@@ -30,7 +30,11 @@ class TestCmdLineTools(BaseTestCase):
         print(result.stdout.strip())
         print()
         print(details.strip())
-        assert result.stdout.strip() == details.strip()
+        # Path difference can lead to subtle differences in the backends
+        # compare only the first lines.
+        assert (
+            result.stdout.strip().split("\n")[:16] == details.strip().split("\n")[:16]
+        )
 
         with Popen(["python", "-m", "visa", "shell"], stdin=PIPE, stdout=PIPE) as p:
             stdout, _ = p.communicate(b"exit")
@@ -51,9 +55,13 @@ class TestCmdLineTools(BaseTestCase):
         """Test the visa info command line tool."""
         result = run("pyvisa-info", stdout=PIPE, universal_newlines=True)
         details = util.system_details_to_str(util.get_system_details())
-        assert result.stdout.strip() == details.strip()
+        # Path difference can lead to subtle differences in the backends
+        # compare only the first lines.
+        assert (
+            result.stdout.strip().split("\n")[:16] == details.strip().split("\n")[:16]
+        )
 
-    # TODO test backend selection: this not easy at all to assert
+    # TODO test backend selection: this is not easy at all to assert
     @require_visa_lib
     def test_visa_shell(self):
         """Test the visa shell function."""

@@ -88,6 +88,20 @@ class TestHighlevel(BaseTestCase):
         assert "oserror" in msg[1]
         assert "error" in msg[2]
 
+    def test_list_backends(self):
+        """Test listing backends."""
+        highlevel._WRAPPERS.clear()
+
+        path = os.path.join(os.path.dirname(__file__), "fake-extensions")
+        sys.path.append(path)
+        try:
+            backends = highlevel.list_backends()
+        finally:
+            sys.path.remove(path)
+
+        assert "ivi" in backends
+        assert "test" in backends
+
     def test_get_wrapper_class(self):
         """Test retrieving a wrapper class."""
         highlevel._WRAPPERS.clear()

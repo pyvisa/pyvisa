@@ -2775,14 +2775,15 @@ class VisaLibraryBase(object):
 def list_backends() -> List[str]:
     """Return installed backends.
 
-    Backends are installed python packages named pyvisa-<something> where <something>
+    Backends are installed python packages named pyvisa_<something> where <something>
     is the name of the backend.
 
     """
     return ["ivi"] + [
-        name
+        name[7:]
         for (loader, name, ispkg) in pkgutil.iter_modules()
-        if name.startswith("pyvisa-") and not name.endswith("-script")
+        if (name.startswith("pyvisa_") or name.startswith("pyvisa-"))
+        and not name.endswith("-script")
     ]
 
 
