@@ -60,16 +60,18 @@ if TYPE_CHECKING:
 #: Named tuple with information about a resource. Returned by some :class:`ResourceManager` methods.
 #:
 #: :interface_type: Interface type of the given resource string. :class:`pyvisa.constants.InterfaceType`
-#: :interface_board_number: Board number of the interface of the given resource string.
+#: :interface_board_number: Board number of the interface of the given resource string. We allow None
+#:                          since serial resources may not sometimes be easily described
+#:                          by a single number in particular on Linux system.
 #: :resource_class: Specifies the resource class (for example, "INSTR") of the given resource string.
 #: :resource_name: This is the expanded version of the given resource string.
-#:                       The format should be similar to the VISA-defined canonical resource name.
+#:                 The format should be similar to the VISA-defined canonical resource name.
 #: :alias: Specifies the user-defined alias for the given resource string.
 ResourceInfo = NamedTuple(
     "ResourceInfo",
     (
         ("interface_type", constants.InterfaceType),
-        ("interface_board_number", int),
+        ("interface_board_number", Optional[int]),
         ("resource_class", Optional[str]),
         ("resource_name", Optional[str]),
         ("alias", Optional[str]),
@@ -2036,28 +2038,35 @@ class VisaLibraryBase(object):
         """
         try:
             parsed = rname.parse_resource_name(resource_name)
-
-            return (
-                ResourceInfo(
-                    parsed.interface_type_const,
-                    # We can only get concrete classes which have one of those
-                    # attributes
-                    int(
-                        parsed.board  # type: ignore
-                        if hasattr(parsed, "board")
-                        else parsed.interface  # type: ignore
-                    ),
-                    parsed.resource_class,
-                    str(parsed),
-                    None,
-                ),
-                StatusCode.success,
-            )
         except ValueError:
             return (
                 ResourceInfo(constants.InterfaceType.unknown, 0, None, None, None),
                 StatusCode.error_invalid_resource_name,
             )
+
+        board_number: Optional[int]
+        try:
+            # We can only get concrete classes which have one of those attributes
+            board_number = int(
+                parsed.board  # type: ignore
+                if hasattr(parsed, "board")
+                else parsed.interface  # type: ignore
+            )
+        # In some cases the board number may not be convertible to an int
+        # PyVISA-py serial resources on Linux for example
+        except ValueError:
+            board_number = None
+
+        return (
+            ResourceInfo(
+                parsed.interface_type_const,
+                board_number,
+                parsed.resource_class,
+                str(parsed),
+                None,
+            ),
+            StatusCode.success,
+        )
 
     def peek_8(
         self, session: VISASession, address: VISAMemoryAddress

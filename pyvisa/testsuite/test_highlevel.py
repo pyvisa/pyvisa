@@ -19,26 +19,50 @@ class TestHighlevel(BaseTestCase):
 
     CHECK_NO_WARNING = False
 
-    def test_base_class_parse_resource(self):
+    @pytest.mark.parametrize(
+        "rsc_name, values",
+        [
+            ("TCPIP::192.168.0.1::INSTR", (constants.InterfaceType.tcpip, 0, "INSTR")),
+            ("TCPIP1::192.168.0.1::INSTR", (constants.InterfaceType.tcpip, 1, "INSTR")),
+            (
+                "TCPIP::192.168.0.1::5000::SOCKET",
+                (constants.InterfaceType.tcpip, 0, "SOCKET"),
+            ),
+            (
+                "TCPIP2::192.168.0.1::5000::SOCKET",
+                (constants.InterfaceType.tcpip, 2, "SOCKET"),
+            ),
+            ("GPIB::1::INSTR", (constants.InterfaceType.gpib, 0, "INSTR")),
+            ("GPIB::INTFC", (constants.InterfaceType.gpib, 0, "INTFC")),
+            ("GPIB2::1::INSTR", (constants.InterfaceType.gpib, 2, "INSTR")),
+            ("GPIB3::INTFC", (constants.InterfaceType.gpib, 3, "INTFC")),
+            (
+                "USB1::0x1111::0x2222::0x4445::0::RAW",
+                (constants.InterfaceType.usb, 1, "RAW"),
+            ),
+            (
+                "USB0::0x1112::0x2223::0x1234::0::INSTR",
+                (constants.InterfaceType.usb, 0, "INSTR"),
+            ),
+            ("ASRL2::INSTR", (constants.InterfaceType.asrl, 2, "INSTR")),
+            ("ASRL/dev/tty0::INSTR", (constants.InterfaceType.asrl, None, "INSTR")),
+        ],
+    )
+    def test_base_class_parse_resource(self, rsc_name, values):
         """Test the base class implementation of parse_resource."""
         lib = highlevel.VisaLibraryBase("test")
-        rsc_name = "TCPIP::192.168.0.1::INSTR"
         info, ret_code = lib.parse_resource(None, rsc_name)
 
         # interface_type interface_board_number resource_class resource_name alias
-        for parsed, value in zip(
-            info, (constants.InterfaceType.tcpip, 0, None, None, None)
-        ):
+        for parsed, value in zip(info, values[:2] + (None, None, None)):
             assert parsed == value
 
         info, ret_code = lib.parse_resource_extended(None, rsc_name)
         # interface_type interface_board_number resource_class resource_name alias
         for parsed, value in zip(
             info,
-            (
-                constants.InterfaceType.tcpip,
-                0,
-                "INSTR",
+            values
+            + (
                 rname.to_canonical_name(rsc_name),
                 None,
             ),
