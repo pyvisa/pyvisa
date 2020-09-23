@@ -60,7 +60,12 @@ class TestHighlevel(BaseTestCase):
         info, ret_code = lib.parse_resource_extended(None, rsc_name)
         # interface_type interface_board_number resource_class resource_name alias
         for parsed, value in zip(
-            info, values + (rname.to_canonical_name(rsc_name), None,),
+            info,
+            values
+            + (
+                rname.to_canonical_name(rsc_name),
+                None,
+            ),
         ):
             assert parsed == value
 
