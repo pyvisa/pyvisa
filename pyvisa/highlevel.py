@@ -2782,7 +2782,8 @@ def list_backends() -> List[str]:
     return ["ivi"] + [
         name
         for (loader, name, ispkg) in pkgutil.iter_modules()
-        if name.startswith("pyvisa-") and not name.endswith("-script")
+        if (name.startswith("pyvisa_") or name.startswith("pyvisa-"))
+        and not name.endswith("-script")
     ]
 
 
