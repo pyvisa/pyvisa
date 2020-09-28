@@ -4,6 +4,7 @@ PyVISA Changelog
 1.11.1 (unreleased)
 -------------------
 
+- deprecate methods that were mistakenly added to GPIB::INSTR resources PR #560
 - fix the listing of available backends (Also not that we now return the backend
   name as can be used to create a ResourceManger) PR #545
 - allow a None value for the board value of a ResourceInfo PR #547
