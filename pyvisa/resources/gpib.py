@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+import warnings
 from time import perf_counter
 from typing import Tuple
 
@@ -48,6 +49,13 @@ class _GPIBMixin(ControlRenMixin):
             Return value of the library call.
 
         """
+        if not isinstance(self, GPIBInterface):
+            warnings.warn(
+                FutureWarning(
+                    "`control_atn` is only supported on GPIB::INTFC resources "
+                    "and the methods will be removed in PyVISA 1.12"
+                )
+            )
         return self.visalib.gpib_command(self.session, data)
 
     def control_atn(self, mode: constants.ATNLineOperation) -> constants.StatusCode:
@@ -67,6 +75,13 @@ class _GPIBMixin(ControlRenMixin):
             Return value of the library call.
 
         """
+        if not isinstance(self, GPIBInterface):
+            warnings.warn(
+                FutureWarning(
+                    "`control_atn` is only supported on GPIB::INTFC resources "
+                    "and the methods will be removed in PyVISA 1.12"
+                )
+            )
         return self.visalib.gpib_control_atn(self.session, mode)
 
     def pass_control(
@@ -91,6 +106,13 @@ class _GPIBMixin(ControlRenMixin):
             Return value of the library call.
 
         """
+        if not isinstance(self, GPIBInterface):
+            warnings.warn(
+                FutureWarning(
+                    "`control_atn` is only supported on GPIB::INTFC resources "
+                    "and the methods will be removed in PyVISA 1.12"
+                )
+            )
         return self.visalib.gpib_pass_control(
             self.session, primary_address, secondary_address
         )
@@ -101,6 +123,13 @@ class _GPIBMixin(ControlRenMixin):
         Corresponds to viGpibSendIFC function of the VISA library.
 
         """
+        if not isinstance(self, GPIBInterface):
+            warnings.warn(
+                FutureWarning(
+                    "`control_atn` is only supported on GPIB::INTFC resources "
+                    "and the methods will be removed in PyVISA 1.12"
+                )
+            )
         return self.visalib.gpib_send_ifc(self.session)
 
 
