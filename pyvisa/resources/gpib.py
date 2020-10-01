@@ -18,60 +18,69 @@ from .resource import Resource
 
 
 class GPIBCommand(bytes, Enum):
-    """GPIB commands to use in send_command."""
+    """GPIB commands to use in send_command.
 
-    #: GO TO LOCAL affects only addressed devices
-    GTL = b"\x01"
+    Please note that group_execute_trigger provide a high level interface to
+    perform a trigger addressed to multiple instrument on the bus.
 
-    #: SELECTED DEVICE CLEAR
-    SDC = b"\x04"
+    """
 
-    #: PARALLEL POLL CONFIGURE
-    PPC = b"\x05"
+    #: GTL: GO TO LOCAL affects only addressed devices
+    go_to_local = GTL = b"\x01"
 
-    #: GROUP EXECUTE TRIGGER
-    GET = b"\x08"
+    #: SDC: SELECTED DEVICE CLEAR
+    selected_device_clear = SDC = b"\x04"
 
-    #: TAKE CONTROL
-    TCT = b"\x09"
+    #: PPC: PARALLEL POLL CONFIGURE
+    parallel_poll_configure = PPC = b"\x05"
 
-    #: LOCAL LOCKOUT
-    LLO = b"\x11"
+    #: PPU: PARALLEL POLL UNCONFIGURE
+    parallel_poll_unconfigure = PPU = b"\x15"
 
-    #: DEVICE CLEAR
-    DCL = b"\x14"
+    #: GET: GROUP EXECUTE TRIGGER
+    group_execute_trigger = GET = b"\x08"
 
-    #: PARALLEL POLL UNCONFIGURE
-    PPU = b"\x15"
+    #: TCT: TAKE CONTROL
+    take_control = TCT = b"\x09"
 
-    #: SERIAL POLL ENABLE
-    SPE = b"\x18"
+    #: LLO: LOCAL LOCKOUT
+    local_lockout = LLO = b"\x11"
 
-    #: SERIAL POLL DISABLE
-    SPD = b"\x19"
+    #: DCL: DEVICE CLEAR
+    device_clear = DCL = b"\x14"
 
-    #: CONFIGURE ENABLE
-    CFE = b"\x1F"
+    #: SPE: SERIAL POLL ENABLE
+    serial_poll_enable = SPE = b"\x18"
 
-    #: UNTALK
-    UNT = b"\x3F"
+    #: SPD: SERIAL POLL DISABLE
+    serial_poll_disable = SPD = b"\x19"
 
-    #: UNLISTEN
-    UNL = b"\x5F"
+    #: CFE: CONFIGURE ENABLE
+    configure_enable = CFE = b"\x1F"
+
+    #: UNT: UNTALK
+    untalk = UNT = b"\x3F"
+
+    #: UNL: UNLISTEN
+    unlisten = UNL = b"\x5F"
 
     @staticmethod
-    def MTA(board_pad) -> bytes:
-        """MY TALK ADDRESS."""
+    def talker(board_pad) -> bytes:
+        """MTA: MY TALK ADDRESS."""
         return (40 + board_pad).to_bytes(1, "big")
 
-    @staticmethod
-    def MLA(device_pad) -> bytes:
-        """MY LISTEN ADDRESS."""
-        return (20 + device_pad).to_bytes(1, "big")
+    MTA = talker
 
     @staticmethod
-    def MSA(device_sad) -> bytes:
-        """MY SECONDARY ADDRESS
+    def listener(device_pad) -> bytes:
+        """MLA: MY LISTEN ADDRESS."""
+        return (20 + device_pad).to_bytes(1, "big")
+
+    MLA = listener
+
+    @staticmethod
+    def secondary_address(device_sad) -> bytes:
+        """MSA: MY SECONDARY ADDRESS
 
         For VISA SAD range from 1 to 31 and 0 is not SAD.
 
@@ -79,6 +88,8 @@ class GPIBCommand(bytes, Enum):
         if device_sad == 0:
             return b""
         return (95 + device_sad).to_bytes(1, "big")
+
+    MSA = secondary_address
 
 
 class _GPIBMixin(ControlRenMixin):
