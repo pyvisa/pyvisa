@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+from enum import Enum
 from time import perf_counter
 from typing import Tuple
 
@@ -14,6 +15,70 @@ from .. import attributes, constants
 from ..attributes import Attribute
 from .messagebased import ControlRenMixin, MessageBasedResource
 from .resource import Resource
+
+
+class GPIBCommand(bytes, Enum):
+    """GPIB commands to use in send_command."""
+
+    #: GO TO LOCAL affects only addressed devices
+    GTL = b"\x01"
+
+    #: SELECTED DEVICE CLEAR
+    SDC = b"\x04"
+
+    #: PARALLEL POLL CONFIGURE
+    PPC = b"\x05"
+
+    #: GROUP EXECUTE TRIGGER
+    GET = b"\x08"
+
+    #: TAKE CONTROL
+    TCT = b"\x09"
+
+    #: LOCAL LOCKOUT
+    LLO = b"\x11"
+
+    #: DEVICE CLEAR
+    DCL = b"\x14"
+
+    #: PARALLEL POLL UNCONFIGURE
+    PPU = b"\x15"
+
+    #: SERIAL POLL ENABLE
+    SPE = b"\x18"
+
+    #: SERIAL POLL DISABLE
+    SPD = b"\x19"
+
+    #: CONFIGURE ENABLE
+    CFE = b"\x1F"
+
+    #: UNTALK
+    UNT = b"\x3F"
+
+    #: UNLISTEN
+    UNL = b"\x5F"
+
+    @staticmethod
+    def MTA(board_pad) -> bytes:
+        """MY TALK ADDRESS."""
+        return (40 + board_pad).to_bytes(1, "big")
+
+    @staticmethod
+    def MLA(device_pad) -> bytes:
+        """MY LISTEN ADDRESS."""
+        return (20 + device_pad).to_bytes(1, "big")
+
+    @staticmethod
+    def MSA(device_sad) -> bytes:
+        """MY SECONDARY ADDRESS
+
+        For VISA SAD range from 1 to 31 and 0 is not SAD.
+
+        """
+        if device_sad == 0:
+            return b""
+        return (95 + device_sad).to_bytes(1, "big")
 
 
 class _GPIBMixin(ControlRenMixin):
