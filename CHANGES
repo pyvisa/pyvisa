@@ -1,7 +1,7 @@
 PyVISA Changelog
 ================
 
-1.11.1 (unreleased)
+1.11.1 (30-09-2020)
 -------------------
 
 - deprecate methods that were mistakenly added to GPIB::INSTR resources PR #560
