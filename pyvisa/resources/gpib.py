@@ -52,7 +52,7 @@ class _GPIBMixin(ControlRenMixin):
         if not isinstance(self, GPIBInterface):
             warnings.warn(
                 FutureWarning(
-                    "`control_atn` is only supported on GPIB::INTFC resources "
+                    "`send_command` is only supported on GPIB::INTFC resources "
                     "and the methods will be removed in PyVISA 1.12"
                 )
             )
@@ -109,7 +109,7 @@ class _GPIBMixin(ControlRenMixin):
         if not isinstance(self, GPIBInterface):
             warnings.warn(
                 FutureWarning(
-                    "`control_atn` is only supported on GPIB::INTFC resources "
+                    "`pass_control` is only supported on GPIB::INTFC resources "
                     "and the methods will be removed in PyVISA 1.12"
                 )
             )
@@ -126,7 +126,7 @@ class _GPIBMixin(ControlRenMixin):
         if not isinstance(self, GPIBInterface):
             warnings.warn(
                 FutureWarning(
-                    "`control_atn` is only supported on GPIB::INTFC resources "
+                    "`send_ifc` is only supported on GPIB::INTFC resources "
                     "and the methods will be removed in PyVISA 1.12"
                 )
             )
