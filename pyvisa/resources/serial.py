@@ -21,7 +21,7 @@ class SerialInstrument(MessageBasedResource):
 
     """
 
-    #: Baud rate of the interface.
+    #: Baud rate of the interface. The default value is 9600.
     baud_rate: Attribute[int] = attributes.AttrVI_ATTR_ASRL_BAUD()
 
     #: Number of data bits contained in each frame (from 5 to 8).

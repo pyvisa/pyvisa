@@ -116,6 +116,15 @@ start communicating as follows::
 Here we use `'\n'` known as 'line feed'. This is a common value, another one is
 `'\r'` i.e. 'carriage return', and in some cases the null byte '\0' is used.
 
+For instruments that communicate over serial, you need to ensure you configure
+the correct baud rate. The default baud rate is set to 9600, but you should
+check your instrument's manual to verify the correct value for your use case.
+
+You can configure PyVISA to communicate to your instrument using a different
+baud rate as follows:
+
+    >>> my_instrument.baud_rate = 57600
+
 In an ideal world, this will work and you will be able to get an answer from
 your instrument. If it does not, it means the settings are likely wrong (the
 documentation does not always shine by its clarity). In the following we will
@@ -189,7 +198,7 @@ up a couple of paragraph).
 
 .. note::
 
-    It is possible to disable the use of teh termination character to detect
+    It is possible to disable the use of the termination character to detect
     the end of an input message by setting |read_termination| to ``""``. Care
     has to be taken for the case of serial instrument for which the method used
     to determine the end of input is controlled by the |end_input| attribute
