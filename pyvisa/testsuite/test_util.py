@@ -6,6 +6,7 @@ import array
 import contextlib
 import logging
 import os
+import struct
 import subprocess
 import sys
 import tempfile
@@ -495,15 +496,42 @@ class TestSystemDetailsAnalysis(BaseTestCase):
         util.system_details_to_str(details)
 
 
+def generate_fakelibs(dirname):
+
+    for name, blob in zip(
+        [
+            "fakelib_bad_magic.dll",
+            "fakelib_good_32.dll",
+            "fakelib_good_64_2.dll",
+            "fakelib_good_64.dll",
+            "fakelib_good_unknown.dll",
+            "fakelib_not_pe.dll",
+        ],
+        [
+            struct.pack("=6sH52sl", b"MAPE\x00\x00", 0x014C, 52 * b"\0", 2),
+            struct.pack("=6sH52sl", b"MZPE\x00\x00", 0x014C, 52 * b"\0", 2),
+            struct.pack("=6sH52sl", b"MZPE\x00\x00", 0x8664, 52 * b"\0", 2),
+            struct.pack("=6sH52sl", b"MZPE\x00\x00", 0x0200, 52 * b"\0", 2),
+            struct.pack("=6sH52sl", b"MZPE\x00\x00", 0xFFFF, 52 * b"\0", 2),
+            struct.pack("=6sH52sl", b"MZDE\x00\x00", 0x014C, 52 * b"\0", 2),
+        ],
+    ):
+        with open(os.path.join(dirname, name), "wb") as f:
+            f.write(blob)
+            print("Written %s" % name)
+
+
 class TestLibraryAnalysis(BaseTestCase):
     """Test (through monkey patching) the analysis of binary libraries."""
 
-    def test_get_shared_library_arch(self):
+    def test_get_shared_library_arch(self, tmpdir):
         """Test analysing a library on Windows."""
-        dirname = os.path.join(os.path.dirname(__file__), "fakelibs")
+        dirname = str(tmpdir)
+        generate_fakelibs(dirname)
+
         for f, a in zip(["_32", "_64", "_64_2"], ["I386", "IA64", "AMD64"]):
             arch = util.get_shared_library_arch(
-                os.path.join(dirname, "fakelib_good%s.dll" % f)
+                os.path.join(tmpdir, "fakelib_good%s.dll" % f)
             )
             assert arch == a
 
@@ -520,9 +548,10 @@ class TestLibraryAnalysis(BaseTestCase):
             util.get_shared_library_arch(os.path.join(dirname, "fakelib_not_pe.dll"))
         assert "Not a PE executable" in e.exconly()
 
-    def test_get_arch_windows(self):
+    def test_get_arch_windows(self, tmpdir):
         """Test identifying the computer architecture on windows."""
-        dirname = os.path.join(os.path.dirname(__file__), "fakelibs")
+        dirname = str(tmpdir)
+        generate_fakelibs(dirname)
 
         platform = sys.platform
         sys.platform = "win32"
