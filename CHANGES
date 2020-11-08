@@ -1,6 +1,13 @@
 PyVISA Changelog
 ================
 
+1.11.2 (07-11-2020)
+-------------------
+
+- fix minor typos in deprecation warning for GPIB resources
+- generate some test files on the fly to avoid issue when building conda packages
+- add official Python 3.9 support
+
 1.11.1 (30-09-2020)
 -------------------
 
