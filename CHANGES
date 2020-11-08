@@ -1,9 +1,12 @@
 PyVISA Changelog
 ================
 
-1.11.2 (07-11-2020)
+1.11.3 (07-11-2020)
 -------------------
 
+1.11.2 was skipped due to an issue in the MANIFEST file.
+
+- fix MANIFEST to exclude built docs
 - fix minor typos in deprecation warning for GPIB resources
 - generate some test files on the fly to avoid issue when building conda packages
 - add official Python 3.9 support
