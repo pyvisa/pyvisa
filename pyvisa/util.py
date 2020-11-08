@@ -211,7 +211,7 @@ class LibraryPath(str):
         return ", ".join(str(a) for a in self.arch)
 
 
-def cleanup_timeout(timeout: Optional[float]) -> int:
+def cleanup_timeout(timeout: Optional[Union[int, float]]) -> int:
     """Turn a timeout expressed as a float into in interger or the proper constant."""
     if timeout is None or math.isinf(timeout):
         timeout = constants.VI_TMO_INFINITE
