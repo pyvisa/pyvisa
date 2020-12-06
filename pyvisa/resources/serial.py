@@ -27,14 +27,16 @@ class SerialInstrument(MessageBasedResource):
     #: Number of data bits contained in each frame (from 5 to 8). The default value is 8.
     data_bits: Attribute[int] = attributes.AttrVI_ATTR_ASRL_DATA_BITS()
 
-    #: Parity used with every frame transmitted and received. The default value is None (VI_ASRL_PAR_NONE).
+    #: Parity used with every frame transmitted and received. The default value is
+    #: `constants.Parity.none` (VI_ASRL_PAR_NONE).
     parity: Attribute[constants.Parity] = attributes.AttrVI_ATTR_ASRL_PARITY()
 
-    #: Number of stop bits used to indicate the end of a frame. The default value is 1 (VI_ASRL_STOP_ONE).
+    #: Number of stop bits used to indicate the end of a frame. The default value is
+    #: `constants.StopBits.one` (VI_ASRL_STOP_ONE).
     stop_bits: Attribute[constants.StopBits] = attributes.AttrVI_ATTR_ASRL_STOP_BITS()
 
     #: Indicates the type of flow control used by the transfer mechanism. The default value
-    #: is None (VI_ASRL_FLOW_NONE).
+    #: is `constants.ControlFlow.none` (VI_ASRL_FLOW_NONE).
     flow_control: Attribute[
         constants.ControlFlow
     ] = attributes.AttrVI_ATTR_ASRL_FLOW_CNTRL()
@@ -48,14 +50,15 @@ class SerialInstrument(MessageBasedResource):
     #: Manually control transmission. The default value is True.
     allow_transmit: Attribute[bool] = attributes.AttrVI_ATTR_ASRL_ALLOW_TRANSMIT()
 
-    #: Method used to terminate read operations. The default method terminates by
-    #: searching for "/" appending the termination character (VI_ASRL_END_TERMCHAR).
+    #: Method used to terminate read operations. The default value is
+    #: `constants.SerialTermination.termination_char` (VI_ASRL_END_TERMCHAR).
     end_input: Attribute[
         constants.SerialTermination
     ] = attributes.AttrVI_ATTR_ASRL_END_IN()
 
-    #: Method used to terminate write operations. The default method terminates
-    #: when all requested data is transferred or when an error occurs (VI_ASRL_END_NONE).
+    #: Method used to terminate write operations. The default value is
+    #: `constants.SerialTermination.none` (VI_ASRL_END_NONE) and terminates
+    #: when all requested data is transferred or when an error occurs.
     end_output: Attribute[
         constants.SerialTermination
     ] = attributes.AttrVI_ATTR_ASRL_END_OUT()
@@ -64,7 +67,7 @@ class SerialInstrument(MessageBasedResource):
     break_length: Attribute[int] = attributes.AttrVI_ATTR_ASRL_BREAK_LEN()
 
     #: Manually control the assertion state of the break signal. The default state is
-    #: VI_STATE_UNASSERTED.
+    #: `constants.LineState.unasserted` (VI_STATE_UNASSERTED).
     break_state: Attribute[
         constants.LineState
     ] = attributes.AttrVI_ATTR_ASRL_BREAK_STATE()

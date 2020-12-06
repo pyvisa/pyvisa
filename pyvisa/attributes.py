@@ -1623,7 +1623,7 @@ class AttrVI_ATTR_ASRL_FLOW_CNTRL(EnumAttribute):
 
     visa_type = "ViUInt16"
 
-    default = constants.VI_ASRL_FLOW_NONE
+    default = constants.ControlFlow.none
 
     read, write, local = True, True, False
 
