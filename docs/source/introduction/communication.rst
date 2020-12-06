@@ -116,9 +116,13 @@ start communicating as follows::
 Here we use `'\n'` known as 'line feed'. This is a common value, another one is
 `'\r'` i.e. 'carriage return', and in some cases the null byte '\0' is used.
 
-For instruments that communicate over serial, you need to ensure you configure
-the correct baud rate. The default baud rate is set to 9600, but you should
-check your instrument's manual to verify the correct value for your use case.
+.. note::
+
+    For instruments that communicate over serial, you need to ensure you configure
+    the correct baud rate. The default baud rate is set to 9600, but you should
+    check your instrument's manual to verify the correct value for your use case.
+    If you wish to configure other serial instrument parameters, see
+    :ref:`api_resources` for a full list of attributes.
 
 You can configure PyVISA to communicate to your instrument using a different
 baud rate as follows:
