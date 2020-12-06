@@ -10,7 +10,7 @@ PyVISA Changelog
 - allow a None value for the board value of a ResourceInfo PR #547
   This allows for funky resource name such ASRL/dev/tty0::INSTR which are common
   in pyvisa-py and avoid returning a completely generic resource in those cases.
-- documentation improvements PR #558
+- documentation improvements for pyvisa.resources.SerialInstrument PR #558
 
 1.11 (16-09-2020)
 -----------------
