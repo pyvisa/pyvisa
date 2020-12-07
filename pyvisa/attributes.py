@@ -605,7 +605,7 @@ class AttrVI_ATTR_TMO_VALUE(RangeAttribute):
 
     min_value, max_value, values = 0, 0xFFFFFFFF, None
 
-    def pre_set(self, value: Union[int, float]) -> int:
+    def pre_set(self, value: Optional[Union[int, float]]) -> int:
         """Convert the timeout to an integer recognized by the VISA library."""
         timeout = util.cleanup_timeout(value)
         return timeout

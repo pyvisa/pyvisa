@@ -41,8 +41,6 @@ import sys
 import textwrap
 import unicodedata
 
-import pkg_resources
-
 __version__ = "0.7.3.dev.43cdb910a6fbee396e1fceb76a7775fa7314ee1d"
 py3k = sys.version_info[0] >= 3
 if py3k:
@@ -51,14 +49,15 @@ if py3k:
     itermap = map
     iterzip = zip
     uni_chr = chr
-    from html.parser import HTMLParser
     from html import escape
+    from html.parser import HTMLParser
 else:
     itermap = itertools.imap
     iterzip = itertools.izip
     uni_chr = unichr  # noqa: F821
-    from HTMLParser import HTMLParser
     from cgi import escape
+
+    from HTMLParser import HTMLParser
 
 # hrule styles
 FRAME = 0
