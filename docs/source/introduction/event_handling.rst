@@ -7,9 +7,9 @@ Event handling
 
 VISA supports generating events on the instrument side usually when a register
 change and handling then on the controller using two different mechanisms:
+
 - storing the events in a queue
-- calling a dedicated handler function registered for that purpose when the
-event occurs
+- calling a dedicated handler function registered for that purpose when the event occurs
 
 PyVISA supports using both mechanism and tries to provide a convenient interface
 to both. Below we give a couple of example of how to use each mechanism (using
