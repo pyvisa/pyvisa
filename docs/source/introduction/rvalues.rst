@@ -105,15 +105,15 @@ termination character at the end of the message.
 If you can read without any problem from your instrument, but cannot retrieve
 the full message when using this method (VI_ERROR_CONN_LOST,
 VI_ERROR_INV_SETUP, or Python simply crashes), try passing different values for
-``chunk_size``(the default is 20*1024). The underlying mechanism for this issue
+``chunk_size`` (the default is 20*1024). The underlying mechanism for this issue
 is not clear but changing ``chunk_size`` has been used to work around it. Note
 that using  larger chunk sizes for large transfer may result in a speed up of
 the transfer.
 
 In some cases, the instrument may use a protocol that does not indicate how
-many bytes will be transferred. The Keithley 2000 for example always return the
-full buffer whose size is reported by the 'trace:points?' command. Since a
-binary block may contain the termination character, PyVISA need to know how
+many bytes will be transferred. The Keithley 2000 for example always returns the
+full buffer whose size is reported by the ``trace:points?`` command. Since a
+binary block may contain the termination character, PyVISA needs to know how
 many bytes to expect. For those case, you can pass the expected number of
 points using the ``data_points`` keyword argument. The number of bytes will be
 inferred from the datatype of the block.
@@ -144,7 +144,7 @@ The separator can also be specified just like in ``query_ascii_values``.
 
     >>> inst.write_ascii_values('WLISt:WAVeform:DATA somename,', values, converter='x', separator='$')
 
-You can provide a function to takes a iterable and returns an string.
+You can provide a function that takes a iterable and returns a string.
 Default value for the separator is ``','`` (comma)
 
 
@@ -171,7 +171,7 @@ When things are not what they should be
 PyVISA provides an easy way to transfer data from and to the device. The
 methods described above work fine for 99% of the cases but there is always a
 particular device that do not follow any of the standard protocols and is so
-different that cannot be adapted with the arguments provided above.
+different that it cannot be adapted with the arguments provided above.
 
 In those cases, you need to get the data::
 

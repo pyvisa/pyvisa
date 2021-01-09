@@ -7,9 +7,10 @@ Event handling
 
 VISA supports generating events on the instrument side usually when a register
 change and handling then on the controller using two different mechanisms:
+
 - storing the events in a queue
 - calling a dedicated handler function registered for that purpose when the
-event occurs
+  event occurs
 
 PyVISA supports using both mechanism and tries to provide a convenient interface
 to both. Below we give a couple of example of how to use each mechanism (using
@@ -66,22 +67,22 @@ time and start the operation that will lead to the event. For the sake of that
 example we are going to consider a Service Request event. Usually service request
 can be enabled for a range of register state, the details depending on the
 instrument. One useful case is to generate a service request when an operation
-is complete which is we are pretending to do here.
+is complete which is what we are pretending to do here.
 
 Finally we wait for the event to occur and we specify a timeout of 1000ms to
-avoid waiting for ever. Once we received the event we disable event handling.
+avoid waiting forever. Once we receive the event we disable event handling.
 
 
 Registering handlers for event
 ------------------------------
 
 Rather than waiting for an event, it can sometimes be convenient to take immediate
-action when an event occurs, in which having the VISA library call directly a function
-can be useful. Let see how.
+action when an event occurs, in which case having the VISA library call a function
+directly can be useful. Let's see how.
 
 .. note::
 
-    One can enable event handling using both mechanisms (constants.EventMechanism.all)
+    One can enable event handling using both mechanisms (``constants.EventMechanism.all``)
 
 .. code-block:: python
 
@@ -151,7 +152,7 @@ Next we install the handler and enable the event processing:
     user_handle = instr.install_handler(event_type, wrapped, 42)
     instr.enable_event(event_type, event_mech, None)
 
-When installing a handler one can optionally, specify a user handle that will be
+When installing a handler one can optionally specify a user handle that will be
 passed to the handler. This handle can be used to identify which handler is called
 when registering the same handler multiple times on the same resource. That value
 may have to be converted by the backend. As a consequence the value passed to

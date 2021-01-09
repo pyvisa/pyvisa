@@ -37,14 +37,14 @@ SCPI and/or Keithley 2000 manual.
    >>> keithley.write("trace:feed sense1; trace:feed:control next")
 
 Okay, now the instrument is prepared to do the measurement.  The next
-three lines make the instrument waiting for a trigger pulse, trigger
+three lines make the instrument wait for a trigger pulse, trigger
 it, and wait until it sends a "service request"::
 
    >>> keithley.write("initiate")
    >>> keithley.assert_trigger()
    >>> keithley.wait_for_srq()
 
-With sending the service request, the instrument tells us that the
+By sending the service request, the instrument tells us that the
 measurement has been finished and that the results are ready for
 transmission.  We could read them with `keithley.query("trace:data?")`
 however, then we'd get:

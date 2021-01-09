@@ -8,9 +8,9 @@ Resources
 A resource represents an instrument, e.g. a measurement device. There are
 multiple classes derived from resources representing the different available
 types of resources (eg. GPIB, Serial). Each contains the particular set of
-attributes an methods that are available by the underlying device.
+attributes and methods that are available by the underlying device.
 
-You do not create this objects directly but they are returned by the
+You do not create these objects directly but they are returned by the
 |open_resource| method of a |ResourceManager|. In general terms, there
 are two main groups derived from |Resource|, |MessageBasedResource| and
 |RegisterBasedResource|.
@@ -53,7 +53,7 @@ If the resource is closed, an exception will be raised:
 timeout
 ~~~~~~~
 
-Very most VISA I/O operations may be performed with a timeout. If a timeout is
+Most VISA I/O operations may be performed with a timeout. If a timeout is
 set, every operation that takes longer than the timeout is aborted and an
 exception is raised.  Timeouts are given per instrument in **milliseconds**.
 
@@ -71,11 +71,11 @@ is set to 25 seconds. To set an **infinite** timeout, set it to ``None`` or
 
    del my_device.timeout
 
-To set it to **immediate**, set it to `0` or a negative value. (Actually, any
-value smaller than 1 is considered immediate)
-
 Now every operation of the resource takes as long as it takes, even
 indefinitely if necessary.
+
+To set it to **immediate**, set it to `0` or a negative value. (Actually, any
+value smaller than 1 is considered immediate)
 
 
 Attributes of MessageBase resources
@@ -184,7 +184,7 @@ VISA attributes
 
 In addition to the above mentioned attributes, you can access most of the VISA
 attributes as defined in the visa standard on your resources through properties.
-Those properties will take for you of converting Python values to values VISA
+Those properties will take care of converting Python values to VISA
 values and hence simplify their manipulations. Some of those attributes also
 have lighter aliases that makes them easier to access as illustrated below:
 
@@ -204,7 +204,7 @@ have lighter aliases that makes them easier to access as illustrated below:
     ``attr`` command.
 
 You can also manipulate the VISA attributes using |get_visa_attribute| and
-|set_visa_attribute|. However you will have use the proper values (as defined in
+|set_visa_attribute|. However you will have to use the proper values (as defined in
 :mod:`pyvisa.constants`) both to access the attribute and to specify the value.
 
 .. code:: python
