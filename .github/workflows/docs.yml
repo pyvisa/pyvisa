@@ -1,15 +1,15 @@
 name: Documentation building
 on:
   schedule:
-    - cron: '0 0 * * 2'
+    - cron: "0 0 * * 2"
   push:
     branches:
-      - master
+      - main
       - staging
       - trying
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - .github/workflows/docs.yml
       - pyvisa/*

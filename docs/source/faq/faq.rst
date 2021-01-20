@@ -165,7 +165,7 @@ as described in :ref:`intro-configuring`.
 VisaIOError: VI_ERROR_SYSTEM_ERROR: Unknown system error:
 ---------------------------------------------------------
 
-If you have an issue creating a pyvisa.ResourceManager object, first enable screen 
+If you have an issue creating a pyvisa.ResourceManager object, first enable screen
 logging (pyvisa.log_to_screen()) to ensure it is correctly finding the dll files.
 If it is correctly finding the dlls, you may see an error similar to:
 *  viOpenDefaultRM('<ViObject object at 0x000002B6CA4658C8>',) -> -1073807360
@@ -205,7 +205,7 @@ Where can I get more information about VISA?
        http://digital.ni.com/manuals.nsf/websearch/266526277DFF74F786256ADC0065C50C
 
 
-.. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/master/AUTHORS
+.. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/main/AUTHORS
 .. _`Issue Tracker`: https://github.com/pyvisa/pyvisa/issues
 .. _`virtual environment`: http://www.virtualenv.org/en/latest/
 
