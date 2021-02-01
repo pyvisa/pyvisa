@@ -158,7 +158,7 @@ class TestConfigFile(BaseTestCase):
 class TestParser(BaseTestCase):
     def test_parse_binary(self):
         s = (
-            b"#A@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xde\x8b<@\xde\x8b<@"
+            b"#0@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xde\x8b<@\xde\x8b<@"
             b"\xde\x8b<@\xde\x8b<@\xe0\x8b<@\xe0\x8b<@\xdc\x8b<@\xde\x8b<@"
             b"\xe2\x8b<@\xe0\x8b<"
         )
@@ -188,6 +188,10 @@ class TestParser(BaseTestCase):
         p = util.from_ieee_block(b"#214" + s[2:], datatype="f", is_big_endian=False)
         for a, b in zip(p, e):
             assert a == pytest.approx(b)
+
+        # Test handling zero length block
+        p = util.from_ieee_block(b"#10" + s[2:], datatype="f", is_big_endian=False)
+        assert not p
 
         p = util.from_hp_block(
             b"#A\x0e\x00" + s[2:],
@@ -374,7 +378,7 @@ class TestParser(BaseTestCase):
                 block = block[:2] + b"0" * header_length + block[2 + header_length :]
             else:
                 block = block[:2] + b"\x00\x00\x00\x00" + block[2 + 4 :]
-            assert fb(block, "h", False, list) == values
+            assert not fb(block, "h", False, list)
 
     def test_handling_malformed_binary(self):
         containers = (list, tuple) + ((np.array, np.ndarray) if np else ())

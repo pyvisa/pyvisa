@@ -1,6 +1,17 @@
 PyVISA Changelog
 ================
 
+1.12.0 (unreleased)
+-------------------
+
+- allow an IEEE binary block or an HP block to be empty PR #581
+  This is more correct and can affect real instruments. However this introduces
+  a minor backward incompatibility when parsing IEEE header. The data length for
+  #0 is now reported to be -1 instead of 0 since 0 corresponds to #10.
+  This changes should affect a minority of user and does not change the behavior for
+  instrument returning #0 (only the value of data_length as returned by
+  parse_ieee_block_header is affected and functions using it have been adapted).
+
 1.11.3 (07-11-2020)
 -------------------
 
