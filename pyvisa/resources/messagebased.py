@@ -581,7 +581,7 @@ class MessageBasedResource(Resource):
             offset, data_length = util.parse_hp_block_header(block, is_big_endian)
         elif header_fmt == "empty":
             offset = 0
-            data_length = 0
+            data_length = -1
         else:
             raise ValueError(
                 "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
@@ -589,7 +589,9 @@ class MessageBasedResource(Resource):
 
         # Allow to support instrument such as the Keithley 2000 that do not
         # report the length of the block
-        data_length = data_length or data_points * struct.calcsize(datatype)
+        data_length = (
+            data_length if data_length >= 0 else data_points * struct.calcsize(datatype)
+        )
 
         expected_length = offset + data_length
 
@@ -597,10 +599,12 @@ class MessageBasedResource(Resource):
             expected_length += len(self._read_termination)
 
         # Read all the data if we know what to expect.
-        if data_length != 0:
+        if data_length > 0:
             block.extend(
                 self.read_bytes(expected_length - len(block), chunk_size=chunk_size)
             )
+        elif data_length == 0:
+            pass
         else:
             raise ValueError(
                 "The length of the data to receive could not be "
