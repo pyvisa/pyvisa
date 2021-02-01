@@ -19,3 +19,4 @@ _test/
 htmlcov/
 .mypy_cache/
 pip-wheel-metadata/
+.pytest_cache
