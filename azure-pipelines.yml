@@ -17,7 +17,7 @@ variables:
   PYVISA_KEYSIGHT_VIRTUAL_INSTR: 1
 
 pool:
-  name: default
+  name: Keysight-based
   demands: KEYSIGHT -equals TCPIP
 
 steps:
@@ -25,7 +25,7 @@ steps:
       echo Activate conda
       call $(CONDA_PATH)\activate.bat
       echo Create environment
-      conda create -n test_ python=3.7 numpy --yes
+      conda create -n test_ python=3.9 numpy --yes
     displayName: "Create environment"
 
   - script: |
