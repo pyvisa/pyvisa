@@ -22,13 +22,13 @@ pool:
 
 steps:
   - script: |
-      $HOME/miniconda3/bin/activate
+      export PATH="$HOME/miniconda3/bin:$PATH"
       echo Create environment
       conda create -n test_ python=3.9 numpy --yes
     displayName: "Create environment"
 
   - script: |
-      $HOME/miniconda3/bin/activate
+      export PATH="$HOME/miniconda3/bin:$PATH"
       echo Activate environment
       conda activate test_
       echo Install project
@@ -36,7 +36,7 @@ steps:
     displayName: "Install dependencies"
 
   - script: |
-      $HOME/miniconda3/bin/activate
+      export PATH="$HOME/miniconda3/bin:$PATH"
       echo Activate environment
       conda activate test_
       echo Install pytest and co
@@ -46,8 +46,7 @@ steps:
     displayName: "Run tests"
 
   - script: |
-      echo Activate conda
-      $HOME/miniconda3/bin/activate
+      export PATH="$HOME/miniconda3/bin:$PATH"
       echo Activate environment
       conda activate test_
       echo Install codecov
@@ -57,7 +56,7 @@ steps:
     displayName: "Upload test coverage results"
 
   - script: |
-      $HOME/miniconda3/bin/activate
+      export PATH="$HOME/miniconda3/bin:$PATH"
       conda remove -n test_ --all --yes
     displayName: "Remove test environment"
     condition: always()
