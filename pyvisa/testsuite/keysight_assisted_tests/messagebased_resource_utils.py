@@ -524,7 +524,6 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                 chunk_size=6,
             )
 
-    @pytest.mark.parametrize("hfmt, header", zip(("ieee"), ("#10", "")))
     def test_read_binary_values_empty(self):
         """Test reading binary data."""
         self.instr.write("RECEIVE")
