@@ -39,7 +39,7 @@ class TestConfigFile(BaseTestCase):
                 os.path.join(os.path.expanduser("~"), ".pyvisarc"),
             ]
         ):
-            raise unittest.skipTest(
+            raise unittest.SkipTest(
                 ".pyvisarc file exists cannot properly test in this case"
             )
         self.temp_dir = tempfile.TemporaryDirectory()

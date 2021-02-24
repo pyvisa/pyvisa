@@ -29,6 +29,7 @@ steps:
 
   - script: |
       export PATH="$HOME/miniconda3/bin:$PATH"
+      source $HOME/miniconda3/bin/activate
       conda init bash
       echo Activate environment
       conda activate test_
@@ -38,6 +39,7 @@ steps:
 
   - script: |
       export PATH="$HOME/miniconda3/bin:$PATH"
+      source $HOME/miniconda3/bin/activate
       conda init bash
       echo Activate environment
       conda activate test_
@@ -49,6 +51,7 @@ steps:
 
   - script: |
       export PATH="$HOME/miniconda3/bin:$PATH"
+      source $HOME/miniconda3/bin/activate
       conda init bash
       echo Activate environment
       conda activate test_
