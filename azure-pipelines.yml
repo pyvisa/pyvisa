@@ -29,6 +29,7 @@ steps:
 
   - script: |
       export PATH="$HOME/miniconda3/bin:$PATH"
+      conda init bash
       echo Activate environment
       conda activate test_
       echo Install project
@@ -37,6 +38,7 @@ steps:
 
   - script: |
       export PATH="$HOME/miniconda3/bin:$PATH"
+      conda init bash
       echo Activate environment
       conda activate test_
       echo Install pytest and co
@@ -47,6 +49,7 @@ steps:
 
   - script: |
       export PATH="$HOME/miniconda3/bin:$PATH"
+      conda init bash
       echo Activate environment
       conda activate test_
       echo Install codecov

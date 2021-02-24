@@ -29,14 +29,14 @@ require_virtual_instr = pytest.mark.skipif(
 
 
 RESOURCE_ADDRESSES = {
-    # "GPIB::INSTR": "GPIB::19::INSTR",
+    "GPIB::INSTR": "GPIB::19::INSTR",
     # "USB::INSTR": "USB::",
-    "TCPIP::INSTR": "TCPIP::127.0.0.1::INSTR",  # ie localhost
-    "TCPIP::SOCKET": "TCPIP::127.0.0.1::5025::SOCKET",
+    "TCPIP::INSTR": "TCPIP::192.168.0.2::INSTR",  # ie localhost
+    "TCPIP::SOCKET": "TCPIP::192.168.0.2::5025::SOCKET",
 }
 
 ALIASES = {
-    "TCPIP::127.0.0.1::INSTR": "tcpip",
+    "TCPIP::192.168.0.2::INSTR": "tcpip",
 }
 
 
