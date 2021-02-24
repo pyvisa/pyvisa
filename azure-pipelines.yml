@@ -22,26 +22,23 @@ pool:
 
 steps:
   - script: |
-      echo Activate conda
-      call $(CONDA_PATH)\activate.bat
+      $HOME/miniconda3/bin activate
       echo Create environment
       conda create -n test_ python=3.9 numpy --yes
     displayName: "Create environment"
 
   - script: |
-      echo Activate conda
-      call $(CONDA_PATH)\activate.bat
+      $HOME/miniconda3/bin activate
       echo Activate environment
-      call conda activate test_
+      conda activate test_
       echo Install project
       pip install -e .
     displayName: "Install dependencies"
 
   - script: |
-      echo Activate conda
-      call $(CONDA_PATH)\activate.bat
+      $HOME/miniconda3/bin activate
       echo Activate environment
-      call conda activate test_
+      conda activate test_
       echo Install pytest and co
       pip install pytest pytest-azurepipelines pytest-cov
       echo Run pytest
@@ -50,9 +47,9 @@ steps:
 
   - script: |
       echo Activate conda
-      call $(CONDA_PATH)\activate.bat
+      $HOME/miniconda3/bin activate
       echo Activate environment
-      call conda activate test_
+      conda activate test_
       echo Install codecov
       pip install codecov
       echo Run codecov
@@ -60,7 +57,7 @@ steps:
     displayName: "Upload test coverage results"
 
   - script: |
-      call $(CONDA_PATH)\activate.bat
+      $HOME/miniconda3/bin activate
       conda remove -n test_ --all --yes
     displayName: "Remove test environment"
     condition: always()
