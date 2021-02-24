@@ -462,9 +462,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """"""
         pass
 
-    @pytest.mark.parametrize(
-        "hfmt, header", zip(("ieee", "hp", "empty"), ("#10", "#A\x00\x00", ""))
-    )
+    @pytest.mark.parametrize("hfmt, header", zip(("ieee", "empty"), ("#0", "")))
     def test_read_binary_values_unreported_length(self, hfmt, header):
         """Test reading binary data."""
         self.instr.read_termination = "\r"
@@ -525,6 +523,42 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                 expect_termination=True,
                 chunk_size=6,
             )
+
+    @pytest.mark.parametrize("hfmt, header", zip(("ieee"), ("#10", "")))
+    def test_read_binary_values_empty(self):
+        """Test reading binary data."""
+        self.instr.write("RECEIVE")
+        self.instr.write(
+            "#10",
+            termination="\n",
+        )
+        self.instr.write("SEND")
+        new = self.instr.read_binary_values(
+            datatype="h",
+            is_big_endian=False,
+            header_fmt="ieee",
+            expect_termination=True,
+            chunk_size=6,
+        )
+        assert not new
+
+        if np:
+            self.instr.write("RECEIVE")
+            self.instr.write(
+                "#10",
+                termination="\n",
+            )
+            new = self.instr.query_binary_values(
+                "SEND",
+                datatype="h",
+                header_fmt="ieee",
+                is_big_endian=True,
+                expect_termination=False,
+                chunk_size=6,
+                container=np.array if np else list,
+            )
+
+            assert not new
 
     def test_delay_in_query_ascii(self):
         """Test handling of the delay argument in query_ascii_values."""
