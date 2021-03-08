@@ -10,6 +10,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import unittest
 from configparser import ConfigParser
 from functools import partial
 from io import StringIO
@@ -38,7 +39,9 @@ class TestConfigFile(BaseTestCase):
                 os.path.join(os.path.expanduser("~"), ".pyvisarc"),
             ]
         ):
-            self.skipTest(".pyvisarc file exists cannot properly test in this case")
+            raise unittest.SkipTest(
+                ".pyvisarc file exists cannot properly test in this case"
+            )
         self.temp_dir = tempfile.TemporaryDirectory()
         os.makedirs(os.path.join(self.temp_dir.name, "share", "pyvisa"))
         self.config_path = os.path.join(

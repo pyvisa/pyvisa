@@ -24,19 +24,19 @@ import pytest
 
 require_virtual_instr = pytest.mark.skipif(
     "PYVISA_KEYSIGHT_VIRTUAL_INSTR" not in os.environ,
-    reason="Requires the Keysight virtual instrument. Run on PyVISA " "buildbot.",
+    reason="Requires the Keysight virtual instrument. Run on PyVISA buildbot.",
 )
 
 
 RESOURCE_ADDRESSES = {
-    # "GPIB::INSTR": "GPIB::19::INSTR",
     # "USB::INSTR": "USB::",
-    "TCPIP::INSTR": "TCPIP::127.0.0.1::INSTR",  # ie localhost
-    "TCPIP::SOCKET": "TCPIP::127.0.0.1::5025::SOCKET",
+    "TCPIP::INSTR": "TCPIP::192.168.0.2::INSTR",
+    "TCPIP::SOCKET": "TCPIP::192.168.0.2::5025::SOCKET",
+    # "GPIB::INSTR": "GPIB::19::INSTR",
 }
 
 ALIASES = {
-    "TCPIP::127.0.0.1::INSTR": "tcpip",
+    "TCPIP::192.168.0.2::INSTR": "tcpip",
 }
 
 
