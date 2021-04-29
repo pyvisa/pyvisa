@@ -938,7 +938,7 @@ class PrettyTable(object):
 
     @property
     def oldsortslice(self):
-        """ oldsortslice - Slice rows before sorting in the "old style" """
+        """oldsortslice - Slice rows before sorting in the "old style" """
         return self._oldsortslice
 
     @oldsortslice.setter

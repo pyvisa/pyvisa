@@ -2933,7 +2933,7 @@ def open_visa_library(specification: str = "") -> VisaLibraryBase:
 
 
 class ResourceManager(object):
-    """VISA Resource Manager. """
+    """VISA Resource Manager."""
 
     #: Maps (Interface Type, Resource Class) to Python class encapsulating that resource.
     _resource_classes: ClassVar[

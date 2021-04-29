@@ -20,7 +20,7 @@ from .resource import Resource
 
 
 class ControlRenMixin(object):
-    """Common control_ren method of some messaged based resources. """
+    """Common control_ren method of some messaged based resources."""
 
     #: Will be present when used as a mixin with Resource
     visalib: VisaLibraryBase
