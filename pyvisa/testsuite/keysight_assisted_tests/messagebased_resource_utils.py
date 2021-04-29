@@ -459,7 +459,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
     # Not sure how to test this
     @pytest.mark.skip
     def test_handling_malformed_binary(self):
-        """"""
+        """ """
         pass
 
     @pytest.mark.parametrize("hfmt, header", zip(("ieee", "empty"), ("#0", "")))
