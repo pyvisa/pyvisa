@@ -103,6 +103,11 @@ class TestTCPIPSocket(MessagebasedResourceTestCase):
             MessagebasedResourceTestCase.test_read_binary_values_unreported_length
         )
     )
+    test_read_binary_values_empty = pytest.mark.xfail(
+        copy_func(
+            MessagebasedResourceTestCase.test_read_binary_values_empty
+        )
+    )
     test_delay_in_query_ascii = pytest.mark.xfail(
         copy_func(MessagebasedResourceTestCase.test_delay_in_query_ascii)
     )

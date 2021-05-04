@@ -161,7 +161,7 @@ class TestConfigFile(BaseTestCase):
 class TestParser(BaseTestCase):
     def test_parse_binary(self):
         s = (
-            b"#A@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xde\x8b<@\xde\x8b<@"
+            b"#0@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xe2\x8b<@\xde\x8b<@\xde\x8b<@"
             b"\xde\x8b<@\xde\x8b<@\xe0\x8b<@\xe0\x8b<@\xdc\x8b<@\xde\x8b<@"
             b"\xe2\x8b<@\xe0\x8b<"
         )
@@ -192,6 +192,10 @@ class TestParser(BaseTestCase):
         for a, b in zip(p, e):
             assert a == pytest.approx(b)
 
+        # Test handling zero length block
+        p = util.from_ieee_block(b"#10" + s[2:], datatype="f", is_big_endian=False)
+        assert not p
+
         p = util.from_hp_block(
             b"#A\x0e\x00" + s[2:],
             datatype="f",
@@ -206,7 +210,8 @@ class TestParser(BaseTestCase):
         for fmt in "d":
             msg = "block=%s, fmt=%s"
             msg = msg % ("ascii", fmt)
-            tb = lambda values: util.to_ascii_block(values, fmt, ",")
+            # Test handling the case of a trailing comma
+            tb = lambda values: util.to_ascii_block(values, fmt, ",") + ","
             fb = lambda block, cont: util.from_ascii_block(block, fmt, ",", cont)
             self.round_trip_block_conversion(values, tb, fb, msg)
 
@@ -377,7 +382,7 @@ class TestParser(BaseTestCase):
                 block = block[:2] + b"0" * header_length + block[2 + header_length :]
             else:
                 block = block[:2] + b"\x00\x00\x00\x00" + block[2 + 4 :]
-            assert fb(block, "h", False, list) == values
+            assert not fb(block, "h", False, list)
 
     def test_handling_malformed_binary(self):
         containers = (list, tuple) + ((np.array, np.ndarray) if np else ())

@@ -48,6 +48,7 @@ to filter the instruments discovered by this method. The syntax is described in
 details in |list_resources|. The default value is '?*::INSTR' which means that
 by default only instrument whose resource name ends with '::INSTR' are listed
 (in particular USB RAW resources and TCPIP SOCKET resources are not listed).
+To list all resources present, pass '?*' to ``list_resources``.
 
 In this case, there is a GPIB instrument with instrument number 14, so you ask
 the ``ResourceManager`` to open "'GPIB0::14::INSTR'" and assign the returned
