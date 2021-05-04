@@ -556,7 +556,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                 container=np.array if np else list,
             )
 
-            assert (not new.size if np else not new)
+            assert not new.size if np else not new
 
     def test_delay_in_query_ascii(self):
         """Test handling of the delay argument in query_ascii_values."""
