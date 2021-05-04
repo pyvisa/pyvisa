@@ -350,11 +350,13 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         with pytest.raises(ValueError):
             self.instr.write_binary_values("", values, "h", header_fmt="zxz")
 
-    def test_read_ascii_values(self):
+    # Without and with trailing comma
+    @pytest.mark.parametrize("msg", ["1,2,3,4,5", "1,2,3,4,5,"])
+    def test_read_ascii_values(self, msg):
         """Test reading ascii values."""
         # Standard separator
         self.instr.write("RECEIVE")
-        self.instr.write("1,2,3,4,5")
+        self.instr.write(msg)
         self.instr.write("SEND")
         values = self.instr.read_ascii_values()
         assert type(values[0]) is float
@@ -362,7 +364,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
         # Non standard separator and termination
         self.instr.write("RECEIVE")
-        self.instr.write("1;2;3;4;5")
+        self.instr.write(msg.replace(",", ";"))
         tic = time.time()
         values = self.instr.query_ascii_values(
             "SEND", converter="d", separator=";", delay=0.5
@@ -374,7 +376,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Numpy container
         if np:
             self.instr.write("RECEIVE")
-            self.instr.write("1,2,3,4,5")
+            self.instr.write(msg)
             self.instr.write("SEND")
             values = self.instr.read_ascii_values(container=np.array)
             expected = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
@@ -527,10 +529,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
     def test_read_binary_values_empty(self):
         """Test reading binary data."""
         self.instr.write("RECEIVE")
-        self.instr.write(
-            "#10",
-            termination="\n",
-        )
+        self.instr.write("#10")
         self.instr.write("SEND")
         new = self.instr.read_binary_values(
             datatype="h",
@@ -557,7 +556,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
                 container=np.array if np else list,
             )
 
-            assert not new
+            assert (not new.size if np else not new)
 
     def test_delay_in_query_ascii(self):
         """Test handling of the delay argument in query_ascii_values."""
@@ -593,7 +592,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
     def test_instrument_wide_delay_in_query_binary(self):
         """Test handling delay in query_ascii_values."""
-        header = "#10"
+        header = "#0"
         data = [1, 2, 3328, 3, 4, 5]
         # Test using the instrument wide delay
         self.instr.query_delay = 1.0
@@ -618,7 +617,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
     def test_delay_args_in_query_binary(self):
         """Test handling of the delay argument in query_ascii_values."""
-        header = "#10"
+        header = "#0"
         data = [1, 2, 3328, 3, 4, 5]
         self.instr.query_delay = 0.0
         self.instr.write("RECEIVE")
@@ -643,7 +642,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
 
     def test_no_delay_args_in_query_binary(self):
         """Test handling of the delay argument in query_ascii_values."""
-        header = "#10"
+        header = "#0"
         data = [1, 2, 3328, 3, 4, 5]
         self.instr.query_delay = 1.0
         self.instr.write("RECEIVE")
