@@ -210,7 +210,8 @@ class TestParser(BaseTestCase):
         for fmt in "d":
             msg = "block=%s, fmt=%s"
             msg = msg % ("ascii", fmt)
-            tb = lambda values: util.to_ascii_block(values, fmt, ",")
+            # Test handling the case of a trailing comma
+            tb = lambda values: util.to_ascii_block(values, fmt, ",") + ","
             fb = lambda block, cont: util.from_ascii_block(block, fmt, ",", cont)
             self.round_trip_block_conversion(values, tb, fb, msg)
 

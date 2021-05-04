@@ -346,6 +346,8 @@ def from_ascii_block(
     data: Iterable[str]
     if isinstance(separator, str):
         data = ascii_data.split(separator)
+        if not data[-1]:
+            data = data[:-1]
     else:
         data = separator(ascii_data)
 

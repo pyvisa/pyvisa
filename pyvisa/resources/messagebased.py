@@ -537,7 +537,7 @@ class MessageBasedResource(Resource):
         container: Union[Type, Callable[[Iterable], Sequence]] = list,
         header_fmt: util.BINARY_HEADERS = "ieee",
         expect_termination: bool = True,
-        data_points: int = 0,
+        data_points: int = -1,
         chunk_size: Optional[int] = None,
     ) -> Sequence[Union[int, float]]:
         """Read values from the device in binary format returning an iterable

@@ -65,7 +65,7 @@ jobs:
       - name: Test with pytest
         run: |
           pip install pytest-cov
-          pytest --pyargs pyvisa --cov pyvisa --cov-report xml -v
+          python -X dev -m pytest --pyargs pyvisa --cov pyvisa --cov-report xml -v
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
