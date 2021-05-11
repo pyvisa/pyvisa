@@ -1,6 +1,12 @@
 PyVISA Changelog
 ================
 
+1.12.0 (unreleased)
+-------------------
+
+- fix collection of debug info on the ctypes wrapper PR #598
+
+
 1.11.3 (07-11-2020)
 -------------------
 
