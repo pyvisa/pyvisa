@@ -128,12 +128,12 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
                 )
                 nfo["Impl. Version"] = str(
                     lib.get_attribute(
-                        sess, constants.ResourceAttribute.resource_manufacturer_name
+                        sess, constants.ResourceAttribute.resource_impl_version
                     )[0]
                 )
                 nfo["Spec. Version"] = str(
                     lib.get_attribute(
-                        sess, constants.ResourceAttribute.resource_manufacturer_name
+                        sess, constants.ResourceAttribute.resource_spec_version
                     )[0]
                 )
                 lib.close(sess)
