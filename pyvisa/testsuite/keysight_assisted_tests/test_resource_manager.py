@@ -50,6 +50,8 @@ class TestResourceManager:
             self.rm.session
         assert self.rm.visalib.resource_manager is None
 
+    # This test is flaky
+    @pytest.mark.skip
     def test_cleanup_on_del(self, caplog):
         """Test that deleting the rm does clean the VISA session"""
         # The test seems to assert what it should even though the coverage report

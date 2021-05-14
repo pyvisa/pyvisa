@@ -346,6 +346,8 @@ def from_ascii_block(
     data: Iterable[str]
     if isinstance(separator, str):
         data = ascii_data.split(separator)
+        if not data[-1]:
+            data = data[:-1]
     else:
         data = separator(ascii_data)
 
@@ -467,7 +469,7 @@ def parse_ieee_block_header(
     else:
         # #0DATA
         # 012
-        data_length = 0
+        data_length = -1
 
     return offset, data_length
 
@@ -577,7 +579,7 @@ def from_ieee_block(
 
     # If the data length is not reported takes all the data and do not make
     # any assumption about the termination character
-    if data_length == 0:
+    if data_length == -1:
         data_length = len(block) - offset
 
     if len(block) < offset + data_length:
@@ -626,11 +628,6 @@ def from_hp_block(
 
     """
     offset, data_length = parse_hp_block_header(block, is_big_endian)
-
-    # If the data length is not reported takes all the data and do not make
-    # any assumption about the termination character
-    if data_length == 0:
-        data_length = len(block) - offset
 
     if len(block) < offset + data_length:
         raise ValueError(

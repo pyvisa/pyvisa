@@ -56,10 +56,8 @@ class TestCmdLineTools(BaseTestCase):
         result = run("pyvisa-info", stdout=PIPE, universal_newlines=True)
         details = util.system_details_to_str(util.get_system_details())
         # Path difference can lead to subtle differences in the backends
-        # compare only the first lines.
-        assert (
-            result.stdout.strip().split("\n")[:16] == details.strip().split("\n")[:16]
-        )
+        # and Python path so compare only the first lines.
+        assert result.stdout.strip().split("\n")[:5] == details.strip().split("\n")[:5]
 
     # TODO test backend selection: this is not easy at all to assert
     @require_visa_lib

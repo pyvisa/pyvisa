@@ -122,7 +122,7 @@ class VisaShell(cmd.Cmd):
             self.prompt = self.default_prompt
 
     def do_query(self, args):
-        """Query resource in use: query *IDN? """
+        """Query resource in use: query *IDN?"""
 
         if not self.current:
             print('There are no resources in use. Use the command "open".')
@@ -146,7 +146,7 @@ class VisaShell(cmd.Cmd):
             print(e)
 
     def do_write(self, args):
-        """Send to the resource in use: send *IDN? """
+        """Send to the resource in use: send *IDN?"""
 
         if not self.current:
             print('There are no resources in use. Use the command "open".')
