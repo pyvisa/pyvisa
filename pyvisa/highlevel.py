@@ -2806,12 +2806,7 @@ class PyVISAModule(ModuleType):
 
 
 def get_wrapper_class(backend_name: str) -> Type[VisaLibraryBase]:
-    """Return the WRAPPER_CLASS for a given backend.
-
-    backend_name == 'ni' is used for backwards compatibility
-    and will be removed in 1.12.
-
-    """
+    """Return the WRAPPER_CLASS for a given backend."""
     try:
         return _WRAPPERS[backend_name]
     except KeyError:

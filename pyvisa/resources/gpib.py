@@ -7,7 +7,6 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
-import warnings
 from time import perf_counter
 from typing import Tuple
 

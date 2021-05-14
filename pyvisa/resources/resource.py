@@ -9,7 +9,6 @@ This file is part of PyVISA.
 """
 import contextlib
 import time
-import warnings
 from functools import update_wrapper
 from typing import (
     Any,

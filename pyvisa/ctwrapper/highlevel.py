@@ -9,7 +9,6 @@ This file is part of PyVISA.
 """
 import ctypes
 import logging
-import warnings
 from collections import OrderedDict
 from typing import (
     Any,
