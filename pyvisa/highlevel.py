@@ -50,7 +50,7 @@ from .typing import (
     VISARMSession,
     VISASession,
 )
-from .util import LibraryPath
+from .util import LibraryPath, DebugInfo
 
 if TYPE_CHECKING:
     from .resources import Resource  # pragma: no cover
@@ -210,7 +210,7 @@ class VisaLibraryBase(object):
         return ()
 
     @staticmethod
-    def get_debug_info() -> Union[Iterable[str], Dict[str, Union[str, Dict[str, Any]]]]:
+    def get_debug_info() -> DebugInfo:
         """Override to return an iterable of lines with the backend debug details."""
         return ["Does not provide debug info"]
 
@@ -2980,7 +2980,9 @@ class ResourceManager(object):
 
         # If the class already has this attribute, it means that a parent class
         # was registered first. We need to copy the current set and extend it.
-        attrs = copy.copy(getattr(python_class, "visa_attributes_classes", set()))
+        attrs: Set[Type[attributes.Attribute]] = copy.copy(
+            getattr(python_class, "visa_attributes_classes", set())
+        )
 
         for attr in chain(
             attributes.AttributesPerResource[(interface_type, resource_class)],
