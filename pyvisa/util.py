@@ -16,9 +16,9 @@ import platform
 import struct
 import subprocess
 import sys
-from types import ModuleType
 import warnings
 from collections import OrderedDict
+from types import ModuleType
 from typing import (
     Any,
     Callable,
@@ -36,7 +36,6 @@ from typing import (
 from typing_extensions import Literal
 
 from . import constants, logger
-
 
 np: Optional[ModuleType]
 try:

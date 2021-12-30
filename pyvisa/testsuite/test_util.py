@@ -10,11 +10,11 @@ import struct
 import subprocess
 import sys
 import tempfile
-from types import ModuleType
 import unittest
 from configparser import ConfigParser
 from functools import partial
 from io import StringIO
+from types import ModuleType
 from typing import Optional
 
 import pytest

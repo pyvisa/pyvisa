@@ -50,7 +50,7 @@ from .typing import (
     VISARMSession,
     VISASession,
 )
-from .util import LibraryPath, DebugInfo
+from .util import DebugInfo, LibraryPath
 
 if TYPE_CHECKING:
     from .resources import Resource  # pragma: no cover
