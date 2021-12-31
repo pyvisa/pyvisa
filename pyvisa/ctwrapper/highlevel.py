@@ -26,7 +26,12 @@ from typing import (
 
 from pyvisa import constants, errors, highlevel, logger, typing
 
-from ..util import LibraryPath, add_user_dll_extra_paths, read_user_library_path
+from ..util import (
+    DebugInfo,
+    LibraryPath,
+    add_user_dll_extra_paths,
+    read_user_library_path,
+)
 from . import functions, types
 from .cthelper import Library, find_library
 
@@ -105,11 +110,11 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         )
 
     @classmethod
-    def get_debug_info(cls) -> Dict[str, Union[str, Dict[str, Any]]]:
+    def get_debug_info(cls) -> DebugInfo:
         """Return a list of lines with backend info."""
         from pyvisa import __version__
 
-        d: Dict[str, Union[str, Dict[str, Any]]] = OrderedDict()
+        d: Dict[str, Any] = OrderedDict()
         d["Version"] = "%s (bundled with PyVISA)" % __version__
 
         paths = cls.get_library_paths()
@@ -376,7 +381,7 @@ class NIVisaLibrary(IVIVisaLibrary):  # pragma: no cover
         return IVIVisaLibrary.get_library_paths()
 
     @classmethod
-    def get_debug_info(cls) -> Dict[str, Union[str, Dict[str, Any]]]:
+    def get_debug_info(cls) -> DebugInfo:
         """Return a list of lines with backend info."""
         warnings.warn(
             "NIVisaLibrary is deprecated and will be removed in 1.12. "
