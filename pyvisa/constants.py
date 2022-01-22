@@ -1077,7 +1077,7 @@ class WireMode(enum.IntEnum):
 
 
 @enum.unique
-class ControlFlow(enum.IntEnum):
+class ControlFlow(enum.IntFlag):
     """Control flow for a serial resource."""
 
     none = VI_ASRL_FLOW_NONE
