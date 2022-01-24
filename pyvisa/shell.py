@@ -4,7 +4,7 @@
 
 This file is taken from the Lantz Project.
 
-:copyright: (c) 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:copyright: (c) 2014-2022 by PyVISA Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 
 """
