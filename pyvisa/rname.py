@@ -7,7 +7,7 @@
 """
 import contextlib
 import re
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from dataclasses import dataclass, field, fields
 from typing import (
     TYPE_CHECKING,
@@ -160,7 +160,7 @@ class ResourceName:
     is_rc_optional: ClassVar[bool] = False
 
     #: Formatting string for canonical
-    _canonical_fmt: str = field(init=False)
+    _canonical_fmt: dict[str, str] = field(init=False)
 
     #: VISA syntax for resource
     _visa_syntax: str = field(init=False)
