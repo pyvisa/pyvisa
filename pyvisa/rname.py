@@ -160,7 +160,7 @@ class ResourceName:
     is_rc_optional: ClassVar[bool] = False
 
     #: Formatting string for canonical
-    _canonical_fmt: dict[str, str] = field(init=False)
+    _canonical_fmt: Dict[str, str] = field(init=False)
 
     #: VISA syntax for resource
     _visa_syntax: str = field(init=False)
