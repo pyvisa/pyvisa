@@ -3266,7 +3266,6 @@ class ResourceManager(object):
             Subclass of Resource matching the resource.
 
         """
-
         if resource_pyclass is None:
             info = self.resource_info(resource_name, extended=True)
 
@@ -3284,27 +3283,31 @@ class ResourceManager(object):
                     "There is no class defined for %r. Using Resource",
                     (info.interface_type, info.resource_class),
                 )
+        if hasattr(self.visalib, "open_resource"):
+            res = self.visalib.open_resource(  # type: ignore
+                resource_name, access_mode, open_timeout, resource_pyclass, **kwargs
+            )
+        else:
+            res = resource_pyclass(self, resource_name)
+            for key in kwargs.keys():
+                try:
+                    getattr(res, key)
+                    present = True
+                except AttributeError:
+                    present = False
+                except errors.InvalidSession:
+                    present = True
 
-        res = resource_pyclass(self, resource_name)
-        for key in kwargs.keys():
-            try:
-                getattr(res, key)
-                present = True
-            except AttributeError:
-                present = False
-            except errors.InvalidSession:
-                present = True
+                if not present:
+                    raise ValueError(
+                        "%r is not a valid attribute for type %s"
+                        % (key, res.__class__.__name__)
+                    )
 
-            if not present:
-                raise ValueError(
-                    "%r is not a valid attribute for type %s"
-                    % (key, res.__class__.__name__)
-                )
+            res.open(access_mode, open_timeout)
 
-        res.open(access_mode, open_timeout)
-
-        for key, value in kwargs.items():
-            setattr(res, key, value)
+            for key, value in kwargs.items():
+                setattr(res, key, value)
 
         self._created_resources.add(res)
 
