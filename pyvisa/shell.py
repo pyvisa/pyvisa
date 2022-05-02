@@ -328,7 +328,7 @@ class VisaShell(cmd.Cmd):
 
         if not args:
             try:
-                charmap = {u"\r": "CR", u"\n": "LF", u"\r\n": "CRLF", u"\0": "NUL"}
+                charmap = {"\r": "CR", "\n": "LF", "\r\n": "CRLF", "\0": "NUL"}
                 chr = self.current.read_termination
                 if chr in charmap:
                     chr = charmap[chr]
@@ -349,10 +349,10 @@ class VisaShell(cmd.Cmd):
             )
         else:
             charmap = {
-                "CR": u"\r",
-                "LF": u"\n",
-                "CRLF": u"\r\n",
-                "NUL": u"\0",
+                "CR": "\r",
+                "LF": "\n",
+                "CRLF": "\r\n",
+                "NUL": "\0",
                 "None": None,
             }
             chr = args[0]
