@@ -17,6 +17,12 @@ PyVISA Changelog
   for the builtin parser.
 - adding open_resource attribute check for VisaLibraryBase in order to support
   custom resource opening #660
+- changed constant ControlFlow enum type from IntEnum to IntFlag PR#652
+  This change also triggers a change in attributes.py to include a new Attribute
+  class, FlagAttribute where the enum type is declared at IntFlag. 
+  Class AttrVI_ATTR_ASRL_FLOW_CNTRL now inherits from FlagAttribute.
+  Flow control attribute per ivi foundation definition is a flag and 
+  multiple flow control types can be set.
 
 1.11.3 (07-11-2020)
 -------------------

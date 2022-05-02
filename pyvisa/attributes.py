@@ -238,6 +238,38 @@ class EnumAttribute(Attribute):
         return value
 
 
+class FlagAttribute(Attribute):
+    """Class for attributes with Flag values that map to a PyVISA Enum."""
+
+    #: Enum type with valid values.
+    enum_type: ClassVar[Type[enum.IntFlag]]
+
+    @classmethod
+    def redoc(cls) -> None:
+        """Add the enum member to the docstring."""
+        super(FlagAttribute, cls).redoc()
+        cls.__doc__ += "\n:type: :class:%s.%s" % (
+            cls.enum_type.__module__,
+            cls.enum_type.__name__,
+        )
+
+    def post_get(self, value: Any) -> enum.IntFlag:
+        """Convert the VISA value to the proper enum member."""
+        return self.enum_type(value)
+
+    def pre_set(self, value: enum.IntFlag) -> Any:
+        """Validate the value passed against the enum."""
+        # Python 3.8 raise if a non-Enum is used for value
+        try:
+            value = self.enum_type(value)
+        except ValueError:
+            raise ValueError(
+                "%r is an invalid value for attribute %s, "
+                "should be a %r" % (value, self.visa_name, self.enum_type)
+            )
+        return value
+
+
 class IntAttribute(Attribute):
     """Class for attributes with integers values."""
 
@@ -1612,7 +1644,7 @@ class AttrVI_ATTR_ASRL_STOP_BITS(EnumAttribute):
     enum_type = constants.StopBits
 
 
-class AttrVI_ATTR_ASRL_FLOW_CNTRL(EnumAttribute):
+class AttrVI_ATTR_ASRL_FLOW_CNTRL(FlagAttribute):
     """Indicate the type of flow control used by the transfer mechanism."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]

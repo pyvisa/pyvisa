@@ -6,6 +6,8 @@ import ctypes
 import gc
 import logging
 import time
+from types import ModuleType
+from typing import Optional
 
 import pytest
 
@@ -19,8 +21,11 @@ from .resource_utils import (
     ResourceTestCase,
 )
 
+np: Optional[ModuleType]
 try:
-    import numpy as np  # type: ignore
+    import numpy
+
+    np = numpy
 except ImportError:
     np = None
 

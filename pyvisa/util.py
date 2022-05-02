@@ -18,6 +18,7 @@ import subprocess
 import sys
 import warnings
 from collections import OrderedDict
+from types import ModuleType
 from typing import (
     Any,
     Callable,
@@ -36,8 +37,11 @@ from typing_extensions import Literal
 
 from . import constants, logger
 
+np: Optional[ModuleType]
 try:
-    import numpy as np  # type: ignore
+    import numpy
+
+    np = numpy
 except ImportError:
     np = None
 
@@ -332,6 +336,7 @@ def from_ascii_block(
         and isinstance(separator, str)
         and converter in _np_converters
     ):
+        assert np  # for typing
         return np.fromstring(ascii_data, _np_converters[converter], sep=separator)
 
     if isinstance(converter, str):
@@ -684,6 +689,7 @@ def from_binary_block(
     endianess = ">" if is_big_endian else "<"
 
     if _use_numpy_routines(container):
+        assert np  # for typing
         return np.frombuffer(block, endianess + datatype, array_length, offset)
 
     fullfmt = "%s%d%s" % (endianess, array_length, datatype)
@@ -805,7 +811,14 @@ def to_hp_block(
     return to_binary_block(iterable, header, datatype, is_big_endian)
 
 
-def get_system_details(backends: bool = True) -> Dict[str, str]:
+# The actual value would be:
+# DebugInfo = Union[List[str], Dict[str, Union[str, DebugInfo]]]
+DebugInfo = Union[List[str], Dict[str, Any]]
+
+
+def get_system_details(
+    backends: bool = True,
+) -> Dict[str, Union[str, Dict[str, DebugInfo]]]:
     """Return a dictionary with information about the system."""
     buildno, builddate = platform.python_build()
     if sys.maxunicode == 65535:
@@ -818,7 +831,8 @@ def get_system_details(backends: bool = True) -> Dict[str, str]:
 
     from . import __version__
 
-    d = {
+    backend_details: Dict[str, DebugInfo] = OrderedDict()
+    d: Dict[str, Union[str, dict]] = {
         "platform": platform.platform(),
         "processor": platform.processor(),
         "executable": sys.executable,
@@ -830,7 +844,7 @@ def get_system_details(backends: bool = True) -> Dict[str, str]:
         "unicode": unitype,
         "bits": bits,
         "pyvisa": __version__,
-        "backends": OrderedDict(),
+        "backends": backend_details,
     }
 
     if backends:
@@ -843,16 +857,16 @@ def get_system_details(backends: bool = True) -> Dict[str, str]:
             try:
                 cls = highlevel.get_wrapper_class(backend)
             except Exception as e:
-                d["backends"][backend] = [
+                backend_details[backend] = [
                     "Could not instantiate backend",
                     "-> %s" % str(e),
                 ]
                 continue
 
             try:
-                d["backends"][backend] = cls.get_debug_info()
+                backend_details[backend] = cls.get_debug_info()
             except Exception as e:
-                d["backends"][backend] = [
+                backend_details[backend] = [
                     "Could not obtain debug info",
                     "-> %s" % str(e),
                 ]

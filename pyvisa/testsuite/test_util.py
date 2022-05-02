@@ -14,6 +14,8 @@ import unittest
 from configparser import ConfigParser
 from functools import partial
 from io import StringIO
+from types import ModuleType
+from typing import Optional
 
 import pytest
 
@@ -21,8 +23,11 @@ from pyvisa import highlevel, util
 from pyvisa.ctwrapper import IVIVisaLibrary
 from pyvisa.testsuite import BaseTestCase
 
+np: Optional[ModuleType]
 try:
-    import numpy as np  # type: ignore
+    import numpy
+
+    np = numpy
 except ImportError:
     np = None
 
