@@ -15,6 +15,8 @@ PyVISA Changelog
 - allow trailing separators in ascii blocks PR #581
   Numpy style extraction already handled this case correctly but it was not so
   for the builtin parser.
+- adding open_resource attribute check for VisaLibraryBase in order to support
+  custom resource opening #660
 
 1.11.3 (07-11-2020)
 -------------------
