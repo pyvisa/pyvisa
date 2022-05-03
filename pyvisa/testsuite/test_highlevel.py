@@ -2,14 +2,14 @@
 """Test highlevel functions not requiring an actual backend.
 
 """
-from importlib import import_module
 import logging
 import os
 import sys
+from importlib import import_module
 
 import pytest
 
-from pyvisa import constants, highlevel, resources, rname, ResourceManager
+from pyvisa import ResourceManager, constants, highlevel, resources, rname
 from pyvisa.ctwrapper import IVIVisaLibrary
 
 from . import BaseTestCase

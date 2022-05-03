@@ -2,9 +2,9 @@
 """
 
 """
+from pyvisa import constants
 from pyvisa.highlevel import VisaLibraryBase
 from pyvisa.util import LibraryPath
-from pyvisa import constants
 
 
 class FakeResource:
