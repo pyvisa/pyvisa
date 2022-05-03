@@ -194,3 +194,7 @@ Complete list of level 2 functions to implement::
     def write(self, session, data):
     def write_asynchronously(self, session, data):
     def write_from_file(self, session, filename, count):
+
+Additionally, a |ResourceManager| attribute check for 
+:class:`pyvisa.highlevel.VisaLibraryBase.open_resource` is implemented 
+in order to support custom opening handling by the new backend implementation.
