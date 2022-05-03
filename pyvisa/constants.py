@@ -18,7 +18,7 @@ import sys
 
 from typing_extensions import Literal
 
-is_64bits = sys.maxsize > 2 ** 32
+is_64bits = sys.maxsize > 2**32
 
 
 def _to_int(x: int) -> int:

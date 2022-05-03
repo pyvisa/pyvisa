@@ -91,6 +91,12 @@ As a **very minimum** set you need:
 
 (you can get the signature below or here :ref:`api_visalibrarybase`)
 
+.. note:: 
+
+  A |ResourceManager| attribute check for 
+  :class:`pyvisa.highlevel.VisaLibraryBase.open_resource` is implemented 
+  in order to support custom opening handling by the new backend implementation.
+
 But of course you cannot do anything interesting with just this. In general you
 will also need:
 

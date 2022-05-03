@@ -15,6 +15,8 @@ PyVISA Changelog
 - allow trailing separators in ascii blocks PR #581
   Numpy style extraction already handled this case correctly but it was not so
   for the builtin parser.
+- adding open_resource attribute check for VisaLibraryBase in order to support
+  custom resource opening #660
 - changed constant ControlFlow enum type from IntEnum to IntFlag PR#652
   This change also triggers a change in attributes.py to include a new Attribute
   class, FlagAttribute where the enum type is declared at IntFlag. 
