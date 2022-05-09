@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Functions and classes to parse and assemble resource name.
 
-:copyright: 2014-2020 by PyVISA Authors, see AUTHORS for more details.
+:copyright: 2014-2022 by PyVISA Authors, see AUTHORS for more details.
 :license: MIT, see LICENSE for more details.
 
 """
