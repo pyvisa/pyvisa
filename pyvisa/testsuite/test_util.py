@@ -294,10 +294,10 @@ class TestParser(BaseTestCase):
             (util.to_ieee_block, util.to_hp_block),
             (util.from_ieee_block, util.from_hp_block),
         ):
-            for fmt in "sp":
-                block = tb(values, datatype="s")
-                print(block)
-                rt = fb(block, datatype="s", container=bytes)
+            for fmt in "sbB":
+                block = tb(values, datatype=fmt)
+                print(fmt, block)
+                rt = fb(block, datatype=fmt, container=bytes)
                 assert values == rt
 
     def test_malformed_binary_block_header(self):

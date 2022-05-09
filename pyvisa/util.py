@@ -706,7 +706,7 @@ def from_binary_block(
 
 
 def to_binary_block(
-    iterable: Sequence[Union[int, float]],
+    iterable: Union[bytes, bytearray, Sequence[Union[int, float]]],
     header: Union[str, bytes],
     datatype: BINARY_DATATYPES,
     is_big_endian: bool,
@@ -730,12 +730,26 @@ def to_binary_block(
         Binary block of data preceded by the specified header
 
     """
-    array_length = len(iterable)
-    endianess = ">" if is_big_endian else "<"
-    fullfmt = "%s%d%s" % (endianess, array_length, datatype)
-
     if isinstance(header, str):
-        header = bytes(header, "ascii")
+        header = header.encode("ascii")
+
+    if isinstance(iterable, (bytes, bytearray)):
+        if datatype not in "sbB":
+            warnings.warn(
+                "Using the formats 's', 'p', 'b' or 'B' is more efficient when "
+                "directly writing bytes",
+                UserWarning,
+            )
+        else:
+            return header + iterable
+
+    endianess = ">" if is_big_endian else "<"
+
+    if _use_numpy_routines(type(iterable)):
+        return header + iterable.astype(endianess + datatype).tobytes()
+
+    array_length = len(iterable)
+    fullfmt = "%s%d%s" % (endianess, array_length, datatype)
 
     if datatype in ("s", "p"):
         block = struct.pack(fullfmt, iterable)
