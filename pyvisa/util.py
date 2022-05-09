@@ -746,7 +746,7 @@ def to_binary_block(
     endianess = ">" if is_big_endian else "<"
 
     if _use_numpy_routines(type(iterable)):
-        assert isinstance(iterable, np.ndarray)  # For typing
+        assert np and isinstance(iterable, np.ndarray)  # For typing
         return header + iterable.astype(endianess + datatype).tobytes()
 
     array_length = len(iterable)
