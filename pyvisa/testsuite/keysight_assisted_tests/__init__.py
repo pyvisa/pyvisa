@@ -22,14 +22,16 @@ import types
 
 import pytest
 
+_KEYSIGHT_AVAILABLE = "PYVISA_KEYSIGHT_VIRTUAL_INSTR" in os.environ
+
 require_virtual_instr = pytest.mark.skipif(
-    "PYVISA_KEYSIGHT_VIRTUAL_INSTR" not in os.environ,
+    not _KEYSIGHT_AVAILABLE,
     reason="Requires the Keysight virtual instrument. Run on PyVISA buildbot.",
 )
 
 
 # We are testing locally with only TCPIP resources on the loop back address
-if os.environ["PYVISA_KEYSIGHT_VIRTUAL_INSTR"] == "0":
+if _KEYSIGHT_AVAILABLE and os.environ["PYVISA_KEYSIGHT_VIRTUAL_INSTR"] == "0":
     RESOURCE_ADDRESSES = {
         "TCPIP::INSTR": "TCPIP::127.0.0.1::INSTR",
         "TCPIP::SOCKET": "TCPIP::127.0.0.1::5025::SOCKET",
