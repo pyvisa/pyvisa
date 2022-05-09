@@ -28,16 +28,27 @@ require_virtual_instr = pytest.mark.skipif(
 )
 
 
-RESOURCE_ADDRESSES = {
-    # "USB::INSTR": "USB::",
-    "TCPIP::INSTR": "TCPIP::192.168.0.2::INSTR",
-    "TCPIP::SOCKET": "TCPIP::192.168.0.2::5025::SOCKET",
-    # "GPIB::INSTR": "GPIB::19::INSTR",
-}
+# We are testing locally with only TCPIP resources on the loop back address
+if os.environ["PYVISA_KEYSIGHT_VIRTUAL_INSTR"] == "0":
+    RESOURCE_ADDRESSES = {
+        "TCPIP::INSTR": "TCPIP::127.0.0.1::INSTR",
+        "TCPIP::SOCKET": "TCPIP::127.0.0.1::5025::SOCKET",
+    }
 
-ALIASES = {
-    "TCPIP::192.168.0.2::INSTR": "tcpip",
-}
+    ALIASES = {}
+
+# We are running on the bot with all supported resources.
+else:
+    RESOURCE_ADDRESSES = {
+        # "USB::INSTR": "USB::",
+        "TCPIP::INSTR": "TCPIP::192.168.0.2::INSTR",
+        "TCPIP::SOCKET": "TCPIP::192.168.0.2::5025::SOCKET",
+        # "GPIB::INSTR": "GPIB::19::INSTR",
+    }
+
+    ALIASES = {
+        "TCPIP::192.168.0.2::INSTR": "tcpip",
+    }
 
 
 # Even a deepcopy is not a true copy of a function.
