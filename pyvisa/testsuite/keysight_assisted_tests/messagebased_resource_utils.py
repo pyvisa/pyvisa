@@ -303,7 +303,8 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             assert self.instr.read() == "\r1;2;3;4;5\r"
 
     @pytest.mark.parametrize(
-        "hfmt, prefix", zip(("ieee", "hp", "empty"), (b"#212", b"#A\x0c\x00", b""))
+        "hfmt, prefix",
+        list(zip(("ieee", "hp", "empty"), (b"#212", b"#A\x0c\x00", b""))),
     )
     def test_write_binary_values(self, hfmt, prefix):
         """Test writing binary data."""
@@ -469,7 +470,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         """ """
         pass
 
-    @pytest.mark.parametrize("hfmt, header", zip(("ieee", "empty"), ("#0", "")))
+    @pytest.mark.parametrize("hfmt, header", list(zip(("ieee", "empty"), ("#0", ""))))
     def test_read_binary_values_unreported_length(self, hfmt, header):
         """Test reading binary data."""
         self.instr.read_termination = "\r"

@@ -4,6 +4,8 @@ PyVISA Changelog
 1.12.0 (unreleased)
 -------------------
 
+- optimize write_binary_values when passing in bytes, bytearray or numpy arrays PR #668
+  We avoid going through the struct module which can cause large memory overheads.
 - fix collection of debug info on the ctypes wrapper PR #598
 - allow an IEEE binary block or an HP block to be empty PR #581
   This is more correct and can affect real instruments. However this introduces
@@ -19,9 +21,9 @@ PyVISA Changelog
   custom resource opening #660
 - changed constant ControlFlow enum type from IntEnum to IntFlag PR#652
   This change also triggers a change in attributes.py to include a new Attribute
-  class, FlagAttribute where the enum type is declared at IntFlag. 
+  class, FlagAttribute where the enum type is declared at IntFlag.
   Class AttrVI_ATTR_ASRL_FLOW_CNTRL now inherits from FlagAttribute.
-  Flow control attribute per ivi foundation definition is a flag and 
+  Flow control attribute per ivi foundation definition is a flag and
   multiple flow control types can be set.
 
 1.11.3 (07-11-2020)
