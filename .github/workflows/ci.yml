@@ -35,17 +35,23 @@ jobs:
         run: |
           isort pyvisa -c;
       - name: Black
+        if: always()
         run: |
           black pyvisa --check;
       - name: Flake8
+        if: always()
         run: |
           flake8 pyvisa;
       - name: Mypy
+        if: always()
         run: |
           mypy pyvisa;
   tests:
     name: Unit tests
     runs-on: ${{ matrix.os }}
+    needs:
+      - formatting
+    if: needs.formatting.result == 'success'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
