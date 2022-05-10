@@ -29,8 +29,7 @@ jobs:
         run: |
           pip install pytest
           pip install dist/*.tar.gz
-          cd ..
-          python -m pytest pyvisa/testsuite
+          python -X dev -m pytest --pyargs pyvisa
       - name: Store artifacts
         uses: actions/upload-artifact@v2
         with:
