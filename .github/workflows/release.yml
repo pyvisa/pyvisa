@@ -29,8 +29,7 @@ jobs:
         run: |
           pip install pytest
           pip install dist/*.tar.gz
-          cd ..
-          python -m pytest pyvisa/testsuite
+          python -X dev -m pytest --pyargs pyvisa
       - name: Store artifacts
         uses: actions/upload-artifact@v2
         with:
@@ -39,6 +38,7 @@ jobs:
 
   build_wheel:
     name: Build wheel
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -48,12 +48,10 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
       - name: Setup Python
         uses: actions/setup-python@v2
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install wheel cibuildwheel
       - name: Build wheels
         run: |
+          pip install --upgrade pip
+          pip install wheel build
           python -m build . -w
       - name: Test wheel
         run: |
@@ -70,7 +68,7 @@ jobs:
     name: Create Release and Upload Release Asset
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheel, build_sdist]
     steps:
       - name: Create Release
         id: create_release
@@ -97,7 +95,7 @@ jobs:
 
   upload_pypi:
     if: github.event_name == 'push'
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheel, build_sdist]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
