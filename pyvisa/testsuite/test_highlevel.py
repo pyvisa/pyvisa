@@ -131,8 +131,7 @@ class TestHighlevel(BaseTestCase):
         """Test retrieving a wrapper class."""
         highlevel._WRAPPERS.clear()
 
-        with pytest.warns(FutureWarning):
-            highlevel.get_wrapper_class("ni")
+        highlevel.get_wrapper_class("ivi")
         assert "ivi" in highlevel._WRAPPERS
 
         path = os.path.join(os.path.dirname(__file__), "fake-extensions")

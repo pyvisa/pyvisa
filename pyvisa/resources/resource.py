@@ -9,7 +9,6 @@ This file is part of PyVISA.
 """
 import contextlib
 import time
-import warnings
 from functools import update_wrapper
 from typing import (
     Any,
@@ -65,24 +64,6 @@ class WaitResponse:
         self.ret = ret
         self._visalib = visalib
         self.timed_out = timed_out
-
-    @property
-    def event_type(self) -> Optional[constants.EventType]:
-        warnings.warn(
-            "event_type is deprecated and will be removed in 1.12. "
-            "Use the event object instead.",
-            FutureWarning,
-        )
-        return self._event_type
-
-    @property
-    def context(self) -> Optional[VISAEventContext]:
-        warnings.warn(
-            "context is deprecated and will be removed in 1.12. "
-            "Use the event object instead to access the event attributes.",
-            FutureWarning,
-        )
-        return self._context
 
     def __del__(self) -> None:
         if self.event._context is not None:

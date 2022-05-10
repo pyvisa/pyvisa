@@ -9,7 +9,6 @@ This file is part of PyVISA.
 """
 import ctypes
 import logging
-import warnings
 from collections import OrderedDict
 from typing import (
     Any,
@@ -361,41 +360,3 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
                 return buffer
 
         return None
-
-
-class NIVisaLibrary(IVIVisaLibrary):  # pragma: no cover
-    """Deprecated name for IVIVisaLibrary.
-
-    This class will be removed in 1.12
-
-    """
-
-    @staticmethod
-    def get_library_paths() -> Tuple[LibraryPath, ...]:
-        """Return a tuple of possible library paths."""
-        warnings.warn(
-            "NIVisaLibrary is deprecated and will be removed in 1.12. "
-            "Use IVIVisaLibrary instead.",
-            FutureWarning,
-        )
-        return IVIVisaLibrary.get_library_paths()
-
-    @classmethod
-    def get_debug_info(cls) -> DebugInfo:
-        """Return a list of lines with backend info."""
-        warnings.warn(
-            "NIVisaLibrary is deprecated and will be removed in 1.12. "
-            "Use IVIVisaLibrary instead.",
-            FutureWarning,
-        )
-        return IVIVisaLibrary.get_debug_info()
-
-    def __new__(  # type: ignore
-        cls: Type["NIVisaLibrary"], library_path: str = ""
-    ) -> highlevel.VisaLibraryBase:
-        warnings.warn(
-            "NIVisaLibrary is deprecated and will be removed in 1.12. "
-            "Use IVIVisaLibrary instead.",
-            FutureWarning,
-        )
-        return IVIVisaLibrary.__new__(cls, library_path)

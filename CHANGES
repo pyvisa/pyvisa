@@ -4,6 +4,10 @@ PyVISA Changelog
 1.12.0 (unreleased)
 -------------------
 
+- remove deprecated feature planned for removal PR #600
+  This include the visa.py module. `
+  import visa` should be replaced by `import pyvisa as visa` and usage of
+  `python -m visa info` by `pyvisa-info` and `python -m visa shell` by `pyvisa-shell`
 - optimize write_binary_values when passing in bytes, bytearray or numpy arrays PR #668
   We avoid going through the struct module which can cause large memory overheads.
 - fix collection of debug info on the ctypes wrapper PR #598

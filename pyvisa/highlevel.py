@@ -2806,26 +2806,14 @@ class PyVISAModule(ModuleType):
 
 
 def get_wrapper_class(backend_name: str) -> Type[VisaLibraryBase]:
-    """Return the WRAPPER_CLASS for a given backend.
-
-    backend_name == 'ni' is used for backwards compatibility
-    and will be removed in 1.12.
-
-    """
+    """Return the WRAPPER_CLASS for a given backend."""
     try:
         return _WRAPPERS[backend_name]
     except KeyError:
-        if backend_name == "ivi" or backend_name == "ni":
+        if backend_name == "ivi":
             from .ctwrapper import IVIVisaLibrary
 
             _WRAPPERS["ivi"] = IVIVisaLibrary
-            if backend_name == "ni":
-                warnings.warn(
-                    "@ni backend name is deprecated and will be "
-                    "removed in 1.12. Use @ivi instead. "
-                    "Check the documentation for details",
-                    FutureWarning,
-                )
             return IVIVisaLibrary
 
     pkg: PyVISAModule
@@ -2834,20 +2822,7 @@ def get_wrapper_class(backend_name: str) -> Type[VisaLibraryBase]:
         _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
         return cls
     except ImportError:
-        try:
-            pkg = cast(PyVISAModule, import_module("pyvisa-" + backend_name))
-            _WRAPPERS[backend_name] = cls = pkg.WRAPPER_CLASS
-            warnings.warn(
-                "Backends packages should use an _ rather than a - ."
-                "Project can/should keep using a - (like pytest plugins)."
-                "Support for backends with - will be removed in 1.12",
-                FutureWarning,
-            )
-            return cls
-        except ImportError:
-            raise ValueError(
-                "Wrapper not found: No package named pyvisa_%s" % backend_name
-            )
+        raise ValueError("Wrapper not found: No package named pyvisa_%s" % backend_name)
 
 
 def _get_default_wrapper() -> str:
@@ -3314,51 +3289,3 @@ class ResourceManager(object):
         self._created_resources.add(res)
 
         return res
-
-    def get_instrument(
-        self,
-        resource_name: str,
-        access_mode: constants.AccessModes = constants.AccessModes.no_lock,
-        open_timeout: int = constants.VI_TMO_IMMEDIATE,
-        resource_pyclass: Type["Resource"] = None,
-        **kwargs: Any,
-    ) -> "Resource":
-        """Return an instrument for the resource name.
-
-        .. warning::
-            get_instrument is deprecated and will be removed in 1.12,
-            use open_resource instead."
-
-        Parameters
-        ----------
-        resource_name : str
-            Name or alias of the resource to open.
-        access_mode : constants.AccessModes, optional
-            Specifies the mode by which the resource is to be accessed,
-            by default constants.AccessModes.no_lock
-        open_timeout : int, optional
-            If the ``access_mode`` parameter requests a lock, then this
-            parameter specifies the absolute time period (in milliseconds) that
-            the resource waits to get unlocked before this operation returns an
-            error, by default constants.VI_TMO_IMMEDIATE.
-        resource_pyclass : Optional[Type[Resource]], optional
-            Resource Python class to use to instantiate the Resource.
-            Defaults to None: select based on the resource name.
-        kwargs : Any
-            Keyword arguments to be used to change instrument attributes
-            after construction.
-
-        Returns
-        -------
-        Resource
-            Subclass of Resource matching the resource.
-
-        """
-        warnings.warn(
-            "get_instrument is deprecated and will be removed in "
-            "1.12, use open_resource instead.",
-            FutureWarning,
-        )
-        return self.open_resource(
-            resource_name, access_mode, open_timeout, resource_pyclass, **kwargs
-        )

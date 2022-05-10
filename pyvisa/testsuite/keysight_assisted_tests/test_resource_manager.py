@@ -220,12 +220,6 @@ class TestResourceManager:
 
         assert len(self.rm.list_opened_resources()) == 0
 
-    def test_get_instrument(self):
-        """Check that we get the expected deprecation warning."""
-        rname = list(RESOURCE_ADDRESSES.values())[0]
-        with pytest.warns(FutureWarning):
-            self.rm.get_instrument(rname)
-
 
 @require_virtual_instr
 class TestResourceParsing(BaseTestCase):

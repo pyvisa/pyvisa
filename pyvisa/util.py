@@ -232,40 +232,6 @@ def cleanup_timeout(timeout: Optional[Union[int, float]]) -> int:
     return timeout
 
 
-def warn_for_invalid_kwargs(keyw, allowed_keys):  # pragma: no cover
-    warnings.warn("warn_for_invalid_kwargs will be removed in 1.12", FutureWarning)
-    for key in keyw.keys():
-        if key not in allowed_keys:
-            warnings.warn('Keyword argument "%s" unknown' % key, stacklevel=3)
-
-
-def filter_kwargs(keyw, selected_keys):  # pragma: no cover
-    warnings.warn("warn_for_invalid_kwargs will be removed in 1.12", FutureWarning)
-    result = {}
-    for key, value in keyw.items():
-        if key in selected_keys:
-            result[key] = value
-    return result
-
-
-def split_kwargs(keyw, self_keys, parent_keys, warn=True):  # pragma: no cover
-    warnings.warn("warn_for_invalid_kwargs will be removed in 1.12", FutureWarning)
-    self_kwargs = dict()
-    parent_kwargs = dict()
-    self_keys = set(self_keys)
-    parent_keys = set(parent_keys)
-    all_keys = self_keys | parent_keys
-    for key, value in keyw.items():
-        if warn and key not in all_keys:
-            warnings.warn('Keyword argument "%s" unknown' % key, stacklevel=3)
-        if key in self_keys:
-            self_kwargs[key] = value
-        if key in parent_keys:
-            parent_kwargs[key] = value
-
-    return self_kwargs, parent_kwargs
-
-
 _converters: Dict[str, Callable[[str], Any]] = {
     "s": str,
     "b": functools.partial(int, base=2),
@@ -970,17 +936,6 @@ def get_debug_info(to_screen=True):
     if not to_screen:
         return out
     print(out)
-
-
-def pip_install(package):  # pragma: no cover
-    warnings.warn("warn_for_invalid_kwargs will be removed in 1.12", FutureWarning)
-    try:
-        import pip  # type: ignore
-
-        return pip.main(["install", package])
-    except ImportError:
-        print(system_details_to_str(get_system_details()))
-        raise RuntimeError("Please install pip to continue.")
 
 
 machine_types = {

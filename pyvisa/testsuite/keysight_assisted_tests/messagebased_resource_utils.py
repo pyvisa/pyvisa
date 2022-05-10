@@ -814,11 +814,6 @@ class EventAwareMessagebasedResourceTestCaseMixin(EventAwareResourceTestCaseMixi
         assert response.event.event_type == EventType.service_request
         assert self.instr.read() == "1"
 
-        with pytest.warns(FutureWarning):
-            response.event_type
-        with pytest.warns(FutureWarning):
-            response.context
-
     def test_managing_visa_handler(self):
         """Test using visa handlers."""
 
