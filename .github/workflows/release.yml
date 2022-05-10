@@ -71,7 +71,7 @@ jobs:
     name: Create Release and Upload Release Asset
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheel, build_sdist]
     steps:
       - name: Create Release
         id: create_release
@@ -98,7 +98,7 @@ jobs:
 
   upload_pypi:
     if: github.event_name == 'push'
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheel, build_sdist]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
