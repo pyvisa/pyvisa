@@ -39,6 +39,7 @@ jobs:
 
   build_wheel:
     name: Build wheel
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
