@@ -1,7 +1,7 @@
 PyVISA Changelog
 ================
 
-1.12.0 (unreleased)
+1.12.0 (11-05-2022)
 -------------------
 
 - remove deprecated feature planned for removal PR #600
@@ -29,6 +29,7 @@ PyVISA Changelog
   Class AttrVI_ATTR_ASRL_FLOW_CNTRL now inherits from FlagAttribute.
   Flow control attribute per ivi foundation definition is a flag and
   multiple flow control types can be set.
+- move all setup metadata to pyproject.toml PR #600
 
 1.11.3 (07-11-2020)
 -------------------
