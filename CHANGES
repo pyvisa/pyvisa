@@ -30,7 +30,7 @@ PyVISA Changelog
   Flow control attribute per ivi foundation definition is a flag and
   multiple flow control types can be set.
 - move all setup metadata to pyproject.toml PR #600
-- remove duplicate calls to the command loop after running pyvisa-shell
+- remove duplicate call to the command loop after running pyvisa-shell PR #687
 
 1.11.3 (07-11-2020)
 -------------------
