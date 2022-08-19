@@ -51,8 +51,6 @@ def visa_main(command: Optional[str] = None) -> None:
         from pyvisa import shell
 
         shell.main("@" + args.backend if args.backend else "")
-
-        shell.main("@" + args.backend if args.backend else "")
     else:
         raise ValueError(
             f"Unknown command {args.command}. Valid values are: info and shell"

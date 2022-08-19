@@ -40,4 +40,4 @@ class TestCmdLineTools(BaseTestCase):
         """Test the visa shell function."""
         with Popen(["pyvisa-shell"], stdin=PIPE, stdout=PIPE) as p:
             stdout, stderr = p.communicate(b"exit")
-        assert b"Welcome to the VISA shell" in stdout
+        assert stdout.count(b"Welcome to the VISA shell") == 1
