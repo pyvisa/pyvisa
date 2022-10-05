@@ -22,7 +22,7 @@ from functools import update_wrapper
 from threading import Lock
 from typing import Any, Callable, Optional, Tuple
 
-from pyvisa import attributes, constants, ctwrapper, typing
+from pyvisa import attributes, constants, ctwrapper, typing, VisaIOError
 from pyvisa.highlevel import ResourceInfo
 
 from . import types
@@ -832,6 +832,19 @@ def get_attribute(library, session, attribute):
         Return value of the library call.
 
     """
+    if attribute not in attributes.AttributesByID:
+        #
+        # the following ResourceAttribute members will fail:
+        #
+        #     fdc_generate_signal_enabled
+        #     interface_parent_number
+        #     pxi_memory_base_bar5
+        #     pxi_memory_size_bar5
+        #     pxi_memory_type_bar5
+        #     resource_manager_session
+        #
+        raise VisaIOError(constants.VI_ERROR_NSUP_ATTR)
+
     attr = attributes.AttributesByID[attribute]
     datatype = getattr(types, attr.visa_type)
     if datatype == ViString:
