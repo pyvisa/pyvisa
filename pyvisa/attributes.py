@@ -1292,7 +1292,7 @@ class AttrVI_ATTR_TCPIP_HISLIP_MAX_MESSAGE_KB(RangeAttribute):
 
     visa_name = "VI_ATTR_TCPIP_HISLIP_MAX_MESSAGE_KB"
 
-    visa_type = "ViUint32"
+    visa_type = "ViUInt32"
 
     default = 1024
 
@@ -2611,7 +2611,7 @@ class AttrVI_ATTR_WIN_SIZE(RangeAttribute):
 
     visa_name = "VI_ATTR_WIN_SIZE"
 
-    visa_type = "ViBusSize64" if constants.is_64bits else "ViBusSize"
+    visa_type = "ViUInt64" if constants.is_64bits else "ViUInt32"
 
     default = NotAvailable
 
@@ -2865,7 +2865,7 @@ class AttrVI_ATTR_MEM_SIZE(RangeAttribute):
 
     visa_name = "VI_ATTR_MEM_SIZE"
 
-    visa_type = "ViBusSize64" if constants.is_64bits else "ViUInt32"
+    visa_type = "ViUInt64" if constants.is_64bits else "ViUInt32"
 
     default = NotAvailable
 
