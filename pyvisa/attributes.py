@@ -389,6 +389,7 @@ class CharAttribute(Attribute):
 # --- Session attributes ---------------------------------------------------------------
 # Attributes are in the same order as in the constants.ResourceAttribute enum
 
+
 class AttrVI_ATTR_RM_SESSION(Attribute):
     """Specifies the session of the Resource Manager used to open this session."""
 
