@@ -208,6 +208,9 @@ class Resource(object):
     #: VISA attributes require the resource to be opened in order to get accessed.
     #: Please have a look at the attributes definition for more details
 
+    #: The session of the Resource Manager used to open this session.
+    resource_manager_session: Attribute[int] = attributes.AttrVI_ATTR_RM_SESSION()
+
     #: Interface type of the given session.
     interface_type: Attribute[
         constants.InterfaceType

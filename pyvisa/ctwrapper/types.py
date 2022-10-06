@@ -110,6 +110,7 @@ ViBusAddress, ViPBusAddress = _type_pair(ViUInt32)
 ViBusAddress64, ViPBusAddress64 = _type_pair(ViUInt64)
 
 ViBusSize = ViUInt32
+ViBusSize64 = ViUInt64
 
 ViAttrState, ViPAttrState = _type_pair(ViUInt32)
 
