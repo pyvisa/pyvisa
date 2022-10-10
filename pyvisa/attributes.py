@@ -390,22 +390,21 @@ class CharAttribute(Attribute):
 # Attributes are in the same order as in the constants.ResourceAttribute enum
 
 
-class AttrVI_ATTR_RM_SESSION(Attribute):
-    """Specifies the session of the Resource Manager used to open this session."""
-
-    resources = AllSessionTypes
-
-    py_name = "resource_manager_session"
-
-    visa_name = "VI_ATTR_RM_SESSION"
-
-    visa_type = "ViSession"
-
-    default = NotAvailable
-
-    read, write, local = True, False, False
-
-
+# class AttrVI_ATTR_RM_SESSION(Attribute):
+#     """Specifies the session of the Resource Manager used to open this session."""
+#
+#     resources = AllSessionTypes
+#
+#     py_name = "resource_manager_session"
+#
+#     visa_name = "VI_ATTR_RM_SESSION"
+#
+#     visa_type = "ViSession"
+#
+#     default = NotAvailable
+#
+#     read, write, local = True, False, False
+#
 # VI_ATTR_RM_SESSION is not implemented as resource property,
 # use .resource_manager.session instead
 
