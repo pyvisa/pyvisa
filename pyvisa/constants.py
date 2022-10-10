@@ -1901,9 +1901,7 @@ class ResourceAttribute(enum.IntEnum):
 
     # All sessions
 
-    ## VI_ATTR_RM_SESSION is not implemented as resource property,
-    ## use .resource_manager.session instead
-    # resource_manager_session = VI_ATTR_RM_SESSION
+    resource_manager_session = VI_ATTR_RM_SESSION
     interface_type = VI_ATTR_INTF_TYPE
     interface_number = VI_ATTR_INTF_NUM
     interface_instrument_name = VI_ATTR_INTF_INST_NAME
