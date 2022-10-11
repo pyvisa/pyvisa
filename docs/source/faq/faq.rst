@@ -174,6 +174,29 @@ may have been corrupted.
 [https://github.com/pyvisa/pyvisa/issues/538]
 
 
+Using USB-GPIB adapters but no GPIB resources are listed:
+---------------------------------------------------------
+
+This issue primarily arises when using a Keithley GPIB-USB cable or other non-NI brands. 
+
+Issue: When connecting the cable from an instrument, the device manager recognizes the connection. However, it is not recognized by PyVisa or any other applications such as NI-VISA or TekVisa. 
+
+Make sure you have the correct driver of your cable installed. For the Keithley KUSB-488B, the driver can be found here: https://www.tek.com/en/support/software/driver/4-0-0
+
+Ensure that the driver is compatible with your software version and OS. If Windows 11 is installed, for example, the above driver will not work. Additionally, when plugging the cable in, see if the indicator lights (if present) are on and lit. If not, use another cable. If the computer itself in Device Manager does not recognize the connection, then it is most likely a problem with the connection or the instrument may require further configuration to prepare it for remote programming. 
+
+There are various options for Visa applications to check on the status and information of the instrument. The recommended ones are either TekVisa or NI-Visa. For Keithley cables, TekVisa is recommended. However, do not install these simultaneously. If both programs are installed, the connection will not be properly detected and a variety of other errors may occur. If both are already downloaded on the same machine, cleanly and completely uninstall both and reinstall the chosen Visa application. If you believe that there may be conflicting a great deal of installation files from these applications and others, it may be conducive to restart on another machine and ensure that nothing is installed more than once. Along with using ``pip uninstall`` (for Spyder, if using another platform using the corresponding uninstall command), the "Add or Remove Programs" in Control Panel for Windows can be used. Again, use the corresponding version depending on the OS. Restart your computer to make sure the changes are implemented accordingly. 
+
+TekVisa Installation - https://www.tek.com/en/support/software/driver/tekvisa-connectivity-software-v411
+
+NI Package Manager Installation - https://www.ni.com/en-us/support/downloads/software-products/download.package-manager.html
+
+NI-Max and NI-VISA might require a reinstallation of the ``.dllwin32`` file. The program will let you know and guide you through the reinstallation. You can either install the file again or (easier) remove the NI application all together and reinstall it. If there is no warning, then you can assume it is installed correctly. Within TekVisa, make sure to enable all categories, as by default the "GPIB" option will be unselected. To do this, press on the "Search Criteria" option and enable the corresponding attributes. 
+
+Another common error in this installation is ``VISA: (Hex 0xBFFF0011) Insufficient location information or the device or resource is not present in the system.``. Although this error might appear with the NI-VISA, it does not necessarily mean that PyVisa will not detect the instrument. It is still worthwhile to print the opened resources from the PyVisa Resource Manager as the instrument may show up. 
+
+
+
 Where can I get more information about VISA?
 --------------------------------------------
 
