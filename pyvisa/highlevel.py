@@ -89,7 +89,7 @@ class VisaLibraryBase(object):
     to the underlying devices providing Pythonic wrappers to VISA functions. But not all
     derived class must/will implement all methods. Even if methods are expected to return
     the status code they are expected to raise the appropriate exception when an error
-    ocurred since this is more Pythonic.
+    occurred since this is more Pythonic.
 
     The default VisaLibrary class is :class:`pyvisa.ctwrapper.highlevel.IVIVisaLibrary`,
     which implements a ctypes wrapper around the IVI-VISA library.
@@ -127,7 +127,7 @@ class VisaLibraryBase(object):
     #: Maps session handle to warnings to ignore.
     _ignore_warning_in_session: Dict[int, set]
 
-    #: Extra inforatoion used for logging errors
+    #: Extra information used for logging errors
     _logging_extra: Dict[str, str]
 
     #: Contains all installed event handlers.
@@ -865,7 +865,7 @@ class VisaLibraryBase(object):
         ----------
         session : VISASession
             Unique logical identifier to a session.
-        event_type : constans.EventType
+        event_type : constants.EventType
             Logical event identifier.
         mechanism : constants.EventMechanism
             Specifies event handling mechanisms to be discarded.
@@ -2938,10 +2938,10 @@ class ResourceManager(object):
 
         Parameters
         ----------
-        interface_type : constants.InterfaceTyp
+        interface_type : constants.InterfaceType
             Interface type for which to use the provided class.
         resource_class : str
-            Resource class (INSTR, INTFC, ...)  for which to use teh povided class.
+            Resource class (INSTR, INTFC, ...)  for which to use the provided class.
         python_class : Type[Resource]
             Subclass of ``Resource`` to use when opening a resource matching the
             specified interface type and resource class.

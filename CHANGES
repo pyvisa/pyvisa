@@ -1,6 +1,14 @@
 PyVISA Changelog
 ================
 
+1.12.1 (11-10-2022)
+-------------------
+
+- numerous bug fixes related to VISA attributes PR #697
+  This included fixing several typos, uncommenting the
+  AttrVI_ATTR_INTF_PARENT_NUM class, and adding in the
+  AttrVI_ATTR_RM_SESSION class,
+
 1.12.0 (11-05-2022)
 -------------------
 
