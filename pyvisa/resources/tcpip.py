@@ -27,6 +27,18 @@ class TCPIPInstrument(ControlRenMixin, MessageBasedResource):
     pass
 
 
+@Resource.register(constants.InterfaceType.vicp, "INSTR")
+class VICPInstrument(ControlRenMixin, MessageBasedResource):
+    """Communicates with to devices of type VICP::host address[::INSTR]
+
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
+    """
+
+    pass
+
+
 @Resource.register(constants.InterfaceType.tcpip, "SOCKET")
 class TCPIPSocket(MessageBasedResource):
     """Communicates with to devices of type TCPIP::host address::port::SOCKET

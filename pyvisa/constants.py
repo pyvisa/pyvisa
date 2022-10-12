@@ -816,6 +816,9 @@ class InterfaceType(enum.IntEnum):
     #: Rohde and Schwarz Device via Passport
     rsnrp = 33024
 
+    #: Lecroy VICP via passport
+    vicp = 36000  # FIXME
+
 
 @enum.unique
 class LineState(enum.IntEnum):
