@@ -102,7 +102,7 @@ directly can be useful. Let's see how.
         # Type of event we want to be notified about
         event_type = constants.EventType.service_request
         # Mechanism by which we want to be notified
-        event_mech = constants.EventMechanism.queue
+        event_mech = constants.EventMechanism.handler
 
         wrapped = instr.wrap_handler(handle_event)
 
