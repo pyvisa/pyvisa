@@ -62,7 +62,7 @@ Error: Could not find VISA library
 
 This error occurs when you have not provided a path for the VISA library and
 PyVISA is not able to find it for you. You can solve it by creating a configuration
-file as described in :ref:`intro-configuring` or by providing the
+file as described in :ref:`intro-configuring` (recommended) or by providing the
 library path to the ``VisaLibrary`` or ``ResourceManager`` constructor::
 
     >>> visalib = VisaLibrary('/path/to/library')
@@ -71,30 +71,32 @@ or::
 
     >>> rm = ResourceManager('Path to library')
 
-If you get this error while trying to create a ``ResourceManager`` in Python built
-for Cygwin (see `https://www.cygwin.com/`) on Windows:
+.. note::
 
-  1. Check you are running the Cygwin build of Python by running ``python -VV``. If not follow
-     the troubleshooting steps for Windows::
+   If you get this error while trying to create a ``ResourceManager`` in Python built
+   for Cygwin (https://www.cygwin.com/) on Windows:
 
-        $ python -VV
-        Python 3.9.10 (main, Jan 20 2022, 21:37:52)
-        [GCC 11.2.0]
+     1. Check you are running the Cygwin build of Python by running ``python -VV``. If not, follow
+        the troubleshooting steps for Windows::
 
-  2. Specify the location of the ``visa32.dll`` or ``visa64.dll`` using the ``linux`` syntax
-     and Cygwin paths by creating a `.pyvisarc` (:ref:`intro-configuring`) file::
+           $ python -VV
+           Python 3.9.10 (main, Jan 20 2022, 21:37:52)
+           [GCC 11.2.0]
 
-        $ cat ~/.pyvisarc
-        [Paths]
-        VISA library: /cygdrive/c/Windows/System32/visa64.dll
+     2. Specify the location of the ``visa32.dll`` or ``visa64.dll`` using the ``linux`` syntax
+        and Cygwin paths by creating a `.pyvisarc` (:ref:`intro-configuring`) file::
 
-     or::
+           $ cat ~/.pyvisarc
+           [Paths]
+           VISA library: /cygdrive/c/Windows/System32/visa64.dll
 
-        rm = visa.ResourceManager('/cygdrive/c/Windows/System32/visa64.dll')
+        or::
 
-     or::
+           rm = visa.ResourceManager('/cygdrive/c/Windows/System32/visa64.dll')
 
-        rm = visa.ResourceManager('/cygdrive/c/Windows/System32/visa32.dll')
+        or::
+
+           rm = visa.ResourceManager('/cygdrive/c/Windows/System32/visa32.dll')
 
 
 Error: `visa` module has no attribute `ResourceManager`
