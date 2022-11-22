@@ -468,7 +468,7 @@ class MessageBasedResource(Resource):
         ----------
         termination : Optional[str], optional
             Alternative character termination to use. If None, the value of
-            write_termination is used. Defaults to None.
+            read_termination is used. Defaults to None.
         encoding : Optional[str], optional
             Alternative encoding to use to turn bytes into str. If None, the
             value of encoding is used. Defaults to None.
