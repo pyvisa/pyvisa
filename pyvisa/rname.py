@@ -50,7 +50,7 @@ class InvalidResourceName(ValueError):
 
     @classmethod
     def bad_syntax(
-        cls, syntax: str, resource_name: str, ex: Exception = None
+        cls, syntax: str, resource_name: str, ex: Optional[Exception] = None
     ) -> "InvalidResourceName":
         """Build an exception when the resource name cannot be parsed."""
         if ex:
@@ -64,7 +64,9 @@ class InvalidResourceName(ValueError):
 
     @classmethod
     def subclass_notfound(
-        cls, interface_type_resource_class: Tuple[str, str], resource_name: str = None
+        cls,
+        interface_type_resource_class: Tuple[str, str],
+        resource_name: Optional[str] = None,
     ) -> "InvalidResourceName":
         """Build an exception when no parser has been registered for a pair."""
 
@@ -77,7 +79,7 @@ class InvalidResourceName(ValueError):
 
     @classmethod
     def rc_notfound(
-        cls, interface_type: str, resource_name: str = None
+        cls, interface_type: str, resource_name: Optional[str] = None
     ) -> "InvalidResourceName":
         """Build an exception when no resource class is provided and no default is found."""
 

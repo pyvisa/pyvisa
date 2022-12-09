@@ -448,7 +448,7 @@ def parse_ieee_block_header(
 def parse_hp_block_header(
     block: Union[bytes, bytearray],
     is_big_endian: bool,
-    length_before_block: int = None,
+    length_before_block: Optional[int] = None,
     raise_on_late_block: bool = False,
 ) -> Tuple[int, int]:
     """Parse the header of a HP block.
