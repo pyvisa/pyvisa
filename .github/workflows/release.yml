@@ -31,7 +31,7 @@ jobs:
           pip install dist/*.tar.gz
           python -X dev -m pytest --pyargs pyvisa
       - name: Store artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: artifact
           path: dist/*
@@ -59,7 +59,7 @@ jobs:
           pip install dist/*.whl
           python -X dev -m pytest --pyargs pyvisa
       - name: Store artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: artifact
           path: dist/*.whl
