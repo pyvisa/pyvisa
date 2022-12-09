@@ -2,7 +2,7 @@
 name = "PyVISA"
 description = "Python VISA bindings for GPIB, RS232, TCPIP and USB instruments"
 readme = "README.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = {file = "LICENSE"}
 authors = [
   {name = "Torsten Bronger", email = "bronger@physik.rwth-aachen.de"},
@@ -32,15 +32,14 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
     "typing_extensions",
     "importlib-metadata; python_version<'3.8'",
-    "dataclasses; python_version<'3.7'",
 ]
 dynamic=["version"]
 
