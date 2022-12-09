@@ -64,7 +64,9 @@ class InvalidResourceName(ValueError):
 
     @classmethod
     def subclass_notfound(
-        cls, interface_type_resource_class: Tuple[str, str], resource_name: Optional[str] = None
+        cls,
+        interface_type_resource_class: Tuple[str, str],
+        resource_name: Optional[str] = None,
     ) -> "InvalidResourceName":
         """Build an exception when no parser has been registered for a pair."""
 
