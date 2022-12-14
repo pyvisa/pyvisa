@@ -8,12 +8,7 @@ This file is part of PyVISA.
 
 """
 import logging
-import sys
-
-if sys.version_info >= (3, 8):
-    from importlib.metadata import PackageNotFoundError, version
-else:
-    from importlib_metadata import PackageNotFoundError, version  # type: ignore
+from importlib.metadata import PackageNotFoundError, version
 
 # Defined here since it is imported in other pyvisa modules
 logger = logging.getLogger("pyvisa")

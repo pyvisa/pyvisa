@@ -421,6 +421,27 @@ class TCPIPInstr(ResourceName):
 
 @register_subclass
 @dataclass
+class VICPInstr(ResourceName):
+    """VICP INSTR
+
+    The syntax is:
+    VICP[board]::host address[::INSTR]
+
+    """
+
+    #: Board to use.
+    board: str = "0"
+
+    #: Host address of the device (IPv4 or host name)
+    host_address: str = ""
+
+    interface_type: ClassVar[str] = "VICP"
+    resource_class: ClassVar[str] = "INSTR"
+    is_rc_optional: ClassVar[bool] = True
+
+
+@register_subclass
+@dataclass
 class TCPIPSocket(ResourceName):
     """TCPIP SOCKET
 
