@@ -7,7 +7,6 @@ exclude =
     build,
     dist,
     pyvisa/thirdparty/*,
-    visa.py,
 ignore = E203, E266, E501, W503, E731
 # line length is intentionally set to 80 here because pyvisa uses Bugbear
 # See https://github.com/psf/black/blob/master/README.md#line-length for more details
