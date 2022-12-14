@@ -1,9 +1,13 @@
 PyVISA Changelog
 ================
 
-1.12.1 (11-10-2022)
+1.13.0 (unreleased)
 -------------------
 
+- add support for VICP resource names PR #699
+  NOTE: the interface type enum value for VICP is unknown. No documentation was
+  found and tests using the VICP passport were not conclusive. If somebody figures
+  out the right value it would be great
 - numerous bug fixes related to VISA attributes PR #697
   This included fixing several typos, uncommenting the
   AttrVI_ATTR_INTF_PARENT_NUM class, and adding in the
