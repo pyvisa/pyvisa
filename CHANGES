@@ -1,9 +1,10 @@
 PyVISA Changelog
 ================
 
-1.13.0 (unreleased)
+1.13.0 (22-12-2022)
 -------------------
 
+- add official support for Python 3.11 and drop support for Python 3.7
 - add support for VICP resource names PR #699
   NOTE: the interface type enum value for VICP is unknown. No documentation was
   found and tests using the VICP passport were not conclusive. If somebody figures
