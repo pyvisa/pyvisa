@@ -206,34 +206,23 @@ Where can I get more information about VISA?
 
 * The original VISA docs:
 
-  - `VISA specification`_ (scroll down to the end)
-  - `VISA library specification`_
-  - `VISA specification for textual languages`_
+  - `VISA/IVI/SCPI specifications`_ (scroll down to find VISA)
 
-* The very good VISA manuals from `National Instruments's VISA`_:
+* The very good VISA manuals from `NI's VISA`_:
 
-  - `NI-VISA User Manual`_
-  - `NI-VISA Programmer Reference Manual`_
-  - `NI-VISA help file`_ in HTML
+  - `NI-VISA Download`_
+  - `NI-VISA help file`_ in HTML (download in PDF, upper right corner)
 
-.. _`VISA specification`:
-       http://www.ivifoundation.org/Downloads/Specifications.htm
-.. _`VISA library specification`:
-       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
-.. _`VISA specification for textual languages`:
-       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp432.doc
-.. _`National Instruments's VISA`: http://ni.com/visa/
-.. _`NI-VISA Programmer Reference Manual`:
-       http://digital.ni.com/manuals.nsf/websearch/87E52268CF9ACCEE86256D0F006E860D
+.. _`VISA/IVI/SCPI specifications`:
+       https://www.ivifoundation.org/specifications/default.aspx
+.. _`NI VISA Download`:
+       https://www.ni.com/en-us/support/downloads/drivers/download.ni-visa.html#460225
 .. _`NI-VISA help file`:
-       http://digital.ni.com/manuals.nsf/websearch/21992F3750B967ED86256F47007B00B3
-.. _`NI-VISA User Manual`:
-       http://digital.ni.com/manuals.nsf/websearch/266526277DFF74F786256ADC0065C50C
-
+       https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/help_file_title.html
 
 .. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/main/AUTHORS
 .. _`Issue Tracker`: https://github.com/pyvisa/pyvisa/issues
-.. _`virtual environment`: http://www.virtualenv.org/en/latest/
+.. _`virtual environment`: https://virtualenv.pypa.io/en/latest/
 
 .. _`https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew`:
        https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
