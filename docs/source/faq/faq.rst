@@ -223,11 +223,11 @@ Where can I get more information about VISA?
 .. _`NI-VISA help file`:
        https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/help_file_title.html
 .. _`R&S-VISA Download`:
-https://www.rohde-schwarz.com/us/applications/r-s-visa-application-note_56280-148812.html
+       https://www.rohde-schwarz.com/us/applications/r-s-visa-application-note_56280-148812.html
 .. _`R&S Basics of Instrument Remote Control`:
-https://www.rohde-schwarz.com/us/driver-pages/remote-control/automation-by-remote-control-step-by-step_231238.html
+       https://www.rohde-schwarz.com/us/driver-pages/remote-control/automation-by-remote-control-step-by-step_231238.html
 .. _`Keysight-VISA Download`:
-https://www.keysight.com/us/en/lib/software-detail/computer-software/io-libraries-suite-downloads-2175637.html
+       https://www.keysight.com/us/en/lib/software-detail/computer-software/io-libraries-suite-downloads-2175637.html
 .. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/main/AUTHORS
 .. _`Issue Tracker`: https://github.com/pyvisa/pyvisa/issues
 .. _`virtual environment`: https://virtualenv.pypa.io/en/latest/
