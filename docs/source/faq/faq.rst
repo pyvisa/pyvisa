@@ -218,7 +218,7 @@ Where can I get more information about VISA?
 
 .. _`VISA/IVI/SCPI specifications`:
        https://www.ivifoundation.org/specifications/default.aspx
-.. _`NI VISA Download`:
+.. _`NI-VISA Download`:
        https://www.ni.com/en-us/support/downloads/drivers/download.ni-visa.html#460225
 .. _`NI-VISA help file`:
        https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/help_file_title.html
