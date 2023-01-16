@@ -204,30 +204,19 @@ Where can I get more information about VISA?
 --------------------------------------------
 
 
-* The original VISA docs:
+VISA Specifications:
 
   - `VISA/IVI/SCPI specifications`_ (scroll down to find VISA)
-
-* The very good VISA manuals from NI:
-
-  - `NI-VISA Download`_
-  - `NI-VISA help file`_ in HTML (download in PDF, upper right corner)
-  - `R&S-VISA Download`_
-  - `R&S Basics of Instrument Remote Control`_
-  - `Keysight-VISA Download`_
+  - `VPP-4.3 The VISA Library`_
+  - `VPP-4.3.2 VISA Implementation Specification For Textual Languages`_
 
 .. _`VISA/IVI/SCPI specifications`:
        https://www.ivifoundation.org/specifications/default.aspx
-.. _`NI-VISA Download`:
-       https://www.ni.com/en-us/support/downloads/drivers/download.ni-visa.html#460225
-.. _`NI-VISA help file`:
-       https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/help_file_title.html
-.. _`R&S-VISA Download`:
-       https://www.rohde-schwarz.com/us/applications/r-s-visa-application-note_56280-148812.html
-.. _`R&S Basics of Instrument Remote Control`:
-       https://www.rohde-schwarz.com/us/driver-pages/remote-control/automation-by-remote-control-step-by-step_231238.html
-.. _`Keysight-VISA Download`:
-       https://www.keysight.com/us/en/lib/software-detail/computer-software/io-libraries-suite-downloads-2175637.html
+.. _`VPP-4.3 The VISA Library`:
+       https://www.ivifoundation.org/downloads/Architecture%20Specifications/vpp43_2022-05-19.pdf
+.. _'VPP-4.3.2 VISA Implementation Specification For Textual Languages':
+       https://www.ivifoundation.org/downloads/Architecture%20Specifications/vpp432_2022-05-19.pdf
+
 .. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/main/AUTHORS
 .. _`Issue Tracker`: https://github.com/pyvisa/pyvisa/issues
 .. _`virtual environment`: https://virtualenv.pypa.io/en/latest/

@@ -14,7 +14,6 @@ communications issues.
     getting
     configuring
     communication
-    ext_cfg_util
     example
     rvalues
     event_handling
