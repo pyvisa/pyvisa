@@ -214,7 +214,7 @@ VISA Specifications:
        https://www.ivifoundation.org/specifications/default.aspx
 .. _`VPP-4.3 The VISA Library`:
        https://www.ivifoundation.org/downloads/Architecture%20Specifications/vpp43_2022-05-19.pdf
-.. _'VPP-4.3.2 VISA Implementation Specification For Textual Languages':
+.. _`VPP-4.3.2 VISA Implementation Specification For Textual Languages`:
        https://www.ivifoundation.org/downloads/Architecture%20Specifications/vpp432_2022-05-19.pdf
 
 .. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/main/AUTHORS
