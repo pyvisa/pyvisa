@@ -1,4 +1,4 @@
-.. _faq-visa_distributions:
+.. _faq-visa-distributions:
 
 IVI VISA Distributions
 =======================
