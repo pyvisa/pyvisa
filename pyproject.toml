@@ -6,7 +6,8 @@ requires-python = ">=3.8"
 license = {file = "LICENSE"}
 authors = [
   {name = "Torsten Bronger", email = "bronger@physik.rwth-aachen.de"},
-  {name = "Gregor Thalhammer"}
+  {name = "Gregor Thalhammer"},
+  {name = "Hernan E. Grecco", email = "hernan.grecco@gmail.com"}
 ]
 maintainers = [
   {name = "Matthieu C. Dartiailh", email = "m.dartiailh@gmail.com"}
