@@ -13,6 +13,7 @@ means "ViUInt32" and such.
 
 """
 import ctypes as _ctypes
+import sys
 
 from .cthelper import FUNCTYPE
 
@@ -104,15 +105,16 @@ ViConstString = _ctypes.POINTER(ViChar)
 # Part Two: Type Assignments for VISA only, see spec table 3.1.2.  The
 # difference to the above is of no significance in Python, so I use it here
 # only for easier synchronisation with the spec.
+is_64bit = sys.maxsize > 2**32
 
 ViAccessMode, ViPAccessMode = _type_pair(ViUInt32)
-ViBusAddress, ViPBusAddress = _type_pair(ViUInt32)
+ViBusAddress, ViPBusAddress = _type_pair(ViUInt64) if is_64bit else _type_pair(ViUInt32)
 ViBusAddress64, ViPBusAddress64 = _type_pair(ViUInt64)
 
-ViBusSize = ViUInt32
+ViBusSize = ViUInt64 if is_64bit else ViUInt32
 ViBusSize64 = ViUInt64
 
-ViAttrState, ViPAttrState = _type_pair(ViUInt32)
+ViAttrState, ViPAttrState = _type_pair(ViUInt64) if is_64bit else _type_pair(ViUInt32)
 
 # The following is weird, taken from news:zn2ek2w2.fsf@python.net
 ViVAList = _ctypes.POINTER(_ctypes.c_char)
