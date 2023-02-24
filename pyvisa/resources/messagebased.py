@@ -773,12 +773,10 @@ class MessageBasedResource(Resource):
 
     @contextlib.contextmanager
     def read_termination_context(self, new_termination: str) -> Iterator:
-        term = self.get_visa_attribute(constants.ResourceAttribute.termchar)
-        self.set_visa_attribute(
-            constants.ResourceAttribute.termchar, ord(new_termination[-1])
-        )
+        term = self.read_termination
+        self.read_termination = new_termination
         yield
-        self.set_visa_attribute(constants.ResourceAttribute.termchar, term)
+        self.read_termination = term
 
     def flush(self, mask: constants.BufferOperation) -> None:
         """Manually clears the specified buffers.
