@@ -4,6 +4,7 @@ PyVISA Changelog
 1.14.0 (unreleased)
 -------------------
 - fix ctypes truncated pointers on 64-bit for ViBusAddress, ViBusSize, ViAttrState PR # 725
+- fix read_termination_context does not allow None PR # 727
 
 1.13.0 (22-12-2022)
 -------------------
