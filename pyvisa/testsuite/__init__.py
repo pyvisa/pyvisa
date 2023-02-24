@@ -42,7 +42,6 @@ class TestHandler(BufferingHandler):
 
 
 class BaseTestCase:
-
     CHECK_NO_WARNING = True
 
     def setup_method(self):

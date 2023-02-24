@@ -19,7 +19,6 @@ else:
 # On Linux, find Library returns the name not the path.
 # This excerpt provides a modified find_library.
 if os.name == "posix" and sys.platform.startswith("linux"):
-
     # Andreas Degert's find functions, using gcc, /sbin/ldconfig, objdump
     def define_find_libary():
         import errno

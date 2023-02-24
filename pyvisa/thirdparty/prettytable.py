@@ -84,7 +84,6 @@ def _get_size(text):
 
 class PrettyTable(object):
     def __init__(self, field_names=None, **kwargs):
-
         """Return a new PrettyTable instance
 
         Arguments:
@@ -239,7 +238,6 @@ class PrettyTable(object):
                 return (excess // 2) * " " + text + (excess // 2) * " "
 
     def __getattr__(self, name):
-
         if name == "rowcount":
             return len(self._rows)
         elif name == "colcount":
@@ -253,7 +251,6 @@ class PrettyTable(object):
             raise AttributeError(name)
 
     def __getitem__(self, index):
-
         new = PrettyTable()
         new.field_names = self.field_names
         for attr in self._options:
@@ -951,7 +948,6 @@ class PrettyTable(object):
     ##############################
 
     def _get_options(self, kwargs):
-
         options = {}
         for option in self._options:
             if option in kwargs:
@@ -966,7 +962,6 @@ class PrettyTable(object):
     ##############################
 
     def set_style(self, style):
-
         if style == DEFAULT:
             self._set_default_style()
         elif style == MSWORD_FRIENDLY:
@@ -991,7 +986,6 @@ class PrettyTable(object):
         self.junction_char = "|"
 
     def _set_default_style(self):
-
         self.header = True
         self.border = True
         self._hrules = FRAME
@@ -1004,7 +998,6 @@ class PrettyTable(object):
         self.junction_char = "+"
 
     def _set_msword_style(self):
-
         self.header = True
         self.border = True
         self._hrules = NONE
@@ -1014,7 +1007,6 @@ class PrettyTable(object):
         self.vertical_char = "|"
 
     def _set_columns_style(self):
-
         self.header = True
         self.border = False
         self.padding_width = 1
@@ -1022,7 +1014,6 @@ class PrettyTable(object):
         self.right_padding_width = 8
 
     def _set_random_style(self):
-
         # Just for fun!
         self.header = random.choice((True, False))
         self.border = random.choice((True, False))
@@ -1039,7 +1030,6 @@ class PrettyTable(object):
     ##############################
 
     def add_row(self, row):
-
         """Add a row to the table
 
         Arguments:
@@ -1057,7 +1047,6 @@ class PrettyTable(object):
         self._rows.append(list(row))
 
     def del_row(self, row_index):
-
         """Delete a row to the table
 
         Arguments:
@@ -1072,7 +1061,6 @@ class PrettyTable(object):
         del self._rows[row_index]
 
     def add_column(self, fieldname, column, align="c", valign="t"):
-
         """Add a column to the table.
 
         Arguments:
@@ -1102,13 +1090,11 @@ class PrettyTable(object):
             )
 
     def clear_rows(self):
-
         """Delete all rows from the table but keep the current field names"""
 
         self._rows = []
 
     def clear(self):
-
         """Delete all rows and field names from the table, maintaining nothing but
         styling options"""
 
@@ -1193,7 +1179,6 @@ class PrettyTable(object):
                 self._widths = widths
 
     def _get_padding_widths(self, options):
-
         if options["left_padding_width"] is not None:
             lpad = options["left_padding_width"]
         else:
@@ -1247,7 +1232,6 @@ class PrettyTable(object):
     ##############################
 
     def get_string(self, **kwargs):
-
         """Return string representation of table in current state.
 
         Arguments:
@@ -1318,7 +1302,6 @@ class PrettyTable(object):
         return self._unicode("\n").join(lines)
 
     def _stringify_hrule(self, options):
-
         if not options["border"]:
             return ""
         lpad, rpad = self._get_padding_widths(options)
@@ -1344,7 +1327,6 @@ class PrettyTable(object):
         return "".join(bits)
 
     def _stringify_title(self, title, options):
-
         lines = []
         lpad, rpad = self._get_padding_widths(options)
         if options["border"]:
@@ -1366,7 +1348,6 @@ class PrettyTable(object):
         return "\n".join(lines)
 
     def _stringify_header(self, options):
-
         bits = []
         lpad, rpad = self._get_padding_widths(options)
         if options["border"]:
@@ -1383,7 +1364,7 @@ class PrettyTable(object):
                 bits.append(options["vertical_char"])
             else:
                 bits.append(" ")
-        for (field, width) in zip(self._field_names, self._widths):
+        for field, width in zip(self._field_names, self._widths):
             if options["fields"] and field not in options["fields"]:
                 continue
             if self._header_style == "cap":
@@ -1417,8 +1398,7 @@ class PrettyTable(object):
         return "".join(bits)
 
     def _stringify_row(self, row, options):
-
-        for (index, field, value, width) in zip(
+        for index, field, value, width in zip(
             range(0, len(row)), self._field_names, row, self._widths
         ):
             # Enforce max widths
@@ -1448,8 +1428,7 @@ class PrettyTable(object):
                 else:
                     bits[y].append(" ")
 
-        for (field, value, width) in zip(self._field_names, row, self._widths):
-
+        for field, value, width in zip(self._field_names, row, self._widths):
             valign = self._valign[field]
             lines = value.split("\n")
             dHeight = row_height - len(lines)
@@ -1499,7 +1478,6 @@ class PrettyTable(object):
         return "\n".join(bits)
 
     def paginate(self, page_length=58, **kwargs):
-
         pages = []
         kwargs["start"] = kwargs.get("start", 0)
         true_end = kwargs.get("end", self.rowcount)
@@ -1515,7 +1493,6 @@ class PrettyTable(object):
     # JSON STRING METHODS        #
     ##############################
     def get_json_string(self, **kwargs):
-
         """Return string representation of JSON formatted table in the current state
 
         Arguments:
@@ -1572,7 +1549,6 @@ class PrettyTable(object):
         return string
 
     def _get_simple_html_string(self, options):
-
         lines = []
         if options["xhtml"]:
             linebreak = "<br/>"
@@ -1627,7 +1603,6 @@ class PrettyTable(object):
         return self._unicode("\n").join(lines)
 
     def _get_formatted_html_string(self, options):
-
         lines = []
         lpad, rpad = self._get_padding_widths(options)
         if options["xhtml"]:
@@ -1836,7 +1811,7 @@ class TableHandler(HTMLParser):
         self.active = tag
         if tag == "th":
             self.is_last_row_header = True
-        for (key, value) in attrs:
+        for key, value in attrs:
             if key == "colspan":
                 self.colspan = int(value)
 

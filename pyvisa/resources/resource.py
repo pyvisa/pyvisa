@@ -120,7 +120,6 @@ class Resource(object):
         """
 
         def _internal(python_class):
-
             highlevel.ResourceManager.register_resource_class(
                 interface_type, resource_class, python_class
             )

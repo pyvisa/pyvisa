@@ -94,7 +94,6 @@ class MessageBasedResource(Resource):
 
     @read_termination.setter
     def read_termination(self, value: str) -> None:
-
         if value:
             # termination character, the rest is just used for verification
             # after each read operation.

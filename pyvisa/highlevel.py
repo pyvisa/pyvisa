@@ -2801,7 +2801,6 @@ _WRAPPERS: Dict[str, Type[VisaLibraryBase]] = {}
 
 
 class PyVISAModule(ModuleType):
-
     WRAPPER_CLASS: Type[VisaLibraryBase]
 
 

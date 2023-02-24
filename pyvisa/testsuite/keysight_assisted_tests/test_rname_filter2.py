@@ -22,7 +22,6 @@ class TestFilter2(BaseTestCase):
         self.rm.close()
 
     def _test_filter2(self, expr, *correct):
-
         resources = self.rm.list_resources(expr.split("{")[0])
         ok = tuple(resources[n] for n in correct)
         filtered = rname.filter2(

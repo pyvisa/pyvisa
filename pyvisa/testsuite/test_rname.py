@@ -254,7 +254,6 @@ class TestParsers(BaseTestCase):
         )
 
     def test_tcpip_intr(self):
-
         self._parse_test(
             "TCPIP::192.168.134.102",
             interface_type="TCPIP",
@@ -296,7 +295,6 @@ class TestParsers(BaseTestCase):
         )
 
     def test_vicp_intr(self):
-
         self._parse_test(
             "VICP::192.168.134.102",
             interface_type="VICP",
@@ -466,7 +464,6 @@ class TestParsers(BaseTestCase):
 
 
 class TestFilters(BaseTestCase):
-
     CHECK_NO_WARNING = False
 
     run_list = (

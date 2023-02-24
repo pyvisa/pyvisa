@@ -111,7 +111,6 @@ def register_subclass(cls: T) -> T:
     fmt = OrderedDict([("interface_type", cls.interface_type)])
     syntax = cls.interface_type
     for ndx, f in enumerate(fields(cls)):
-
         sep = "::" if ndx else ""
 
         fmt[f.name] = sep + "{0}"
@@ -207,7 +206,6 @@ class ResourceName:
         uname = resource_name.upper()
 
         for interface_type in _INTERFACE_TYPES:
-
             # Loop through all known interface types until we found one
             # that matches the beginning of the resource name
             if not uname.startswith(interface_type):

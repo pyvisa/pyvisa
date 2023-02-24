@@ -54,7 +54,6 @@ class Event:
         """Register a class with a given event type."""
 
         def _internal(python_class: Type["Event"]) -> Type["Event"]:
-
             if event_type in cls._event_classes:
                 logger.warning(
                     "%s is already registered. "

@@ -510,7 +510,6 @@ class TestSystemDetailsAnalysis(BaseTestCase):
 
 
 def generate_fakelibs(dirname):
-
     for name, blob in zip(
         [
             "fakelib_bad_magic.dll",

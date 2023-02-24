@@ -1181,7 +1181,6 @@ def install_handler(
                 )
 
     with set_user_handle_type(library, converted_user_handle):
-
         if ctwrapper.WRAP_HANDLER:
             # Wrap the handler to provide a non-wrapper specific interface
             def handler_wrapper(
@@ -2096,7 +2095,7 @@ def parse_resource_extended(library, session, resource_name):
         ResourceInfo(
             constants.InterfaceType(interface_type.value),
             interface_board_number.value,
-            *res
+            *res,
         ),
         ret,
     )

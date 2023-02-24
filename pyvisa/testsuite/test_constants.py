@@ -16,7 +16,6 @@ from . import BaseTestCase
 
 class TestDataWidth(BaseTestCase):
     def test_conversion_from_literal(self):
-
         for v, e in zip(
             (8, 16, 32, 64),
             (DataWidth.bit_8, DataWidth.bit_16, DataWidth.bit_32, DataWidth.bit_64),
