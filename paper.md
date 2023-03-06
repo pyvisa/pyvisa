@@ -26,8 +26,8 @@ authors:
     corresponding: true
     affiliation: "3, 4, 5"
   - name: Gregor Thalhammer-Thurner
-	orcid: 0000-0002-3948-8045
-	affiliation: "6"
+    orcid: 0000-0002-3948-8045
+    affiliation: "6"
   - name: Torsten Bronger
     orcid: 0000-0002-5174-6684
     affiliation: "7"
@@ -46,7 +46,7 @@ affiliations:
   - name: Institut Néel, CNRS. Grenoble, France
     index: 5
   - name: Institute for Biomedical Physics, Medical University of Innsbruck, Austria
-	index: 6
+    index: 6
   - name: Forschungszentrum Jülich GmbH (ROR 02nv7yv05). Jülich, Germany
     index: 7
   - name: Independent Researcher, Germany
