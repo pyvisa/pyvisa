@@ -532,7 +532,7 @@ def generate_fakelibs(dirname: Path):
         ),
     }
     for name, blob in libs.items():
-        with open(Path(dirname, name), "wb") as f:
+        with open(dirname / name, "wb") as f:
             f.write(blob)
             print("Written %s" % name)
 
@@ -552,20 +552,18 @@ class TestLibraryAnalysis(BaseTestCase):
                 util.PEMachineType.AARCH64,
             ],
         ):
-            arch = util.get_shared_library_arch(
-                Path(tmp_path, "fakelib_good_%s.dll" % f)
-            )
+            arch = util.get_shared_library_arch(tmp_path / f"fakelib_good_{f}.dll")
             assert arch == a
 
-        arch = util.get_shared_library_arch(Path(tmp_path, "fakelib_good_unknown.dll"))
+        arch = util.get_shared_library_arch(tmp_path / "fakelib_good_unknown.dll")
         assert arch == util.PEMachineType.UNKNOWN
 
         with pytest.raises(Exception) as e:
-            util.get_shared_library_arch(Path(tmp_path, "fakelib_bad_magic.dll"))
+            util.get_shared_library_arch(tmp_path / "fakelib_bad_magic.dll")
         assert "Not an executable" in e.exconly()
 
         with pytest.raises(Exception) as e:
-            util.get_shared_library_arch(Path(tmp_path, "fakelib_not_pe.dll"))
+            util.get_shared_library_arch(tmp_path / "fakelib_not_pe.dll")
         assert "Not a PE executable" in e.exconly()
 
     def test_get_arch_windows(self, tmp_path: Path):
@@ -585,7 +583,7 @@ class TestLibraryAnalysis(BaseTestCase):
                 ],
             ):
                 print(f, a)
-                path = Path(tmp_path, "fakelib_good_%s.dll" % f)
+                path = tmp_path / f"fakelib_good_{f}.dll"
                 lib = util.LibraryPath(str(path))
                 assert lib.arch == a
         finally:
