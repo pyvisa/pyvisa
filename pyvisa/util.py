@@ -223,7 +223,7 @@ class LibraryPath(str):
     found_by: str
 
     #: Architectural information (32, ) or (64, ) or (32, 64)
-    _arch: Optional[list[ArchitectureType]] = None
+    _arch: Optional[List[ArchitectureType]] = None
 
     def __new__(
         cls: Type["LibraryPath"], path: str, found_by: str = "auto"
@@ -235,7 +235,7 @@ class LibraryPath(str):
         return obj
 
     @property
-    def arch(self) -> list[ArchitectureType]:
+    def arch(self) -> List[ArchitectureType]:
         """Architecture of the library."""
         if self._arch is None:
             try:
@@ -1001,7 +1001,7 @@ def get_shared_library_arch(filename: Path) -> PEMachineType:
             return PEMachineType.UNKNOWN
 
 
-def get_arch(filename: Path) -> list[ArchitectureType]:
+def get_arch(filename: Path) -> List[ArchitectureType]:
     """Get the architecture of the platform."""
     this_platform = sys.platform
     if this_platform.startswith("win"):
@@ -1046,7 +1046,7 @@ def get_arch(filename: Path) -> list[ArchitectureType]:
         #   /usr/bin/grep (for architecture arm64e):	Mach-O 64-bit executable arm64e
         # single-arch binary, aarch64:
         #   /opt/homebrew/bin/rg: Mach-O 64-bit executable arm64
-        archs: list[ArchitectureType] = []
+        archs: List[ArchitectureType] = []
 
         if "executable i386" in out:
             archs.append(ArchitectureType.I386)
