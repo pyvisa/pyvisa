@@ -5,7 +5,6 @@
 :license: MIT, see LICENSE for more details.
 
 """
-from __future__ import annotations
 
 import contextlib
 import re
@@ -53,7 +52,7 @@ class InvalidResourceName(ValueError):
     @classmethod
     def bad_syntax(
         cls, syntax: str, resource_name: str, ex: Optional[Exception] = None
-    ) -> InvalidResourceName:
+    ) -> Self:
         """Build an exception when the resource name cannot be parsed."""
         if ex:
             msg = "The syntax is '%s' (%s)." % (syntax, ex)
@@ -69,7 +68,7 @@ class InvalidResourceName(ValueError):
         cls,
         interface_type_resource_class: Tuple[str, str],
         resource_name: Optional[str] = None,
-    ) -> InvalidResourceName:
+    ) -> Self:
         """Build an exception when no parser has been registered for a pair."""
 
         msg = "Parser not found for: %s." % (interface_type_resource_class,)
@@ -82,7 +81,7 @@ class InvalidResourceName(ValueError):
     @classmethod
     def rc_notfound(
         cls, interface_type: str, resource_name: Optional[str] = None
-    ) -> InvalidResourceName:
+    ) -> Self:
         """Build an exception when no resource class is provided and no default is found."""
 
         msg = (

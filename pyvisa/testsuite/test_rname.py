@@ -162,7 +162,7 @@ class TestResourceName(BaseTestCase):
 
 
 class TestParsers(BaseTestCase):
-    def _parse_test(self, rn: str, **kwargs):
+    def _parse_test(self, rn, **kwargs):
         p = rname.ResourceName.from_string(rn)
         r = dict(
             (k, getattr(p, k)) for k in p._fields + ("interface_type", "resource_class")
