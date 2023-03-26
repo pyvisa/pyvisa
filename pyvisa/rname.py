@@ -5,10 +5,12 @@
 :license: MIT, see LICENSE for more details.
 
 """
+from __future__ import annotations
+
 import contextlib
 import re
 from collections import OrderedDict, defaultdict
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, fields
 from typing import (
     TYPE_CHECKING,
     Callable,
@@ -22,7 +24,7 @@ from typing import (
     TypeVar,
 )
 
-from typing_extensions import ClassVar
+from typing_extensions import ClassVar, Self
 
 from . import constants, errors, logger
 
@@ -51,7 +53,7 @@ class InvalidResourceName(ValueError):
     @classmethod
     def bad_syntax(
         cls, syntax: str, resource_name: str, ex: Optional[Exception] = None
-    ) -> "InvalidResourceName":
+    ) -> InvalidResourceName:
         """Build an exception when the resource name cannot be parsed."""
         if ex:
             msg = "The syntax is '%s' (%s)." % (syntax, ex)
@@ -67,7 +69,7 @@ class InvalidResourceName(ValueError):
         cls,
         interface_type_resource_class: Tuple[str, str],
         resource_name: Optional[str] = None,
-    ) -> "InvalidResourceName":
+    ) -> InvalidResourceName:
         """Build an exception when no parser has been registered for a pair."""
 
         msg = "Parser not found for: %s." % (interface_type_resource_class,)
@@ -80,7 +82,7 @@ class InvalidResourceName(ValueError):
     @classmethod
     def rc_notfound(
         cls, interface_type: str, resource_name: Optional[str] = None
-    ) -> "InvalidResourceName":
+    ) -> InvalidResourceName:
         """Build an exception when no resource class is provided and no default is found."""
 
         msg = (
@@ -108,7 +110,7 @@ def register_subclass(cls: T) -> T:
     """
 
     # Assemble the format string based on the resource parts
-    fmt = OrderedDict([("interface_type", cls.interface_type)])
+    fmt: OrderedDict[str, str] = OrderedDict([("interface_type", cls.interface_type)])
     syntax = cls.interface_type
     for ndx, f in enumerate(fields(cls)):
         sep = "::" if ndx else ""
@@ -148,46 +150,26 @@ def register_subclass(cls: T) -> T:
     return cls
 
 
-class ResourceName:
+class _ResourceNameBase:
     """Base class for ResourceNames to be used as a mixin."""
-
-    #: Interface type string
-    interface_type: ClassVar[str]
-
-    #: Resource class string
-    resource_class: ClassVar[str]
 
     #: Specifices if the resource class part of the string is optional.
     is_rc_optional: ClassVar[bool] = False
 
     #: Formatting string for canonical
-    _canonical_fmt: Dict[str, str] = field(init=False)
+    _canonical_fmt: Dict[str, str]
 
     #: VISA syntax for resource
-    _visa_syntax: str = field(init=False)
+    _visa_syntax: str
 
     #: VISA syntax for resource
-    _fields: Tuple[str, ...] = field(init=False)
+    _fields: Tuple[str, ...]
 
     #: Resource name provided by the user (not empty only when parsing)
-    user: str = field(init=False)
-
-    def __post_init__(self):
-        # Ensure that all mandatory arguments have been passed
-        for f in fields(self):
-            if getattr(self, f.name) == "":
-                raise TypeError(f.name + " is a required parameter")
-        self._fields = tuple(f.name for f in fields(self))
-
-    @property
-    def interface_type_const(self) -> constants.InterfaceType:
-        try:
-            return getattr(constants.InterfaceType, self.interface_type.lower())
-        except Exception:
-            return constants.InterfaceType.unknown
+    user: Optional[str]
 
     @classmethod
-    def from_string(cls, resource_name: str) -> "ResourceName":
+    def from_string(cls, resource_name: str) -> Self:
         """Parse a resource name and return a ResourceName
 
         Parameters
@@ -252,7 +234,7 @@ class ResourceName:
         )
 
     @classmethod
-    def from_kwargs(cls, **kwargs) -> "ResourceName":
+    def from_kwargs(cls, **kwargs) -> Self:
         """Build a resource from keyword arguments."""
         interface_type = kwargs.pop("interface_type")
 
@@ -279,7 +261,39 @@ class ResourceName:
         except (ValueError, TypeError) as ex:
             raise InvalidResourceName(str(ex))
 
-    # Implemented when building concrete subclass in build_rn_class
+    def __str__(self):
+        s = ""
+        for part, form in self._canonical_fmt.items():
+            value = getattr(self, part, None)
+            if value is not None:
+                s += form.format(value)
+        return s
+
+
+@dataclass
+class ResourceName(_ResourceNameBase):
+    #: Interface type string
+    interface_type: ClassVar[str]
+
+    #: Resource class string
+    resource_class: ClassVar[str]
+
+    def __post_init__(self):
+        # Ensure that all mandatory arguments have been passed
+        for f in fields(self):
+            if getattr(self, f.name) == "":
+                raise TypeError(f.name + " is a required parameter")
+        self._fields = tuple(f.name for f in fields(self))
+
+    @property
+    def interface_type_const(self) -> constants.InterfaceType:
+        try:
+            return getattr(constants.InterfaceType, self.interface_type.lower())
+        except Exception:
+            return constants.InterfaceType.unknown
+
+        # Implemented when building concrete subclass in build_rn_class
+
     @classmethod
     def from_parts(cls, *parts):
         """Construct a resource name from a list of parts."""
@@ -318,14 +332,6 @@ class ResourceName:
         kwargs.update((k.name, p) for k, p in zip(rp, pending))
 
         return cls(**kwargs)
-
-    def __str__(self):
-        s = ""
-        for part, form in self._canonical_fmt.items():
-            value = getattr(self, part, None)
-            if value is not None:
-                s += form.format(value)
-        return s
 
 
 # Build subclasses for each resource
@@ -732,7 +738,7 @@ class _AttrGetter:
     """
 
     def __init__(
-        self, resource_name: str, open_resource: Callable[[str], "Resource"]
+        self, resource_name: str, open_resource: Callable[[str], Resource]
     ) -> None:
         self.resource_name = resource_name
         self.parsed = parse_resource_name(resource_name)
@@ -815,7 +821,7 @@ class _AttrGetter:
 
 
 def filter2(
-    resources: Iterable[str], query: str, open_resource: Callable[[str], "Resource"]
+    resources: Iterable[str], query: str, open_resource: Callable[[str], Resource]
 ) -> Tuple[str, ...]:
     """Filter a list of resources according to a query expression.
 
