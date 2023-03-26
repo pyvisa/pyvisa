@@ -737,7 +737,7 @@ class _AttrGetter:
     """
 
     def __init__(
-        self, resource_name: str, open_resource: Callable[[str], Resource]
+        self, resource_name: str, open_resource: Callable[[str], "Resource"]
     ) -> None:
         self.resource_name = resource_name
         self.parsed = parse_resource_name(resource_name)
@@ -820,7 +820,7 @@ class _AttrGetter:
 
 
 def filter2(
-    resources: Iterable[str], query: str, open_resource: Callable[[str], Resource]
+    resources: Iterable[str], query: str, open_resource: Callable[[str], "Resource"]
 ) -> Tuple[str, ...]:
     """Filter a list of resources according to a query expression.
 
