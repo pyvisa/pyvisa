@@ -14,6 +14,7 @@ import unittest
 from configparser import ConfigParser
 from functools import partial
 from io import StringIO
+from pathlib import Path
 from types import ModuleType
 from typing import Optional
 
@@ -509,26 +510,29 @@ class TestSystemDetailsAnalysis(BaseTestCase):
         util.system_details_to_str(details)
 
 
-def generate_fakelibs(dirname):
-    for name, blob in zip(
-        [
-            "fakelib_bad_magic.dll",
-            "fakelib_good_32.dll",
-            "fakelib_good_64_2.dll",
-            "fakelib_good_64.dll",
-            "fakelib_good_unknown.dll",
-            "fakelib_not_pe.dll",
-        ],
-        [
-            struct.pack("=6sH52sl", b"MAPE\x00\x00", 0x014C, 52 * b"\0", 2),
-            struct.pack("=6sH52sl", b"MZPE\x00\x00", 0x014C, 52 * b"\0", 2),
-            struct.pack("=6sH52sl", b"MZPE\x00\x00", 0x8664, 52 * b"\0", 2),
-            struct.pack("=6sH52sl", b"MZPE\x00\x00", 0x0200, 52 * b"\0", 2),
-            struct.pack("=6sH52sl", b"MZPE\x00\x00", 0xFFFF, 52 * b"\0", 2),
-            struct.pack("=6sH52sl", b"MZDE\x00\x00", 0x014C, 52 * b"\0", 2),
-        ],
-    ):
-        with open(os.path.join(dirname, name), "wb") as f:
+def generate_fakelibs(dirname: Path):
+    libs = {
+        "fakelib_bad_magic.dll": struct.pack(
+            "=6sH52sl", b"MAPE\x00\x00", 0x014C, 52 * b"\0", 2
+        ),
+        "fakelib_good_x86_32.dll": struct.pack(
+            "=6sH52sl", b"MZPE\x00\x00", 0x014C, 52 * b"\0", 2
+        ),
+        "fakelib_good_x86_64.dll": struct.pack(
+            "=6sH52sl", b"MZPE\x00\x00", 0x8664, 52 * b"\0", 2
+        ),
+        "fakelib_good_arm_64.dll": struct.pack(
+            "=6sH52sl", b"MZPE\x00\x00", 0xAA64, 52 * b"\0", 2
+        ),
+        "fakelib_good_unknown.dll": struct.pack(
+            "=6sH52sl", b"MZPE\x00\x00", 0xFFFF, 52 * b"\0", 2
+        ),
+        "fakelib_not_pe.dll": struct.pack(
+            "=6sH52sl", b"MZDE\x00\x00", 0x014C, 52 * b"\0", 2
+        ),
+    }
+    for name, blob in libs.items():
+        with open(Path(dirname, name), "wb") as f:
             f.write(blob)
             print("Written %s" % name)
 
@@ -536,53 +540,54 @@ def generate_fakelibs(dirname):
 class TestLibraryAnalysis(BaseTestCase):
     """Test (through monkey patching) the analysis of binary libraries."""
 
-    def test_get_shared_library_arch(self, tmpdir):
+    def test_get_shared_library_arch(self, tmp_path: Path):
         """Test analysing a library on Windows."""
-        dirname = str(tmpdir)
-        generate_fakelibs(dirname)
+        generate_fakelibs(tmp_path)
 
-        for f, a in zip(["_32", "_64", "_64_2"], ["I386", "IA64", "AMD64"]):
+        for f, a in zip(
+            ["x86_32", "x86_64", "arm_64"],
+            [
+                util.PEMachineType.I386,
+                util.PEMachineType.AMD64,
+                util.PEMachineType.AARCH64,
+            ],
+        ):
             arch = util.get_shared_library_arch(
-                os.path.join(tmpdir, "fakelib_good%s.dll" % f)
+                Path(tmp_path, "fakelib_good_%s.dll" % f)
             )
             assert arch == a
 
-        arch = util.get_shared_library_arch(
-            os.path.join(dirname, "fakelib_good_unknown.dll")
-        )
-        assert arch == "UNKNOWN"
+        arch = util.get_shared_library_arch(Path(tmp_path, "fakelib_good_unknown.dll"))
+        assert arch == util.PEMachineType.UNKNOWN
 
         with pytest.raises(Exception) as e:
-            util.get_shared_library_arch(os.path.join(dirname, "fakelib_bad_magic.dll"))
+            util.get_shared_library_arch(Path(tmp_path, "fakelib_bad_magic.dll"))
         assert "Not an executable" in e.exconly()
 
         with pytest.raises(Exception) as e:
-            util.get_shared_library_arch(os.path.join(dirname, "fakelib_not_pe.dll"))
+            util.get_shared_library_arch(Path(tmp_path, "fakelib_not_pe.dll"))
         assert "Not a PE executable" in e.exconly()
 
-    def test_get_arch_windows(self, tmpdir):
+    def test_get_arch_windows(self, tmp_path: Path):
         """Test identifying the computer architecture on windows."""
-        dirname = str(tmpdir)
-        generate_fakelibs(dirname)
+        generate_fakelibs(tmp_path)
 
         platform = sys.platform
         sys.platform = "win32"
         try:
             for f, a in zip(
-                ["_32", "_64", "_64_2", "_unknown"], [(32,), (64,), (64,), ()]
+                ["x86_32", "x86_64", "arm_64", "_unknown"],
+                [
+                    [util.ArchitectureType.I386],
+                    [util.ArchitectureType.X86_64],
+                    [util.ArchitectureType.AARCH64],
+                    [],
+                ],
             ):
                 print(f, a)
-                path = os.path.join(dirname, "fakelib_good%s.dll" % f)
-                lib = util.LibraryPath(path)
+                path = Path(tmp_path, "fakelib_good_%s.dll" % f)
+                lib = util.LibraryPath(str(path))
                 assert lib.arch == a
-                if f != "_unknown":
-                    assert lib.is_32bit if 32 in a else not lib.is_32bit
-                    assert lib.is_64bit if 64 in a else not lib.is_64bit
-                    assert lib.bitness == ", ".join(str(b) for b in a)
-                else:
-                    assert lib.is_32bit == "n/a"
-                    assert lib.is_64bit == "n/a"
-                    assert lib.bitness == "n/a"
         finally:
             sys.platform = platform
 
@@ -601,19 +606,16 @@ class TestLibraryAnalysis(BaseTestCase):
             subprocess.run = alt_run
 
             for p, f, a in [
-                ("linux2", "32-bit", (32,)),
-                ("linux2", "32-bit & 64-bit", (32, 64)),
-                ("linux3", "64-bit", (64,)),
-                ("darwin", "(for architecture i386)", (32,)),
-                ("darwin", "(for architecture x86_64)", (64,)),
+                ("linux", "80386", [(util.ArchitectureType.I386)]),
+                ("linux", "x86-64", [(util.ArchitectureType.X86_64)]),
+                ("linux", "aarch64", [(util.ArchitectureType.AARCH64)]),
+                ("darwin", "executable i386", [(util.ArchitectureType.I386)]),
+                ("darwin", "executable x86_64", [(util.ArchitectureType.X86_64)]),
+                ("darwin", "executable arm64", [(util.ArchitectureType.AARCH64)]),
             ]:
                 sys.platform = p
                 lib = util.LibraryPath(f)
                 assert lib.arch == a
-                assert lib.is_32bit if 32 in a else not lib.is_32bit
-                assert lib.is_64bit if 64 in a else not lib.is_64bit
-                assert lib.bitness == ", ".join(str(b) for b in a)
-
         finally:
             sys.platform = platform
             subprocess.run = run
@@ -625,10 +627,7 @@ class TestLibraryAnalysis(BaseTestCase):
         try:
             sys.platform = "darwin"
             lib = util.LibraryPath("")
-            assert lib.arch == ()
-            assert lib.is_32bit == "n/a"
-            assert lib.is_64bit == "n/a"
-            assert lib.bitness == "n/a"
+            assert lib.arch == []
         finally:
             sys.platform = platform
             subprocess.run = run
@@ -640,10 +639,7 @@ class TestLibraryAnalysis(BaseTestCase):
         try:
             sys.platform = "test"
             lib = util.LibraryPath("")
-            assert lib.arch == ()
-            assert lib.is_32bit == "n/a"
-            assert lib.is_64bit == "n/a"
-            assert lib.bitness == "n/a"
+            assert lib.arch == []
         finally:
             sys.platform = platform
             subprocess.run = run

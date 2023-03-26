@@ -730,9 +730,12 @@ class LibraryError(OSError, Error):
             filename, "user" if filename == util.read_user_library_path() else "auto"
         )
         s += "No matching architecture.\n"
-        s += "    Current Python interpreter is %s bits\n" % details["bits"]
+        s += (
+            "    Current Python interpreter architecture: %s\n"
+            % details["architecture"]
+        )
         s += "    The library in: %s\n" % visalib.path
         s += "      found by: %s\n" % visalib.found_by
-        s += "      bitness: %s\n" % visalib.bitness
+        s += "      architecture: %s\n" % [str(a.value) for a in visalib.arch]
 
         return cls("Error while accessing %s: %s" % (filename, s))
