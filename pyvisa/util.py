@@ -976,7 +976,7 @@ def get_debug_info(to_screen: bool = True):
     print(out)
 
 
-def get_shared_library_arch(filename: Path) -> PEMachineType:
+def get_shared_library_arch(filename: str | Path) -> PEMachineType:
     """Get the architecture of shared library."""
     with io.open(filename, "rb") as fp:
         dos_headers = fp.read(64)
@@ -1001,7 +1001,7 @@ def get_shared_library_arch(filename: Path) -> PEMachineType:
             return PEMachineType.UNKNOWN
 
 
-def get_arch(filename: Path) -> List[ArchitectureType]:
+def get_arch(filename: str | Path) -> List[ArchitectureType]:
     """Get the architecture of the platform."""
     this_platform = sys.platform
     if this_platform.startswith("win"):
