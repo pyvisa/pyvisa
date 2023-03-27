@@ -222,7 +222,7 @@ class LibraryPath(str):
     #: Detection method employed to locate the library
     found_by: str
 
-    #: Architectural information (32, ) or (64, ) or (32, 64)
+    #: Architectural information
     _arch: Optional[List[ArchitectureType]] = None
 
     def __new__(
