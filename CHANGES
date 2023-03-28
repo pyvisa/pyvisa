@@ -5,6 +5,15 @@ PyVISA Changelog
 -------------------
 - fix ctypes truncated pointers on 64-bit for ViBusAddress, ViBusSize, ViAttrState PR # 725
 - fix read_termination_context does not allow None PR # 727
+- replace `bitness` for library and python runtime information with instruction set
+  and bitness # 733
+  Resulting API changes:
+  - `pyvisa.util.LibraryPath.arch` now returns a list of `pyvisa.util.ArchitectureType`
+    enum values representing architectures the binary was compiled for
+  - `p.u.LibraryPath.is_32bit`, `p.u.LibraryPath.is_64bit`, and `p.u.LibraryPath.bitness`
+    have been removed
+  - `p.u.get_shared_library_arch` now returns `p.u.PEMachineType` instead of a string
+  - `p.u.get_arch` now returns a list of `p.u.ArchitectureType`
 
 1.13.0 (22-12-2022)
 -------------------

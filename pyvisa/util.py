@@ -18,6 +18,8 @@ import subprocess
 import sys
 import warnings
 from collections import OrderedDict
+from enum import Enum
+from pathlib import Path
 from types import ModuleType
 from typing import (
     Any,
@@ -161,6 +163,56 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
         return None
 
 
+class PEMachineType(Enum):
+    UNKNOWN = 0
+    I386 = 0x014C
+    R3000 = 0x0162
+    R4000 = 0x0166
+    R10000 = 0x0168
+    WCEMIPSV2 = 0x0169
+    ALPHA = 0x0184
+    SH3 = 0x01A2
+    SH3DSP = 0x01A3
+    SH3E = 0x01A4
+    SH4 = 0x01A6
+    SH5 = 0x01A8
+    ARM = 0x01C0
+    AARCH64 = 0xAA64
+    THUMB = 0x01C2
+    ARMNT = 0x01C4
+    AM33 = 0x01D3
+    POWERPC = 0x01F0
+    POWERPCFP = 0x01F1
+    IA64 = 0x0200
+    MIPS16 = 0x0266
+    ALPHA64 = 0x0284
+    MIPSFPU = 0x0366
+    MIPSFPU16 = 0x0466
+    TRICORE = 0x0520
+    CEF = 0x0CEF
+    EBC = 0x0EBC
+    AMD64 = 0x8664
+    M32R = 0x9041
+    CEE = 0xC0EE
+
+
+class ArchitectureType(Enum):
+    I386 = ("x86", 32)
+    X86_64 = ("x86", 64)
+    AARCH64 = ("arm", 64)
+
+    @classmethod
+    def from_platform_machine(cls, machine: str) -> Optional["ArchitectureType"]:
+        if machine == "i386" or machine == "i686":
+            return cls.I386
+        elif machine == "x86_64" or machine == "amd64":
+            return cls.X86_64
+        elif machine == "arm64" or machine == "aarch64":
+            return cls.AARCH64
+
+        return None
+
+
 class LibraryPath(str):
     """Object encapsulating information about a VISA dynamic library."""
 
@@ -170,8 +222,8 @@ class LibraryPath(str):
     #: Detection method employed to locate the library
     found_by: str
 
-    #: Architectural information (32, ) or (64, ) or (32, 64)
-    _arch: Optional[Tuple[int, ...]] = None
+    #: Architectural information
+    _arch: Optional[List[ArchitectureType]] = None
 
     def __new__(
         cls: Type["LibraryPath"], path: str, found_by: str = "auto"
@@ -183,36 +235,15 @@ class LibraryPath(str):
         return obj
 
     @property
-    def arch(self) -> Tuple[int, ...]:
+    def arch(self) -> List[ArchitectureType]:
         """Architecture of the library."""
         if self._arch is None:
             try:
-                self._arch = get_arch(self.path)
+                self._arch = get_arch(Path(self.path))
             except Exception:
-                self._arch = tuple()
+                self._arch = []
 
         return self._arch
-
-    @property
-    def is_32bit(self) -> Union[bool, Literal["n/a"]]:
-        """Is the library 32 bits."""
-        if not self.arch:
-            return "n/a"
-        return 32 in self.arch
-
-    @property
-    def is_64bit(self) -> Union[bool, Literal["n/a"]]:
-        """Is the library 64 bits."""
-        if not self.arch:
-            return "n/a"
-        return 64 in self.arch
-
-    @property
-    def bitness(self) -> str:
-        """Bitness of the library."""
-        if not self.arch:
-            return "n/a"
-        return ", ".join(str(a) for a in self.arch)
 
 
 def cleanup_timeout(timeout: Optional[Union[int, float]]) -> int:
@@ -808,7 +839,12 @@ def get_system_details(
     else:
         # UCS4 build (most recent Linux distros)
         unitype = "UCS4"
-    bits, linkage = platform.architecture()
+    machine_info = platform.machine()
+    maybe_architecture = ArchitectureType.from_platform_machine(machine_info)
+    if maybe_architecture:
+        architecture_str = str(maybe_architecture.value)
+    else:
+        architecture_str = machine_info
 
     from . import __version__
 
@@ -823,7 +859,7 @@ def get_system_details(
         "buildno": buildno,
         "builddate": builddate,
         "unicode": unitype,
-        "bits": bits,
+        "architecture": architecture_str,
         "pyvisa": __version__,
         "backends": backend_details,
     }
@@ -855,7 +891,9 @@ def get_system_details(
     return d
 
 
-def system_details_to_str(d: Dict[str, str], indent: str = "") -> str:
+def system_details_to_str(
+    d: Dict[str, Union[str, Dict[str, DebugInfo]]], indent: str = ""
+) -> str:
     """Convert the system details to a str.
 
     System details can be obtained by `get_system_details`.
@@ -872,7 +910,7 @@ def system_details_to_str(d: Dict[str, str], indent: str = "") -> str:
         "   Executable:     %s" % d.get("executable", "n/a"),
         "   Version:        %s" % d.get("python", "n/a"),
         "   Compiler:       %s" % d.get("compiler", "n/a"),
-        "   Bits:           %s" % d.get("bits", "n/a"),
+        "   Architecture:   %s" % d.get("architecture", "n/a"),
         "   Build:          %s (#%s)"
         % (d.get("builddate", "n/a"), d.get("buildno", "n/a")),
         "   Unicode:        %s" % d.get("unicode", "n/a"),
@@ -930,7 +968,7 @@ def get_debug_info(to_screen: Literal[False]) -> str:
     pass
 
 
-def get_debug_info(to_screen=True):
+def get_debug_info(to_screen: bool = True):
     """Get the PyVISA debug information."""
     out = system_details_to_str(get_system_details())
     if not to_screen:
@@ -938,41 +976,7 @@ def get_debug_info(to_screen=True):
     print(out)
 
 
-machine_types = {
-    0: "UNKNOWN",
-    0x014C: "I386",
-    0x0162: "R3000",
-    0x0166: "R4000",
-    0x0168: "R10000",
-    0x0169: "WCEMIPSV2",
-    0x0184: "ALPHA",
-    0x01A2: "SH3",
-    0x01A3: "SH3DSP",
-    0x01A4: "SH3E",
-    0x01A6: "SH4",
-    0x01A8: "SH5",
-    0x01C0: "ARM",
-    0x01C2: "THUMB",
-    0x01C4: "ARMNT",
-    0x01D3: "AM33",
-    0x01F0: "POWERPC",
-    0x01F1: "POWERPCFP",
-    0x0200: "IA64",
-    0x0266: "MIPS16",
-    0x0284: "ALPHA64",
-    # 0x0284: 'AXP64', # same
-    0x0366: "MIPSFPU",
-    0x0466: "MIPSFPU16",
-    0x0520: "TRICORE",
-    0x0CEF: "CEF",
-    0x0EBC: "EBC",
-    0x8664: "AMD64",
-    0x9041: "M32R",
-    0xC0EE: "CEE",
-}
-
-
-def get_shared_library_arch(filename: str) -> str:
+def get_shared_library_arch(filename: Union[str, Path]) -> PEMachineType:
     """Get the architecture of shared library."""
     with io.open(filename, "rb") as fp:
         dos_headers = fp.read(64)
@@ -991,35 +995,64 @@ def get_shared_library_arch(filename: str) -> str:
         if sig != b"PE":
             raise Exception("Not a PE executable")
 
-        return machine_types.get(machine, "UNKNOWN")
+        try:
+            return PEMachineType(machine)
+        except ValueError:
+            return PEMachineType.UNKNOWN
 
 
-def get_arch(filename: str) -> Tuple[int, ...]:
+def get_arch(filename: Union[str, Path]) -> List[ArchitectureType]:
     """Get the architecture of the platform."""
     this_platform = sys.platform
     if this_platform.startswith("win"):
         machine_type = get_shared_library_arch(filename)
-        if machine_type == "I386":
-            return (32,)
-        elif machine_type in ("IA64", "AMD64"):
-            return (64,)
+        if machine_type == PEMachineType.I386:
+            return [ArchitectureType.I386]
+        elif machine_type == PEMachineType.AMD64:
+            return [ArchitectureType.X86_64]
+        elif machine_type == PEMachineType.AARCH64:
+            return [ArchitectureType.AARCH64]
         else:
-            return ()
-    elif this_platform not in ("linux2", "linux3", "linux", "darwin"):
+            return []
+    elif this_platform not in ("linux", "darwin"):
         raise OSError("Unsupported platform: %s" % this_platform)
-
     res = subprocess.run(["file", filename], capture_output=True)
     out = res.stdout.decode("ascii")
-    ret = []
-    if this_platform.startswith("linux"):
-        if "32-bit" in out:
-            ret.append(32)
-        if "64-bit" in out:
-            ret.append(64)
-    else:  # darwin
-        if "(for architecture i386)" in out:
-            ret.append(32)
-        if "(for architecture x86_64)" in out:
-            ret.append(64)
 
-    return tuple(ret)
+    if this_platform.startswith("linux"):
+        # Example outputs:
+        #   i386:
+        #       /usr/bin/python: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV)
+        #   x86_64:
+        #       /usr/bin/python3.10: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked
+        #   aarch64:
+        #       /usr/bin/python3.9: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), dynamically linked
+        if "80386" in out:
+            return [ArchitectureType.I386]
+        if "x86-64" in out:
+            return [ArchitectureType.X86_64]
+        if "aarch64" in out:
+            return [ArchitectureType.AARCH64]
+
+        return []
+    else:  # darwin
+        # universal binary, i386 and x86_64:
+        #   /usr/bin/grep: Mach-O universal binary with 2 architectures
+        #   /usr/bin/grep (for architecture x86_64):    Mach-O 64-bit executable x86_64
+        #   /usr/bin/grep (for architecture i386):      Mach-O executable i386
+        # universal binary, x86_64 and aarch64:
+        #   /usr/bin/grep: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]
+        #   /usr/bin/grep (for architecture x86_64):	Mach-O 64-bit executable x86_64
+        #   /usr/bin/grep (for architecture arm64e):	Mach-O 64-bit executable arm64e
+        # single-arch binary, aarch64:
+        #   /opt/homebrew/bin/rg: Mach-O 64-bit executable arm64
+        archs: List[ArchitectureType] = []
+
+        if "executable i386" in out:
+            archs.append(ArchitectureType.I386)
+        if "executable x86_64" in out:
+            archs.append(ArchitectureType.X86_64)
+        if "executable arm64" in out:
+            archs.append(ArchitectureType.AARCH64)
+
+        return archs

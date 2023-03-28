@@ -121,7 +121,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
         for ndx, visalib in enumerate(paths, 1):
             nfo: Dict[str, Union[str, List[str]]] = OrderedDict()
             nfo["found by"] = visalib.found_by
-            nfo["bitness"] = visalib.bitness
+            nfo["architecture"] = [str(a.value) for a in visalib.arch]
             try:
                 lib = cls(visalib)
                 sess, _ = lib.open_default_resource_manager()
