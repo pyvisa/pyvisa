@@ -14,6 +14,7 @@ PyVISA Changelog
     have been removed
   - `p.u.get_shared_library_arch` now returns `p.u.PEMachineType` instead of a string
   - `p.u.get_arch` now returns a list of `p.u.ArchitectureType`
+- update `Resource` context manager type annotation to preserve derived type PR # 740
 
 1.13.0 (22-12-2022)
 -------------------

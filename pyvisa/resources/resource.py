@@ -184,7 +184,7 @@ class Resource(object):
     def __repr__(self) -> str:
         return "<%r(%r)>" % (self.__class__.__name__, self._resource_name)
 
-    def __enter__(self) -> "Resource":
+    def __enter__(self: T) -> T:
         return self
 
     def __exit__(self, *args) -> None:
