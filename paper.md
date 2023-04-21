@@ -59,7 +59,7 @@ bibliography: paper.bib
 # Summary
 
 Data-driven science requires reliable data generation, and in modern
-instrumentation, software plays a central role to achieve this
+instrumentation software plays a central role to achieve this
 goal. Computer-controlled experiments allow for complex synchronization of
 sensors and actuators. Moreover, as it was already recognized decades ago, they enable on-line analysis routines to steer
 the experiment in real time [@Enke:1982]. When combined with programming best practices,
@@ -67,14 +67,14 @@ instrumentation software fosters reproducible, traceable, and open science.
 
 An important step in the development of instrumentation software has been the
 definition of Virtual Instrument Software Architecture (VISA) [@Cheij:2002], which
-quickly became the most common API for test and measurement, widely used both
+quickly became the most common API for test and measurement and is widely used both
 in industry and academia. It includes specifications for communication with
 resources over a variety of interfaces such as GPIB, PXI, VXI, SERIAL, TCP/IP,
-USB. VISA abstracts away the (often complex) idiosyncrasies of those low-level
+and USB. VISA abstracts away the (often complex) idiosyncrasies of those low-level
 protocols, so that the scientist can focus on the instrument-specific command
 set. 
 
-The here presented Python package `PyVISA` provides an easy-to-use
+The Python package `PyVISA` provides an easy-to-use
 interface to software libraries that implement the VISA standard,
 enabling communication between a host computer and instruments or other devices.
 
@@ -82,7 +82,7 @@ enabling communication between a host computer and instruments or other devices.
 
 `PyVISA` has become the *de facto* standard for instrument control in
 Python.  At the heart of every `PyVISA` program is a `ResourceManager`
-instance, which allows to list available resources (devices,
+instance, which allows to list available resources (e.g., devices,
 instruments, boards). Opening one of such devices returns a `Resource`
 instance with methods to send and receives streams of data, control
 registers and device specific flags. While this high-level API serves
@@ -90,10 +90,10 @@ most use cases, `PyVISA` still provides a convenient way to make
 low-level calls for those few applications that require it.
 
 `PyVISA` was designed to be used in both simple acquisition scripts and also
-within large and complex codebases. It takes care of resource allocation and
-cleaning, stream parsing, data conversion; and it provides introspection
+within large and complex codebases. It takes care of resource allocation,
+cleaning, stream parsing, data conversion, and provides introspection
 capabilities. `Resource` instances are fully configurable in terms of
-termination characters, format of the data stream, defaulting to sensible
+termination characters and format of the data stream, defaulting to sensible
 values while allowing full control if necessary. Logging is used extensively
 throughout the library to help with debugging.
 
@@ -124,15 +124,15 @@ We open a connection to the resource:
 Basic methods for communication with a resource are `write()` and `read()`, which send and receive data (as strings). As this is often performed together, the `query()` method provides 
 this with a single call. 
 
-Next we ask for an identification by sending the `*IDN?` command, which is defined in the IEEE 488.2 standard and also belongs to the standard commands for programmable instruments (SCPI). Most instruments support this command.
+Next we ask for an identification by sending the `*IDN?` command, which is defined in the IEEE 488.2 standard and also belongs to the standard commands for programmable instruments (SCPI); most instruments support this command.
 
 ```python
 >>> osci.query("*IDN?")
 TEKTRONIX,TDS 1002B,C102220,CF:91.1CT FV:v22.11\n
 ```
 
-It is a Tektronix oscilloscope. We set channel 1 vertical scale to 100 mV/div
-and we can request the curve on display.
+The instrument is a Tektronix oscilloscope. We set the channel 1 vertical scale to 100 mV/div
+and request the curve on the display.
 
 ```python
 >>> osci.write("CH1:SCALE 100E-3")
@@ -142,7 +142,7 @@ and we can request the curve on display.
 `PyVISA` parses the instrument's response and returns the data as a Python `list` containing the values from the device. 
 
 This oscilloscope also supports binary data transfer. We activate this mode at the
-device with two commands, and then request the binary values but now returned
+device with two commands and then request the binary values to be returned
 in a NumPy array.
 
 ```python
@@ -156,10 +156,10 @@ in a NumPy array.
 # Structure of PyVISA
 
 **Backends**: To provide the main functionality for communication with
-external devices, `PyVISA` calls code in external libraries. Typically
+external devices `PyVISA` calls code in external libraries. Typically
 these are provided by vendors that implement the VISA library
 specification.
-`PyVISA` is not limited to a specific VISA vendor, but it is rather a frontend
+`PyVISA` is not limited to a specific VISA vendor, but is rather a frontend
 for multiple backends. The default backend wraps the Interchangeable Virtual
 Instrumentation (IVI) VISA library provided by vendors like National
 Instruments, Keysight VISA, R&S VISA, tekVISA and others. Alternative backends
@@ -179,7 +179,7 @@ foreign types. Some backends, like `PyVISA-py`, do not define this layer as
 they rely on other Python packages. Direct access to these functions is neither
 required nor recommended.
 
-**Layer 2 (mid level)**: provides a function-oriented Pythonic API with a
+**Layer 2 (mid level)**: provides a function-oriented Pythonic API with
 comprehensive and Python-friendly documentation. Access to this layer is rarely
 needed, only used to control certain specific aspects of the VISA library which
 are not implemented by the corresponding resource class. In the default backend
@@ -243,10 +243,10 @@ not yet been set up.
 
 # Acknowledgements
 
-`PyVISA` has been developed over the course of many years. Following the best
-practices of an open source [@raymond2010cathedral], we had to foster a community of users that
-became developers, and we had to pass leadership on to the person that can devote time
-and energy. This vision is achieved by the establishment of a `PyVISA`
+`PyVISA` has been developed over the course of many years. Following open source best
+practices [@raymond2010cathedral], we fostered a community of users that
+became developers, and passed project leadership onto the people that can devote time
+and energy. This vision has been achieved by the establishment of a `PyVISA`
 organization on GitHub, moving the project out of a personal repository [@pyvisa:github].
 We appreciate greatly the contributions of the `PyVISA` global community that
 made all this possible.
