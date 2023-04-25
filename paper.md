@@ -244,7 +244,7 @@ not yet been set up.
 # Acknowledgements
 
 `PyVISA` has been developed over the course of many years. Following open source best
-practices [@raymond2010cathedral], we fostered a community of users that
+practices [@raymond:1999], we fostered a community of users that
 became developers, and passed project leadership onto the people that can devote time
 and energy. This vision has been achieved by the establishment of a `PyVISA`
 organization on GitHub, moving the project out of a personal repository [@pyvisa:github].
