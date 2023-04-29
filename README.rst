@@ -23,6 +23,9 @@ PyVISA
 .. image:: https://img.shields.io/pypi/v/PyVISA
     :target: https://pypi.python.org/pypi/pyvisa
     :alt: PyPI
+.. image:: https://joss.theoj.org/papers/10.21105/joss.05304/status.svg
+   :target: https://doi.org/10.21105/joss.05304
+
 
 A Python package for support of the "Virtual Instrument Software
 Architecture" (VISA), in order to control measurement devices and
@@ -48,10 +51,10 @@ The VISA specification has explicit bindings to Visual Basic, C, and G
 VISA shared library (`.dll`, `.so`, `.dylib`) allowing to directly leverage the
 standard implementations. In addition, Python can be used to directly access
 most bus systems used by instruments which is why one can envision to implement
-the VISA standard directly in Python (see the `PyVISA-Py` project for more
+the VISA standard directly in Python (see the `PyVISA-Py`_ project for more
 details). PyVISA is both a Python wrapper for VISA shared libraries but
 can also serve as a front-end for other VISA implementation such as
-`PyVISA-Py`.
+`PyVISA-Py`_.
 
 
 .. _VISA: http://www.ivifoundation.org/specifications/default.aspx
@@ -99,3 +102,14 @@ Documentation
 --------------
 
 The documentation can be read online at https://pyvisa.readthedocs.org
+
+
+Citing
+------
+
+If you are using this package, you can cite the `PyVISA publication`_ 
+
+Grecco et al., (2023). PyVISA: the Python instrumentation package. Journal of Open Source 
+Software, 8(84), 5304, https://doi.org/10.21105/joss.05304
+
+.. _`PyVISA publication`: https://joss.theoj.org/papers/10.21105/joss.05304#
