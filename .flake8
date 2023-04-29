@@ -1,0 +1,18 @@
+[flake8]
+exclude =
+    .git,
+    __pycache__,
+    docs/source/conf.py,
+    old,
+    build,
+    dist,
+    pyvisa/thirdparty/*,
+ignore = E203, E266, E501, W503, E731
+# line length is intentionally set to 80 here because pyvisa uses Bugbear
+# See https://github.com/psf/black/blob/master/README.md#line-length for more details
+max-line-length = 80
+max-complexity = 18
+select = B,C,E,F,W,T4,B9
+per-file-ignores =
+    pyvisa/__init__.py:E402
+    pyvisa/constants.py:E221

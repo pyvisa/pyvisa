@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
+"""ctypes wrapper for IVI-VISA library.
+
+This file is part of PyVISA.
+
+:copyright: 2014-2022 by PyVISA Authors, see AUTHORS for more details.
+:license: MIT, see LICENSE for more details.
+
 """
-    pyvisa.ctwrapper
-    ~~~~~~~~~~~~~~~~
+import os
 
-    ctypes wrapper for NI-VISA library.
+from .highlevel import IVIVisaLibrary
 
-    This file is part of PyVISA.
+WRAPPER_CLASS = IVIVisaLibrary
 
-    :copyright: 2014 by PyVISA Authors, see AUTHORS for more details.
-    :license: MIT, see LICENSE for more details.
-"""
+WRAP_HANDLER = True
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
-from .highlevel import NIVisaLibrary
-
-WRAPPER_CLASS = NIVisaLibrary
-
+env_value = os.environ.get("PYVISA_WRAP_HANDLER", None)
+if env_value is not None:
+    WRAP_HANDLER = bool(int(env_value))
