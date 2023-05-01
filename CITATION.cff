@@ -1,0 +1,50 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Grecco"
+  given-names: "Hernán E."
+  orcid: "https://orcid.org/0000-0002-1165-4320"
+- family-names: "Dartiailh"
+  given-names: "Matthieu C."
+  orcid: "https://orcid.org/0000-0001-6451-0577"
+- family-names: "Thalhammer-Thurner"
+  given-names: "Gregor"
+  orcid: "https://orcid.org/0000-0002-3948-8045"
+- family-names: "Bronger"
+  given-names: "Torsten"
+  orcid: "https://orcid.org/0000-0002-5174-6684"
+- family-names: "Bauer"
+  given-names: "Florian"
+  orcid: "https://orcid.org/0009-0004-5271-5363"
+title: "PyVISA"
+version: 1.13.0
+doi: 10.5281/zenodo.7868199
+date-released: 2022-12-22
+url: "https://github.com/github-linguist/linguist"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Grecco"
+    given-names: "Hernán E."
+    orcid: "https://orcid.org/0000-0002-1165-4320"
+  - family-names: "Dartiailh"
+    given-names: "Matthieu C."
+    orcid: "https://orcid.org/0000-0001-6451-0577"
+  - family-names: "Thalhammer-Thurner"
+    given-names: "Gregor"
+    orcid: "https://orcid.org/0000-0002-3948-8045"
+  - family-names: "Bronger"
+    given-names: "Torsten"
+    orcid: "https://orcid.org/0000-0002-5174-6684"
+  - family-names: "Bauer"
+    given-names: "Florian"
+    orcid: "https://orcid.org/0009-0004-5271-5363"
+  doi: "10.21105/joss.05304"
+  journal: "Journal of Open Source Software"
+  month: 4
+  start: 5304
+  end: 5308 
+  title: "PyVISA: the Python instrumentation package"
+  issue: 84
+  volume: 8
+  year: 2023
