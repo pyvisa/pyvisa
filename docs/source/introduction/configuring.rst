@@ -15,7 +15,7 @@ Failing that, it uses the pyvisa-py backend.
 You can also select a desired backend by passing a parameter to the
 ResourceManager, shown here for pyvisa-py:
 
-    >>> visa.ResourceManager('@py')
+    >>> pyvisa.ResourceManager('@py')
 
 Alternatively it can also be selected by setting the environment variable
 PYVISA_LIBRARY. It takes the same values as the ResourceManager constructor.
