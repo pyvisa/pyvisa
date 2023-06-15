@@ -10,6 +10,7 @@ This file is part of PyVISA.
 import contextlib
 import struct
 import time
+import types
 import warnings
 from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, Type, Union
 
@@ -75,6 +76,26 @@ class MessageBasedResource(Resource):
 
     #: Internal storage for the encoding
     _encoding: str = "ascii"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Always initialize without a progress bar object
+        self._progress_bar = None
+
+    @property
+    def progress_bar(self) -> Any:
+        """
+        Progress bar object that shows data transfer progress on the console. Defaults
+        to None.
+        """
+        return self._progress_bar
+
+    @progress_bar.setter
+    def progress_bar(self, progress_bar: Any):
+        # Test that progress bar has an update method
+        if not (hasattr(progress_bar, "update") and isinstance(progress_bar.update, types.MethodType)):
+            TypeError("Progress bar object missing update() method")
+        self._progress_bar = progress_bar
 
     @property
     def encoding(self) -> str:
@@ -368,6 +389,8 @@ class MessageBasedResource(Resource):
                         status,
                     )
                     chunk, status = self.visalib.read(self.session, size)
+                    if self._progress_bar:
+                        self._progress_bar(len(chunk))
                     ret.extend(chunk)
                     left_to_read -= len(chunk)
                     if break_on_termchar and (
@@ -439,6 +462,8 @@ class MessageBasedResource(Resource):
                         status,
                     )
                     chunk, status = self.visalib.read(self.session, size)
+                    if self._progress_bar:
+                        self.progress_bar.update(len(chunk))
                     ret.extend(chunk)
             except errors.VisaIOError as e:
                 logger.debug(
