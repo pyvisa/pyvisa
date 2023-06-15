@@ -94,7 +94,10 @@ class MessageBasedResource(Resource):
     @progress_bar.setter
     def progress_bar(self, progress_bar: Any):
         # Test that progress bar has an update method
-        if not (hasattr(progress_bar, "update") and isinstance(progress_bar.update, types.MethodType)):
+        if not (
+                hasattr(progress_bar, "update")
+                and isinstance(progress_bar.update, types.MethodType)
+        ):
             TypeError("Progress bar object missing update() method")
         self._progress_bar = progress_bar
 
