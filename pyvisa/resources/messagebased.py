@@ -398,6 +398,8 @@ class MessageBasedResource(Resource):
                     ):
                         break
             except errors.VisaIOError as e:
+                if self._progress_bar:
+                    self._progress_bar = None
                 logger.debug(
                     "%s - exception while reading: %s\n" "Buffer content: %r",
                     self._resource_name,
@@ -466,6 +468,8 @@ class MessageBasedResource(Resource):
                         self._progress_bar.update(len(chunk))
                     ret.extend(chunk)
             except errors.VisaIOError as e:
+                if self._progress_bar:
+                    self._progress_bar = None
                 logger.debug(
                     "%s - exception while reading: %s\nBuffer " "content: %r",
                     self._resource_name,
