@@ -10,14 +10,28 @@ This file is part of PyVISA.
 import contextlib
 import struct
 import time
-import types
 import warnings
-from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    Optional,
+    Protocol,
+    Sequence,
+    Type,
+    Union,
+)
 
 from .. import attributes, constants, errors, logger, util
 from ..attributes import Attribute
 from ..highlevel import VisaLibraryBase
 from .resource import Resource
+
+
+class SupportsUpdate(Protocol):
+    def update(self, size: int) -> None:
+        ...
 
 
 class ControlRenMixin(object):
@@ -81,36 +95,6 @@ class MessageBasedResource(Resource):
         super().__init__(*args, **kwargs)
         # Always initialize without a progress bar object
         self._progress_bar = None
-
-    @property
-    def progress_bar(self) -> Any:
-        """
-        Progress bar object that shows data transfer progress on the console. Defaults
-        to the None object.
-
-        Example using the tqdm package:
-
-        with tqdm(
-            description="Downloading",
-            unit="B",
-            total=total_bytes,
-            unit_scale=True,
-        ) as progress_bar:
-            instrument.progress_bar = progress_bar
-            data = instrument.read_binary_values()  # updates progress bar during read
-            instrument.progress_bar = None
-        """
-        return self._progress_bar
-
-    @progress_bar.setter
-    def progress_bar(self, progress_bar: Any):
-        # Test that progress bar has an update method
-        if not (
-            hasattr(progress_bar, "update")
-            and isinstance(progress_bar.update, types.MethodType)
-        ):
-            TypeError("Progress bar object missing update() method")
-        self._progress_bar = progress_bar
 
     @property
     def encoding(self) -> str:
@@ -478,7 +462,7 @@ class MessageBasedResource(Resource):
                     )
                     chunk, status = self.visalib.read(self.session, size)
                     if self._progress_bar:
-                        self.progress_bar.update(len(chunk))
+                        self._progress_bar.update(len(chunk))
                     ret.extend(chunk)
             except errors.VisaIOError as e:
                 logger.debug(
@@ -578,6 +562,7 @@ class MessageBasedResource(Resource):
         expect_termination: bool = True,
         data_points: int = -1,
         chunk_size: Optional[int] = None,
+        progress_bar: Optional[SupportsUpdate] = None,
     ) -> Sequence[Union[int, float]]:
         """Read values from the device in binary format returning an iterable
         of values.
@@ -604,6 +589,9 @@ class MessageBasedResource(Resource):
         chunk_size : int, optional
             Size of the chunks to read from the device. Using larger chunks may
             be faster for large amount of data.
+        progress_bar : SupportsUpdate Protocol, optional
+            Progress bar object with update() method that accepts the number of bytes
+            read. See tqdm documentation for more information.
 
         Returns
         -------
@@ -611,6 +599,7 @@ class MessageBasedResource(Resource):
             Data read from the device.
 
         """
+        self._progress_bar = progress_bar
         block = self._read_raw(chunk_size)
 
         if header_fmt == "ieee":
@@ -622,6 +611,7 @@ class MessageBasedResource(Resource):
             offset = 0
             data_length = -1
         else:
+            self._progress_bar = None
             raise ValueError(
                 "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
             )
@@ -645,6 +635,7 @@ class MessageBasedResource(Resource):
         elif data_length == 0:
             pass
         else:
+            self._progress_bar = None
             raise ValueError(
                 "The length of the data to receive could not be "
                 "determined. You should provide the number of "
@@ -652,6 +643,7 @@ class MessageBasedResource(Resource):
                 "argument."
             )
 
+        self._progress_bar = None
         try:
             # Do not reparse the headers since it was already done and since
             # this allows for custom data length
@@ -738,6 +730,7 @@ class MessageBasedResource(Resource):
         expect_termination: bool = True,
         data_points: int = 0,
         chunk_size: Optional[int] = None,
+        progress_bar: Optional[SupportsUpdate] = None,
     ) -> Sequence[Union[int, float]]:
         """Query the device for values in binary format returning an iterable
         of values.
@@ -769,6 +762,9 @@ class MessageBasedResource(Resource):
         chunk_size : int, optional
             Size of the chunks to read from the device. Using larger chunks may
             be faster for large amount of data.
+        progress_bar : SupportsUpdate Protocol, optional
+            Progress bar object with update() method that accepts the number of bytes
+            read. See tqdm documentation for more information.
 
         Returns
         -------
@@ -795,6 +791,7 @@ class MessageBasedResource(Resource):
             expect_termination,
             data_points,
             chunk_size,
+            progress_bar,
         )
 
     def assert_trigger(self) -> None:
