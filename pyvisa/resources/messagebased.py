@@ -86,7 +86,19 @@ class MessageBasedResource(Resource):
     def progress_bar(self) -> Any:
         """
         Progress bar object that shows data transfer progress on the console. Defaults
-        to None.
+        to the None object.
+
+        Example using the tqdm package:
+
+        with tqdm(
+            description="Downloading",
+            unit="B",
+            total=total_bytes,
+            unit_scale=True,
+        ) as progress_bar:
+            instrument.progress_bar = progress_bar
+            data = instrument.read_binary_values()  # updates progress bar during read
+            instrument.progress_bar = None
         """
         return self._progress_bar
 
@@ -94,8 +106,8 @@ class MessageBasedResource(Resource):
     def progress_bar(self, progress_bar: Any):
         # Test that progress bar has an update method
         if not (
-                hasattr(progress_bar, "update")
-                and isinstance(progress_bar.update, types.MethodType)
+            hasattr(progress_bar, "update")
+            and isinstance(progress_bar.update, types.MethodType)
         ):
             TypeError("Progress bar object missing update() method")
         self._progress_bar = progress_bar
