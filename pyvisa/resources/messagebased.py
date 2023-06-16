@@ -590,8 +590,8 @@ class MessageBasedResource(Resource):
             Size of the chunks to read from the device. Using larger chunks may
             be faster for large amount of data.
         progress_bar : SupportsUpdate Protocol, optional
-            Progress bar object with update() method that accepts the number of bytes
-            read. See tqdm documentation for more information.
+            Progress bar object with update() method that accepts the number of
+            bytes read. See tqdm documentation for more information.
 
         Returns
         -------
@@ -763,8 +763,8 @@ class MessageBasedResource(Resource):
             Size of the chunks to read from the device. Using larger chunks may
             be faster for large amount of data.
         progress_bar : SupportsUpdate Protocol, optional
-            Progress bar object with update() method that accepts the number of bytes
-            read. See tqdm documentation for more information.
+            Progress bar object with update() method that accepts the number of
+            bytes read. See tqdm documentation for more information.
 
         Returns
         -------
