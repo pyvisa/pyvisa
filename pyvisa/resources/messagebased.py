@@ -30,6 +30,8 @@ from .resource import Resource
 
 
 class SupportsUpdate(Protocol):
+    """Type hint for a progress bar object"""
+
     def update(self, size: int) -> None:
         ...
 
@@ -90,11 +92,6 @@ class MessageBasedResource(Resource):
 
     #: Internal storage for the encoding
     _encoding: str = "ascii"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Always initialize without a progress bar object
-        self._progress_bar = None
 
     @property
     def encoding(self) -> str:
@@ -346,6 +343,7 @@ class MessageBasedResource(Resource):
         count: int,
         chunk_size: Optional[int] = None,
         break_on_termchar: bool = False,
+        progress_bar: Optional[SupportsUpdate] = None,
     ) -> bytes:
         """Read a certain number of bytes from the instrument.
 
@@ -360,6 +358,9 @@ class MessageBasedResource(Resource):
         break_on_termchar : bool, optional
             Should the reading stop when a termination character is encountered
             or when the message ends. Defaults to False.
+        progress_bar : SupportsUpdate Protocol, optional
+            Progress bar object with update() method that accepts the number of
+            bytes read. See tqdm documentation for more information.
 
         Returns
         -------
@@ -388,8 +389,8 @@ class MessageBasedResource(Resource):
                         status,
                     )
                     chunk, status = self.visalib.read(self.session, size)
-                    if self._progress_bar:
-                        self._progress_bar(len(chunk))
+                    if progress_bar:
+                        progress_bar.update(len(chunk))
                     ret.extend(chunk)
                     left_to_read -= len(chunk)
                     if break_on_termchar and (
@@ -397,8 +398,6 @@ class MessageBasedResource(Resource):
                     ):
                         break
             except errors.VisaIOError as e:
-                if self._progress_bar:
-                    self._progress_bar = None
                 logger.debug(
                     "%s - exception while reading: %s\n" "Buffer content: %r",
                     self._resource_name,
@@ -427,7 +426,9 @@ class MessageBasedResource(Resource):
         """
         return bytes(self._read_raw(size))
 
-    def _read_raw(self, size: Optional[int] = None):
+    def _read_raw(
+        self, size: Optional[int] = None, progress_bar: Optional[SupportsUpdate] = None
+    ):
         """Read the unmodified string sent from the instrument to the computer.
 
         In contrast to read(), no termination characters are stripped.
@@ -437,6 +438,9 @@ class MessageBasedResource(Resource):
         size : Optional[int], optional
             The chunk size to use to perform the reading. Defaults to None,
             meaning the resource wide set value is set.
+        progress_bar : SupportsUpdate Protocol, optional
+            Progress bar object with update() method that accepts the number of
+            bytes read. See tqdm documentation for more information.
 
         Returns
         -------
@@ -463,12 +467,10 @@ class MessageBasedResource(Resource):
                         status,
                     )
                     chunk, status = self.visalib.read(self.session, size)
-                    if self._progress_bar:
-                        self._progress_bar.update(len(chunk))
+                    if progress_bar:
+                        progress_bar.update(len(chunk))
                     ret.extend(chunk)
             except errors.VisaIOError as e:
-                if self._progress_bar:
-                    self._progress_bar = None
                 logger.debug(
                     "%s - exception while reading: %s\nBuffer " "content: %r",
                     self._resource_name,
@@ -603,8 +605,7 @@ class MessageBasedResource(Resource):
             Data read from the device.
 
         """
-        self._progress_bar = progress_bar
-        block = self._read_raw(chunk_size)
+        block = self._read_raw(chunk_size, progress_bar=progress_bar)
 
         if header_fmt == "ieee":
             offset, data_length = util.parse_ieee_block_header(block)
@@ -615,7 +616,6 @@ class MessageBasedResource(Resource):
             offset = 0
             data_length = -1
         else:
-            self._progress_bar = None
             raise ValueError(
                 "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
             )
@@ -634,12 +634,15 @@ class MessageBasedResource(Resource):
         # Read all the data if we know what to expect.
         if data_length > 0:
             block.extend(
-                self.read_bytes(expected_length - len(block), chunk_size=chunk_size)
+                self.read_bytes(
+                    expected_length - len(block),
+                    chunk_size=chunk_size,
+                    progress_bar=progress_bar,
+                )
             )
         elif data_length == 0:
             pass
         else:
-            self._progress_bar = None
             raise ValueError(
                 "The length of the data to receive could not be "
                 "determined. You should provide the number of "
@@ -647,7 +650,6 @@ class MessageBasedResource(Resource):
                 "argument."
             )
 
-        self._progress_bar = None
         try:
             # Do not reparse the headers since it was already done and since
             # this allows for custom data length
