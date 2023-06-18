@@ -30,6 +30,17 @@ except ImportError:
     np = None
 
 
+class DummyProgressBar:
+    """A test object that implements the progress bar interface"""
+
+    def __init__(self, total_bytes: int) -> None:
+        self.last_update = None
+        self.total_bytes = total_bytes
+
+    def update(self, size: int) -> None:
+        self.last_update = size
+
+
 class EventHandler:
     """Event handler."""
 
@@ -389,14 +400,18 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             assert values.dtype is expected.dtype
             np.testing.assert_array_equal(values, expected)
 
-    @pytest.mark.parametrize("hfmt", ("ieee", "hp"))
-    def test_read_binary_values(self, hfmt):
+    @pytest.mark.parametrize("hfmt, use_pb", list(zip(("ieee", "hp"), (False, True))))
+    def test_read_binary_values(self, hfmt, use_pb):
         """Test reading binary data."""
         # TODO test handling binary decoding issue (troublesome)
         self.instr.read_termination = "\r"
         # 3328 in binary short is \x00\r this way we can interrupt the
         # transmission midway to test some corner cases
         data = [1, 2, 3328, 3, 4, 5, 6, 7]
+        data_length = 2 * len(data)
+        # Calculate header length based on header format
+        header_length = len(f"{data_length}") + 3 if hfmt == "ieee" else 6
+        progress_bar = DummyProgressBar(data_length + header_length) if use_pb else None
 
         self.instr.write("RECEIVE")
         self.instr.write_binary_values(
@@ -409,15 +424,18 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             header_fmt=hfmt,
             expect_termination=True,
             chunk_size=8,
+            progress_bar=progress_bar,
         )
         self.instr.read_bytes(1)
         assert data == new
+        if use_pb:
+            assert progress_bar.last_update == progress_bar.total_bytes
 
         self.instr.write("RECEIVE")
         self.instr.write_binary_values(
             "", data, "h", header_fmt=hfmt, is_big_endian=True
         )
-
+        progress_bar = DummyProgressBar(data_length + header_length) if use_pb else None
         new = self.instr.query_binary_values(
             "SEND",
             datatype="h",
@@ -426,12 +444,15 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             expect_termination=False,
             chunk_size=8,
             container=np.array if np else list,
+            progress_bar=progress_bar,
         )
         self.instr.read_bytes(1)
         if np:
             np.testing.assert_array_equal(new, np.array(data, dtype=np.int16))
         else:
             assert data == new
+        if use_pb:
+            assert progress_bar.last_update == progress_bar.total_bytes
 
     def test_read_query_binary_values_invalid_header(self):
         """Test we properly handle an invalid header."""
