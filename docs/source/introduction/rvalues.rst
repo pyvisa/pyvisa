@@ -102,6 +102,20 @@ you get from your instrument (plus the header). If it is so, then you can
 safely pass ``expect_termination=False``, and PyVISA will not look for a
 termination character at the end of the message.
 
+An optional tqdm (or similar) progress bar object can be passed to the
+read_binary_values() and query_binary_values() methods. Both methods will provide
+the progress bar object with an updated count of the number of bytes read from
+the instrument. The progress bar object must be initialized with the total value
+set to the total number of bytes to be downloaded from the instrument. The progress
+bar object must implement the update() method. See the tqdm package documentation for
+more information. An implementation of a progress bar might look like:
+
+inst = resource_manager.open_resource(...)
+    ...
+    with tqdm(desc="Downloading", unit="B", total=total_bytes) as progress_bar:
+        inst.write("CURV?")
+        data = inst.read_binary_values(..., progress_bar=progress_bar)
+
 If you can read without any problem from your instrument, but cannot retrieve
 the full message when using this method (VI_ERROR_CONN_LOST,
 VI_ERROR_INV_SETUP, or Python simply crashes), try passing different values for
