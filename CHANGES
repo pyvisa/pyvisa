@@ -1,6 +1,12 @@
 PyVISA Changelog
 ================
 
+1.15.0 (TBD)
+-------------------
+- update `Resource` context manager type annotation to preserve derived type PR # 74
+- added support for an optional progress bar object to the read_binary_values() and
+    query_binary_values() methods of message-based resources.
+
 1.14.1 (22-11-2023)
 -------------------
 - fix handling of missing board number for VICP resources PR #787
