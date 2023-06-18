@@ -7,7 +7,7 @@ import gc
 import logging
 import time
 from types import ModuleType
-from typing import Optional
+from typing import Optional, Union
 
 import pytest
 
@@ -34,10 +34,10 @@ class DummyProgressBar:
     """A test object that implements the progress bar interface"""
 
     def __init__(self, total_bytes: int) -> None:
-        self.last_update = None
-        self.total_bytes = total_bytes
+        self.last_update: Union[int, None] = None
+        self.total_bytes: int = total_bytes
 
-    def update(self, size: int) -> None:
+    def update(self, size: Union[int, None]) -> None:
         self.last_update = size
 
 
