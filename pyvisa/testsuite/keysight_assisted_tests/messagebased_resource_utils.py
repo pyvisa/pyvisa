@@ -29,7 +29,7 @@ except ImportError:
     np = None
 
 
-class DummyProgressBar:
+class DummyMonitoringDevice:
     """A test object that implements the progress bar interface"""
 
     def __init__(self, total_bytes: int) -> None:
@@ -410,7 +410,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         data_length = 2 * len(data)
         # Calculate header length based on header format
         header_length = len(f"{data_length}") + 3 if hfmt == "ieee" else 6
-        progress_bar = DummyProgressBar(data_length + header_length) if use_pb else None
+        monitor = DummyMonitoringDevice(data_length + header_length) if use_pb else None
 
         self.instr.write("RECEIVE")
         self.instr.write_binary_values(
@@ -423,18 +423,18 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             header_fmt=hfmt,
             expect_termination=True,
             chunk_size=8,
-            progress_bar=progress_bar,
+            monitoring_interface=monitor,
         )
         self.instr.read_bytes(1)
         assert data == new
         if use_pb:
-            assert progress_bar.last_update == progress_bar.total_bytes
+            assert monitor.last_update == monitor.total_bytes
 
         self.instr.write("RECEIVE")
         self.instr.write_binary_values(
             "", data, "h", header_fmt=hfmt, is_big_endian=True
         )
-        progress_bar = DummyProgressBar(data_length + header_length) if use_pb else None
+        monitor = DummyMonitoringDevice(data_length + header_length) if use_pb else None
         new = self.instr.query_binary_values(
             "SEND",
             datatype="h",
@@ -443,7 +443,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             expect_termination=False,
             chunk_size=8,
             container=np.array if np else list,
-            progress_bar=progress_bar,
+            monitoring_interface=monitor,
         )
         self.instr.read_bytes(1)
         if np:
@@ -451,7 +451,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         else:
             assert data == new
         if use_pb:
-            assert progress_bar.last_update == progress_bar.total_bytes
+            assert monitor.last_update == monitor.total_bytes
 
     def test_read_query_binary_values_invalid_header(self):
         """Test we properly handle an invalid header."""
