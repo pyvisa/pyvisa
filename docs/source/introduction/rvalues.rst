@@ -103,19 +103,21 @@ safely pass ``expect_termination=False``, and PyVISA will not look for a
 termination character at the end of the message.
 
 An optional monitoring interface object, such as a tqdm progress bar, can be
-passed to the read_binary_values() and query_binary_values() methods. Both methods
-will provide the monitoring object with an updated count of the number of bytes read
-from the instrument. If monitoring object is a progress bar, the progress bar must be
-initialized with the total number of bytes to be downloaded from the instrument. The
-monitoring object must implement the update() method. See the tqdm package
-documentation for more information. An implementation of a progress bar might look
-like:
+passed to the read_binary_values() and query_binary_values() methods. This is useful
+in applications where are large data records are downloaded from instruments such as
+oscilloscopes.  Both methods will provide the monitoring object with an updated count
+of the number of bytes read from the instrument. If monitoring object is a progress
+bar, the progress bar must be initialized with the total number of bytes to be
+downloaded from the instrument. The monitoring object must implement the update()
+method. See the tqdm package documentation for more information. An implementation
+of a progress bar might look like:
 
-inst = resource_manager.open_resource(...)
-    ...
-    with tqdm(desc="Downloading", unit="B", total=total_bytes) as progress_bar:
-        inst.write("CURV?")
-        data = inst.read_binary_values(..., monitoring_interface=progress_bar)
+.. code:: python
+
+    inst = resource_manager.open_resource(...)
+        with tqdm(desc="Downloading", unit="B", total=total_bytes) as progress_bar:
+            inst.write("CURV?")
+            data = inst.read_binary_values(monitoring_interface=progress_bar)
 
 If you can read without any problem from your instrument, but cannot retrieve
 the full message when using this method (VI_ERROR_CONN_LOST,
