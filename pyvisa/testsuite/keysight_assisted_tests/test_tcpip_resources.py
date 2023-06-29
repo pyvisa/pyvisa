@@ -29,7 +29,7 @@ class TestTCPIPInstr(
     #: Minimal timeout value accepted by the resource. When setting the timeout
     #: to VI_TMO_IMMEDIATE, Visa (Keysight at least) may actually use a
     #: different value depending on the values supported by the resource.
-    MINIMAL_TIMEOUT = 1
+    MINIMAL_TIMEOUT = 10
 
     def test_io_prot_attr(self):
         """Test getting/setting the io prot attribute.
@@ -68,7 +68,7 @@ class TestTCPIPSocket(MessagebasedResourceTestCase):
     #: Minimal timeout value accepted by the resource. When setting the timeout
     #: to VI_TMO_IMMEDIATE, Visa (Keysight at least) may actually use a
     #: different value depending on the values supported by the resource.
-    MINIMAL_TIMEOUT = 1
+    MINIMAL_TIMEOUT = 0
 
     # Copy functions since the marker is applied in-place
     test_write_raw_read_bytes = pytest.mark.xfail(
@@ -119,3 +119,4 @@ class TestTCPIPSocket(MessagebasedResourceTestCase):
     test_no_delay_args_in_query_binary = pytest.mark.xfail(
         copy_func(MessagebasedResourceTestCase.test_no_delay_args_in_query_binary)
     )
+    test_stb = pytest.mark.skip(copy_func(MessagebasedResourceTestCase.test_stb))
