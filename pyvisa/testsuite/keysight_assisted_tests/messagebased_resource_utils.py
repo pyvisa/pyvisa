@@ -415,7 +415,9 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         # Calculate header length based on header format
         header_length = len(f"{data_length}") + 2 if hfmt == "ieee" else 4
         monitor = (
-            DummyMonitoringDevice(data_length + header_length + 1)  # 1 for the term char
+            DummyMonitoringDevice(
+                data_length + header_length + 1
+            )  # 1 for the term char
             if use_pb
             else None
         )
