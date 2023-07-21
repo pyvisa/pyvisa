@@ -7,15 +7,28 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+import asyncio
 import contextlib
 import struct
 import time
 import warnings
-from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, Type, Union
+from typing import (
+    Any,
+    AsyncIterable,
+    Callable,
+    Iterable,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 from .. import attributes, constants, errors, logger, util
 from ..attributes import Attribute
 from ..highlevel import VisaLibraryBase
+from ..typing import VISAEventContext, VISAHandler, VISASession
 from .resource import Resource
 
 
@@ -75,6 +88,9 @@ class MessageBasedResource(Resource):
 
     #: Internal storage for the encoding
     _encoding: str = "ascii"
+
+    # Internal queue for async IO
+    _async_io_queue: Optional[asyncio.Queue] = None
 
     @property
     def encoding(self) -> str:
@@ -620,6 +636,141 @@ class MessageBasedResource(Resource):
             )
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args[0])
+
+    def _create_handler_for_io_completion(self) -> Tuple[asyncio.Queue, VISAHandler]:
+        # This queue will be awaited to know when IO has completed.
+        async_io_queue: asyncio.Queue[Tuple] = asyncio.Queue(maxsize=1)
+        # We get the running asyncio loop for our callback
+        loop = asyncio.get_running_loop()
+
+        def _visa_handler_for_io_completion(
+            session: VISASession,
+            event_type: constants.EventType,
+            event_ctx: VISAEventContext,
+            user_handle: Any,
+        ) -> None:
+            # This is a closure around the current asyncio loop and the queue we'll use for
+            # cross-thread synchronization. It will be run in a different thread, so
+            # BE CAREFUL that asyncio is only used via `call_soon_threadsafe` or similar
+            # the event_ctx will be closed by VISA after this callback, so we have to read
+            # everything we need from it in here
+            job_id, _ = self.visalib.get_attribute(
+                event_ctx, constants.EventAttribute.job_id
+            )
+            job_status, _ = self.visalib.get_attribute(
+                event_ctx, constants.EventAttribute.status
+            )
+            ret_count, _ = self.visalib.get_attribute(
+                event_ctx, constants.EventAttribute.return_count
+            )
+            loop.call_soon_threadsafe(
+                lambda: async_io_queue.put_nowait((job_id, job_status, ret_count))
+            )
+
+        return async_io_queue, _visa_handler_for_io_completion
+
+    @contextlib.contextmanager
+    def async_io_context(self):
+        # We make a (queue, callback_handler) pair to bring IO_COMPLETION events into asyncio code
+        async_io_queue, io_complete_handler = self._create_handler_for_io_completion()
+        self._async_io_queue = async_io_queue
+
+        # Handler for IO_COMPLETION event must be installed before the event is enabled
+        callback_handle = self.install_handler(
+            constants.VI_EVENT_IO_COMPLETION, io_complete_handler
+        )
+        self.visalib.enable_event(
+            self.session, constants.VI_EVENT_IO_COMPLETION, constants.VI_HNDLR
+        )
+
+        # Here we are ready to use any async methods
+        yield
+
+        self.disable_event(
+            constants.VI_EVENT_IO_COMPLETION, constants.EventMechanism.handler
+        )
+        self.uninstall_handler(
+            constants.VI_EVENT_IO_COMPLETION, io_complete_handler, callback_handle
+        )
+        self._async_io_queue = None
+
+    async def _async_read_chunks(
+        self, size: Optional[int] = None
+    ) -> AsyncIterable[bytes]:
+        """This async generator returns raw chunks from the instrument until the end of message.
+
+        Parameters
+        ----------
+        size : Optional[int], optional
+            The chunk size to use to perform the reading. Defaults to None,
+            meaning the resource wide set value is set.
+
+        Returns
+        -------
+        async generator of bytearrays
+            Chunked bytes read from the instrument.
+        """
+
+        if self._async_io_queue is None:
+            raise RuntimeError(
+                "Async methods can only be called inside async_io_context"
+            )
+
+        size = self.chunk_size if size is None else size
+
+        with self.ignore_warning(constants.StatusCode.success_max_count_read):
+            # If we ask for a chunk of N bytes and recieve exactly N bytes, there
+            # might be more data waiting, so we should keep reading. This is raised
+            # as a warning, which we ignore because we're handling it.
+            while True:
+                # This triggers an async read and gives us a bytes buffer into which the
+                # result will be written by the VISA backend
+                buf, job_id, status = self.visalib.read_asynchronously(
+                    self.session, self.chunk_size
+                )
+                # The io_complete coroutine returns the status of the completed read
+                # and the number of bytes that was read into the buffer
+                (
+                    completed_job_id,
+                    job_status,
+                    ret_count,
+                ) = await self._async_io_queue.get()
+                if job_status < 0:
+                    raise errors.VisaIOError(job_status)
+                if completed_job_id != job_id:
+                    raise RuntimeError(
+                        f"Wrong Job ID! Wanted {job_id}, got {completed_job_id}."
+                    )
+                # We pull the bytes out of the buffer and yield them
+                # TODO: buf from read_asynchronously should be typed as something indexable
+                yield bytes(buf[:ret_count])  # type: ignore
+                # Stop when there's no more to read
+                if job_status != constants.StatusCode.success_max_count_read:
+                    break
+
+    async def async_read_raw(self, size: Optional[int] = None) -> bytes:
+        """Read the unmodified raw bytes sent from the instrument to the computer.
+
+        No termination characters are stripped.  This is a coroutine that must be
+        awaited in an asyncio loop.
+
+        Parameters
+        ----------
+        size : Optional[int], optional
+            The chunk size to use to perform the reading. Defaults to None,
+            meaning the resource wide set value is set.
+
+        Returns
+        -------
+        bytes
+            Bytes read from the instrument.
+
+        """
+
+        ret = bytearray()
+        async for chunk in self._async_read_chunks(size):
+            ret.extend(chunk)
+        return bytes(ret)
 
     def query(self, message: str, delay: Optional[float] = None) -> str:
         """A combination of write(message) and read()
