@@ -783,6 +783,56 @@ class MessageBasedResource(Resource):
         async with self._async_io_lock:
             return await self._async_read_raw(size)
 
+    async def async_read(
+        self, termination: Optional[str] = None, encoding: Optional[str] = None
+    ) -> str:
+        """Read a string from the device.
+
+        Reading stops when the device stops sending (e.g. by setting
+        appropriate bus lines), or the termination characters sequence was
+        detected.  Attention: Only the last character of the termination
+        characters is really used to stop reading, however, the whole sequence
+        is compared to the ending of the read string message.  If they don't
+        match, a warning is issued.
+
+        Parameters
+        ----------
+        termination : Optional[str], optional
+            Alternative character termination to use. If None, the value of
+            read_termination is used. Defaults to None.
+        encoding : Optional[str], optional
+            Alternative encoding to use to turn bytes into str. If None, the
+            value of encoding is used. Defaults to None.
+
+        Returns
+        -------
+        str
+            Message read from the instrument and decoded.
+
+        """
+        enco = self._encoding if encoding is None else encoding
+
+        if self._async_io_lock is None:
+            raise RuntimeError("Async IO must be called inside async_io_context")
+        async with self._async_io_lock:
+            if termination is None:
+                termination = self._read_termination
+                message = await self._async_read_raw().decode(enco)
+            else:
+                with self.read_termination_context(termination):
+                    message = await self._async_read_raw().decode(enco)
+
+        if not termination:
+            return message
+
+        if not message.endswith(termination):
+            warnings.warn(
+                "read string doesn't end with termination characters", stacklevel=2
+            )
+            return message
+
+        return message[: -len(termination)]
+
     def query(self, message: str, delay: Optional[float] = None) -> str:
         """A combination of write(message) and read()
 
