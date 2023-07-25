@@ -860,6 +860,31 @@ class MessageBasedResource(Resource):
 
         return self.read()
 
+    async def async_query(self, message: str, delay: Optional[float] = None) -> str:
+        """A combination of write(message) and read()
+
+        Parameters
+        ----------
+        message : str
+            The message to send.
+        delay : Optional[float], optional
+            Delay in seconds between write and read operations. If None,
+            defaults to self.query_delay.
+
+        Returns
+        -------
+        str
+            Answer from the device.
+
+        """
+        self.write(message)
+
+        delay = self.query_delay if delay is None else delay
+        if delay > 0.0:
+            asyncio.sleep(delay)
+
+        return await self.async_read()
+
     def query_ascii_values(
         self,
         message: str,
