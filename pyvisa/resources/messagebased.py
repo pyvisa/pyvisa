@@ -15,7 +15,6 @@ import warnings
 from collections import namedtuple
 from typing import (
     Any,
-    AsyncIterable,
     Callable,
     Iterable,
     Iterator,
@@ -671,7 +670,7 @@ class MessageBasedResource(Resource):
         # It's unclear what should be returned on the queue. A simple dictionary of
         # {attribute_id: value} ? Or something more like an Event data object?
         # Here we try out the second option by making a namedtuple to return.
-        return_type = namedtuple(str(event_type.name), attrs_wanted.keys()) #type: ignore
+        return_type = namedtuple(str(event_type.name), attrs_wanted.keys())  # type: ignore
 
         # Our handler gets the attributes and returns them on the queue we made
         @self.wrap_handler
@@ -700,9 +699,9 @@ class MessageBasedResource(Resource):
         self.disable_event(event_type, constants.EventMechanism.handler)
         self.uninstall_handler(event_type, _visa_handler, callback_handle)
 
-    async def _async_read_chunked(
+    async def _async_read_raw(
         self, size: Optional[int] = None, max_bytes: Optional[int] = None
-    ) -> AsyncIterable[bytes]:
+    ) -> bytes:
         """This async generator returns raw chunks from the instrument until the end of message.
 
         Parameters
@@ -716,14 +715,14 @@ class MessageBasedResource(Resource):
 
         Returns
         -------
-        async generator of bytes
-            Chunks of bytes read from the instrument
+        bytes
+            Bytes read from the instrument
         """
 
         if self._async_io_queue is None:
-            raise RuntimeError(
-                "Async methods can only be called inside async_io_context"
-            )
+            raise RuntimeError("Async IO must be called inside async_io_context")
+
+        accumulated_bytes = bytearray()
 
         size = self.chunk_size if size is None else size
 
@@ -753,11 +752,13 @@ class MessageBasedResource(Resource):
 
                 # We pull the bytes out of the buffer and yield them
                 # TODO: buf from read_asynchronously should be typed as something indexable
-                yield bytes(buf[: event.return_count])  # type: ignore
+                accumulated_bytes.extend(buf[: event.return_count])  # type: ignore
 
                 # Stop when there's no more to read
                 if event.status != constants.StatusCode.success_max_count_read:
                     break
+
+        return bytes(accumulated_bytes)
 
     async def async_read_raw(self, size: Optional[int] = None) -> bytes:
         """Read the unmodified raw bytes sent from the instrument to the computer.
@@ -777,14 +778,10 @@ class MessageBasedResource(Resource):
             Bytes read from the instrument.
 
         """
-
-        ret = bytearray()
         if self._async_io_lock is None:
-            raise RuntimeError("Async IO methods must be called from async_io_context")
+            raise RuntimeError("Async IO must be called inside async_io_context")
         async with self._async_io_lock:
-            async for chunk in self._async_read_chunked(size):
-                ret.extend(chunk)
-        return bytes(ret)
+            return await self._async_read_raw(size)
 
     def query(self, message: str, delay: Optional[float] = None) -> str:
         """A combination of write(message) and read()
