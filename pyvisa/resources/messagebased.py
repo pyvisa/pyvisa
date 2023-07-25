@@ -721,6 +721,8 @@ class MessageBasedResource(Resource):
 
         if self._async_io_queue is None:
             raise RuntimeError("Async IO must be called inside async_io_context")
+        if self._async_io_lock is None:
+            raise RuntimeError("Async IO must be called inside async_io_context")
 
         accumulated_bytes = bytearray()
 
@@ -730,33 +732,37 @@ class MessageBasedResource(Resource):
             # If we ask for a chunk of N bytes and recieve exactly N bytes, there
             # might be more data waiting, so we should keep reading. This is raised
             # as a warning, which we ignore because we're handling it.
-            while True:
-                # This triggers an async read and gives us a bytes buffer into which the
-                # result will be written by the VISA backend
-                buf, requested_job_id, status = self.visalib.read_asynchronously(
-                    self.session, self.chunk_size
-                )
-                if status < 0:
-                    raise errors.VisaIOError(status)
-
-                # The async_io_queue returns IOCompleteEvents
-                event = await self._async_io_queue.get()
-
-                # Error checking
-                if event.status < 0:
-                    raise errors.VisaIOError(event.status)
-                if event.job_id != requested_job_id:
-                    raise RuntimeError(
-                        f"Wrong Job ID! Wanted {requested_job_id}, got {event.job_id}."
+            async with self._async_io_lock:
+                # This lock doesn't prevent all issues with doing IO from concurrent coroutines
+                # e.g. two `queries` can become `write`, `write`, `read`, `read`, which is an
+                # error in general. However, it does ensure that each read is consistent
+                while True:
+                    # This triggers an async read and gives us a bytes buffer into which the
+                    # result will be written by the VISA backend
+                    buf, requested_job_id, status = self.visalib.read_asynchronously(
+                        self.session, self.chunk_size
                     )
+                    if status < 0:
+                        raise errors.VisaIOError(status)
 
-                # We pull the bytes out of the buffer and yield them
-                # TODO: buf from read_asynchronously should be typed as something indexable
-                accumulated_bytes.extend(buf[: event.return_count])  # type: ignore
+                    # The async_io_queue returns IOCompleteEvents
+                    event = await self._async_io_queue.get()
 
-                # Stop when there's no more to read
-                if event.status != constants.StatusCode.success_max_count_read:
-                    break
+                    # Error checking
+                    if event.status < 0:
+                        raise errors.VisaIOError(event.status)
+                    if event.job_id != requested_job_id:
+                        raise RuntimeError(
+                            f"Wrong Job ID! Wanted {requested_job_id}, got {event.job_id}."
+                        )
+
+                    # We pull the bytes out of the buffer and yield them
+                    # TODO: buf from read_asynchronously should be typed as something indexable
+                    accumulated_bytes.extend(buf[: event.return_count])  # type: ignore
+
+                    # Stop when there's no more to read
+                    if event.status != constants.StatusCode.success_max_count_read:
+                        break
 
         return bytes(accumulated_bytes)
 
@@ -778,10 +784,7 @@ class MessageBasedResource(Resource):
             Bytes read from the instrument.
 
         """
-        if self._async_io_lock is None:
-            raise RuntimeError("Async IO must be called inside async_io_context")
-        async with self._async_io_lock:
-            return await self._async_read_raw(size)
+        return await self._async_read_raw(size)
 
     async def async_read(
         self, termination: Optional[str] = None, encoding: Optional[str] = None
@@ -812,15 +815,12 @@ class MessageBasedResource(Resource):
         """
         enco = self._encoding if encoding is None else encoding
 
-        if self._async_io_lock is None:
-            raise RuntimeError("Async IO must be called inside async_io_context")
-        async with self._async_io_lock:
-            if termination is None:
-                termination = self._read_termination
+        if termination is None:
+            termination = self._read_termination
+            message = await self._async_read_raw().decode(enco)
+        else:
+            with self.read_termination_context(termination):
                 message = await self._async_read_raw().decode(enco)
-            else:
-                with self.read_termination_context(termination):
-                    message = await self._async_read_raw().decode(enco)
 
         if not termination:
             return message
