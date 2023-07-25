@@ -817,10 +817,12 @@ class MessageBasedResource(Resource):
 
         if termination is None:
             termination = self._read_termination
-            message = await self._async_read_raw().decode(enco)
+            raw_message = await self._async_read_raw()
         else:
             with self.read_termination_context(termination):
-                message = await self._async_read_raw().decode(enco)
+                raw_message = await self._async_read_raw()
+
+        message = raw_message.decode(enco)
 
         if not termination:
             return message
