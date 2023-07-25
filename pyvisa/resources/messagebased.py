@@ -12,6 +12,7 @@ import contextlib
 import struct
 import time
 import warnings
+from collections import namedtuple
 from typing import (
     Any,
     AsyncIterable,
@@ -27,8 +28,9 @@ from typing import (
 
 from .. import attributes, constants, errors, logger, util
 from ..attributes import Attribute
+from ..constants import EventType
+from ..events import Event
 from ..highlevel import VisaLibraryBase
-from ..typing import VISAEventContext, VISAHandler, VISASession
 from .resource import Resource
 
 
@@ -91,6 +93,9 @@ class MessageBasedResource(Resource):
 
     # Internal queue for async IO
     _async_io_queue: Optional[asyncio.Queue] = None
+
+    # Internal queue for async IO
+    _async_io_lock: Optional[asyncio.Lock] = None
 
     @property
     def encoding(self) -> str:
@@ -204,7 +209,7 @@ class MessageBasedResource(Resource):
         if term:
             if message.endswith(term):
                 warnings.warn(
-                    "write message already ends with " "termination characters",
+                    "write message already ends with termination characters",
                     stacklevel=2,
                 )
             message += term
@@ -256,7 +261,7 @@ class MessageBasedResource(Resource):
 
         if term and message.endswith(term):
             warnings.warn(
-                "write message already ends with " "termination characters",
+                "write message already ends with termination characters",
                 stacklevel=2,
             )
 
@@ -315,7 +320,7 @@ class MessageBasedResource(Resource):
 
         if term and message.endswith(term):
             warnings.warn(
-                "write message already ends with " "termination characters",
+                "write message already ends with termination characters",
                 stacklevel=2,
             )
 
@@ -392,7 +397,7 @@ class MessageBasedResource(Resource):
                         break
             except errors.VisaIOError as e:
                 logger.debug(
-                    "%s - exception while reading: %s\n" "Buffer content: %r",
+                    "%s - exception while reading: %s\nBuffer content: %r",
                     self._resource_name,
                     e,
                     ret,
@@ -458,7 +463,7 @@ class MessageBasedResource(Resource):
                     ret.extend(chunk)
             except errors.VisaIOError as e:
                 logger.debug(
-                    "%s - exception while reading: %s\nBuffer " "content: %r",
+                    "%s - exception while reading: %s\nBuffer content: %r",
                     self._resource_name,
                     e,
                     ret,
@@ -508,7 +513,7 @@ class MessageBasedResource(Resource):
 
         if not message.endswith(termination):
             warnings.warn(
-                "read string doesn't end with " "termination characters", stacklevel=2
+                "read string doesn't end with termination characters", stacklevel=2
             )
             return message
 
@@ -599,7 +604,7 @@ class MessageBasedResource(Resource):
             data_length = -1
         else:
             raise ValueError(
-                "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
+                "Invalid header format. Valid options are 'ieee', 'empty', 'hp'"
             )
 
         # Allow to support instrument such as the Keithley 2000 that do not
@@ -637,65 +642,66 @@ class MessageBasedResource(Resource):
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args[0])
 
-    def _create_handler_for_io_completion(self) -> Tuple[asyncio.Queue, VISAHandler]:
-        # This queue will be awaited to know when IO has completed.
-        async_io_queue: asyncio.Queue[Tuple] = asyncio.Queue(maxsize=1)
-        # We get the running asyncio loop for our callback
-        loop = asyncio.get_running_loop()
-
-        def _visa_handler_for_io_completion(
-            session: VISASession,
-            event_type: constants.EventType,
-            event_ctx: VISAEventContext,
-            user_handle: Any,
-        ) -> None:
-            # This is a closure around the current asyncio loop and the queue we'll use for
-            # cross-thread synchronization. It will be run in a different thread, so
-            # BE CAREFUL that asyncio is only used via `call_soon_threadsafe` or similar
-            # the event_ctx will be closed by VISA after this callback, so we have to read
-            # everything we need from it in here
-            job_id, _ = self.visalib.get_attribute(
-                event_ctx, constants.EventAttribute.job_id
-            )
-            job_status, _ = self.visalib.get_attribute(
-                event_ctx, constants.EventAttribute.status
-            )
-            ret_count, _ = self.visalib.get_attribute(
-                event_ctx, constants.EventAttribute.return_count
-            )
-            loop.call_soon_threadsafe(
-                lambda: async_io_queue.put_nowait((job_id, job_status, ret_count))
-            )
-
-        return async_io_queue, _visa_handler_for_io_completion
-
     @contextlib.contextmanager
     def async_io_context(self):
-        # We make a (queue, callback_handler) pair to bring IO_COMPLETION events into asyncio code
-        async_io_queue, io_complete_handler = self._create_handler_for_io_completion()
-        self._async_io_queue = async_io_queue
+        with self.async_event_context(EventType.io_completion) as async_io_queue:
+            self._async_io_queue = async_io_queue
+            self._async_io_lock = asyncio.Lock()
+            yield
+            self._async_io_lock = None
+            self._async_io_queue = None
 
-        # Handler for IO_COMPLETION event must be installed before the event is enabled
-        callback_handle = self.install_handler(
-            constants.VI_EVENT_IO_COMPLETION, io_complete_handler
-        )
+    @contextlib.contextmanager
+    def async_event_context(self, event_type: EventType):
+        # This queue will contain the events produced by our callback
+        async_queue: asyncio.Queue[Tuple] = asyncio.Queue()
+
+        # We get the running asyncio loop for our callback to communicate
+        loop = asyncio.get_running_loop()
+
+        # Our callback needs to know what attributes to return on the queue
+        # By default, we read all attributes with a "py_name" (except for the
+        # buffer address, which is useless and also currently breaks things).
+        attrs_wanted = {
+            a.py_name: constants.EventAttribute(a.attribute_id)
+            for a in attributes.AttributesPerResource[event_type]
+            if a.py_name and (a.attribute_id != constants.EventAttribute.buffer)
+        }
+
+        # It's unclear what should be returned on the queue. A simple dictionary of
+        # {attribute_id: value} ? Or something more like an Event data object?
+        # Here we try out the second option by making a namedtuple to return.
+        return_type = namedtuple(str(event_type.name), attrs_wanted.keys()) #type: ignore
+
+        # Our handler gets the attributes and returns them on the queue we made
+        @self.wrap_handler
+        def _visa_handler(resource: Resource, event: Event, user_handle: Any) -> None:
+            # This is a closure around the current asyncio loop and the queue we'll use for
+            # cross-thread synchronization. It will be run in a different thread, so
+            # BE CAREFUL that asyncio is only used via `call_soon_threadsafe` or similar.
+            # The event_ctx will be closed by VISA after this callback, so we must read
+            # everything in here and return data on the queue
+            event_data = {
+                name: event.get_visa_attribute(id) for name, id in attrs_wanted.items()
+            }
+            result = return_type(**event_data)
+            loop.call_soon_threadsafe(lambda: async_queue.put_nowait(result))
+
+        # Handler must be installed before the event is enabled
+        callback_handle = self.install_handler(event_type, _visa_handler)
         self.visalib.enable_event(
-            self.session, constants.VI_EVENT_IO_COMPLETION, constants.VI_HNDLR
+            self.session, event_type, constants.EventMechanism.handler
         )
 
-        # Here we are ready to use any async methods
-        yield
+        # We're getting events!
+        yield async_queue
 
-        self.disable_event(
-            constants.VI_EVENT_IO_COMPLETION, constants.EventMechanism.handler
-        )
-        self.uninstall_handler(
-            constants.VI_EVENT_IO_COMPLETION, io_complete_handler, callback_handle
-        )
-        self._async_io_queue = None
+        # Stop the event and remove our handler and queue
+        self.disable_event(event_type, constants.EventMechanism.handler)
+        self.uninstall_handler(event_type, _visa_handler, callback_handle)
 
-    async def _async_read_chunks(
-        self, size: Optional[int] = None
+    async def _async_read_chunked(
+        self, size: Optional[int] = None, max_bytes: Optional[int] = None
     ) -> AsyncIterable[bytes]:
         """This async generator returns raw chunks from the instrument until the end of message.
 
@@ -705,10 +711,13 @@ class MessageBasedResource(Resource):
             The chunk size to use to perform the reading. Defaults to None,
             meaning the resource wide set value is set.
 
+        max_bytes : Optional[int], optional
+            No more than max_bytes will be read from the resource
+
         Returns
         -------
-        async generator of bytearrays
-            Chunked bytes read from the instrument.
+        async generator of bytes
+            Chunks of bytes read from the instrument
         """
 
         if self._async_io_queue is None:
@@ -725,27 +734,29 @@ class MessageBasedResource(Resource):
             while True:
                 # This triggers an async read and gives us a bytes buffer into which the
                 # result will be written by the VISA backend
-                buf, job_id, status = self.visalib.read_asynchronously(
+                buf, requested_job_id, status = self.visalib.read_asynchronously(
                     self.session, self.chunk_size
                 )
-                # The io_complete coroutine returns the status of the completed read
-                # and the number of bytes that was read into the buffer
-                (
-                    completed_job_id,
-                    job_status,
-                    ret_count,
-                ) = await self._async_io_queue.get()
-                if job_status < 0:
-                    raise errors.VisaIOError(job_status)
-                if completed_job_id != job_id:
+                if status < 0:
+                    raise errors.VisaIOError(status)
+
+                # The async_io_queue returns IOCompleteEvents
+                event = await self._async_io_queue.get()
+
+                # Error checking
+                if event.status < 0:
+                    raise errors.VisaIOError(event.status)
+                if event.job_id != requested_job_id:
                     raise RuntimeError(
-                        f"Wrong Job ID! Wanted {job_id}, got {completed_job_id}."
+                        f"Wrong Job ID! Wanted {requested_job_id}, got {event.job_id}."
                     )
+
                 # We pull the bytes out of the buffer and yield them
                 # TODO: buf from read_asynchronously should be typed as something indexable
-                yield bytes(buf[:ret_count])  # type: ignore
+                yield bytes(buf[: event.return_count])  # type: ignore
+
                 # Stop when there's no more to read
-                if job_status != constants.StatusCode.success_max_count_read:
+                if event.status != constants.StatusCode.success_max_count_read:
                     break
 
     async def async_read_raw(self, size: Optional[int] = None) -> bytes:
@@ -768,8 +779,11 @@ class MessageBasedResource(Resource):
         """
 
         ret = bytearray()
-        async for chunk in self._async_read_chunks(size):
-            ret.extend(chunk)
+        if self._async_io_lock is None:
+            raise RuntimeError("Async IO methods must be called from async_io_context")
+        async with self._async_io_lock:
+            async for chunk in self._async_read_chunked(size):
+                ret.extend(chunk)
         return bytes(ret)
 
     def query(self, message: str, delay: Optional[float] = None) -> str:
@@ -889,7 +903,7 @@ class MessageBasedResource(Resource):
         """
         if header_fmt not in ("ieee", "empty", "hp"):
             raise ValueError(
-                "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
+                "Invalid header format. Valid options are 'ieee', 'empty', 'hp'"
             )
 
         self.write(message)
