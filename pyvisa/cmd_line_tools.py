@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+import argparse
 from typing import Optional
 
 
@@ -50,11 +51,25 @@ def visa_main(command: Optional[str] = None) -> None:
     elif args.command == "shell":
         from pyvisa import shell
 
-        shell.main("@" + args.backend if args.backend else "")
+        backend = _create_backend_str(args)
+        shell.main(backend)
     else:
         raise ValueError(
             f"Unknown command {args.command}. Valid values are: info and shell"
         )
+
+
+def _create_backend_str(args: argparse.Namespace) -> str:
+    """Create the backend string from the CLI arguments."""
+    if not args.backend:
+        return ""
+
+    # User already entered things correctly like "@py" or "file.yaml@sim"
+    if "@" in args.backend:
+        return args.backend
+
+    # Keep the current functionality
+    return "@" + args.backend
 
 
 def visa_shell() -> None:
