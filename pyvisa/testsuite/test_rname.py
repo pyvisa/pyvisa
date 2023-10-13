@@ -52,7 +52,7 @@ class TestRegisteringSubclass(BaseTestCase):
             rname.register_subclass(rname.GPIBInstr)
         assert "Class already registered for" in e.exconly()
 
-    def test_handling_duplicate_default(self):
+    def test_handling_duplicate_default(self) -> None:
         """Test we enforce the unicity of default resource class per interface."""
         with pytest.raises(ValueError) as e:
 

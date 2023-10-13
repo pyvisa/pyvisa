@@ -40,7 +40,6 @@ classifiers = [
 ]
 dependencies = [
     "typing_extensions",
-    "importlib-metadata; python_version<'3.8'",
 ]
 dynamic=["version"]
 
