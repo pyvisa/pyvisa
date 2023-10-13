@@ -98,8 +98,6 @@ class Attribute(Generic[T]):
     write: ClassVar[bool] = False
     local: ClassVar[bool] = False
 
-    __doc__: str
-
     @classmethod
     def __init_subclass__(cls, **kwargs):
         """Register the subclass with the supported resources."""
@@ -123,6 +121,7 @@ class Attribute(Generic[T]):
     @classmethod
     def redoc(cls) -> None:
         """Generate a descriptive docstring."""
+        assert cls.__doc__ is not None
         cls.__doc__ += "\n:VISA Attribute: %s (%s)" % (cls.visa_name, cls.attribute_id)
 
     def post_get(self, value: Any) -> T:
@@ -215,6 +214,7 @@ class EnumAttribute(Attribute):
     @classmethod
     def redoc(cls) -> None:
         """Add the enum member to the docstring."""
+        assert cls.__doc__ is not None
         super(EnumAttribute, cls).redoc()
         cls.__doc__ += "\n:type: :class:%s.%s" % (
             cls.enum_type.__module__,
@@ -247,6 +247,7 @@ class FlagAttribute(Attribute):
     @classmethod
     def redoc(cls) -> None:
         """Add the enum member to the docstring."""
+        assert cls.__doc__ is not None
         super(FlagAttribute, cls).redoc()
         cls.__doc__ += "\n:type: :class:%s.%s" % (
             cls.enum_type.__module__,
@@ -276,6 +277,7 @@ class IntAttribute(Attribute):
     @classmethod
     def redoc(cls) -> None:
         """Add the type of the returned value."""
+        assert cls.__doc__ is not None
         super(IntAttribute, cls).redoc()
         cls.__doc__ += "\n:type: int"
 
@@ -295,6 +297,7 @@ class RangeAttribute(IntAttribute):
     @classmethod
     def redoc(cls) -> None:
         """Specify the range of validity for the attribute."""
+        assert cls.__doc__ is not None
         super(RangeAttribute, cls).redoc()
         cls.__doc__ += "\n:range: %s <= value <= %s" % (cls.min_value, cls.max_value)
         if cls.values:
@@ -332,7 +335,8 @@ class ValuesAttribute(Attribute):
 
     @classmethod
     def redoc(cls) -> None:
-        """Add the allowed values to teh docs."""
+        """Add the allowed values to the docs."""
+        assert cls.__doc__ is not None
         super(ValuesAttribute, cls).redoc()
         cls.__doc__ += "\n:values: %s" % cls.values
 
@@ -354,6 +358,7 @@ class BooleanAttribute(Attribute):
     @classmethod
     def redoc(cls) -> None:
         """Add the type to the docs."""
+        assert cls.__doc__ is not None
         super(BooleanAttribute, cls).redoc()
         cls.__doc__ += "\n:type: bool"
 
@@ -374,6 +379,7 @@ class CharAttribute(Attribute):
     @classmethod
     def redoc(cls) -> None:
         """Specify the valid characters."""
+        assert cls.__doc__ is not None
         super(CharAttribute, cls).redoc()
         cls.__doc__ += "\nASCII Character\n:type: str | bytes"
 
