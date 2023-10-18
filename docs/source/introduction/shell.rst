@@ -158,6 +158,10 @@ You can invoke::
 to use python-sim as backend instead of ni backend.
 This can be used for example for testing of python-sim configuration.
 
+You can include a specific file to use for the simulated backend::
+
+    pyvisa-shell -b file.yaml@sim
+
 You can invoke::
 
     pyvisa-shell -b py
