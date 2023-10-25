@@ -30,7 +30,7 @@ from . import constants, errors, logger
 if TYPE_CHECKING:
     from .resources import Resource  # noqa  # pragma: no cover
 
-#: Interface types for which a subclass of ResourName exists
+#: Interface types for which a subclass of ResourceName exists
 _INTERFACE_TYPES: Set[str] = set()
 
 #: Resource Class for Interface type
@@ -428,12 +428,13 @@ class VICPInstr(ResourceName):
     """VICP INSTR
 
     The syntax is:
-    VICP[board]::host address[::INSTR]
+    VICP::host address[::INSTR]
 
     """
 
-    #: Board to use.
-    board: str = "0"
+    #: VICP resource do not support a board index. But it is the only resource
+    #: in this case so we allow parsing one but set a default of ""
+    _unused: None = None
 
     #: Host address of the device (IPv4 or host name)
     host_address: str = ""
