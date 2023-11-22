@@ -1,6 +1,10 @@
 PyVISA Changelog
 ================
 
+1.14.1 (22-11-2023)
+-------------------
+- fix handling of missing board number for VICP resources PR #787
+
 1.14.0 (13-11-2023)
 -------------------
 - fix ctypes truncated pointers on 64-bit for ViBusAddress, ViBusSize, ViAttrState PR #725
