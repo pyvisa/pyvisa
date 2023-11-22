@@ -2053,8 +2053,9 @@ class VisaLibraryBase(object):
                 else parsed.interface  # type: ignore
             )
         # In some cases the board number may not be convertible to an int
-        # PyVISA-py serial resources on Linux for example
-        except ValueError:
+        # PyVISA-py serial resources on Linux for example. For VICP, there is
+        # no such attribute.
+        except (ValueError, AttributeError):
             board_number = None
 
         return (
