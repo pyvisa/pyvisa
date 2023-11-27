@@ -45,7 +45,7 @@ class Event:
     _context: Optional[VISAEventContext]
 
     #: Maps Event type to Python class encapsulating that event.
-    _event_classes: ClassVar[Dict[constants.EventType, Type["Event"]]] = dict()
+    _event_classes: ClassVar[Dict[constants.EventType, Type["Event"]]] = {}
 
     @classmethod
     def register(

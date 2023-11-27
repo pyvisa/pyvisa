@@ -205,7 +205,7 @@ class VisaShell(cmd.Cmd):
 
         print(p.get_string(sortby="VISA name"))
 
-    def do_attr(self, args):  # noqa: C901
+    def do_attr(self, args):
         """Get or set the state for a visa attribute.
 
         List all attributes:

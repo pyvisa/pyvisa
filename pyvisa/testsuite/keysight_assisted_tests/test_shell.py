@@ -83,7 +83,7 @@ class TestVisaShell(BaseTestCase):
         self.reader.get_lines()
 
     def open_resource(self):
-        lines = self.communicate(f"open {list(RESOURCE_ADDRESSES.values())[0]}")
+        lines = self.communicate(f"open {next(iter(RESOURCE_ADDRESSES.values()))}")
         assert b"has been opened." in lines[0]
 
     def communicate(self, msg):
@@ -152,7 +152,7 @@ class TestVisaShell(BaseTestCase):
 
         lines = self.communicate("list")
         lines = self.communicate("open 0")
-        rsc = list(RESOURCE_ADDRESSES.values())[0]
+        rsc = next(iter(RESOURCE_ADDRESSES.values()))
         assert f"{to_canonical_name(rsc)} has been opened.".encode("ascii") in lines[0]
 
         lines = self.communicate("open 0")
@@ -163,7 +163,7 @@ class TestVisaShell(BaseTestCase):
 
     def test_open_by_address(self):
         """Test opening based on the resource address."""
-        rsc = list(RESOURCE_ADDRESSES.values())[0]
+        rsc = next(iter(RESOURCE_ADDRESSES.values()))
         lines = self.communicate(f"open {rsc}")
         assert f"{rsc} has been opened.".encode("ascii") in lines[0]
 
@@ -174,7 +174,7 @@ class TestVisaShell(BaseTestCase):
 
     def test_handle_double_open(self):
         """Test handling before closing resource."""
-        rsc = list(RESOURCE_ADDRESSES.values())[0]
+        rsc = next(iter(RESOURCE_ADDRESSES.values()))
         lines = self.communicate(f"open {rsc}")
         lines = self.communicate(f"open {rsc}")
         assert (
@@ -190,7 +190,7 @@ class TestVisaShell(BaseTestCase):
 
     def test_close(self):
         """Test closing a resource."""
-        rsc = list(RESOURCE_ADDRESSES.values())[0]
+        rsc = next(iter(RESOURCE_ADDRESSES.values()))
         lines = self.communicate(f"open {rsc}")
         assert b"has been opened." in lines[0]
         lines = self.communicate("close")
@@ -329,7 +329,7 @@ class TestVisaShell(BaseTestCase):
     def test_issue_in_getting_attr(self):
         """Test handling exception in getting an attribute."""
         shell = VisaShell()
-        shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
+        shell.do_open(next(iter(RESOURCE_ADDRESSES.values())))
 
         def broken_get_visa_attribute(self, name=""):
             raise Exception("Exception")
@@ -440,7 +440,7 @@ class TestVisaShell(BaseTestCase):
     def test_complete_attr(self):
         """Test providing auto-completion for attrs."""
         shell = VisaShell()
-        shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
+        shell.do_open(next(iter(RESOURCE_ADDRESSES.values())))
         completions = shell.complete_attr("VI_ATTR_TERM", 0, 0, 0)
         assert "VI_ATTR_TERMCHAR" in completions
         assert "VI_ATTR_TERMCHAR_EN" in completions
@@ -461,7 +461,7 @@ class TestVisaShell(BaseTestCase):
     def test_getting_termchar_absent_mapping(self):
         """Test getting a termchar that does not map to something with a representation."""
         shell = VisaShell()
-        shell.do_open(list(RESOURCE_ADDRESSES.values())[0])
+        shell.do_open(next(iter(RESOURCE_ADDRESSES.values())))
         shell.current.read_termination = "X"
         shell.current.write_termination = "Z"
         temp_stdout = StringIO()

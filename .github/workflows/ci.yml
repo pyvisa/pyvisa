@@ -29,19 +29,19 @@ jobs:
       - name: Install tools
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 black isort mypy pytest numpy
+          pip install ruff mypy pytest numpy
       - name: Isort
         run: |
           isort pyvisa -c;
-      - name: Black
+      - name: Formatting
         if: always()
         run: |
-          black pyvisa --check;
-      - name: Flake8
+          ruff format pyvisa --check;
+      - name: Linting
         if: always()
         run: |
-          flake8 pyvisa;
-      - name: Mypy
+          ruff pyvisa;
+      - name: typing
         if: always()
         run: |
           mypy pyvisa;

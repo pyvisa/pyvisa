@@ -1,6 +1,4 @@
-black
-flake8
+ruff
 mypy
-isort
 sphinx
 sphinx-rtd-theme

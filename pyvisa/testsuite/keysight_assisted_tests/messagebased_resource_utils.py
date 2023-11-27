@@ -365,7 +365,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         self.instr.write(msg)
         self.instr.write("SEND")
         values = self.instr.read_ascii_values()
-        assert type(values[0]) is float
+        assert isinstance(values[0], float)
         assert values == [1.0, 2.0, 3.0, 4.0, 5.0]
 
         # Non standard separator and termination
@@ -376,7 +376,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
             "SEND", converter="d", separator=";", delay=0.5
         )
         assert time.time() - tic > 0.5
-        assert type(values[0]) is int
+        assert isinstance(values[0], int)
         assert values == [1, 2, 3, 4, 5]
 
         # Numpy container
@@ -573,7 +573,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         tic = time.perf_counter()
         values = self.instr.query_ascii_values("SEND")
         assert time.perf_counter() - tic > 0.99
-        assert type(values[0]) is float
+        assert isinstance(values[0], float)
         assert values == [1.0, 2.0, 3.0, 4.0, 5.0]
 
         # Test specifying the delay
@@ -583,7 +583,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         tic = time.perf_counter()
         values = self.instr.query_ascii_values("SEND", delay=1.0)
         assert time.perf_counter() - tic > 0.99
-        assert type(values[0]) is float
+        assert isinstance(values[0], float)
         assert values == [1.0, 2.0, 3.0, 4.0, 5.0]
 
         # Test specifying a 0 delay
@@ -593,7 +593,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         tic = time.perf_counter()
         values = self.instr.query_ascii_values("SEND", delay=0.0)
         assert time.perf_counter() - tic < 0.99
-        assert type(values[0]) is float
+        assert isinstance(values[0], float)
         assert values == [1.0, 2.0, 3.0, 4.0, 5.0]
 
     def test_instrument_wide_delay_in_query_binary(self):

@@ -28,7 +28,7 @@ from typing_extensions import ClassVar, Self
 from . import constants, errors, logger
 
 if TYPE_CHECKING:
-    from .resources import Resource  # noqa  # pragma: no cover
+    from .resources import Resource  # pragma: no cover
 
 #: Interface types for which a subclass of ResourceName exists
 _INTERFACE_TYPES: Set[str] = set()
@@ -871,7 +871,7 @@ def filter2(
     for rn in filtered:
         with open_close(rn) as getter:
             try:
-                if eval(optional, None, dict(res=getter)):
+                if eval(optional, None, {"res": getter}):
                     selected.append(rn)
             except Exception:
                 logger.exception("Failed to evaluate %s on %s", optional, rn)

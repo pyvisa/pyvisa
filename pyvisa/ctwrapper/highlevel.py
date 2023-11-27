@@ -292,7 +292,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
             )
         except errors.VisaIOError as e:
             if e.error_code == constants.StatusCode.error_resource_not_found:
-                return tuple()
+                return ()
             raise e
 
         try:

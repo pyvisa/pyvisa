@@ -217,8 +217,10 @@ class TestParser(BaseTestCase):
             msg = "block=%s, fmt=%s"
             msg = msg % ("ascii", fmt)
             # Test handling the case of a trailing comma
-            tb = lambda values: util.to_ascii_block(values, fmt, ",") + ","
-            fb = lambda block, cont: util.from_ascii_block(block, fmt, ",", cont)
+            def tb(values):
+                return util.to_ascii_block(values, fmt, ",") + ","
+            def fb(block, cont):
+                return util.from_ascii_block(block, fmt, ",", cont)
             self.round_trip_block_conversion(values, tb, fb, msg)
 
     def test_non_integer_ascii_block(self):
@@ -227,8 +229,10 @@ class TestParser(BaseTestCase):
         for fmt in "fFeEgG":
             msg = "block=%s, fmt=%s"
             msg = msg % ("ascii", fmt)
-            tb = lambda values: util.to_ascii_block(values, fmt, ",")
-            fb = lambda block, cont: util.from_ascii_block(block, fmt, ",", cont)
+            def tb(values):
+                return util.to_ascii_block(values, fmt, ",")
+            def fb(block, cont):
+                return util.from_ascii_block(block, fmt, ",", cont)
             self.round_trip_block_conversion(values, tb, fb, msg)
 
     def test_invalid_string_converter(self):
@@ -243,19 +247,19 @@ class TestParser(BaseTestCase):
         values = list(range(99))
         fmt = "d"
         msg = "block=ascii, fmt=%s" % fmt
-        tb = lambda values: util.to_ascii_block(values, fmt, ":".join)
-        fb = lambda block, cont: util.from_ascii_block(
-            block, fmt, lambda s: s.split(":"), cont
-        )
+        def tb(values):
+            return util.to_ascii_block(values, fmt, ":".join)
+        def fb(block, cont):
+            return util.from_ascii_block(block, fmt, lambda s: s.split(":"), cont)
         self.round_trip_block_conversion(values, tb, fb, msg)
 
     def test_function_converter(self):
         values = list(range(99))
         msg = "block=ascii"
-        tb = lambda values: util.to_ascii_block(values, str, ":".join)
-        fb = lambda block, cont: util.from_ascii_block(
-            block, int, lambda s: s.split(":"), cont
-        )
+        def tb(values):
+            return util.to_ascii_block(values, str, ":".join)
+        def fb(block, cont):
+            return util.from_ascii_block(block, int, lambda s: s.split(":"), cont)
         self.round_trip_block_conversion(values, tb, fb, msg)
 
     def test_integer_binary_block(self):
@@ -269,8 +273,10 @@ class TestParser(BaseTestCase):
                 for endi in (True, False):
                     msg = "block=%s, fmt=%s, endianness=%s"
                     msg = msg % (block, fmt, endi)
-                    tblock = lambda values: tb(values, fmt, endi)
-                    fblock = lambda block, cont: fb(block, fmt, endi, cont)
+                    def tblock(values):
+                        return tb(values, fmt, endi)
+                    def fblock(block, cont):
+                        return fb(block, fmt, endi, cont)
                     self.round_trip_block_conversion(values, tblock, fblock, msg)
 
     def test_noninteger_binary_block(self):
@@ -284,8 +290,10 @@ class TestParser(BaseTestCase):
                 for endi in (True, False):
                     msg = "block=%s, fmt=%s, endianness=%s"
                     msg = msg % (block, fmt, endi)
-                    tblock = lambda values: bytearray(tb(values, fmt, endi))
-                    fblock = lambda block, cont: fb(block, fmt, endi, cont)
+                    def tblock(values):
+                        return bytearray(tb(values, fmt, endi))
+                    def fblock(block, cont):
+                        return fb(block, fmt, endi, cont)
                     self.round_trip_block_conversion(values, tblock, fblock, msg)
 
     def test_bytes_binary_block(self):

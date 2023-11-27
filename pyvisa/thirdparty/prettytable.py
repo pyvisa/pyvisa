@@ -1651,7 +1651,7 @@ class PrettyTable(object):
                 if options["fields"] and field not in options["fields"]:
                     continue
                 lines.append(
-                    '        <th style="padding-left: %dem; padding-right: %dem; text-align: center">%s</th>'  # noqa: E501
+                    '        <th style="padding-left: %dem; padding-right: %dem; text-align: center">%s</th>'
                     % (lpad, rpad, escape(field).replace("\n", linebreak))
                 )
             lines.append("    </tr>")
@@ -1676,7 +1676,7 @@ class PrettyTable(object):
                 if options["fields"] and field not in options["fields"]:
                     continue
                 lines.append(
-                    '        <td style="padding-left: %dem; padding-right: %dem; text-align: %s; vertical-align: %s">%s</td>'  # noqa: E501
+                    '        <td style="padding-left: %dem; padding-right: %dem; text-align: %s; vertical-align: %s">%s</td>'
                     % (
                         lpad,
                         rpad,

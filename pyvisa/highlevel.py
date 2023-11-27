@@ -193,7 +193,7 @@ class VisaLibraryBase(object):
         # Create instance specific registries.
         #: Error codes on which to issue a warning.
         obj.issue_warning_on = set(errors.default_warnings)
-        obj._last_status_in_session = dict()
+        obj._last_status_in_session = {}
         obj._ignore_warning_in_session = defaultdict(set)
         obj.handlers = defaultdict(list)
         obj.resource_manager = None
@@ -2913,7 +2913,7 @@ class ResourceManager(object):
     #: Maps (Interface Type, Resource Class) to Python class encapsulating that resource.
     _resource_classes: ClassVar[
         Dict[Tuple[constants.InterfaceType, str], Type["Resource"]]
-    ] = dict()
+    ] = {}
 
     #: Session handler for the resource manager.
     _session: Optional[VISARMSession] = None
@@ -3149,10 +3149,10 @@ class ResourceManager(object):
 
         """
 
-        return dict(
-            (resource, self.resource_info(resource))
+        return {
+            resource: self.resource_info(resource)
             for resource in self.list_resources(query)
-        )
+        }
 
     def list_opened_resources(self) -> List["Resource"]:
         """Return a list of all the opened resources."""
