@@ -62,11 +62,7 @@ class TestHighlevel(BaseTestCase):
         # interface_type interface_board_number resource_class resource_name alias
         for parsed, value in zip(
             info,
-            values
-            + (
-                rname.to_canonical_name(rsc_name),
-                None,
-            ),
+            (*values, rname.to_canonical_name(rsc_name), None),
         ):
             assert parsed == value
 

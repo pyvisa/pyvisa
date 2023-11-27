@@ -30,7 +30,7 @@ def _type_pair(ctypes_type):
 
 
 def _type_triplet(ctypes_type):
-    return _type_pair(ctypes_type) + (_ctypes.POINTER(ctypes_type),)
+    return (*_type_pair(ctypes_type), _ctypes.POINTER(ctypes_type))
 
 
 ViUInt64, ViPUInt64, ViAUInt64 = _type_triplet(_ctypes.c_uint64)

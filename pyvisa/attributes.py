@@ -35,8 +35,8 @@ from typing_extensions import ClassVar, DefaultDict
 from . import constants, util
 
 if TYPE_CHECKING:
-    from .events import Event, IOCompletionEvent  # noqa  # pragma: no cover
-    from .resources import Resource  # noqa  # pragma: no cover
+    from .events import Event, IOCompletionEvent  # pragma: no cover
+    from .resources import Resource  # pragma: no cover
 
 #: Not available value.
 NotAvailable = object()
@@ -58,7 +58,7 @@ AttributesPerResource: DefaultDict[
 ] = defaultdict(set)
 
 #: Map id to attribute
-AttributesByID: Dict[int, Type["Attribute"]] = dict()
+AttributesByID: Dict[int, Type["Attribute"]] = {}
 
 
 # --- Descriptor classes ---------------------------------------------------------------
@@ -160,11 +160,11 @@ class Attribute(Generic[T]):
     def __get__(self, instance: None, owner) -> "Attribute":
         pass
 
-    @overload  # noqa: F811
-    def __get__(self, instance: Union["Resource", "Event"], owner) -> T:  # noqa: F811
+    @overload
+    def __get__(self, instance: Union["Resource", "Event"], owner) -> T:
         pass
 
-    def __get__(self, instance, owner):  # noqa: F811
+    def __get__(self, instance, owner):
         """Access a VISA attribute and convert to a nice Python representation."""
         if instance is None:
             return self
@@ -1275,11 +1275,11 @@ class AttrVI_ATTR_TCPIP_HISLIP_VERSION(RangeAttribute):
 
 
 class AttrVI_ATTR_TCPIP_HISLIP_OVERLAP_EN(BooleanAttribute):
-    """Enables HiSLIP ‘Overlap’ mode.
+    """Enables HiSLIP 'Overlap' mode.
 
     The value defaults to the mode suggested by the instrument on HiSLIP connection.
-    If disabled, the connection uses ‘Synchronous’ mode to detect and recover
-    from interrupted errors. If enabled, the connection uses ‘Overlapped’ mode
+    If disabled, the connection uses 'Synchronous' mode to detect and recover
+    from interrupted errors. If enabled, the connection uses 'Overlapped' mode
     to allow overlapped responses. If changed, VISA will do a Device Clear
     operation to change the mode.
 
@@ -2245,7 +2245,7 @@ class AttrVI_ATTR_USB_BULK_OUT_STATUS(RangeAttribute):
 class AttrVI_ATTR_USB_BULK_OUT_PIPE(RangeAttribute):
     """Endpoint address of the USB bulk-out or interrupt-out pipe.
 
-    An initial value of –1 signifies that this resource does not have any
+    An initial value of -1 signifies that this resource does not have any
     bulk-out or interrupt-out pipes. This endpoint is used in viWrite
     and related operations.
 
@@ -3347,7 +3347,7 @@ class AttrVI_ATTR_PXI_BUS_NUM(RangeAttribute):
 class AttrVI_ATTR_PXI_CHASSIS(RangeAttribute):
     """PXI chassis number of this device.
 
-    A value of –1 means the chassis number is unknown.
+    A value of -1 means the chassis number is unknown.
 
     """
 
@@ -3478,7 +3478,7 @@ class AttrVI_ATTR_PXI_IS_EXPRESS(BooleanAttribute):
 class AttrVI_ATTR_PXI_SLOT_LWIDTH(ValuesAttribute):
     """PCI Express link width of the PXI Express peripheral slot of the device.
 
-    A value of –1 indicates that the device is not a PXI Express device.
+    A value of -1 indicates that the device is not a PXI Express device.
 
     """
 
@@ -3500,7 +3500,7 @@ class AttrVI_ATTR_PXI_SLOT_LWIDTH(ValuesAttribute):
 class AttrVI_ATTR_PXI_MAX_LWIDTH(ValuesAttribute):
     """Maximum PCI Express link width of the device.
 
-    A value of –1 indicates that the device is not a PXI/PCI Express device.
+    A value of -1 indicates that the device is not a PXI/PCI Express device.
 
     """
 
@@ -3522,7 +3522,7 @@ class AttrVI_ATTR_PXI_MAX_LWIDTH(ValuesAttribute):
 class AttrVI_ATTR_PXI_ACTUAL_LWIDTH(ValuesAttribute):
     """PCI Express link width negotiated between the host controller and the device.
 
-    A value of –1 indicates that the device is not a PXI/PCI Express device.
+    A value of -1 indicates that the device is not a PXI/PCI Express device.
 
     """
 
@@ -3544,7 +3544,7 @@ class AttrVI_ATTR_PXI_ACTUAL_LWIDTH(ValuesAttribute):
 class AttrVI_ATTR_PXI_DSTAR_BUS(RangeAttribute):
     """Differential star bus number of this device.
 
-    A value of –1 means the chassis is unidentified or does not have a timing slot.
+    A value of -1 means the chassis is unidentified or does not have a timing slot.
 
     """
 

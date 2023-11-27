@@ -150,7 +150,7 @@ visa_functions = [
     "peek_64",
 ]
 
-__all__ = ["visa_functions", "set_signatures"] + visa_functions
+__all__ = ["visa_functions", "set_signatures", *visa_functions]
 
 VI_SPEC_VERSION = 0x00300000
 

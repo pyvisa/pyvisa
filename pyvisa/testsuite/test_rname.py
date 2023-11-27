@@ -164,9 +164,7 @@ class TestResourceName(BaseTestCase):
 class TestParsers(BaseTestCase):
     def _parse_test(self, rn, **kwargs):
         p = rname.ResourceName.from_string(rn)
-        r = dict(
-            (k, getattr(p, k)) for k in p._fields + ("interface_type", "resource_class")
-        )
+        r = {k: getattr(p, k) for k in (*p._fields, "interface_type", "resource_class")}
         r["canonical_resource_name"] = rname.assemble_canonical_name(**r)
         assert r == kwargs, rn
 

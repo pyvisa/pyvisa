@@ -108,7 +108,7 @@ class TestResourceManager:
 
     def test_accessing_resource_infos(self):
         """Test accessing resource infos."""
-        rname = list(RESOURCE_ADDRESSES.values())[0]
+        rname = next(iter(RESOURCE_ADDRESSES.values()))
         rinfo_ext = self.rm.resource_info(rname)
         rinfo = self.rm.resource_info(rname, extended=False)
 
@@ -140,7 +140,7 @@ class TestResourceManager:
 
     def test_opening_resource(self):
         """Test opening and closing resources."""
-        rname = list(RESOURCE_ADDRESSES.values())[0]
+        rname = next(iter(RESOURCE_ADDRESSES.values()))
         rsc = self.rm.open_resource(rname, timeout=1234)
 
         # Check the resource is listed as opened and the attributes are right.
@@ -156,7 +156,7 @@ class TestResourceManager:
 
     def test_opening_resource_bad_open_timeout(self):
         """Test opening a resource with a non integer open_timeout."""
-        rname = list(RESOURCE_ADDRESSES.values())[0]
+        rname = next(iter(RESOURCE_ADDRESSES.values()))
 
         with pytest.raises(ValueError) as cm:
             self.rm.open_resource(rname, open_timeout="")
@@ -165,7 +165,7 @@ class TestResourceManager:
 
     def test_opening_resource_with_lock(self):
         """Test opening a locked resource"""
-        rname = list(RESOURCE_ADDRESSES.values())[0]
+        rname = next(iter(RESOURCE_ADDRESSES.values()))
         rsc = self.rm.open_resource(rname, access_mode=AccessModes.exclusive_lock)
         assert len(self.rm.list_opened_resources()) == 1
 
@@ -184,7 +184,7 @@ class TestResourceManager:
 
     def test_opening_resource_specific_class(self):
         """Test opening a resource requesting a specific class."""
-        rname = list(RESOURCE_ADDRESSES.values())[0]
+        rname = next(iter(RESOURCE_ADDRESSES.values()))
         with pytest.raises(TypeError):
             self.rm.open_resource(rname, resource_pyclass=object)
 
@@ -214,7 +214,7 @@ class TestResourceManager:
 
     def test_opening_resource_unknown_attribute(self):
         """Test opening a resource and attempting to set an unknown attr."""
-        rname = list(RESOURCE_ADDRESSES.values())[0]
+        rname = next(iter(RESOURCE_ADDRESSES.values()))
         with pytest.raises(ValueError):
             self.rm.open_resource(rname, unknown_attribute=None)
 

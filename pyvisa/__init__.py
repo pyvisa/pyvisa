@@ -14,7 +14,8 @@ from importlib.metadata import PackageNotFoundError, version
 logger = logging.getLogger("pyvisa")
 logger.addHandler(logging.NullHandler())
 
-from .errors import (
+# Those import cannot at the top of the file
+from .errors import (  # noqa: E402
     Error,
     InvalidBinaryFormat,
     InvalidSession,
@@ -25,7 +26,7 @@ from .errors import (
     VisaIOWarning,
     VisaTypeError,
 )
-from .highlevel import ResourceManager
+from .highlevel import ResourceManager  # noqa: E402
 from .resources import Resource  # noqa : F401 This is needed to register all resources.
 
 

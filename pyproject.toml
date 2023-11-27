@@ -82,8 +82,20 @@ del namedtuple, _version_info, parts
 __version__ = "{version}"
 """
 
-[tool.black]
-line-length = 88  # Enforce the default value
+[tool.ruff]
+  src = ["src"]
+  select = ["C", "E", "F", "W", "I", "C90", "RUF"]
+  extend-exclude = ["pyvisa/thirdparty/*"]
+  extend-ignore = ["E501", "RUF012"]
+  line-length = 88
+
+  [tool.ruff.isort]
+    combine-as-imports = true
+    known-first-party = ["pyvisa"]
+
+  [tool.ruff.mccabe]
+    max-complexity = 20
+
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -97,8 +109,3 @@ module = [
     "pyvisa.thirdparty.*",
 ]
 ignore_errors = true
-
-[tool.isort]
-profile = "black"
-skip = ["pyvisa/thirdparty/prettytable.py", "pyvisa/__init__.py"]
-
