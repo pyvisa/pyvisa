@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+from enum import Enum
 from time import perf_counter
 from typing import Tuple
 
@@ -14,6 +15,81 @@ from .. import attributes, constants
 from ..attributes import Attribute
 from .messagebased import ControlRenMixin, MessageBasedResource
 from .resource import Resource
+
+
+class GPIBCommand(bytes, Enum):
+    """GPIB commands to use in send_command.
+
+    Please note that group_execute_trigger provide a high level interface to
+    perform a trigger addressed to multiple instrument on the bus.
+
+    """
+
+    #: GTL: GO TO LOCAL affects only addressed devices
+    go_to_local = GTL = b"\x01"
+
+    #: SDC: SELECTED DEVICE CLEAR
+    selected_device_clear = SDC = b"\x04"
+
+    #: PPC: PARALLEL POLL CONFIGURE
+    parallel_poll_configure = PPC = b"\x05"
+
+    #: PPU: PARALLEL POLL UNCONFIGURE
+    parallel_poll_unconfigure = PPU = b"\x15"
+
+    #: GET: GROUP EXECUTE TRIGGER
+    group_execute_trigger = GET = b"\x08"
+
+    #: TCT: TAKE CONTROL
+    take_control = TCT = b"\x09"
+
+    #: LLO: LOCAL LOCKOUT
+    local_lockout = LLO = b"\x11"
+
+    #: DCL: DEVICE CLEAR
+    device_clear = DCL = b"\x14"
+
+    #: SPE: SERIAL POLL ENABLE
+    serial_poll_enable = SPE = b"\x18"
+
+    #: SPD: SERIAL POLL DISABLE
+    serial_poll_disable = SPD = b"\x19"
+
+    #: CFE: CONFIGURE ENABLE
+    configure_enable = CFE = b"\x1F"
+
+    #: UNT: UNTALK
+    untalk = UNT = b"\x3F"
+
+    #: UNL: UNLISTEN
+    unlisten = UNL = b"\x5F"
+
+    @staticmethod
+    def talker(board_pad) -> bytes:
+        """MTA: MY TALK ADDRESS."""
+        return (40 + board_pad).to_bytes(1, "big")
+
+    MTA = talker
+
+    @staticmethod
+    def listener(device_pad) -> bytes:
+        """MLA: MY LISTEN ADDRESS."""
+        return (20 + device_pad).to_bytes(1, "big")
+
+    MLA = listener
+
+    @staticmethod
+    def secondary_address(device_sad) -> bytes:
+        """MSA: MY SECONDARY ADDRESS
+
+        For VISA SAD range from 1 to 31 and 0 is not SAD.
+
+        """
+        if device_sad == 0:
+            return b""
+        return (95 + device_sad).to_bytes(1, "big")
+
+    MSA = secondary_address
 
 
 class _GPIBMixin(ControlRenMixin):
@@ -123,6 +199,56 @@ class GPIBInterface(_GPIBMixin, MessageBasedResource):
         constants.LineState
     ] = attributes.AttrVI_ATTR_GPIB_ADDR_STATE()
 
+    def group_execute_trigger(
+        self, *resources: GPIBInstrument
+    ) -> Tuple[int, constants.StatusCode]:
+        """
+
+        Parameters
+        ----------
+        resources : GPIBInstrument
+            GPIB resources to which to send the group trigger.
+
+        Returns
+        -------
+        int
+            Number of bytes written as part of sending the GPIB commands.
+        constants.StatusCode
+            Return value of the library call.
+
+        """
+        board_number = None
+        for resource in resources:
+            if not isinstance(resource, GPIBInstrument):
+                raise ValueError(f"{repr(resource)} is not a GPIBInstrument")
+
+            device_board = resource.interface_number
+            if board_number is not None and board_number != device_board:
+                raise ValueError(
+                    f"{repr(resource)} is attached to board {device_board} but "
+                    f"another device is attached to board {board_number}"
+                )
+            elif board_number is None:
+                board_number = device_board
+
+        if not self.is_controller_in_charge:
+            self.send_ifc()
+
+        # Broadcast board as talker and unlisten to all devices
+        # Based on VISA address format for INTFC we cannot have a secondary address
+        command = GPIBCommand.talker(self.primary_address) + GPIBCommand.unlisten
+
+        for resource in resources:
+            # tell device GPIB::11 to listen
+            command += GPIBCommand.listener(
+                resource.primary_address
+            ) + GPIBCommand.secondary_address(resource.secondary_address)
+
+        # send GET ('group execute trigger')
+        command += GPIBCommand.group_execute_trigger
+
+        return self.send_command(command)
+
     def send_command(self, data: bytes) -> Tuple[int, constants.StatusCode]:
         """Write GPIB command bytes on the bus.
 
@@ -195,44 +321,3 @@ class GPIBInterface(_GPIBMixin, MessageBasedResource):
 
         """
         return self.visalib.gpib_send_ifc(self.session)
-
-    def group_execute_trigger(
-        self, *resources: GPIBInstrument
-    ) -> Tuple[int, constants.StatusCode]:
-        """
-
-        Parameters
-        ----------
-        resources : GPIBInstrument
-            GPIB resources to which to send the group trigger.
-
-        Returns
-        -------
-        int
-            Number of bytes written as part of sending the GPIB commands.
-        constants.StatusCode
-            Return value of the library call.
-
-        """
-        for resource in resources:
-            if not isinstance(resource, GPIBInstrument):
-                raise ValueError("%r is not a GPIBInstrument", resource)
-
-            # TODO: check that all resources are in the same board.
-
-        if not self.is_controller_in_charge:
-            self.send_ifc()
-
-        command = [
-            0x40,
-            0x20 + 31,
-        ]  # broadcast TAD#0 and "UNL" (don't listen) to all devices
-
-        for resource in resources:
-            # tell device GPIB::11 to listen
-            command.append(0x20 + resource.primary_address)
-
-        # send GET ('group execute trigger')
-        command.append(0x08)
-
-        return self.send_command(bytes(command))
