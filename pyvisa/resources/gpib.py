@@ -220,12 +220,12 @@ class GPIBInterface(_GPIBMixin, MessageBasedResource):
         board_number = None
         for resource in resources:
             if not isinstance(resource, GPIBInstrument):
-                raise ValueError(f"{repr(resource)} is not a GPIBInstrument")
+                raise ValueError(f"{resource!r} is not a GPIBInstrument")
 
             device_board = resource.interface_number
             if board_number is not None and board_number != device_board:
                 raise ValueError(
-                    f"{repr(resource)} is attached to board {device_board} but "
+                    f"{resource!r} is attached to board {device_board} but "
                     f"another device is attached to board {board_number}"
                 )
             elif board_number is None:
