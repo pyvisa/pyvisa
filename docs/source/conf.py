@@ -11,7 +11,6 @@
 # serve to show the default.
 
 import datetime
-import os
 import sys
 
 if sys.version_info >= (3, 8):

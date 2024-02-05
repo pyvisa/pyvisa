@@ -1559,7 +1559,7 @@ class AttrVI_ATTR_GPIB_HS488_CBL_LEN(RangeAttribute):
 
 
 class AttrVI_ATTR_ASRL_AVAIL_NUM(RangeAttribute):
-    """Number of bytes available in the low- level I/O receive buffer."""
+    """Number of bytes available in the low-level I/O receive buffer."""
 
     resources = [(constants.InterfaceType.asrl, "INSTR")]
 
@@ -1569,7 +1569,7 @@ class AttrVI_ATTR_ASRL_AVAIL_NUM(RangeAttribute):
 
     visa_type = "ViUInt32"
 
-    default = NotAvailable
+    default = 0
 
     read, write, local = True, False, False
 
