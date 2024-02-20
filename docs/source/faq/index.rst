@@ -12,6 +12,6 @@ requires more in depth answers.
     :maxdepth: 2
 
     faq
-    getting_nivisa
+    visa_distributions
     migrating
     contributing

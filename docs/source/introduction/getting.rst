@@ -16,12 +16,8 @@ Backend
 -------
 
 In order for PyVISA to work, you need to have a suitable backend. PyVISA
-includes a backend that wraps the `National Instruments's VISA`_ library.
-However, you need to download and install the library yourself
-(See :ref:`faq-getting-nivisa`). There are multiple VISA implementations from
-different vendors. PyVISA is tested against `National Instruments's VISA`_ and
-`Keysight IO Library Suite`_ which can both be downloaded for free (you do not
-need a development environment only the driver library).
+includes a backend that wraps the VISA library.  However, you need to download
+and install the library yourself.  (See :ref:`faq-visa-distributions`).
 
 .. warning::
 
@@ -82,7 +78,5 @@ form GitHub_::
 .. _`Anaconda`: https://www.anaconda.com/distribution/
 .. _PyPI: https://pypi.python.org/pypi/PyVISA
 .. _GitHub: https://github.com/pyvisa/pyvisa
-.. _`National Instruments's VISA`: https://www.ni.com/en-us/support/downloads/drivers/download.ni-visa.html
-.. _`Keysight IO Library SUite`: https://www.keysight.com/en/pd-1985909/io-libraries-suite/
 .. _`issue tracker`: https://github.com/pyvisa/pyvisa/issues
 .. _`PyVISA-Py`: http://pyvisa-py.readthedocs.io/en/latest/
