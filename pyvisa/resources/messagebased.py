@@ -7,14 +7,28 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+import asyncio
 import contextlib
 import struct
 import time
 import warnings
-from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, Type, Union
+from collections import namedtuple
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 from .. import attributes, constants, errors, logger, util
 from ..attributes import Attribute
+from ..constants import EventType
+from ..events import Event
 from ..highlevel import VisaLibraryBase
 from .resource import Resource
 
@@ -75,6 +89,12 @@ class MessageBasedResource(Resource):
 
     #: Internal storage for the encoding
     _encoding: str = "ascii"
+
+    # Internal queue for async IO
+    _async_io_queue: Optional[asyncio.Queue] = None
+
+    # Internal queue for async IO
+    _async_io_lock: Optional[asyncio.Lock] = None
 
     @property
     def encoding(self) -> str:
@@ -188,7 +208,7 @@ class MessageBasedResource(Resource):
         if term:
             if message.endswith(term):
                 warnings.warn(
-                    "write message already ends with " "termination characters",
+                    "write message already ends with termination characters",
                     stacklevel=2,
                 )
             message += term
@@ -240,7 +260,7 @@ class MessageBasedResource(Resource):
 
         if term and message.endswith(term):
             warnings.warn(
-                "write message already ends with " "termination characters",
+                "write message already ends with termination characters",
                 stacklevel=2,
             )
 
@@ -299,7 +319,7 @@ class MessageBasedResource(Resource):
 
         if term and message.endswith(term):
             warnings.warn(
-                "write message already ends with " "termination characters",
+                "write message already ends with termination characters",
                 stacklevel=2,
             )
 
@@ -376,7 +396,7 @@ class MessageBasedResource(Resource):
                         break
             except errors.VisaIOError as e:
                 logger.debug(
-                    "%s - exception while reading: %s\n" "Buffer content: %r",
+                    "%s - exception while reading: %s\nBuffer content: %r",
                     self._resource_name,
                     e,
                     ret,
@@ -442,7 +462,7 @@ class MessageBasedResource(Resource):
                     ret.extend(chunk)
             except errors.VisaIOError as e:
                 logger.debug(
-                    "%s - exception while reading: %s\nBuffer " "content: %r",
+                    "%s - exception while reading: %s\nBuffer content: %r",
                     self._resource_name,
                     e,
                     ret,
@@ -492,7 +512,7 @@ class MessageBasedResource(Resource):
 
         if not message.endswith(termination):
             warnings.warn(
-                "read string doesn't end with " "termination characters", stacklevel=2
+                "read string doesn't end with termination characters", stacklevel=2
             )
             return message
 
@@ -583,7 +603,7 @@ class MessageBasedResource(Resource):
             data_length = -1
         else:
             raise ValueError(
-                "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
+                "Invalid header format. Valid options are 'ieee', 'empty', 'hp'"
             )
 
         # Allow to support instrument such as the Keithley 2000 that do not
@@ -621,6 +641,200 @@ class MessageBasedResource(Resource):
         except ValueError as e:
             raise errors.InvalidBinaryFormat(e.args[0])
 
+    @contextlib.contextmanager
+    def async_io_context(self):
+        with self.async_event_context(EventType.io_completion) as async_io_queue:
+            self._async_io_queue = async_io_queue
+            self._async_io_lock = asyncio.Lock()
+            yield
+            self._async_io_lock = None
+            self._async_io_queue = None
+
+    @contextlib.contextmanager
+    def async_event_context(self, event_type: EventType):
+        # This queue will contain the events produced by our callback
+        async_queue: asyncio.Queue[Tuple] = asyncio.Queue()
+
+        # We get the running asyncio loop for our callback to communicate
+        loop = asyncio.get_running_loop()
+
+        # Our callback needs to know what attributes to return on the queue
+        # By default, we read all attributes with a "py_name" (except for the
+        # buffer address, which is useless and also currently breaks things).
+        attrs_wanted = {
+            a.py_name: constants.EventAttribute(a.attribute_id)
+            for a in attributes.AttributesPerResource[event_type]
+            if a.py_name and (a.attribute_id != constants.EventAttribute.buffer)
+        }
+
+        # It's unclear what should be returned on the queue. A simple dictionary of
+        # {attribute_id: value} ? Or something more like an Event data object?
+        # Here we try out the second option by making a namedtuple to return.
+        return_type = namedtuple(str(event_type.name), attrs_wanted.keys())  # type: ignore
+
+        # Our handler gets the attributes and returns them on the queue we made
+        @self.wrap_handler
+        def _visa_handler(resource: Resource, event: Event, user_handle: Any) -> None:
+            # This is a closure around the current asyncio loop and the queue we'll use for
+            # cross-thread synchronization. It will be run in a different thread, so
+            # BE CAREFUL that asyncio is only used via `call_soon_threadsafe` or similar.
+            # The event_ctx will be closed by VISA after this callback, so we must read
+            # everything in here and return data on the queue
+            event_data = {
+                name: event.get_visa_attribute(id) for name, id in attrs_wanted.items()
+            }
+            result = return_type(**event_data)
+            loop.call_soon_threadsafe(lambda: async_queue.put_nowait(result))
+
+        # Handler must be installed before the event is enabled
+        callback_handle = self.install_handler(event_type, _visa_handler)
+        self.visalib.enable_event(
+            self.session, event_type, constants.EventMechanism.handler
+        )
+
+        # We're getting events!
+        yield async_queue
+
+        # Stop the event and remove our handler and queue
+        self.disable_event(event_type, constants.EventMechanism.handler)
+        self.uninstall_handler(event_type, _visa_handler, callback_handle)
+
+    async def _async_read_raw(
+        self, size: Optional[int] = None, max_bytes: Optional[int] = None
+    ) -> bytes:
+        """This async generator returns raw chunks from the instrument until the end of message.
+
+        Parameters
+        ----------
+        size : Optional[int], optional
+            The chunk size to use to perform the reading. Defaults to None,
+            meaning the resource wide set value is set.
+
+        max_bytes : Optional[int], optional
+            No more than max_bytes will be read from the resource
+
+        Returns
+        -------
+        bytes
+            Bytes read from the instrument
+        """
+
+        if self._async_io_queue is None:
+            raise RuntimeError("Async IO must be called inside async_io_context")
+        if self._async_io_lock is None:
+            raise RuntimeError("Async IO must be called inside async_io_context")
+
+        accumulated_bytes = bytearray()
+
+        size = self.chunk_size if size is None else size
+
+        with self.ignore_warning(constants.StatusCode.success_max_count_read):
+            # If we ask for a chunk of N bytes and recieve exactly N bytes, there
+            # might be more data waiting, so we should keep reading. This is raised
+            # as a warning, which we ignore because we're handling it.
+            async with self._async_io_lock:
+                # This lock doesn't prevent all issues with doing IO from concurrent coroutines
+                # e.g. two `queries` can become `write`, `write`, `read`, `read`, which is an
+                # error in general. However, it does ensure that each read is consistent
+                while True:
+                    # This triggers an async read and gives us a bytes buffer into which the
+                    # result will be written by the VISA backend
+                    buf, requested_job_id, status = self.visalib.read_asynchronously(
+                        self.session, self.chunk_size
+                    )
+                    if status < 0:
+                        raise errors.VisaIOError(status)
+
+                    # The async_io_queue returns IOCompleteEvents
+                    event = await self._async_io_queue.get()
+
+                    # Error checking
+                    if event.status < 0:
+                        raise errors.VisaIOError(event.status)
+                    if event.job_id != requested_job_id:
+                        raise RuntimeError(
+                            f"Wrong Job ID! Wanted {requested_job_id}, got {event.job_id}."
+                        )
+
+                    # We pull the bytes out of the buffer and yield them
+                    # TODO: buf from read_asynchronously should be typed as something indexable
+                    accumulated_bytes.extend(buf[: event.return_count])  # type: ignore
+
+                    # Stop when there's no more to read
+                    if event.status != constants.StatusCode.success_max_count_read:
+                        break
+
+        return bytes(accumulated_bytes)
+
+    async def async_read_raw(self, size: Optional[int] = None) -> bytes:
+        """Read the unmodified raw bytes sent from the instrument to the computer.
+
+        No termination characters are stripped.  This is a coroutine that must be
+        awaited in an asyncio loop.
+
+        Parameters
+        ----------
+        size : Optional[int], optional
+            The chunk size to use to perform the reading. Defaults to None,
+            meaning the resource wide set value is set.
+
+        Returns
+        -------
+        bytes
+            Bytes read from the instrument.
+
+        """
+        return await self._async_read_raw(size)
+
+    async def async_read(
+        self, termination: Optional[str] = None, encoding: Optional[str] = None
+    ) -> str:
+        """Read a string from the device.
+
+        Reading stops when the device stops sending (e.g. by setting
+        appropriate bus lines), or the termination characters sequence was
+        detected.  Attention: Only the last character of the termination
+        characters is really used to stop reading, however, the whole sequence
+        is compared to the ending of the read string message.  If they don't
+        match, a warning is issued.
+
+        Parameters
+        ----------
+        termination : Optional[str], optional
+            Alternative character termination to use. If None, the value of
+            read_termination is used. Defaults to None.
+        encoding : Optional[str], optional
+            Alternative encoding to use to turn bytes into str. If None, the
+            value of encoding is used. Defaults to None.
+
+        Returns
+        -------
+        str
+            Message read from the instrument and decoded.
+
+        """
+        enco = self._encoding if encoding is None else encoding
+
+        if termination is None:
+            termination = self._read_termination
+            raw_message = await self._async_read_raw()
+        else:
+            with self.read_termination_context(termination):
+                raw_message = await self._async_read_raw()
+
+        message = raw_message.decode(enco)
+
+        if not termination:
+            return message
+
+        if not message.endswith(termination):
+            warnings.warn(
+                "read string doesn't end with termination characters", stacklevel=2
+            )
+            return message
+
+        return message[: -len(termination)]
+
     def query(self, message: str, delay: Optional[float] = None) -> str:
         """A combination of write(message) and read()
 
@@ -645,6 +859,31 @@ class MessageBasedResource(Resource):
             time.sleep(delay)
 
         return self.read()
+
+    async def async_query(self, message: str, delay: Optional[float] = None) -> str:
+        """A combination of write(message) and read()
+
+        Parameters
+        ----------
+        message : str
+            The message to send.
+        delay : Optional[float], optional
+            Delay in seconds between write and read operations. If None,
+            defaults to self.query_delay.
+
+        Returns
+        -------
+        str
+            Answer from the device.
+
+        """
+        self.write(message)
+
+        delay = self.query_delay if delay is None else delay
+        if delay > 0.0:
+            asyncio.sleep(delay)
+
+        return await self.async_read()
 
     def query_ascii_values(
         self,
@@ -738,7 +977,7 @@ class MessageBasedResource(Resource):
         """
         if header_fmt not in ("ieee", "empty", "hp"):
             raise ValueError(
-                "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
+                "Invalid header format. Valid options are 'ieee', 'empty', 'hp'"
             )
 
         self.write(message)
