@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Common test case for all message based resources.
+"""Common test case for all message based resources."""
 
-"""
 import ctypes
 import gc
 import logging

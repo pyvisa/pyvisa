@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test test the resource name parsing.
+"""Test test the resource name parsing."""
 
-"""
 import logging
 from dataclasses import dataclass
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test the TCPIP based resources.
+"""Test the TCPIP based resources."""
 
-"""
 import pytest
 
 from pyvisa import constants, errors

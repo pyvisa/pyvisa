@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test pyvisa utility functions that requires a VISA library to be tested.
+"""Test pyvisa utility functions that requires a VISA library to be tested."""
 
-"""
 from pyvisa import util
 from pyvisa.testsuite import BaseTestCase
 

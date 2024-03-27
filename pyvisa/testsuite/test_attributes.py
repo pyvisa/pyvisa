@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test attribute descriptors.
+"""Test attribute descriptors."""
 
-"""
 import enum
 
 import pytest

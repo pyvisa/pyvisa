@@ -8,6 +8,7 @@ This file is taken from the Lantz Project.
 :license: BSD, see LICENSE for more details.
 
 """
+
 import cmd
 from typing import List, Tuple
 

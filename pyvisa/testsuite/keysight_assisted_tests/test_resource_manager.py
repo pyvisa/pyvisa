@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test the capabilities of the ResourceManager.
+"""Test the capabilities of the ResourceManager."""
 
-"""
 import gc
 import logging
 import re

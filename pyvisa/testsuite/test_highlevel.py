@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test highlevel functions not requiring an actual backend.
+"""Test highlevel functions not requiring an actual backend."""
 
-"""
 import logging
 import os
 import sys

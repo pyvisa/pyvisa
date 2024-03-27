@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+""" """
 
-"""
 from pyvisa import constants
 from pyvisa.highlevel import VisaLibraryBase
 from pyvisa.util import LibraryPath

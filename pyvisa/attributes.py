@@ -10,6 +10,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 import enum
 import sys
 from collections import defaultdict

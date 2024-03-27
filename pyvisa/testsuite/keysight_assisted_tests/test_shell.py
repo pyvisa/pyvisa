@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test the shell.
+"""Test the shell."""
 
-"""
 import os
 import time
 from contextlib import redirect_stdout

@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 from .. import attributes, constants
 from ..attributes import Attribute
 from .registerbased import RegisterBasedResource

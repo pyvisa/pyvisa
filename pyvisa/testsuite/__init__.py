@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""PyVISA testsuite.
+"""PyVISA testsuite."""
 
-"""
 import logging
 from logging.handlers import BufferingHandler
 

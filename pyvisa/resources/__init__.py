@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 from .firewire import FirewireInstrument
 from .gpib import GPIBInstrument, GPIBInterface
 from .messagebased import MessageBasedResource
