@@ -58,6 +58,7 @@ class TestConfigFile(BaseTestCase):
         sys.prefix = self.temp_dir.name
         self._platform = sys.platform
         self._version_info = sys.version_info
+        util._ADDED_DLL_PATHS = set()
 
     def teardown_method(self):
         self.temp_dir.cleanup()
@@ -169,7 +170,7 @@ class TestConfigFile(BaseTestCase):
         skipping_log_messages = [
             rec.message
             for rec in caplog.records
-            if "already added; skipping" in rec.message
+            if "already been added; skipping" in rec.message
         ]
         assert added_dll_directories == extra_paths
         # one log message per path per iteration, except initial add
