@@ -23,6 +23,7 @@ from enum import Enum
 from pathlib import Path
 from types import ModuleType
 from typing import (
+    AbstractSet,
     Any,
     Callable,
     Dict,
@@ -109,6 +110,9 @@ def read_user_library_path() -> Optional[str]:
         return None
 
 
+_ADDED_DLL_PATHS: AbstractSet[str] = set()
+
+
 def add_user_dll_extra_paths() -> Optional[List[str]]:
     """Add paths to search for .dll dependencies on Windows.
 
@@ -147,7 +151,11 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
         try:
             dll_extra_paths = config_parser.get("Paths", "dll_extra_paths").split(";")
             for path in dll_extra_paths:
-                os.add_dll_directory(path)
+                if path not in _ADDED_DLL_PATHS:
+                    os.add_dll_directory(path)
+                    _ADDED_DLL_PATHS.add(path)
+                else:
+                    logger.debug("Path %r has already been added; skipping" % path)
             return dll_extra_paths
         except (NoOptionError, NoSectionError):
             logger.debug(
