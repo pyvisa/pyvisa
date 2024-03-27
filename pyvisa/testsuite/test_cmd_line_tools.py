@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test the behavior of the command line tools.
+"""Test the behavior of the command line tools."""
 
-"""
 import argparse
 import sys
 from subprocess import PIPE, Popen, run

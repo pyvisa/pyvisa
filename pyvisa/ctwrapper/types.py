@@ -12,6 +12,7 @@ means "ViUInt32" and such.
 :license: MIT, see LICENSE for more details.
 
 """
+
 import ctypes as _ctypes
 import sys
 

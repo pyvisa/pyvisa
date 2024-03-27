@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 import pytest
 
 from pyvisa.constants import DataWidth

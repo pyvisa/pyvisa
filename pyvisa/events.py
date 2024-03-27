@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 from typing import TYPE_CHECKING, Callable, Dict, Optional, Type
 
 from typing_extensions import ClassVar
@@ -150,9 +151,9 @@ class GPIBCICEvent(Event):
     """
 
     #: New state of the controller in charge status
-    cic_state: Attribute[
-        constants.LineState
-    ] = attributes.AttrVI_ATTR_GPIB_RECV_CIC_STATE()
+    cic_state: Attribute[constants.LineState] = (
+        attributes.AttrVI_ATTR_GPIB_RECV_CIC_STATE()
+    )
 
 
 @Event.register(constants.EventType.io_completion)
@@ -186,9 +187,9 @@ class TrigEvent(Event):
 
     #: Identifier of the triggering mechanism on which the specified trigger event
     #: was received.
-    received_trigger_id: Attribute[
-        constants.TriggerID
-    ] = attributes.AttrVI_ATTR_TRIG_ID()
+    received_trigger_id: Attribute[constants.TriggerID] = (
+        attributes.AttrVI_ATTR_TRIG_ID()
+    )
 
 
 @Event.register(constants.EventType.usb_interrupt)

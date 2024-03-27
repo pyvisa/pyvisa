@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test the handling of errors.
+"""Test the handling of errors."""
 
-"""
 import pickle
 
 from pyvisa import errors
@@ -78,7 +77,7 @@ class TestLibraryError(BaseTestCase):
 
         class DummyExc(Exception):
             def __str__(self):
-                raise b"\xFF".decode("ascii")
+                raise b"\xff".decode("ascii")
 
         exc = errors.LibraryError.from_exception(
             DummyExc("visa.dll: wrong ELF class"), "visa.dll"

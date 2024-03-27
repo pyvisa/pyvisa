@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test pyvisa utility functions.
+"""Test pyvisa utility functions."""
 
-"""
 import array
 import contextlib
 import logging
