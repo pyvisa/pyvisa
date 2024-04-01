@@ -8,7 +8,7 @@ Here's some guidelines to help the review process go smoothly.
    made.
 
 2. Please ensure that the code is properly formatted and typed by running
-   black, isort, flake8 and mypy. You can also use pre-commit hooks (see the
+   ruff and mypy. You can also use pre-commit hooks (see the
    developer documentation for detailed instructions)
 
 3. Please ensure that you have written units tests for the changes made/features
@@ -27,7 +27,7 @@ Many thanks in advance for your cooperation!
 -->
 
 - [ ] Closes # (insert issue number if relevant)
-- [ ] Executed ``black . && isort -c . && flake8`` with no errors
+- [ ] Executed ``ruff check . && ruff format -c . --check`` with no errors
 - [ ] The change is fully covered by automated unit tests
 - [ ] Documented in docs/ as appropriate
 - [ ] Added an entry to the CHANGES file

@@ -40,7 +40,7 @@ public repository::
 Once you have a copy of the source, you can embed it in your Python package,
 or install it in develop mode easily::
 
-    $ python setup.py develop
+    $ pip install -e .
 
 Installing in development mode means that any change you make will be immediately
 reflected when you run pyvisa.
@@ -59,18 +59,18 @@ This will run all the above mentioned tools run when you commit your changes.
   and the `dev_requirements.txt` file. You can a look at the CIs configurations
   (in .github/workflows/ci.yml). Thoses tools are:
 
-    - black: Code formatting
-    - isort: Import sorting
-    - flake8: Code quality
+    - ruff: Code formatting and linting
     - mypy: Typing
 
 Finally if editing docstring, please note that PyVISA uses Numpy style docstring.
 In order to build the documentation you will need to install `sphinx` and
 `sphinx_rtd_theme`. Both are listed in `dev_requirements.txt`.
 
-.. note:: If you have an old system installation of Python and you don't want to
-   mess with it, you can try `Anaconda`_. It is a free Python distribution by
-   Continuum Analytics that includes many scientific packages.
+.. note::
+
+    If you have an old system installation of Python and you don't want to
+    mess with it, you can try `Anaconda`_. It is a free Python distribution by
+    Anaconda that includes many scientific packages.
 
 
 Contributing to an existing backend
@@ -90,7 +90,6 @@ go for it. You can use any of the existing backends as a template or start a
 thread in the `issue tracker`_ and we will be happy to help you.
 
 
-.. _easy_install: http://pypi.python.org/pypi/setuptools
 .. _Python: http://www.python.org/
 .. _pip: http://www.pip-installer.org/
 .. _`Anaconda`: https://www.anaconda.com/distribution/
