@@ -96,3 +96,28 @@ __version__ = "{version}"
   [[tool.mypy.overrides]]
     module = ["pyvisa.thirdparty.*"]
     ignore_errors = true
+
+[tool.coverage]
+  [tool.coverage.run]
+    branch = true
+    source = ["pyvisa"]
+
+  [tool.coverage.report]
+    # Regexes for lines to exclude from consideration
+    exclude_lines = [
+      # Have to re-enable the standard pragma
+      "pragma: no cover",
+
+      # Don't complain if tests don't hit defensive assertion code:
+      "raise NotImplementedError",
+      "pass",
+
+      # Don't complain about abstract methods, they aren't run:
+      "@(abc\\.)?abstractmethod",
+
+      # Don't complain about type checking
+      "if TYPE_CHECKING:",
+
+      # Don't complain about ellipsis in overload
+      "\\.\\.\\.",
+    ]
