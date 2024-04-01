@@ -101,6 +101,11 @@ __version__ = "{version}"
   [tool.coverage.run]
     branch = true
     source = ["pyvisa"]
+    omit = [
+      # Omit the testsuite and thridparty packages that are vendored.
+      "*/pyvisa/testsuite/*",
+      "*/pyvisa/thirdparty/*",
+    ]
 
   [tool.coverage.report]
     # Regexes for lines to exclude from consideration
