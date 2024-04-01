@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Common test case for all message based resources.
+"""Common test case for all message based resources."""
 
-"""
 import logging
 
 from pyvisa import ResourceManager, rname

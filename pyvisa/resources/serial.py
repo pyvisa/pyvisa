@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 from .. import attributes, constants
 from ..attributes import Attribute
 from .messagebased import MessageBasedResource
@@ -37,9 +38,9 @@ class SerialInstrument(MessageBasedResource):
 
     #: Indicates the type of flow control used by the transfer mechanism. The default value
     #: is `constants.ControlFlow.none` (VI_ASRL_FLOW_NONE).
-    flow_control: Attribute[
-        constants.ControlFlow
-    ] = attributes.AttrVI_ATTR_ASRL_FLOW_CNTRL()
+    flow_control: Attribute[constants.ControlFlow] = (
+        attributes.AttrVI_ATTR_ASRL_FLOW_CNTRL()
+    )
 
     #: Number of bytes available in the low- level I/O receive buffer.
     bytes_in_buffer: Attribute[int] = attributes.AttrVI_ATTR_ASRL_AVAIL_NUM()
@@ -52,25 +53,25 @@ class SerialInstrument(MessageBasedResource):
 
     #: Method used to terminate read operations. The default value is
     #: `constants.SerialTermination.termination_char` (VI_ASRL_END_TERMCHAR).
-    end_input: Attribute[
-        constants.SerialTermination
-    ] = attributes.AttrVI_ATTR_ASRL_END_IN()
+    end_input: Attribute[constants.SerialTermination] = (
+        attributes.AttrVI_ATTR_ASRL_END_IN()
+    )
 
     #: Method used to terminate write operations. The default value is
     #: `constants.SerialTermination.none` (VI_ASRL_END_NONE) and terminates
     #: when all requested data is transferred or when an error occurs.
-    end_output: Attribute[
-        constants.SerialTermination
-    ] = attributes.AttrVI_ATTR_ASRL_END_OUT()
+    end_output: Attribute[constants.SerialTermination] = (
+        attributes.AttrVI_ATTR_ASRL_END_OUT()
+    )
 
     #: Duration (in milliseconds) of the break signal. The default value is 250.
     break_length: Attribute[int] = attributes.AttrVI_ATTR_ASRL_BREAK_LEN()
 
     #: Manually control the assertion state of the break signal. The default state is
     #: `constants.LineState.unasserted` (VI_STATE_UNASSERTED).
-    break_state: Attribute[
-        constants.LineState
-    ] = attributes.AttrVI_ATTR_ASRL_BREAK_STATE()
+    break_state: Attribute[constants.LineState] = (
+        attributes.AttrVI_ATTR_ASRL_BREAK_STATE()
+    )
 
     #: Character to be used to replace incoming characters that arrive with errors.
     #: The default character is '\0'.

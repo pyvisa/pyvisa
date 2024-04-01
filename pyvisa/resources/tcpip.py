@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 from .. import constants
 from .messagebased import ControlRenMixin, MessageBasedResource
 from .resource import Resource

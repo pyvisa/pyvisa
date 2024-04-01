@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Test the reading of env vars.
+"""Test the reading of env vars."""
 
-"""
 import os
 import sys
 from subprocess import PIPE, Popen

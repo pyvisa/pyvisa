@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 import contextlib
 import time
 from functools import update_wrapper
@@ -212,9 +213,9 @@ class Resource(object):
     # resource_manager_session: Attribute[int] = attributes.AttrVI_ATTR_RM_SESSION()
 
     #: Interface type of the given session.
-    interface_type: Attribute[
-        constants.InterfaceType
-    ] = attributes.AttrVI_ATTR_INTF_TYPE()
+    interface_type: Attribute[constants.InterfaceType] = (
+        attributes.AttrVI_ATTR_INTF_TYPE()
+    )
 
     #: Board number for the given interface.
     interface_number: Attribute[int] = attributes.AttrVI_ATTR_INTF_NUM()
@@ -229,9 +230,9 @@ class Resource(object):
     implementation_version: Attribute[int] = attributes.AttrVI_ATTR_RSRC_IMPL_VERSION()
 
     #: Current locking state of the resource.
-    lock_state: Attribute[
-        constants.AccessModes
-    ] = attributes.AttrVI_ATTR_RSRC_LOCK_STATE()
+    lock_state: Attribute[constants.AccessModes] = (
+        attributes.AttrVI_ATTR_RSRC_LOCK_STATE()
+    )
 
     #: Version of the VISA specification to which the implementation is compliant.
     spec_version: Attribute[int] = attributes.AttrVI_ATTR_RSRC_SPEC_VERSION()
