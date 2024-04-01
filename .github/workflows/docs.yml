@@ -7,14 +7,13 @@ on:
       - main
       - staging
       - trying
-  pull_request:
+  pull_request_target:
     branches:
       - main
     paths:
       - .github/workflows/docs.yml
       - "pyvisa/**"
       - "docs/**"
-      - setup.py
 
 jobs:
   docs:
