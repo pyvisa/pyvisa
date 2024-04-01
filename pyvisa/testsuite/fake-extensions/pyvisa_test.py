@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+""" """
 
-"""
 from pyvisa.highlevel import VisaLibraryBase
 
 

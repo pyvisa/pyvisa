@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 from enum import Enum
 from time import perf_counter
 from typing import Tuple
@@ -56,13 +57,13 @@ class GPIBCommand(bytes, Enum):
     serial_poll_disable = SPD = b"\x19"
 
     #: CFE: CONFIGURE ENABLE
-    configure_enable = CFE = b"\x1F"
+    configure_enable = CFE = b"\x1f"
 
     #: UNT: UNTALK
-    untalk = UNT = b"\x3F"
+    untalk = UNT = b"\x3f"
 
     #: UNL: UNLISTEN
-    unlisten = UNL = b"\x5F"
+    unlisten = UNL = b"\x5f"
 
     @staticmethod
     def talker(board_pad) -> bytes:
@@ -102,9 +103,9 @@ class _GPIBMixin(ControlRenMixin):
     secondary_address: Attribute[int] = attributes.AttrVI_ATTR_GPIB_SECONDARY_ADDR()
 
     #: Current state of the GPIB REN (Remote ENable) interface line.
-    remote_enabled: Attribute[
-        constants.LineState
-    ] = attributes.AttrVI_ATTR_GPIB_REN_STATE()
+    remote_enabled: Attribute[constants.LineState] = (
+        attributes.AttrVI_ATTR_GPIB_REN_STATE()
+    )
 
 
 @Resource.register(constants.InterfaceType.gpib, "INSTR")
@@ -179,9 +180,9 @@ class GPIBInterface(_GPIBMixin, MessageBasedResource):
     """
 
     #: Is the specified GPIB interface currently the system controller.
-    is_system_controller: Attribute[
-        bool
-    ] = attributes.AttrVI_ATTR_GPIB_SYS_CNTRL_STATE()
+    is_system_controller: Attribute[bool] = (
+        attributes.AttrVI_ATTR_GPIB_SYS_CNTRL_STATE()
+    )
 
     #: Is the specified GPIB interface currently CIC (Controller In Charge).
     is_controller_in_charge: Attribute[bool] = attributes.AttrVI_ATTR_GPIB_CIC_STATE()
@@ -190,14 +191,14 @@ class GPIBInterface(_GPIBMixin, MessageBasedResource):
     atn_state: Attribute[constants.LineState] = attributes.AttrVI_ATTR_GPIB_ATN_STATE()
 
     #: Current state of the GPIB NDAC (Not Data ACcepted) interface line.
-    ndac_state: Attribute[
-        constants.LineState
-    ] = attributes.AttrVI_ATTR_GPIB_NDAC_STATE()
+    ndac_state: Attribute[constants.LineState] = (
+        attributes.AttrVI_ATTR_GPIB_NDAC_STATE()
+    )
 
     #: Is the GPIB interface currently addressed to talk or listen, or is not addressed.
-    address_state: Attribute[
-        constants.LineState
-    ] = attributes.AttrVI_ATTR_GPIB_ADDR_STATE()
+    address_state: Attribute[constants.LineState] = (
+        attributes.AttrVI_ATTR_GPIB_ADDR_STATE()
+    )
 
     def group_execute_trigger(
         self, *resources: GPIBInstrument

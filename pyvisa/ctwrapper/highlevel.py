@@ -7,6 +7,7 @@ This file is part of PyVISA.
 :license: MIT, see LICENSE for more details.
 
 """
+
 import ctypes
 import logging
 from collections import OrderedDict
@@ -144,9 +145,9 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
             except Exception as e:
                 err_string = str(e)
                 if "No matching architecture" in err_string:
-                    nfo[
-                        "Could not get more info"
-                    ] = "Interpreter and library have different bitness."
+                    nfo["Could not get more info"] = (
+                        "Interpreter and library have different bitness."
+                    )
                 else:
                     nfo["Could not get more info"] = err_string.split("\n")
 

@@ -14,4 +14,3 @@ requires more in depth answers.
     faq
     getting_nivisa
     migrating
-    contributing

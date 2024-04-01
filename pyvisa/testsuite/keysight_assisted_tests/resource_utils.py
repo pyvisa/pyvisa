@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Common test case for all resources.
+"""Common test case for all resources."""
 
-"""
 import gc
 import logging
 import re
