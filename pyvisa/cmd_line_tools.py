@@ -40,7 +40,7 @@ def visa_main(command: Optional[str] = None) -> None:
         dest="verbosity",
         action="count",
         default=0,
-        help="verbosity; repeat up to 3 times for increased output",
+        help="verbosity; use up to 3 times for increased output",
     )
 
     if not command:
@@ -53,7 +53,7 @@ def visa_main(command: Optional[str] = None) -> None:
     args = parser.parse_args()
     logging.basicConfig(
         level={0: logging.ERROR, 1: logging.WARN, 2: logging.INFO, 3: logging.DEBUG}[
-            args.verbosity
+            min(3, args.verbosity)
         ]
     )
     if command:
