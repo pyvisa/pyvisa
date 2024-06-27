@@ -26,8 +26,7 @@ Configuring the IVI backend
 .. note::
 
     The IVI backend requires that you install first the IVI-VISA library.
-    For example you can use NI-VISA or any other library in your opinion.
-    about NI-VISA get info here: (:ref:`faq-getting-nivisa`)
+    (:ref:`faq-visa-distributions`)
 
 
 In most cases PyVISA will be able to find the location of the shared visa
