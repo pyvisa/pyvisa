@@ -1,6 +1,11 @@
 PyVISA Changelog
 ================
 
+1.14.2 (unreleased)
+-------------------
+- prevent adding duplicate paths to the DLL search path during ResourceManager
+  instantiation #811
+
 1.14.1 (22-11-2023)
 -------------------
 - fix handling of missing board number for VICP resources PR #787
