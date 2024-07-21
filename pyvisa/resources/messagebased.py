@@ -33,8 +33,7 @@ from .resource import Resource
 class SupportsUpdate(Protocol):
     """Type hint for a progress bar object"""
 
-    def update(self, size: int) -> None:
-        ...
+    def update(self, size: int) -> None: ...
 
 
 class ControlRenMixin(object):
