@@ -1191,9 +1191,11 @@ def install_handler(
                     ctype_session.value,
                     ctype_event_type,
                     ctype_event_context.value,
-                    ctype_user_handle.contents
-                    if ctype_user_handle
-                    else ctype_user_handle,
+                    (
+                        ctype_user_handle.contents
+                        if ctype_user_handle
+                        else ctype_user_handle
+                    ),
                 )
                 return 0
 

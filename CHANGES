@@ -5,6 +5,8 @@ PyVISA Changelog
 -------------------
 - added support for an optional progress bar object to the read_binary_values() and
     query_binary_values() methods of message-based resources.
+- added the message_size() helper function to calculate the estimated size of a data
+    transfer, including the header.
 
 1.14.1 (22-11-2023)
 -------------------

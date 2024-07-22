@@ -1057,3 +1057,32 @@ def get_arch(filename: Union[str, Path]) -> List[ArchitectureType]:
             archs.append(ArchitectureType.AARCH64)
 
         return archs
+
+
+def message_size(
+    num_points: int,
+    point_size: Literal[1, 2] = 2,
+    header_format: Literal["ieee", "hp", "empty"] = "ieee",
+) -> int:
+    """Helper function to calculate a message size, including the header, in bytes.
+
+    Inputs:
+        num_points: Number of data points to transfer
+        point_size: Size of each data point in bytes
+        header_format: Specify "ieee" or "hp" or "empty" header format
+
+    Returns:
+        The total message size in bytes
+
+    """
+    data_length = num_points * point_size
+    if header_format == "ieee":
+        header_length = len(f"{data_length}") + 2
+    elif header_format == "hp":
+        header_length = 4
+    elif header_format == "empty":
+        header_length = 0
+    else:
+        raise ValueError("Unsupported header_fmt: %s" % header_format)
+    result = data_length + header_length + 1  # 1 for the term char
+    return result
