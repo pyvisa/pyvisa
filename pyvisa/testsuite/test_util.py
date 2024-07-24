@@ -674,10 +674,10 @@ class TestMessageSize(BaseTestCase):
     @pytest.mark.parametrize(
         "parameters, expected",
         [
-            ((10, 'h', "empty"), 21),
-            ((10, 'h', "ieee"), 25),
-            ((10, 'f', "hp"), 45),
-            ((10, 'f', "empty"), 41),
+            ((10, "h", "empty"), 21),
+            ((10, "h", "ieee"), 25),
+            ((10, "f", "hp"), 45),
+            ((10, "f", "empty"), 41),
         ],
     )
     def test_message_size(self, parameters, expected):
