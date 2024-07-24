@@ -674,10 +674,10 @@ class TestMessageSize(BaseTestCase):
     @pytest.mark.parametrize(
         "parameters, expected",
         [
-            ((10, 1, "empty"), 11),
-            ((10, 2, "ieee"), 25),
-            ((10, 2, "hp"), 25),
-            ((10, 2, "empty"), 21),
+            ((10, 'h', "empty"), 21),
+            ((10, 'h', "ieee"), 25),
+            ((10, 'f', "hp"), 45),
+            ((10, 'f', "empty"), 41),
         ],
     )
     def test_message_size(self, parameters, expected):
@@ -687,10 +687,10 @@ class TestMessageSize(BaseTestCase):
     def test_message_size_error(self):
         """Verify that a bad header format value raises a ValueError"""
         with pytest.raises(ValueError):
-            util.message_size(1, 1, "BAD VALUE")
+            util.message_size(1, "h", "BAD VALUE")
 
     def test_message_defaults(self):
         """Verify that message_size() uses the expected point_size and header_format
         default values."""
-        expected = util.message_size(num_points=100, point_size=2, header_format="ieee")
+        expected = util.message_size(num_points=100, point_format="h", header_format="ieee")
         assert util.message_size(num_points=100) == expected

@@ -124,7 +124,7 @@ An implementation of a progress bar might look like:
     inst = resource_manager.open_resource(...)
 
     # calculate the total number of bytes to download
-    total_bytes = message_length(num_points=1000, point_size=2, header_format="ieee")
+    total_bytes = message_length(num_points=1000, point_size="f", header_format="ieee")
 
     # create a download monitor and use it when downloading data
     with tqdm(desc="Downloading", unit="B", total=total_bytes) as progress_bar:

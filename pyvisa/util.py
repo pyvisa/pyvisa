@@ -1061,21 +1061,29 @@ def get_arch(filename: Union[str, Path]) -> List[ArchitectureType]:
 
 def message_size(
     num_points: int,
-    point_size: Literal[1, 2] = 2,
+    point_format: Literal[
+        "c", "b", "B", "h", "H", "i", "I", "l", "L", "q", "Q", "e", "f", "d"
+    ] = "h",
     header_format: Literal["ieee", "hp", "empty"] = "ieee",
 ) -> int:
     """Helper function to calculate a message size, including the header, in bytes.
 
-    Inputs:
-        num_points: Number of data points to transfer
-        point_size: Size of each data point in bytes
-        header_format: Specify "ieee" or "hp" or "empty" header format
+    Parameters
+    ----------
+    num_points : int
+        Number of data points to transfer
+    point_format : str
+        Size of each data point described by a struct module format character
+    header_format : str
+        Specify "ieee" or "hp" or "empty" header format
 
-    Returns:
+    Returns
+    -------
+    int
         The total message size in bytes
 
     """
-    data_length = num_points * point_size
+    data_length = num_points * struct.calcsize(point_format)
     if header_format == "ieee":
         header_length = len(f"{data_length}") + 2
     elif header_format == "hp":
