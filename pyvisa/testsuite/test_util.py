@@ -666,3 +666,31 @@ class TestLibraryAnalysis(BaseTestCase):
         finally:
             sys.platform = platform
             subprocess.run = run
+
+
+class TestMessageSize(BaseTestCase):
+    """Test the message_size() function."""
+
+    @pytest.mark.parametrize(
+        "parameters, expected",
+        [
+            ((10, "h", "empty"), 21),
+            ((10, "h", "ieee"), 25),
+            ((10, "f", "hp"), 45),
+            ((10, "f", "empty"), 41),
+        ],
+    )
+    def test_message_size(self, parameters, expected):
+        """Test the functionality of the message_size() function."""
+        assert util.message_size(*parameters) == expected
+
+    def test_message_size_error(self):
+        """Verify that a bad header format value raises a ValueError"""
+        with pytest.raises(ValueError):
+            util.message_size(1, "f", "BAD VALUE")
+
+    def test_message_defaults(self):
+        """Verify that message_size() uses the expected point_size and header_format
+        default values."""
+        expected = util.message_size(num_points=100, datatype="f", header_format="ieee")
+        assert util.message_size(num_points=100) == expected

@@ -96,7 +96,7 @@ class ResourceTestCase:
         )
 
         self.instr.timeout = 0.1
-        assert self.instr.timeout == 1
+        assert self.instr.timeout == float(self.MINIMAL_TIMEOUT)
         assert (
             self.instr.get_visa_attribute(ResourceAttribute.timeout_value)
             == self.MINIMAL_TIMEOUT
@@ -151,7 +151,7 @@ class ResourceTestCase:
             self.instr.get_visa_attribute(ResourceAttribute.timeout_value)
             == self.MINIMAL_TIMEOUT
         )
-        assert self.instr.timeout == 1
+        assert self.instr.timeout == float(self.MINIMAL_TIMEOUT)
 
         self.instr.set_visa_attribute(
             ResourceAttribute.timeout_value, Timeouts.infinite

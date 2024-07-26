@@ -12,12 +12,28 @@ import contextlib
 import struct
 import time
 import warnings
-from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    Optional,
+    Protocol,
+    Sequence,
+    Type,
+    Union,
+)
 
 from .. import attributes, constants, errors, logger, util
 from ..attributes import Attribute
 from ..highlevel import VisaLibraryBase
 from .resource import Resource
+
+
+class SupportsUpdate(Protocol):
+    """Type hint for a progress bar object"""
+
+    def update(self, size: int) -> None: ...
 
 
 class ControlRenMixin(object):
@@ -327,6 +343,7 @@ class MessageBasedResource(Resource):
         count: int,
         chunk_size: Optional[int] = None,
         break_on_termchar: bool = False,
+        monitoring_interface: Optional[SupportsUpdate] = None,
     ) -> bytes:
         """Read a certain number of bytes from the instrument.
 
@@ -341,6 +358,10 @@ class MessageBasedResource(Resource):
         break_on_termchar : bool, optional
             Should the reading stop when a termination character is encountered
             or when the message ends. Defaults to False.
+        monitoring_interface : SupportsUpdate Protocol, optional
+            Progress monitoring object with update() method that accepts the number
+            of bytes read. See the tqdm documentation (a progress bar package) for
+            more information.
 
         Returns
         -------
@@ -369,6 +390,8 @@ class MessageBasedResource(Resource):
                         status,
                     )
                     chunk, status = self.visalib.read(self.session, size)
+                    if monitoring_interface:
+                        monitoring_interface.update(len(chunk))
                     ret.extend(chunk)
                     left_to_read -= len(chunk)
                     if break_on_termchar and (
@@ -404,7 +427,11 @@ class MessageBasedResource(Resource):
         """
         return bytes(self._read_raw(size))
 
-    def _read_raw(self, size: Optional[int] = None):
+    def _read_raw(
+        self,
+        size: Optional[int] = None,
+        monitoring_interface: Optional[SupportsUpdate] = None,
+    ):
         """Read the unmodified string sent from the instrument to the computer.
 
         In contrast to read(), no termination characters are stripped.
@@ -414,6 +441,10 @@ class MessageBasedResource(Resource):
         size : Optional[int], optional
             The chunk size to use to perform the reading. Defaults to None,
             meaning the resource wide set value is set.
+        monitoring_interface : SupportsUpdate Protocol, optional
+            Progress monitoring object with update() method that accepts the number
+            of bytes read. See the tqdm documentation (a progress bar package) for
+            more information.
 
         Returns
         -------
@@ -440,6 +471,8 @@ class MessageBasedResource(Resource):
                         status,
                     )
                     chunk, status = self.visalib.read(self.session, size)
+                    if monitoring_interface:
+                        monitoring_interface.update(len(chunk))
                     ret.extend(chunk)
             except errors.VisaIOError as e:
                 logger.debug(
@@ -539,6 +572,7 @@ class MessageBasedResource(Resource):
         expect_termination: bool = True,
         data_points: int = -1,
         chunk_size: Optional[int] = None,
+        monitoring_interface: Optional[SupportsUpdate] = None,
     ) -> Sequence[Union[int, float]]:
         """Read values from the device in binary format returning an iterable
         of values.
@@ -565,6 +599,10 @@ class MessageBasedResource(Resource):
         chunk_size : int, optional
             Size of the chunks to read from the device. Using larger chunks may
             be faster for large amount of data.
+        monitoring_interface : SupportsUpdate Protocol, optional
+            Progress monitoring object with update() method that accepts the number
+            of bytes read. See the tqdm documentation (a progress bar package) for
+            more information.
 
         Returns
         -------
@@ -572,7 +610,7 @@ class MessageBasedResource(Resource):
             Data read from the device.
 
         """
-        block = self._read_raw(chunk_size)
+        block = self._read_raw(chunk_size, monitoring_interface=monitoring_interface)
 
         if header_fmt == "ieee":
             offset, data_length = util.parse_ieee_block_header(block)
@@ -601,7 +639,11 @@ class MessageBasedResource(Resource):
         # Read all the data if we know what to expect.
         if data_length > 0:
             block.extend(
-                self.read_bytes(expected_length - len(block), chunk_size=chunk_size)
+                self.read_bytes(
+                    expected_length - len(block),
+                    chunk_size=chunk_size,
+                    monitoring_interface=monitoring_interface,
+                )
             )
         elif data_length == 0:
             pass
@@ -699,6 +741,7 @@ class MessageBasedResource(Resource):
         expect_termination: bool = True,
         data_points: int = 0,
         chunk_size: Optional[int] = None,
+        monitoring_interface: Optional[SupportsUpdate] = None,
     ) -> Sequence[Union[int, float]]:
         """Query the device for values in binary format returning an iterable
         of values.
@@ -730,6 +773,10 @@ class MessageBasedResource(Resource):
         chunk_size : int, optional
             Size of the chunks to read from the device. Using larger chunks may
             be faster for large amount of data.
+        monitoring_interface : SupportsUpdate Protocol, optional
+            Progress monitoring object with update() method that accepts the number
+            of bytes read. See the tqdm documentation (a progress bar package) for
+            more information.
 
         Returns
         -------
@@ -756,6 +803,7 @@ class MessageBasedResource(Resource):
             expect_termination,
             data_points,
             chunk_size,
+            monitoring_interface,
         )
 
     def assert_trigger(self) -> None:
