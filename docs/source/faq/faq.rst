@@ -193,36 +193,22 @@ Where can I get more information about VISA?
 --------------------------------------------
 
 
-* The original VISA docs:
+VISA Specifications:
 
-  - `VISA specification`_ (scroll down to the end)
-  - `VISA library specification`_
-  - `VISA specification for textual languages`_
+  - `VISA/IVI/SCPI specifications`_ (scroll down to find VISA)
+  - `VPP-4.3 The VISA Library`_
+  - `VPP-4.3.2 VISA Implementation Specification For Textual Languages`_
 
-* The very good VISA manuals from `National Instruments's VISA`_:
-
-  - `NI-VISA User Manual`_
-  - `NI-VISA Programmer Reference Manual`_
-  - `NI-VISA help file`_ in HTML
-
-.. _`VISA specification`:
-       http://www.ivifoundation.org/Downloads/Specifications.htm
-.. _`VISA library specification`:
-       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
-.. _`VISA specification for textual languages`:
-       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp432.doc
-.. _`National Instruments's VISA`: http://ni.com/visa/
-.. _`NI-VISA Programmer Reference Manual`:
-       http://digital.ni.com/manuals.nsf/websearch/87E52268CF9ACCEE86256D0F006E860D
-.. _`NI-VISA help file`:
-       http://digital.ni.com/manuals.nsf/websearch/21992F3750B967ED86256F47007B00B3
-.. _`NI-VISA User Manual`:
-       http://digital.ni.com/manuals.nsf/websearch/266526277DFF74F786256ADC0065C50C
-
+.. _`VISA/IVI/SCPI specifications`:
+       https://www.ivifoundation.org/specifications/default.aspx
+.. _`VPP-4.3 The VISA Library`:
+       https://www.ivifoundation.org/downloads/Architecture%20Specifications/vpp43_2022-05-19.pdf
+.. _`VPP-4.3.2 VISA Implementation Specification For Textual Languages`:
+       https://www.ivifoundation.org/downloads/Architecture%20Specifications/vpp432_2022-05-19.pdf
 
 .. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/main/AUTHORS
 .. _`Issue Tracker`: https://github.com/pyvisa/pyvisa/issues
-.. _`virtual environment`: http://www.virtualenv.org/en/latest/
+.. _`virtual environment`: https://virtualenv.pypa.io/en/latest/
 
 .. _`https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew`:
        https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
