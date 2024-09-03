@@ -3,7 +3,7 @@
 
 This file is part of PyVISA.
 
-:copyright: 2014-2022 by PyVISA Authors, see AUTHORS for more details.
+:copyright: 2014-2024 by PyVISA Authors, see AUTHORS for more details.
 :license: MIT, see LICENSE for more details.
 
 """
@@ -130,7 +130,7 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
     from configparser import ConfigParser, NoOptionError, NoSectionError
 
     # os.add_dll_library_path has been added in Python 3.8
-    if sys.version_info >= (3, 8) and sys.platform == "win32":
+    if sys.platform == "win32":
         config_parser = ConfigParser()
         files = config_parser.read(
             [

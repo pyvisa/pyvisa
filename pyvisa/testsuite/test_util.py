@@ -97,21 +97,12 @@ class TestConfigFile(BaseTestCase):
 
     def test_reading_config_file_not_windows(self, caplog):
         sys.platform = "darwin"
-        sys.version_info = (3, 8, 1)
-        with caplog.at_level(level=logging.DEBUG):
-            assert util.add_user_dll_extra_paths() is None
-        assert "Not loading dll_extra_paths" in caplog.records[0].message
-
-    def test_reading_config_file_old_python(self, caplog):
-        sys.platform = "win32"
-        sys.version_info = (3, 7, 1)
         with caplog.at_level(level=logging.DEBUG):
             assert util.add_user_dll_extra_paths() is None
         assert "Not loading dll_extra_paths" in caplog.records[0].message
 
     def test_reading_config_file_for_dll_extra_paths(self, monkeypatch):
         sys.platform = "win32"
-        sys.version_info = (3, 8, 1)
         monkeypatch.setattr(
             os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
         )
@@ -127,7 +118,6 @@ class TestConfigFile(BaseTestCase):
 
     def test_no_section_for_dll_extra_paths(self, monkeypatch, caplog):
         sys.platform = "win32"
-        sys.version_info = (3, 8, 1)
         monkeypatch.setattr(
             os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
         )
@@ -140,7 +130,6 @@ class TestConfigFile(BaseTestCase):
 
     def test_no_key_for_dll_extra_paths(self, monkeypatch, caplog):
         sys.platform = "win32"
-        sys.version_info = (3, 8, 1)
         monkeypatch.setattr(
             os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
         )
@@ -154,7 +143,6 @@ class TestConfigFile(BaseTestCase):
 
     def test_no_config_file_for_dll_extra_paths(self, monkeypatch, caplog):
         sys.platform = "win32"
-        sys.version_info = (3, 8, 1)
         monkeypatch.setattr(
             os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
         )
