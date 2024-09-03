@@ -11,13 +11,7 @@
 # serve to show the default.
 
 import datetime
-import sys
-
-if sys.version_info >= (3, 8):
-    from importlib.metadata import version as get_version
-else:
-    from importlib_metadata import version as get_version
-
+from importlib.metadata import version as get_version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
