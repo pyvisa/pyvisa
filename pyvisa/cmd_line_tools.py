@@ -52,8 +52,8 @@ def visa_main(command: Optional[str] = None) -> None:
 
     args = parser.parse_args()
     logging.basicConfig(
-        level={0: logging.ERROR, 1: logging.WARN, 2: logging.INFO, 3: logging.DEBUG}[
-            min(3, args.verbosity)
+        level=(logging.WARN, logging.INFO, logging.DEBUG)[
+            min(2, args.verbosity)
         ]
     )
     if command:
