@@ -164,9 +164,7 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
             )
             return None
     else:
-        logger.debug(
-            "Not loading dll_extra_paths because we are not on Windows"
-        )
+        logger.debug("Not loading dll_extra_paths because we are not on Windows")
         return None
 
 
