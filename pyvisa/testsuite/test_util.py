@@ -18,6 +18,7 @@ from types import ModuleType
 from typing import Optional
 
 import pytest
+from pytest import LogCaptureFixture, MonkeyPatch
 
 from pyvisa import highlevel, util
 from pyvisa.ctwrapper import IVIVisaLibrary
@@ -45,7 +46,7 @@ class TestConfigFile(BaseTestCase):
             ]
         ):
             raise unittest.SkipTest(
-                ".pyvisarc file exists cannot properly test in this case"
+                ".pyvisarc file exists; cannot properly test in this case"
             )
         self.temp_dir = tempfile.TemporaryDirectory()
         os.makedirs(os.path.join(self.temp_dir.name, "share", "pyvisa"))
@@ -56,6 +57,7 @@ class TestConfigFile(BaseTestCase):
         sys.prefix = self.temp_dir.name
         self._platform = sys.platform
         self._version_info = sys.version_info
+        util._ADDED_DLL_PATHS = set()
 
     def teardown_method(self):
         self.temp_dir.cleanup()
@@ -95,60 +97,137 @@ class TestConfigFile(BaseTestCase):
 
     # --- Test reading dll_extra_paths.
 
-    def test_reading_config_file_not_windows(self, caplog):
+    def test_reading_config_file_not_windows(self, caplog: LogCaptureFixture):
         sys.platform = "darwin"
+        sys.version_info = (3, 12, 1)  # type: ignore[assignment]
+
         with caplog.at_level(level=logging.DEBUG):
             assert util.add_user_dll_extra_paths() is None
         assert "Not loading dll_extra_paths" in caplog.records[0].message
 
-    def test_reading_config_file_for_dll_extra_paths(self, monkeypatch):
+    def test_reading_config_file_for_dll_extra_paths(self, monkeypatch: MonkeyPatch):
         sys.platform = "win32"
+        extra_paths = [
+            r"C:\Program Files",
+            r"C:\Program Files (x86)",
+        ]
+        added_dll_directories: list[str] = []
         monkeypatch.setattr(
-            os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
+            os,
+            "add_dll_directory",
+            lambda path: added_dll_directories.append(path),
+            raising=False,
         )
         config = ConfigParser()
         config["Paths"] = {}
         config["Paths"]["dll_extra_paths"] = r"C:\Program Files;C:\Program Files (x86)"
+
         with open(self.config_path, "w") as f:
             config.write(f)
-        assert util.add_user_dll_extra_paths() == [
+
+        assert util.add_user_dll_extra_paths() == extra_paths
+        assert added_dll_directories == extra_paths
+
+    def test_reading_config_file_for_dll_extra_paths_multiple_times(
+        self, monkeypatch: MonkeyPatch, caplog: LogCaptureFixture
+    ):
+        sys.platform = "win32"
+        sys.version_info = (3, 8, 1)  # type: ignore[assignment]
+
+        iter_count = 5
+        extra_paths = [
             r"C:\Program Files",
             r"C:\Program Files (x86)",
         ]
-
-    def test_no_section_for_dll_extra_paths(self, monkeypatch, caplog):
-        sys.platform = "win32"
+        added_dll_directories: list[str] = []
         monkeypatch.setattr(
-            os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
-        )
-        config = ConfigParser()
-        with open(self.config_path, "w") as f:
-            config.write(f)
-        with caplog.at_level(level=logging.DEBUG):
-            assert util.add_user_dll_extra_paths() is None
-        assert "NoOptionError or NoSectionError" in caplog.records[1].message
-
-    def test_no_key_for_dll_extra_paths(self, monkeypatch, caplog):
-        sys.platform = "win32"
-        monkeypatch.setattr(
-            os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
+            os,
+            "add_dll_directory",
+            lambda path: added_dll_directories.append(path),
+            raising=False,
         )
         config = ConfigParser()
         config["Paths"] = {}
+        config["Paths"]["dll_extra_paths"] = r"C:\Program Files;C:\Program Files (x86)"
+
         with open(self.config_path, "w") as f:
             config.write(f)
+
+        with caplog.at_level(level=logging.DEBUG):
+            for _ in range(iter_count):
+                assert util.add_user_dll_extra_paths() == extra_paths
+        skipping_log_messages = [
+            rec.message
+            for rec in caplog.records
+            if "already been added; skipping" in rec.message
+        ]
+        assert added_dll_directories == extra_paths
+        # one log message per path per iteration, except initial add
+        assert (iter_count - 1) * len(extra_paths) == len(skipping_log_messages)
+
+    def test_no_section_for_dll_extra_paths(
+        self, monkeypatch: MonkeyPatch, caplog: LogCaptureFixture
+    ):
+        sys.platform = "win32"
+        sys.version_info = (3, 8, 1)  # type: ignore[assignment]
+
+        added_dll_directories: list[str] = []
+        monkeypatch.setattr(
+            os,
+            "add_dll_directory",
+            lambda path: added_dll_directories.append(path),
+            raising=False,
+        )
+        config = ConfigParser()
+
+        with open(self.config_path, "w") as f:
+            config.write(f)
+
         with caplog.at_level(level=logging.DEBUG):
             assert util.add_user_dll_extra_paths() is None
         assert "NoOptionError or NoSectionError" in caplog.records[1].message
+        assert added_dll_directories == []
 
-    def test_no_config_file_for_dll_extra_paths(self, monkeypatch, caplog):
+    def test_no_key_for_dll_extra_paths(
+        self, monkeypatch: MonkeyPatch, caplog: LogCaptureFixture
+    ):
         sys.platform = "win32"
+        added_dll_directories: list[str] = []
         monkeypatch.setattr(
-            os, "add_dll_directory", lambda *args, **kwargs: "", raising=False
+            os,
+            "add_dll_directory",
+            lambda path: added_dll_directories.append(path),
+            raising=False,
         )
+        config = ConfigParser()
+        config["Paths"] = {}
+
+        with open(self.config_path, "w") as f:
+            config.write(f)
+
+        with caplog.at_level(level=logging.DEBUG):
+            assert util.add_user_dll_extra_paths() is None
+        assert "NoOptionError or NoSectionError" in caplog.records[1].message
+        assert added_dll_directories == []
+
+    def test_no_config_file_for_dll_extra_paths(
+        self, monkeypatch: MonkeyPatch, caplog: LogCaptureFixture
+    ):
+        sys.platform = "win32"
+        sys.version_info = (3, 8, 1)  # type: ignore[assignment]
+
+        added_dll_directories: list[str] = []
+        monkeypatch.setattr(
+            os,
+            "add_dll_directory",
+            lambda path: added_dll_directories.append(path),
+            raising=False,
+        )
+
         with caplog.at_level(level=logging.DEBUG):
             assert util.add_user_dll_extra_paths() is None
         assert "No user defined" in caplog.records[0].message
+        assert added_dll_directories == []
 
 
 class TestParser(BaseTestCase):

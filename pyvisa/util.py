@@ -23,6 +23,7 @@ from enum import Enum
 from pathlib import Path
 from types import ModuleType
 from typing import (
+    AbstractSet,
     Any,
     Callable,
     Dict,
@@ -109,6 +110,9 @@ def read_user_library_path() -> Optional[str]:
         return None
 
 
+_ADDED_DLL_PATHS: AbstractSet[str] = set()
+
+
 def add_user_dll_extra_paths() -> Optional[List[str]]:
     """Add paths to search for .dll dependencies on Windows.
 
@@ -129,7 +133,6 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
     """
     from configparser import ConfigParser, NoOptionError, NoSectionError
 
-    # os.add_dll_library_path has been added in Python 3.8
     if sys.platform == "win32":
         config_parser = ConfigParser()
         files = config_parser.read(
@@ -148,7 +151,11 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
         try:
             dll_extra_paths = config_parser.get("Paths", "dll_extra_paths").split(";")
             for path in dll_extra_paths:
-                os.add_dll_directory(path)
+                if path not in _ADDED_DLL_PATHS:
+                    os.add_dll_directory(path)
+                    _ADDED_DLL_PATHS.add(path)
+                else:
+                    logger.debug("Path %r has already been added; skipping" % path)
             return dll_extra_paths
         except (NoOptionError, NoSectionError):
             logger.debug(
@@ -157,10 +164,7 @@ def add_user_dll_extra_paths() -> Optional[List[str]]:
             )
             return None
     else:
-        logger.debug(
-            "Not loading dll_extra_paths because we are not on Windows "
-            "or Python < 3.8"
-        )
+        logger.debug("Not loading dll_extra_paths because we are not on Windows")
         return None
 
 

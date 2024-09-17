@@ -4,9 +4,11 @@ PyVISA Changelog
 1.15.0 (unreleased)
 -------------------
 - added support for an optional monitoring interface object to the read_binary_values() and
-    query_binary_values() methods of message-based resources.
+  query_binary_values() methods of message-based resources.
 - added the message_size() helper function to calculate the estimated size of a data
-    transfer, including the header.
+  transfer, including the header.
+- prevent adding duplicate paths to the DLL search path during ResourceManager
+  instantiation #811
 
 1.14.1 (22-11-2023)
 -------------------
