@@ -3,7 +3,7 @@
 
 This file is part of PyVISA.
 
-:copyright: 2019-2022 by PyVISA Authors, see AUTHORS for more details.
+:copyright: 2019-2024 by PyVISA Authors, see AUTHORS for more details.
 :license: MIT, see LICENSE for more details.
 
 """

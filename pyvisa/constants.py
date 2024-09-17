@@ -9,7 +9,7 @@ The module exports the values under the original, all-uppercase names.
 
 This file is part of PyVISA.
 
-:copyright: 2014-2022 by PyVISA Authors, see AUTHORS for more details.
+:copyright: 2014-2024 by PyVISA Authors, see AUTHORS for more details.
 :license: MIT, see LICENSE for more details.
 
 """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2009-2014, Luke Maurits <luke@maurits.id.au>
+# Copyright (c) 2009-2024, Luke Maurits <luke@maurits.id.au>
 # All rights reserved.
 # With contributions from:
 #  * Chris Clark
