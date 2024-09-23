@@ -103,7 +103,7 @@ jobs:
         path: dist
         merge-multiple: true
     - name: Sign the dists with Sigstore
-      uses: sigstore/gh-action-sigstore-python@v2.1.0
+      uses: sigstore/gh-action-sigstore-python@v3.0.0
       with:
         password: ${{ secrets.pypi_password }}
         inputs: >-
