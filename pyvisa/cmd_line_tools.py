@@ -9,6 +9,7 @@ This file is part of PyVISA.
 """
 
 import argparse
+import logging
 from typing import Optional
 
 
@@ -34,6 +35,13 @@ def visa_main(command: Optional[str] = None) -> None:
         default=None,
         help="backend to be used (default: ivi)",
     )
+    parser.add_argument(
+        "-v",
+        dest="verbosity",
+        action="count",
+        default=0,
+        help="verbosity; use up to 3 times for increased output",
+    )
 
     if not command:
         subparsers = parser.add_subparsers(title="command", dest="command")
@@ -43,6 +51,9 @@ def visa_main(command: Optional[str] = None) -> None:
         subparsers.add_parser("shell", help="start the PyVISA console")
 
     args = parser.parse_args()
+    logging.basicConfig(
+        level=(logging.WARN, logging.INFO, logging.DEBUG)[min(2, args.verbosity)]
+    )
     if command:
         args.command = command
     if args.command == "info":

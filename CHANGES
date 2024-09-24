@@ -3,6 +3,9 @@ PyVISA Changelog
 
 1.15.0 (unreleased)
 -------------------
+- add support for Python 3.13 PR #852
+- drop support for Python 3.8 and 3.9 PR #852
+- add a -v option to pyvisa-shell to increase log verbosity and set default to WARN PR #816
 - added support for an optional monitoring interface object to the read_binary_values() and
   query_binary_values() methods of message-based resources.
 - added the message_size() helper function to calculate the estimated size of a data
