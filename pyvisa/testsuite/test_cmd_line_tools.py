@@ -2,7 +2,6 @@
 """Test the behavior of the command line tools."""
 
 import argparse
-import sys
 from subprocess import PIPE, Popen, run
 
 import pytest
@@ -14,17 +13,6 @@ from . import BaseTestCase, require_visa_lib
 
 class TestCmdLineTools(BaseTestCase):
     """Test the cmd line tools functions and scripts."""
-
-    def test_visa_main_argument_handling(self):
-        """Test we reject invalid values in visa_main."""
-        from pyvisa.cmd_line_tools import visa_main
-
-        old = sys.argv = ["python"]
-        try:
-            with pytest.raises(ValueError):
-                visa_main("unknown")
-        finally:
-            sys.argv = old
 
     def test_visa_info(self):
         """Test the visa info command line tool."""

@@ -10,22 +10,17 @@ This file is part of PyVISA.
 
 import argparse
 import logging
-from typing import Optional
 
 
-def visa_main(command: Optional[str] = None) -> None:
-    """Run the main entry point for command line tools.
+def get_shell_parser() -> argparse.ArgumentParser:
+    """Create argument parser for pyvisa-shell program."""
 
-    Parameters
-    ----------
-    command : str, optional
-        What command to invoke, if None the value is read from the command
-        line arguments
-
+    description = """
+    PyVISA interactive console for debugging and testing with PyVISA-compatible
+    devices.
     """
-    import argparse
 
-    parser = argparse.ArgumentParser(description="PyVISA command-line utilities")
+    parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument(
         "--backend",
@@ -43,32 +38,7 @@ def visa_main(command: Optional[str] = None) -> None:
         help="verbosity; use up to 3 times for increased output",
     )
 
-    if not command:
-        subparsers = parser.add_subparsers(title="command", dest="command")
-
-        subparsers.add_parser("info", help="print information to diagnose PyVISA")
-
-        subparsers.add_parser("shell", help="start the PyVISA console")
-
-    args = parser.parse_args()
-    logging.basicConfig(
-        level=(logging.WARN, logging.INFO, logging.DEBUG)[min(2, args.verbosity)]
-    )
-    if command:
-        args.command = command
-    if args.command == "info":
-        from pyvisa import util
-
-        util.get_debug_info()
-    elif args.command == "shell":
-        from pyvisa import shell
-
-        backend = _create_backend_str(args)
-        shell.main(backend)
-    else:
-        raise ValueError(
-            f"Unknown command {args.command}. Valid values are: info and shell"
-        )
+    return parser
 
 
 def _create_backend_str(args: argparse.Namespace) -> str:
@@ -86,9 +56,31 @@ def _create_backend_str(args: argparse.Namespace) -> str:
 
 def visa_shell() -> None:
     """Run the VISA shell CLI program."""
-    visa_main("shell")
+    from pyvisa import shell
+
+    parser = get_shell_parser()
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        level=(logging.WARN, logging.INFO, logging.DEBUG)[min(2, args.verbosity)]
+    )
+
+    backend = _create_backend_str(args)
+    shell.main(backend)
+
+
+def get_info_parser() -> argparse.ArgumentParser:
+    """Create argument parser for pyvisa-info program."""
+    parser = argparse.ArgumentParser(description="PyVISA diagnostic information tool.")
+
+    return parser
 
 
 def visa_info() -> None:
     """Summarize the infos about PyVISA and VISA."""
-    visa_main("info")
+    from pyvisa import util
+
+    parser = get_info_parser()
+    parser.parse_args()
+
+    util.get_debug_info()
