@@ -35,7 +35,7 @@ def get_shell_parser() -> argparse.ArgumentParser:
         dest="verbosity",
         action="count",
         default=0,
-        help="verbosity; use up to 3 times for increased output",
+        help="verbosity; use up to 2 times for increased output",
     )
 
     return parser
