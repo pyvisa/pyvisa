@@ -3,6 +3,7 @@ PyVISA Changelog
 
 1.15.0 (unreleased)
 -------------------
+- make `pyvisa-shell` and `pyvisa-info` handle arguments independently PR #859
 - add support for Python 3.13 PR #852
 - drop support for Python 3.8 and 3.9 PR #852
 - add a -v option to pyvisa-shell to increase log verbosity and set default to WARN PR #816
