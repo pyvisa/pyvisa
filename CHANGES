@@ -13,6 +13,7 @@ PyVISA Changelog
   transfer, including the header.
 - prevent adding duplicate paths to the DLL search path during ResourceManager
   instantiation #811
+- set 4.0.0 as the lower bound for `typing_extensions` PR #866
 
 1.14.1 (22-11-2023)
 -------------------
