@@ -76,4 +76,4 @@ if os.name == "posix" and sys.platform.startswith("linux"):
 else:
     from ctypes.util import find_library
 
-__all__ = ["find_library", "FUNCTYPE", "Library"]
+__all__ = ["FUNCTYPE", "Library", "find_library"]
