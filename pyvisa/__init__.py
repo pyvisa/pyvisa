@@ -58,17 +58,17 @@ except PackageNotFoundError:
 
 
 __all__ = [
-    "ResourceManager",
-    "logger",
     "Error",
-    "VisaIOError",
-    "VisaIOWarning",
-    "VisaTypeError",
-    "UnknownHandler",
-    "OSNotSupported",
     "InvalidBinaryFormat",
     "InvalidSession",
     "LibraryError",
+    "OSNotSupported",
+    "ResourceManager",
+    "UnknownHandler",
+    "VisaIOError",
+    "VisaIOWarning",
+    "VisaTypeError",
     "log_to_screen",
     "log_to_stream",
+    "logger",
 ]
