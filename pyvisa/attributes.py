@@ -761,6 +761,7 @@ class AttrVI_ATTR_SEND_END_EN(BooleanAttribute):
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -790,6 +791,7 @@ class AttrVI_ATTR_SUPPRESS_END_EN(BooleanAttribute):
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -823,6 +825,7 @@ class AttrVI_ATTR_TERMCHAR_EN(BooleanAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -857,6 +860,7 @@ class AttrVI_ATTR_TERMCHAR(CharAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -892,6 +896,7 @@ class AttrVI_ATTR_IO_PROT(EnumAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -920,6 +925,7 @@ class AttrVI_ATTR_FILE_APPEND_EN(BooleanAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -953,6 +959,7 @@ class AttrVI_ATTR_RD_BUF_OPER_MODE(RangeAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -985,6 +992,7 @@ class AttrVI_ATTR_RD_BUF_SIZE(RangeAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -1022,6 +1030,7 @@ class AttrVI_ATTR_WR_BUF_OPER_MODE(RangeAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -1054,6 +1063,7 @@ class AttrVI_ATTR_WR_BUF_SIZE(RangeAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -1090,6 +1100,7 @@ class AttrVI_ATTR_DMA_ALLOW_EN(BooleanAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
         (constants.InterfaceType.usb, "INSTR"),
         (constants.InterfaceType.usb, "RAW"),
         (constants.InterfaceType.vxi, "INSTR"),
@@ -1118,6 +1129,7 @@ class AttrVI_ATTR_TCPIP_ADDR(Attribute):
     resources = [
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
     ]
 
     py_name = ""
@@ -1141,6 +1153,7 @@ class AttrVI_ATTR_TCPIP_HOSTNAME(Attribute):
     resources = [
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
     ]
 
     py_name = ""
@@ -1161,7 +1174,10 @@ class AttrVI_ATTR_TCPIP_PORT(RangeAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.tcpip, "SOCKET")]
+    resources = [
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
+    ]
 
     py_name = ""
 
@@ -1201,7 +1217,10 @@ class AttrVI_ATTR_TCPIP_NODELAY(BooleanAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.tcpip, "SOCKET")]
+    resources = [
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
+    ]
 
     py_name = ""
 
@@ -1224,7 +1243,10 @@ class AttrVI_ATTR_TCPIP_KEEPALIVE(BooleanAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.tcpip, "SOCKET")]
+    resources = [
+        (constants.InterfaceType.tcpip, "SOCKET"),
+        (constants.InterfaceType.vicp, "INSTR"),
+    ]
 
     py_name = ""
 
