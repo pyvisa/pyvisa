@@ -718,7 +718,7 @@ def filter(resources: Iterable[str], query: str) -> Tuple[str, ...]:
     if "{" in query:
         query, _ = query.split("{")
         logger.warning(
-            "optional part of the query expression not supported. " "See filter2"
+            "optional part of the query expression not supported. See filter2"
         )
 
     try:
