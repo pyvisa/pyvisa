@@ -68,3 +68,18 @@ class PrlgxTCPIPIntfc(MessageBasedResource):
     """
 
     pass
+
+
+@Resource.register(constants.InterfaceType.prlgx_asrl, "INTFC")
+class PrlgxASRLIntfc(MessageBasedResource):
+    """Communicates with to devices of type PRLGX-ASRL::serial device::INTFC
+
+    More complex resource names can be specified with the following grammar:
+        PRLGX-ASRL[board]::serial device::INTFC
+
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
+    """
+
+    pass
