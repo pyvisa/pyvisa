@@ -205,7 +205,7 @@ class MessageBasedResource(Resource):
         if term:
             if message.endswith(term):
                 warnings.warn(
-                    "write message already ends with " "termination characters",
+                    "write message already ends with termination characters",
                     stacklevel=2,
                 )
             message += term
@@ -257,7 +257,7 @@ class MessageBasedResource(Resource):
 
         if term and message.endswith(term):
             warnings.warn(
-                "write message already ends with " "termination characters",
+                "write message already ends with termination characters",
                 stacklevel=2,
             )
 
@@ -316,7 +316,7 @@ class MessageBasedResource(Resource):
 
         if term and message.endswith(term):
             warnings.warn(
-                "write message already ends with " "termination characters",
+                "write message already ends with termination characters",
                 stacklevel=2,
             )
 
@@ -400,7 +400,7 @@ class MessageBasedResource(Resource):
                         break
             except errors.VisaIOError as e:
                 logger.debug(
-                    "%s - exception while reading: %s\n" "Buffer content: %r",
+                    "%s - exception while reading: %s\nBuffer content: %r",
                     self._resource_name,
                     e,
                     ret,
@@ -476,7 +476,7 @@ class MessageBasedResource(Resource):
                     ret.extend(chunk)
             except errors.VisaIOError as e:
                 logger.debug(
-                    "%s - exception while reading: %s\nBuffer " "content: %r",
+                    "%s - exception while reading: %s\nBuffer content: %r",
                     self._resource_name,
                     e,
                     ret,
@@ -526,7 +526,7 @@ class MessageBasedResource(Resource):
 
         if not message.endswith(termination):
             warnings.warn(
-                "read string doesn't end with " "termination characters", stacklevel=2
+                "read string doesn't end with termination characters", stacklevel=2
             )
             return message
 
@@ -622,7 +622,7 @@ class MessageBasedResource(Resource):
             data_length = -1
         else:
             raise ValueError(
-                "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
+                "Invalid header format. Valid options are 'ieee', 'empty', 'hp'"
             )
 
         # Allow to support instrument such as the Keithley 2000 that do not
@@ -786,7 +786,7 @@ class MessageBasedResource(Resource):
         """
         if header_fmt not in ("ieee", "empty", "hp"):
             raise ValueError(
-                "Invalid header format. Valid options are 'ieee'," " 'empty', 'hp'"
+                "Invalid header format. Valid options are 'ieee', 'empty', 'hp'"
             )
 
         self.write(message)
