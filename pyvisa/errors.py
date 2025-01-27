@@ -130,11 +130,11 @@ completion_and_error_messages = {
     ),
     VI_SUCCESS_QUEUE_EMPTY: (
         "VI_SUCCESS_QUEUE_EMPTY",
-        "Operation completed successfully, but " "queue was already empty.",
+        "Operation completed successfully, but queue was already empty.",
     ),
     VI_SUCCESS_TERM_CHAR: (
         "VI_SUCCESS_TERM_CHAR",
-        "The specified termination character was " "read.",
+        "The specified termination character was read.",
     ),
     VI_SUCCESS_MAX_CNT: (
         "VI_SUCCESS_MAX_CNT",
@@ -150,7 +150,7 @@ completion_and_error_messages = {
     ),
     VI_SUCCESS_TRIG_MAPPED: (
         "VI_SUCCESS_TRIG_MAPPED",
-        "The path from trigSrc to trigDest is " "already mapped.",
+        "The path from trigSrc to trigDest is already mapped.",
     ),
     VI_SUCCESS_QUEUE_NEMPTY: (
         "VI_SUCCESS_QUEUE_NEMPTY",
@@ -168,8 +168,7 @@ completion_and_error_messages = {
     ),
     VI_SUCCESS_NESTED_SHARED: (
         "VI_SUCCESS_NESTED_SHARED",
-        "Operation completed successfully, and "
-        "this session has nested shared locks.",
+        "Operation completed successfully, and this session has nested shared locks.",
     ),
     VI_SUCCESS_NESTED_EXCLUSIVE: (
         "VI_SUCCESS_NESTED_EXCLUSIVE",
@@ -196,7 +195,7 @@ completion_and_error_messages = {
     ),
     VI_WARN_NULL_OBJECT: (
         "VI_WARN_NULL_OBJECT",
-        "The specified object reference is " "uninitialized.",
+        "The specified object reference is uninitialized.",
     ),
     VI_WARN_NSUP_ATTR_STATE: (
         "VI_WARN_NSUP_ATTR_STATE",
@@ -206,11 +205,11 @@ completion_and_error_messages = {
     ),
     VI_WARN_UNKNOWN_STATUS: (
         "VI_WARN_UNKNOWN_STATUS",
-        "The status code passed to the operation " "could not be interpreted.",
+        "The status code passed to the operation could not be interpreted.",
     ),
     VI_WARN_NSUP_BUF: (
         "VI_WARN_NSUP_BUF",
-        "The specified I/O buffer type is not " "supported.",
+        "The specified I/O buffer type is not supported.",
     ),
     VI_WARN_EXT_FUNC_NIMPL: (
         "VI_WARN_EXT_FUNC_NIMPL",
@@ -220,11 +219,11 @@ completion_and_error_messages = {
     ),
     VI_ERROR_SYSTEM_ERROR: (
         "VI_ERROR_SYSTEM_ERROR",
-        "Unknown system error (miscellaneous " "error).",
+        "Unknown system error (miscellaneous error).",
     ),
     VI_ERROR_INV_OBJECT: (
         "VI_ERROR_INV_OBJECT",
-        "The given session or object reference is " "invalid.",
+        "The given session or object reference is invalid.",
     ),
     VI_ERROR_RSRC_LOCKED: (
         "VI_ERROR_RSRC_LOCKED",
@@ -245,10 +244,10 @@ completion_and_error_messages = {
     ),
     VI_ERROR_INV_RSRC_NAME: (
         "VI_ERROR_INV_RSRC_NAME",
-        "Invalid resource reference specified. " "Parsing error.",
+        "Invalid resource reference specified. Parsing error.",
     ),
     VI_ERROR_INV_ACC_MODE: ("VI_ERROR_INV_ACC_MODE", "Invalid access mode."),
-    VI_ERROR_TMO: ("VI_ERROR_TMO", "Timeout expired before operation " "completed."),
+    VI_ERROR_TMO: ("VI_ERROR_TMO", "Timeout expired before operation completed."),
     VI_ERROR_CLOSING_FAILED: (
         "VI_ERROR_CLOSING_FAILED",
         "The VISA driver failed to properly close "
@@ -265,8 +264,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_NSUP_ATTR: (
         "VI_ERROR_NSUP_ATTR",
-        "The specified attribute is not defined or "
-        "supported by the referenced object.",
+        "The specified attribute is not defined or supported by the referenced object.",
     ),
     VI_ERROR_NSUP_ATTR_STATE: (
         "VI_ERROR_NSUP_ATTR_STATE",
@@ -280,7 +278,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_INV_LOCK_TYPE: (
         "VI_ERROR_INV_LOCK_TYPE",
-        "The specified type of lock is not " "supported by this resource.",
+        "The specified type of lock is not supported by this resource.",
     ),
     VI_ERROR_INV_ACCESS_KEY: (
         "VI_ERROR_INV_ACCESS_KEY",
@@ -289,7 +287,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_INV_EVENT: (
         "VI_ERROR_INV_EVENT",
-        "Specified event type is not supported by " "the resource.",
+        "Specified event type is not supported by the resource.",
     ),
     VI_ERROR_INV_MECH: ("VI_ERROR_INV_MECH", "Invalid mechanism specified."),
     VI_ERROR_HNDLR_NINSTALLED: (
@@ -298,7 +296,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_INV_HNDLR_REF: (
         "VI_ERROR_INV_HNDLR_REF",
-        "The given handler reference is either " "invalid or was not installed.",
+        "The given handler reference is either invalid or was not installed.",
     ),
     VI_ERROR_INV_CONTEXT: (
         "VI_ERROR_INV_CONTEXT",
@@ -318,19 +316,19 @@ completion_and_error_messages = {
     VI_ERROR_ABORT: ("VI_ERROR_ABORT", "User abort occurred during transfer."),
     VI_ERROR_RAW_WR_PROT_VIOL: (
         "VI_ERROR_RAW_WR_PROT_VIOL",
-        "Violation of raw write protocol occurred " "during transfer.",
+        "Violation of raw write protocol occurred during transfer.",
     ),
     VI_ERROR_RAW_RD_PROT_VIOL: (
         "VI_ERROR_RAW_RD_PROT_VIOL",
-        "Violation of raw read protocol occurred " "during transfer.",
+        "Violation of raw read protocol occurred during transfer.",
     ),
     VI_ERROR_OUTP_PROT_VIOL: (
         "VI_ERROR_OUTP_PROT_VIOL",
-        "Device reported an output protocol error " "during transfer.",
+        "Device reported an output protocol error during transfer.",
     ),
     VI_ERROR_INP_PROT_VIOL: (
         "VI_ERROR_INP_PROT_VIOL",
-        "Device reported an input protocol error " "during transfer.",
+        "Device reported an input protocol error during transfer.",
     ),
     VI_ERROR_BERR: ("VI_ERROR_BERR", "Bus error occurred during transfer."),
     VI_ERROR_IN_PROGRESS: (
@@ -355,55 +353,55 @@ completion_and_error_messages = {
     ),
     VI_ERROR_ALLOC: (
         "VI_ERROR_ALLOC",
-        "Insufficient system resources to perform " "necessary memory allocation.",
+        "Insufficient system resources to perform necessary memory allocation.",
     ),
     VI_ERROR_INV_MASK: ("VI_ERROR_INV_MASK", "Invalid buffer mask specified."),
     VI_ERROR_IO: (
         "VI_ERROR_IO",
-        "Could not perform operation because of " "I/O error.",
+        "Could not perform operation because of I/O error.",
     ),
     VI_ERROR_INV_FMT: (
         "VI_ERROR_INV_FMT",
-        "A format specifier in the format string " "is invalid.",
+        "A format specifier in the format string is invalid.",
     ),
     VI_ERROR_NSUP_FMT: (
         "VI_ERROR_NSUP_FMT",
-        "A format specifier in the format string " "is not supported.",
+        "A format specifier in the format string is not supported.",
     ),
     VI_ERROR_LINE_IN_USE: (
         "VI_ERROR_LINE_IN_USE",
-        "The specified trigger line is currently " "in use.",
+        "The specified trigger line is currently in use.",
     ),
     VI_ERROR_NSUP_MODE: (
         "VI_ERROR_NSUP_MODE",
-        "The specified mode is not supported by " "this VISA implementation.",
+        "The specified mode is not supported by this VISA implementation.",
     ),
     VI_ERROR_SRQ_NOCCURRED: (
         "VI_ERROR_SRQ_NOCCURRED",
-        "Service request has not been received for " "the session.",
+        "Service request has not been received for the session.",
     ),
     VI_ERROR_INV_SPACE: ("VI_ERROR_INV_SPACE", "Invalid address space specified."),
     VI_ERROR_INV_OFFSET: ("VI_ERROR_INV_OFFSET", "Invalid offset specified."),
     VI_ERROR_INV_WIDTH: ("VI_ERROR_INV_WIDTH", "Invalid access width specified."),
     VI_ERROR_NSUP_OFFSET: (
         "VI_ERROR_NSUP_OFFSET",
-        "Specified offset is not accessible from " "this hardware.",
+        "Specified offset is not accessible from this hardware.",
     ),
     VI_ERROR_NSUP_VAR_WIDTH: (
         "VI_ERROR_NSUP_VAR_WIDTH",
-        "Cannot support source and destination " "widths that are different.",
+        "Cannot support source and destination widths that are different.",
     ),
     VI_ERROR_WINDOW_NMAPPED: (
         "VI_ERROR_WINDOW_NMAPPED",
-        "The specified session is not currently " "mapped.",
+        "The specified session is not currently mapped.",
     ),
     VI_ERROR_RESP_PENDING: (
         "VI_ERROR_RESP_PENDING",
-        "A previous response is still pending, " "causing a multiple query error.",
+        "A previous response is still pending, causing a multiple query error.",
     ),
     VI_ERROR_NLISTENERS: (
         "VI_ERROR_NLISTENERS",
-        "No listeners condition is detected (both " "NRFD and NDAC are deasserted).",
+        "No listeners condition is detected (both NRFD and NDAC are deasserted).",
     ),
     VI_ERROR_NCIC: (
         "VI_ERROR_NCIC",
@@ -413,15 +411,15 @@ completion_and_error_messages = {
     ),
     VI_ERROR_NSYS_CNTLR: (
         "VI_ERROR_NSYS_CNTLR",
-        "The interface associated with this " "session is not the system controller.",
+        "The interface associated with this session is not the system controller.",
     ),
     VI_ERROR_NSUP_OPER: (
         "VI_ERROR_NSUP_OPER",
-        "The given session or object reference " "does not support this operation.",
+        "The given session or object reference does not support this operation.",
     ),
     VI_ERROR_INTR_PENDING: (
         "VI_ERROR_INTR_PENDING",
-        "An interrupt is still pending from a " "previous call.",
+        "An interrupt is still pending from a previous call.",
     ),
     VI_ERROR_ASRL_PARITY: (
         "VI_ERROR_ASRL_PARITY",
@@ -440,7 +438,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_TRIG_NMAPPED: (
         "VI_ERROR_TRIG_NMAPPED",
-        "The path from trigSrc to trigDest is not " "currently mapped.",
+        "The path from trigSrc to trigDest is not currently mapped.",
     ),
     VI_ERROR_NSUP_ALIGN_OFFSET: (
         "VI_ERROR_NSUP_ALIGN_OFFSET",
@@ -455,21 +453,21 @@ completion_and_error_messages = {
     ),
     VI_ERROR_RSRC_BUSY: (
         "VI_ERROR_RSRC_BUSY",
-        "The resource is valid, but VISA cannot " "currently access it.",
+        "The resource is valid, but VISA cannot currently access it.",
     ),
     VI_ERROR_NSUP_WIDTH: (
         "VI_ERROR_NSUP_WIDTH",
-        "Specified width is not supported by this " "hardware.",
+        "Specified width is not supported by this hardware.",
     ),
     VI_ERROR_INV_PARAMETER: (
         "VI_ERROR_INV_PARAMETER",
-        "The value of some parameter (which " "parameter is not known) is invalid.",
+        "The value of some parameter (which parameter is not known) is invalid.",
     ),
     VI_ERROR_INV_PROT: ("VI_ERROR_INV_PROT", "The protocol specified is invalid."),
     VI_ERROR_INV_SIZE: ("VI_ERROR_INV_SIZE", "Invalid size of window specified."),
     VI_ERROR_WINDOW_MAPPED: (
         "VI_ERROR_WINDOW_MAPPED",
-        "The specified session currently contains " "a mapped window.",
+        "The specified session currently contains a mapped window.",
     ),
     VI_ERROR_NIMPL_OPER: (
         "VI_ERROR_NIMPL_OPER",
@@ -479,7 +477,7 @@ completion_and_error_messages = {
     VI_ERROR_INV_MODE: ("VI_ERROR_INV_MODE", "Invalid mode specified."),
     VI_ERROR_SESN_NLOCKED: (
         "VI_ERROR_SESN_NLOCKED",
-        "The current session did not have a lock " "on the resource.",
+        "The current session did not have a lock on the resource.",
     ),
     VI_ERROR_MEM_NSHARED: (
         "VI_ERROR_MEM_NSHARED",
@@ -487,7 +485,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_LIBRARY_NFOUND: (
         "VI_ERROR_LIBRARY_NFOUND",
-        "A code library required by VISA could not " "be located or loaded.",
+        "A code library required by VISA could not be located or loaded.",
     ),
     VI_ERROR_NSUP_INTR: (
         "VI_ERROR_NSUP_INTR",
@@ -497,7 +495,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_INV_LINE: (
         "VI_ERROR_INV_LINE",
-        "The value specified by the line parameter " "is invalid.",
+        "The value specified by the line parameter is invalid.",
     ),
     VI_ERROR_FILE_ACCESS: (
         "VI_ERROR_FILE_ACCESS",
@@ -508,7 +506,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_FILE_IO: (
         "VI_ERROR_FILE_IO",
-        "An error occurred while performing I/O on " "the specified file.",
+        "An error occurred while performing I/O on the specified file.",
     ),
     VI_ERROR_NSUP_LINE: (
         "VI_ERROR_NSUP_LINE",
@@ -519,7 +517,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_NSUP_MECH: (
         "VI_ERROR_NSUP_MECH",
-        "The specified mechanism is not supported " "for the given event type.",
+        "The specified mechanism is not supported for the given event type.",
     ),
     VI_ERROR_INTF_NUM_NCONFIG: (
         "VI_ERROR_INTF_NUM_NCONFIG",
@@ -529,7 +527,7 @@ completion_and_error_messages = {
     ),
     VI_ERROR_CONN_LOST: (
         "VI_ERROR_CONN_LOST",
-        "The connection for the given session has " "been lost.",
+        "The connection for the given session has been lost.",
     ),
     VI_ERROR_MACHINE_NAVAIL: (
         "VI_ERROR_MACHINE_NAVAIL",
