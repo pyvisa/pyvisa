@@ -84,3 +84,18 @@ class SerialInstrument(MessageBasedResource):
     #: XON character used for XON/XOFF flow control (both directions).
     #: The default character is '0x11'.
     xon_char: Attribute[str] = attributes.AttrVI_ATTR_ASRL_XON_CHAR()
+
+
+@MessageBasedResource.register(constants.InterfaceType.prlgx_asrl, "INTFC")
+class PrlgxASRLIntfc(SerialInstrument):
+    """Communicates with devices of type PRLGX-ASRL::serial device::INTFC
+
+    More complex resource names can be specified with the following grammar:
+        PRLGX-ASRL[board]::serial device::INTFC
+
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
+    """
+
+    pass

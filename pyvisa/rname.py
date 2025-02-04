@@ -287,7 +287,8 @@ class ResourceName(_ResourceNameBase):
     @property
     def interface_type_const(self) -> constants.InterfaceType:
         try:
-            return getattr(constants.InterfaceType, self.interface_type.lower())
+            interface_type = self.interface_type.lower().replace("-", "_")
+            return getattr(constants.InterfaceType, interface_type)
         except Exception:
             return constants.InterfaceType.unknown
 
@@ -377,6 +378,47 @@ class GPIBIntfc(ResourceName):
     board: str = "0"
 
     interface_type: ClassVar[str] = "GPIB"
+    resource_class: ClassVar[str] = "INTFC"
+
+
+@register_subclass
+@dataclass
+class PrlgxASRLIntfc(ResourceName):
+    """PRLGX-ASRL INTFC
+
+    The syntax is:
+    PRLGX-ASRL[board]::serial device::INTFC
+    """
+
+    #: GPIB "board" to use.
+    board: str = "0"
+
+    #: Serial device to use.
+    serial_device: str = ""
+
+    interface_type: ClassVar[str] = "PRLGX-ASRL"
+    resource_class: ClassVar[str] = "INTFC"
+
+
+@register_subclass
+@dataclass
+class PrlgxTCPIPIntfc(ResourceName):
+    """PRLGX-TCPIP INTFC
+
+    The syntax is:
+    PRLGX-TCPIP[board]::host address[::port]::INTFC
+    """
+
+    #: GPIB "board" to use.
+    board: str = "0"
+
+    #: Host address of the device (IPv4 or host name)
+    host_address: str = ""
+
+    #: Port on which to establish the connection
+    port: str = "1234"
+
+    interface_type: ClassVar[str] = "PRLGX-TCPIP"
     resource_class: ClassVar[str] = "INTFC"
 
 

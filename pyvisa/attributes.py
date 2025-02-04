@@ -759,6 +759,8 @@ class AttrVI_ATTR_SEND_END_EN(BooleanAttribute):
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.gpib, "INTFC"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -789,6 +791,8 @@ class AttrVI_ATTR_SUPPRESS_END_EN(BooleanAttribute):
     resources = [
         (constants.InterfaceType.asrl, "INSTR"),
         (constants.InterfaceType.gpib, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -823,6 +827,8 @@ class AttrVI_ATTR_TERMCHAR_EN(BooleanAttribute):
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -858,6 +864,8 @@ class AttrVI_ATTR_TERMCHAR(CharAttribute):
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -894,6 +902,8 @@ class AttrVI_ATTR_IO_PROT(EnumAttribute):
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -923,6 +933,8 @@ class AttrVI_ATTR_FILE_APPEND_EN(BooleanAttribute):
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -957,6 +969,8 @@ class AttrVI_ATTR_RD_BUF_OPER_MODE(RangeAttribute):
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -990,6 +1004,8 @@ class AttrVI_ATTR_RD_BUF_SIZE(RangeAttribute):
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -1028,6 +1044,8 @@ class AttrVI_ATTR_WR_BUF_OPER_MODE(RangeAttribute):
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -1061,6 +1079,8 @@ class AttrVI_ATTR_WR_BUF_SIZE(RangeAttribute):
         (constants.InterfaceType.gpib, "INSTR"),
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -1098,6 +1118,8 @@ class AttrVI_ATTR_DMA_ALLOW_EN(BooleanAttribute):
         (constants.InterfaceType.gpib, "INTFC"),
         (constants.InterfaceType.pxi, "INSTR"),
         (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -1127,6 +1149,7 @@ class AttrVI_ATTR_TCPIP_ADDR(Attribute):
     """
 
     resources = [
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -1151,6 +1174,7 @@ class AttrVI_ATTR_TCPIP_HOSTNAME(Attribute):
     """
 
     resources = [
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
         (constants.InterfaceType.tcpip, "INSTR"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
@@ -1175,6 +1199,7 @@ class AttrVI_ATTR_TCPIP_PORT(RangeAttribute):
     """
 
     resources = [
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
     ]
@@ -1218,6 +1243,7 @@ class AttrVI_ATTR_TCPIP_NODELAY(BooleanAttribute):
     """
 
     resources = [
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
     ]
@@ -1244,6 +1270,7 @@ class AttrVI_ATTR_TCPIP_KEEPALIVE(BooleanAttribute):
     """
 
     resources = [
+        (constants.InterfaceType.prlgx_tcpip, "INTFC"),
         (constants.InterfaceType.tcpip, "SOCKET"),
         (constants.InterfaceType.vicp, "INSTR"),
     ]
@@ -1584,7 +1611,10 @@ class AttrVI_ATTR_GPIB_HS488_CBL_LEN(RangeAttribute):
 class AttrVI_ATTR_ASRL_AVAIL_NUM(RangeAttribute):
     """Number of bytes available in the low-level I/O receive buffer."""
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "bytes_in_buffer"
 
@@ -1608,7 +1638,10 @@ class AttrVI_ATTR_ASRL_BAUD(RangeAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "baud_rate"
 
@@ -1631,7 +1664,10 @@ class AttrVI_ATTR_ASRL_DATA_BITS(RangeAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "data_bits"
 
@@ -1649,7 +1685,10 @@ class AttrVI_ATTR_ASRL_DATA_BITS(RangeAttribute):
 class AttrVI_ATTR_ASRL_PARITY(EnumAttribute):
     """Parity used with every frame transmitted and received."""
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "parity"
 
@@ -1671,7 +1710,10 @@ class AttrVI_ATTR_ASRL_STOP_BITS(EnumAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "stop_bits"
 
@@ -1689,7 +1731,10 @@ class AttrVI_ATTR_ASRL_STOP_BITS(EnumAttribute):
 class AttrVI_ATTR_ASRL_FLOW_CNTRL(FlagAttribute):
     """Indicate the type of flow control used by the transfer mechanism."""
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "flow_control"
 
@@ -1712,7 +1757,10 @@ class AttrVI_ATTR_ASRL_DISCARD_NULL(BooleanAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "discard_null"
 
@@ -1756,7 +1804,10 @@ class AttrVI_ATTR_ASRL_ALLOW_TRANSMIT(BooleanAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "allow_transmit"
 
@@ -1772,7 +1823,10 @@ class AttrVI_ATTR_ASRL_ALLOW_TRANSMIT(BooleanAttribute):
 class AttrVI_ATTR_ASRL_END_IN(EnumAttribute):
     """Method used to terminate read operations."""
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "end_input"
 
@@ -1790,7 +1844,10 @@ class AttrVI_ATTR_ASRL_END_IN(EnumAttribute):
 class AttrVI_ATTR_ASRL_END_OUT(EnumAttribute):
     """Method used to terminate write operations."""
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "end_output"
 
@@ -1815,7 +1872,10 @@ class AttrVI_ATTR_ASRL_BREAK_LEN(RangeAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "break_length"
 
@@ -1843,7 +1903,10 @@ class AttrVI_ATTR_ASRL_BREAK_STATE(EnumAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "break_state"
 
@@ -1865,7 +1928,10 @@ class AttrVI_ATTR_ASRL_REPLACE_CHAR(CharAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "replace_char"
 
@@ -1886,7 +1952,10 @@ class AttrVI_ATTR_ASRL_XOFF_CHAR(CharAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "xoff_char"
 
@@ -1907,7 +1976,10 @@ class AttrVI_ATTR_ASRL_XON_CHAR(CharAttribute):
 
     """
 
-    resources = [(constants.InterfaceType.asrl, "INSTR")]
+    resources = [
+        (constants.InterfaceType.asrl, "INSTR"),
+        (constants.InterfaceType.prlgx_asrl, "INTFC"),
+    ]
 
     py_name = "xon_char"
 

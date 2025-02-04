@@ -820,6 +820,12 @@ class InterfaceType(enum.IntEnum):
     #: Lecroy VICP via passport
     vicp = 36000  # FIXME
 
+    #: prologix usb
+    prlgx_asrl = 34567  # an arbitrarily chosen value
+
+    #: prologix tcpip
+    prlgx_tcpip = 76543  # an arbitrarily chosen value
+
 
 @enum.unique
 class LineState(enum.IntEnum):
