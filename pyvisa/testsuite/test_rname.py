@@ -250,6 +250,55 @@ class TestParsers(BaseTestCase):
             canonical_resource_name="GPIB3::INTFC",
         )
 
+    def test_prlgx_intf(self):
+        self._parse_test(
+            "PRLGX-TCPIP::1.2.3.4::INTFC",
+            interface_type="PRLGX-TCPIP",
+            resource_class="INTFC",
+            host_address="1.2.3.4",
+            port="1234",
+            board="0",
+            canonical_resource_name="PRLGX-TCPIP0::1.2.3.4::1234::INTFC",
+        )
+
+        self._parse_test(
+            "PRLGX-TCPIP::169.254.1.80::23::INTFC",
+            interface_type="PRLGX-TCPIP",
+            resource_class="INTFC",
+            host_address="169.254.1.80",
+            port="23",
+            board="0",
+            canonical_resource_name="PRLGX-TCPIP0::169.254.1.80::23::INTFC",
+        )
+
+        self._parse_test(
+            "PRLGX-TCPIP3::dev.company.com::INTFC",
+            interface_type="PRLGX-TCPIP",
+            resource_class="INTFC",
+            host_address="dev.company.com",
+            port="1234",
+            board="3",
+            canonical_resource_name="PRLGX-TCPIP3::dev.company.com::1234::INTFC",
+        )
+
+        self._parse_test(
+            "PRLGX-ASRL2::/dev/cu.usbserial-5678::INTFC",
+            interface_type="PRLGX-ASRL",
+            resource_class="INTFC",
+            serial_device="/dev/cu.usbserial-5678",
+            board="2",
+            canonical_resource_name="PRLGX-ASRL2::/dev/cu.usbserial-5678::INTFC",
+        )
+
+        self._parse_test(
+            "PRLGX-ASRL::asrl1::INTFC",
+            interface_type="PRLGX-ASRL",
+            resource_class="INTFC",
+            serial_device="asrl1",
+            board="0",
+            canonical_resource_name="PRLGX-ASRL0::asrl1::INTFC",
+        )
+
     def test_tcpip_intr(self):
         self._parse_test(
             "TCPIP::192.168.134.102",
