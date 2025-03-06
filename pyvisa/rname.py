@@ -241,7 +241,12 @@ class _ResourceNameBase:
             raise InvalidResourceName("Unknown interface type: %s" % interface_type)
 
         try:
-            resource_class = kwargs.pop("resource_class", _DEFAULT_RC[interface_type])
+            if interface_type not in _DEFAULT_RC:
+                resource_class = kwargs.pop("resource_class")
+            else:
+                resource_class = kwargs.pop(
+                    "resource_class", _DEFAULT_RC[interface_type]
+                )
         except KeyError:
             raise InvalidResourceName.rc_notfound(interface_type)
 
