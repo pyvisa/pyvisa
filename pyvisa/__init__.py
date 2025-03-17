@@ -28,7 +28,9 @@ from .errors import (  # noqa: E402
     VisaTypeError,
 )
 from .highlevel import ResourceManager  # noqa: E402
-from .resources import Resource  # noqa : F401 This is needed to register all resources.
+
+# This is needed to register all resources (E402, F401).
+from .resources import Resource  # noqa
 
 
 def log_to_screen(level=logging.DEBUG) -> None:
