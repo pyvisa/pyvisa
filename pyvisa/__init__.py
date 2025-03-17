@@ -30,7 +30,7 @@ from .errors import (  # noqa: E402
 from .highlevel import ResourceManager  # noqa: E402
 
 # This is needed to register all resources (E402, F401).
-from .resources import Resources  # noqa
+from .resources import Resource  # noqa
 
 
 def log_to_screen(level=logging.DEBUG) -> None:
