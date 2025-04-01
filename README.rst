@@ -64,7 +64,7 @@ can also serve as a front-end for other VISA implementation such as
 VISA and Python
 ---------------
 
-Python has a couple of features that make it very interesting for controlling 
+Python has a couple of features that make it very interesting for controlling
 instruments:
 
 - Python is an easy-to-learn scripting language with short development cycles.
@@ -79,7 +79,7 @@ instruments:
 Requirements
 ------------
 
-- Python (tested with 3.6+)
+- Python (tested with 3.10+)
 - VISA (tested with NI-VISA 17.5, Win7, from www.ni.com/visa and Keysight-VISA )
 
 Installation
@@ -107,9 +107,9 @@ The documentation can be read online at https://pyvisa.readthedocs.org
 Citing
 ------
 
-If you are using this package, you can cite the `PyVISA publication`_ 
+If you are using this package, you can cite the `PyVISA publication`_
 
-Grecco et al., (2023). PyVISA: the Python instrumentation package. Journal of Open Source 
+Grecco et al., (2023). PyVISA: the Python instrumentation package. Journal of Open Source
 Software, 8(84), 5304, https://doi.org/10.21105/joss.05304
 
 .. _`PyVISA publication`: https://joss.theoj.org/papers/10.21105/joss.05304#

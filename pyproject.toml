@@ -33,17 +33,17 @@
 
 
   [project.urls]
-    homepage = "https://github.com/pyvisa/pyvisa"
+    homepage      = "https://github.com/pyvisa/pyvisa"
     documentation = "https://pyvisa.readthedocs.io/en/latest/"
-    repository = "https://github.com/pyvisa/pyvisa"
-    changelog = "https://github.com/pyvisa/pyvisa/blob/main/CHANGES"
+    repository    = "https://github.com/pyvisa/pyvisa"
+    changelog     = "https://github.com/pyvisa/pyvisa/blob/main/CHANGES"
 
   [project.scripts]
     pyvisa-shell = "pyvisa.cmd_line_tools:visa_shell"
-    pyvisa-info = "pyvisa.cmd_line_tools:visa_info"
+    pyvisa-info  = "pyvisa.cmd_line_tools:visa_info"
 
 [build-system]
-  requires = ["setuptools>=61.2", "wheel", "setuptools_scm[toml]>=3.4.3"]
+  requires      = ["setuptools>=61.2", "wheel", "setuptools_scm[toml]>=3.4.3"]
   build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
@@ -71,17 +71,17 @@ __version__ = "{version}"
 """
 
 [tool.ruff]
-  src = ["src"]
+  src            = ["src"]
   extend-exclude = ["pyvisa/thirdparty/*"]
-  line-length = 88
+  line-length    = 88
 
   [tool.ruff.lint]
-    select = ["C", "E", "F", "W", "I", "C90", "RUF"]
+    select        = ["C", "E", "F", "W", "I", "C90", "RUF"]
     extend-ignore = ["E501", "RUF012"]
 
     [tool.ruff.lint.isort]
       combine-as-imports = true
-      known-first-party = ["pyvisa"]
+      known-first-party  = ["pyvisa"]
 
     [tool.ruff.lint.mccabe]
       max-complexity = 20
@@ -90,11 +90,11 @@ __version__ = "{version}"
   minversion = "6.0"
 
 [tool.mypy]
-  follow_imports = "normal"
+  follow_imports  = "normal"
   strict_optional = true
 
   [[tool.mypy.overrides]]
-    module = ["pyvisa.thirdparty.*"]
+    module        = ["pyvisa.thirdparty.*"]
     ignore_errors = true
 
 [tool.coverage]

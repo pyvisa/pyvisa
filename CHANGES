@@ -1,7 +1,7 @@
 PyVISA Changelog
 ================
 
-1.15.0 (unreleased)
+1.15.0 (01-04-2025)
 -------------------
 - make `pyvisa-shell` and `pyvisa-info` handle arguments independently PR #859
 - add support for Python 3.13 PR #852
