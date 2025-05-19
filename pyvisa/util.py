@@ -428,11 +428,12 @@ def parse_ieee_block_header(
     block : Union[bytes, bytearray]
         IEEE formatted block of data.
     length_before_block : Optional[int], optional
-        Number of bytes before the actual start of the block. Default to None,
-        which means that number will be inferred.
+        Maximum number of bytes before the actual start of the block before a warning
+        is issued (or an exception is raised, if raise_on_late_block is True). Default
+        to None, which means the DEFAULT_LENGTH_BEFORE_BLOCK constant will be used..
     raise_on_late_block : bool, optional
         Raise an error in the beginning of the block is not found before
-        DEFAULT_LENGTH_BEFORE_BLOCK, if False use a warning. Default to False.
+        length_before_block, if False use a warning. Default to False.
 
     Returns
     -------
@@ -446,10 +447,10 @@ def parse_ieee_block_header(
     if begin < 0:
         raise ValueError(
             "Could not find hash sign (#) indicating the start of the block. "
-            "The block begin by %r" % block[:25]
+            "The first 25 characters of the block: %r" % block[:25]
         )
 
-    length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK
+    length_before_block = DEFAULT_LENGTH_BEFORE_BLOCK if length_before_block is None else length_before_block
     if begin > length_before_block:
         msg = (
             "The beginning of the block has been found at %d which "
@@ -462,21 +463,50 @@ def parse_ieee_block_header(
         else:
             warnings.warn(msg, UserWarning)
 
+    parentheses_adjustment = 0
+
     try:
         # int(block[begin+1]) != int(block[begin+1:begin+2]) in Python 3
-        header_length = int(block[begin + 1 : begin + 2])
+        if block[begin + 1] == ord('('):
+            # Rohde & Schwarz uses the format #(length_digits)DATA when the number of bytes is
+            # larger than what can be represented with 9 decimal digits (≥1 GB). The length
+            # character is no longer used, and instead parentheses are used to delimit the
+            # length, allowing an arbitrary number of length digits.
+            header_length = (block.find(b')', begin) - 2) - begin
+            parentheses_adjustment = 1
+            if header_length < 0:
+                msg = 'Block length is indicated using parentheses syntax, but no closing parenthesis was found.'
+                raise ValueError(msg)
+            elif header_length > 18:
+                # ≥1 exabyte of data seems quite unlikely
+                msg = f'Unexpectedly large block length indicated using parentheses syntax. Indicated length was {header_length} decimal digits long.'
+                raise ValueError(msg)
+        else:
+            # Tektronix and LeCroy stay with the IEEE 488 style and simply extend the length
+            # digit into hexadecimal to provide up to 15 decimal digits (1 PB) instead of 9.
+            header_length = int(block[begin + 1 : begin + 2], base = 16)
+
     except ValueError:
         header_length = 0
+
     offset = begin + 2 + header_length
 
     if header_length > 0:
+        # Definite block. Number of bytes in the block is given by the next `header_length`
+        # characters after the header length character itself.
         # #3100DATA
         # 012345
         data_length = int(block[begin + 2 : offset])
     else:
+        # Indefinite block
         # #0DATA
         # 012
         data_length = -1
+
+    # Add +1 here to the data starting point if Rohde & Schwarz parentheses syntax is used,
+    # to account for the closing parentheses. In normal block syntax the data starts immediately
+    # following the last data_length character, but in this case there's a ")" inbetween them.
+    offset += parentheses_adjustment
 
     return offset, data_length
 
@@ -523,7 +553,7 @@ def parse_hp_block_header(
             "of the block. The block begin by %r" % block[:25]
         )
 
-    length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK
+    length_before_block = DEFAULT_LENGTH_BEFORE_BLOCK if length_before_block is None else length_before_block
     if begin > length_before_block:
         msg = (
             "The beginning of the block has been found at %d which "
@@ -789,7 +819,7 @@ def to_ieee_block(
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
 
-    header = "%d" % data_length
+    header = f"{data_length:X}"
     header = "#%d%s" % (len(header), header)
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
