@@ -476,11 +476,11 @@ def parse_ieee_block_header(
             parentheses_adjustment = 1
             if header_length < 0:
                 msg = 'Block length is indicated using parentheses syntax, but no closing parenthesis was found.'
-                raise ValueError(msg)
+                raise RuntimeError(msg)
             elif header_length > 18:
                 # ≥1 exabyte of data seems quite unlikely
                 msg = f'Unexpectedly large block length indicated using parentheses syntax. Indicated length was {header_length} decimal digits long.'
-                raise ValueError(msg)
+                raise RuntimeError(msg)
         else:
             # Tektronix and LeCroy stay with the IEEE 488 style and simply extend the length
             # digit into hexadecimal to provide up to 15 decimal digits (1 PB) instead of 9.
