@@ -615,6 +615,10 @@ class MessageBasedResource(Resource):
         if header_fmt == "ieee":
             offset, data_length = util.parse_ieee_block_header(block)
 
+        elif header_fmt == "ieee_or_rs":
+            offset, data_length = util.parse_ieee_or_rs_block_header(block, is_big_endian)
+        elif header_fmt == "rs":
+            offset, data_length = util.parse_rs_block_header(block, is_big_endian)
         elif header_fmt == "hp":
             offset, data_length = util.parse_hp_block_header(block, is_big_endian)
         elif header_fmt == "empty":
@@ -784,9 +788,9 @@ class MessageBasedResource(Resource):
             Data read from the device.
 
         """
-        if header_fmt not in ("ieee", "empty", "hp"):
+        if header_fmt not in ("ieee", "empty", "hp", "rs", "ieee_or_rs"):
             raise ValueError(
-                "Invalid header format. Valid options are 'ieee', 'empty', 'hp'"
+                "Invalid header format. Valid options are 'ieee', 'empty', 'hp', 'rs', and 'ieee_or_rs'"
             )
 
         self.write(message)
