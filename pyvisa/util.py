@@ -455,7 +455,7 @@ def parse_ieee_block_header(
             "is an unexpectedly large value. The actual block may "
             "have been missing a beginning marker but the block "
             "contained one:\n%s"
-        ) % (begin, repr(block))
+        ) % (begin, repr(block[:begin+25]))
         if raise_on_late_block:
             raise RuntimeError(msg)
         else:
@@ -527,7 +527,7 @@ def parse_rs_block_header(
             "is an unexpectedly large value. The actual block may "
             "have been missing a beginning marker but the block "
             "contained one:\n%s"
-        ) % (begin, repr(block))
+        ) % (begin, repr(block[:begin+25]))
         if raise_on_late_block:
             raise RuntimeError(msg)
         else:
