@@ -392,7 +392,7 @@ def to_ascii_block(
 
 
 #: Valid binary header when reading/writing binary block of data from an instrument
-BINARY_HEADERS = Literal["ieee", "hp", "empty", "rs", "ieee_or_rs"]
+BINARY_HEADERS = Literal["ieee", "hp", "rs", "empty"]
 
 #: Valid datatype for binary block. See Python standard library struct module for more
 #: details.
