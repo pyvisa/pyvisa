@@ -473,7 +473,7 @@ def parse_ieee_block_header(
         # #3100DATA
         # 012345
 
-        if header_length == 10 and len(block[begin:]) <= (2 ** 16) + 4:
+        if header_length == 10 and len(block[begin:]) < (2 ** 16) + 4:
             # Detect an HP formatted block, which starts with "A"
             msg = (f'Block length in IEEE format was indicated as 0xA (10d) but the '
                     'block length was less than 64 KiB. It appears the block may be '
@@ -482,7 +482,7 @@ def parse_ieee_block_header(
             raise ValueError (msg)
         
         data_length = int(block[begin + 2 : offset])
-        
+
     else:
         # #0DATA
         # 012
