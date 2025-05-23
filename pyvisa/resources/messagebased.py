@@ -615,12 +615,18 @@ class MessageBasedResource(Resource):
         block = self._read_raw(chunk_size, monitoring_interface=monitoring_interface)
 
         if header_fmt == "ieee":
-            offset, data_length = util.parse_ieee_block_header(block, length_before_block, raise_on_late_block)
+            offset, data_length = util.parse_ieee_block_header(
+                block, length_before_block, raise_on_late_block
+            )
 
         elif header_fmt == "rs":
-            offset, data_length = util.parse_ieee_or_rs_block_header(block, length_before_block, raise_on_late_block)
+            offset, data_length = util.parse_ieee_or_rs_block_header(
+                block, length_before_block, raise_on_late_block
+            )
         elif header_fmt == "hp":
-            offset, data_length = util.parse_hp_block_header(block, is_big_endian, length_before_block, raise_on_late_block)
+            offset, data_length = util.parse_hp_block_header(
+                block, is_big_endian, length_before_block, raise_on_late_block
+            )
         elif header_fmt == "empty":
             offset = 0
             data_length = -1
