@@ -481,7 +481,7 @@ def parse_ieee_block_header(
         if header_length == 10 and len(block[begin:]) < (2**16) + 4:
             # Detect an HP formatted block, which starts with "A"
             msg = (
-                f"Block length in IEEE format was indicated as 0xA (10d) but the "
+                "Header length in IEEE format was indicated as 0xA (10d) but the "
                 "block length was less than 64 KiB. It appears the block may be "
                 "using the HP format instead of IEEE. If so, you will need to use "
                 'the `header_fmt = "hp"` argument.'
@@ -1055,7 +1055,7 @@ def to_ieee_block(
     data_length = array_length * element_length
 
     number_of_digits_in_data_length = f'{len(str(data_length)):X}'
-    
+
     if len(number_of_digits_in_data_length) > 1:
         msg = f'Block length in bytes cannot be greater than or equal to 1 PB (it must be representable with 15 decimal digits), but the block length was {data_length}, which requires {len(str(data_length))} digits to represent.'
         raise OverflowError (msg)
@@ -1067,6 +1067,36 @@ def to_ieee_block(
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
 
+def to_rs_block(
+    iterable: Sequence[Union[int, float]],
+    datatype: BINARY_DATATYPES = "f",
+    is_big_endian: bool = False,
+) -> bytes:
+    """Convert an iterable of numbers into a block of data in the Rohde & Schwarz format
+    for extended block lengths. This is used by R&S for blocks greater than or equal to 1 GB.
+
+    Parameters
+    ----------
+    iterable : Sequence[Union[int, float]]
+        Sequence of numbers to pack into a block.
+    datatype : BINARY_DATATYPES, optional
+        Format string for a single element. See struct module. Default to 'f'.
+    is_big_endian : bool, optional
+        Are the data in big or little endian order. Default to False.
+
+    Returns
+    -------
+    bytes
+        Binary block of data preceded by the specified header
+
+    """
+    array_length = len(iterable)
+    element_length = struct.calcsize(datatype)
+    data_length = array_length * element_length
+
+    header = f'#({data_length:d})'
+
+    return to_binary_block(iterable, header, datatype, is_big_endian)
 
 def to_hp_block(
     iterable: Sequence[Union[int, float]],

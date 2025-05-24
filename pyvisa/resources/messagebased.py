@@ -322,6 +322,8 @@ class MessageBasedResource(Resource):
 
         if header_fmt == "ieee":
             block = util.to_ieee_block(values, datatype, is_big_endian)
+        elif header_fmt == "rs":
+            block = util.to_rs_block(values, datatype, is_big_endian)
         elif header_fmt == "hp":
             block = util.to_hp_block(values, datatype, is_big_endian)
         elif header_fmt == "empty":
