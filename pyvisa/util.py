@@ -403,6 +403,7 @@ BINARY_DATATYPES = Literal[
 #: Valid output containers for storing the parsed binary data
 BINARY_CONTAINERS = Union[type, Callable]
 
+
 def parse_ieee_block_header(
     block: Union[bytes, bytearray],
     length_before_block: Optional[int] = None,
@@ -448,14 +449,18 @@ def parse_ieee_block_header(
             "The block begins with %r" % block[:25]
         )
 
-    length_before_block = DEFAULT_LENGTH_BEFORE_BLOCK if length_before_block is None else length_before_block
+    length_before_block = (
+        DEFAULT_LENGTH_BEFORE_BLOCK
+        if length_before_block is None
+        else length_before_block
+    )
     if begin > length_before_block:
         msg = (
             "The beginning of the block has been found at %d which "
             "is an unexpectedly large value. The actual block may "
             "have been missing a beginning marker but the block "
             "contained one:\n%s"
-        ) % (begin, repr(block[:begin+25]))
+        ) % (begin, repr(block[: begin + 25]))
         if raise_on_late_block:
             raise RuntimeError(msg)
         else:
@@ -463,7 +468,7 @@ def parse_ieee_block_header(
 
     try:
         # int(block[begin+1]) != int(block[begin+1:begin+2]) in Python 3
-        header_length = int(block[begin + 1 : begin + 2], base = 16)
+        header_length = int(block[begin + 1 : begin + 2], base=16)
     except ValueError:
         header_length = 0
 
@@ -473,14 +478,16 @@ def parse_ieee_block_header(
         # #3100DATA
         # 012345
 
-        if header_length == 10 and len(block[begin:]) < (2 ** 16) + 4:
+        if header_length == 10 and len(block[begin:]) < (2**16) + 4:
             # Detect an HP formatted block, which starts with "A"
-            msg = (f'Block length in IEEE format was indicated as 0xA (10d) but the '
-                    'block length was less than 64 KiB. It appears the block may be '
-                    'using the HP format instead of IEEE. If so, you will need to use '
-                    'the `header_fmt = "hp"` argument.')
-            raise ValueError (msg)
-        
+            msg = (
+                f"Block length in IEEE format was indicated as 0xA (10d) but the "
+                "block length was less than 64 KiB. It appears the block may be "
+                "using the HP format instead of IEEE. If so, you will need to use "
+                'the `header_fmt = "hp"` argument.'
+            )
+            raise ValueError(msg)
+
         data_length = int(block[begin + 2 : offset])
 
     else:
@@ -489,6 +496,7 @@ def parse_ieee_block_header(
         data_length = -1
 
     return offset, data_length
+
 
 def parse_rs_block_header(
     block: Union[bytes, bytearray],
@@ -507,7 +515,7 @@ def parse_rs_block_header(
     Parameters
     ----------
     block : Union[bytes, bytearray]
-        R&S formatted block of data 
+        R&S formatted block of data
     length_before_block : Optional[int], optional
         Maximum number of bytes before the actual start of the block before a warning
         is issued (or an exception is raised, if raise_on_late_block is True). Default
@@ -527,18 +535,22 @@ def parse_rs_block_header(
     begin = block.find(b"#(")
     if begin < 0:
         raise ValueError(
-            "Could not find the standard block header (\"#(\") indicating the start "
+            'Could not find the standard block header ("#(") indicating the start '
             "of the block. The block begins with %r" % block[:25]
         )
 
-    length_before_block = DEFAULT_LENGTH_BEFORE_BLOCK if length_before_block is None else length_before_block
+    length_before_block = (
+        DEFAULT_LENGTH_BEFORE_BLOCK
+        if length_before_block is None
+        else length_before_block
+    )
     if begin > length_before_block:
         msg = (
             "The beginning of the block has been found at %d which "
             "is an unexpectedly large value. The actual block may "
             "have been missing a beginning marker but the block "
             "contained one:\n%s"
-        ) % (begin, repr(block[:begin+25]))
+        ) % (begin, repr(block[: begin + 25]))
         if raise_on_late_block:
             raise RuntimeError(msg)
         else:
@@ -548,27 +560,28 @@ def parse_rs_block_header(
     # larger than what can be represented with 9 decimal digits (≥1 GB). The length
     # character is no longer used, and instead parentheses are used to delimit the
     # length, allowing an arbitrary number of length digits.
-    header_length = (block.find(b')', begin)) - (begin + 2)
+    header_length = (block.find(b")", begin)) - (begin + 2)
     if header_length < 0:
-        msg = 'Block length is indicated using parentheses syntax, but no closing parenthesis was found.'
+        msg = "Block length is indicated using parentheses syntax, but no closing parenthesis was found."
         raise RuntimeError(msg)
     elif header_length > 18:
         # ≥1 exabyte of data seems quite unlikely
-        msg = f'Unexpectedly large block length indicated using parentheses syntax. Indicated length was {header_length} decimal digits long.'
+        msg = f"Unexpectedly large block length indicated using parentheses syntax. Indicated length was {header_length} decimal digits long."
         raise RuntimeError(msg)
 
-    '''
+    """
     #(12345678901234567890123)DATA
     ^ ^                     ^ ^
     | |<-- header_length -->| |
     | |                       `--- offset
     | `--- begin + 2
     `--- begin
-    '''
+    """
     offset = begin + 2 + header_length + 1
     data_length = int(block[begin + 2 : offset - 1])
 
     return offset, data_length
+
 
 def parse_ieee_or_rs_block_header(
     block: Union[bytes, bytearray],
@@ -616,10 +629,11 @@ def parse_ieee_or_rs_block_header(
             "The first 25 characters of the block: %r" % block[:25]
         )
 
-    if block[begin + 1] == ord('('):
+    if block[begin + 1] == ord("("):
         return parse_rs_block_header(block, length_before_block, raise_on_late_block)
     else:
         return parse_ieee_block_header(block, length_before_block, raise_on_late_block)
+
 
 def parse_hp_block_header(
     block: Union[bytes, bytearray],
@@ -663,7 +677,11 @@ def parse_hp_block_header(
             "of the block. The block begins with %r" % block[:25]
         )
 
-    length_before_block = DEFAULT_LENGTH_BEFORE_BLOCK if length_before_block is None else length_before_block
+    length_before_block = (
+        DEFAULT_LENGTH_BEFORE_BLOCK
+        if length_before_block is None
+        else length_before_block
+    )
     if begin > length_before_block:
         msg = (
             "The beginning of the block has been found at %d which "
