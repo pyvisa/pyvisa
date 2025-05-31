@@ -1054,13 +1054,13 @@ def to_ieee_block(
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
 
-    number_of_digits_in_data_length = f'{len(str(data_length)):X}'
+    number_of_digits_in_data_length = f"{len(str(data_length)):X}"
 
     if len(number_of_digits_in_data_length) > 1:
-        msg = f'Block length in bytes cannot be greater than or equal to 1 PB (it must be representable with 15 decimal digits), but the block length was {data_length}, which requires {len(str(data_length))} digits to represent.'
-        raise OverflowError (msg)
+        msg = f"Block length in bytes cannot be greater than or equal to 1 PB (it must be representable with 15 decimal digits), but the block length was {data_length}, which requires {len(str(data_length))} digits to represent."
+        raise OverflowError(msg)
 
-    header = f'#{number_of_digits_in_data_length}{data_length:d}'
+    header = f"#{number_of_digits_in_data_length}{data_length:d}"
 
     # header = "%d" % data_length
     # header = "#%d%s" % (len(header), header)
