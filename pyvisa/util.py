@@ -1094,7 +1094,7 @@ def to_rs_block(
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
 
-    header = f'#({data_length:d})'
+    header = f"#({data_length:d})"
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
 
