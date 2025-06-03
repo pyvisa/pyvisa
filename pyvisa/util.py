@@ -23,7 +23,6 @@ from enum import Enum
 from pathlib import Path
 from types import ModuleType
 from typing import (
-    AbstractSet,
     Any,
     Callable,
     Dict,
@@ -31,6 +30,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Set,
     Tuple,
     Type,
     Union,
@@ -110,7 +110,7 @@ def read_user_library_path() -> Optional[str]:
         return None
 
 
-_ADDED_DLL_PATHS: AbstractSet[str] = set()
+_ADDED_DLL_PATHS: Set[str] = set()
 
 
 def add_user_dll_extra_paths() -> Optional[List[str]]:

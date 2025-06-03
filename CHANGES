@@ -1,6 +1,10 @@
 PyVISA Changelog
 ================
 
+1.16.0 (unrealeased)
+-------------------
+- fix handling of missing secondary address for GPIB resources PR #913
+
 1.15.0 (01-04-2025)
 -------------------
 - make `pyvisa-shell` and `pyvisa-info` handle arguments independently PR #859

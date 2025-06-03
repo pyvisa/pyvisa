@@ -86,7 +86,7 @@ class GPIBCommand(bytes, Enum):
         For VISA SAD range from 1 to 31 and 0 is not SAD.
 
         """
-        if device_sad == 0:
+        if device_sad == 0 or device_sad == constants.VI_NO_SEC_ADDR:
             return b""
         return (95 + device_sad).to_bytes(1, "big")
 
