@@ -1078,6 +1078,7 @@ def to_ieee_block(
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
 
+
 def to_rs_block(
     iterable: Sequence[Union[int, float]],
     datatype: BINARY_DATATYPES = "f",
@@ -1109,6 +1110,7 @@ def to_rs_block(
     header = f"#({data_length:d})"
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
+
 
 def to_hp_block(
     iterable: Sequence[Union[int, float]],
