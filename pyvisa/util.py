@@ -556,17 +556,23 @@ def parse_rs_block_header(
         else:
             warnings.warn(msg, UserWarning)
 
-    # Rohde & Schwarz uses the format #(length_digits)DATA when the number of bytes is
-    # larger than what can be represented with 9 decimal digits (≥1 GB). The length
-    # character is no longer used, and instead parentheses are used to delimit the
-    # length, allowing an arbitrary number of length digits.
+    # Rohde & Schwarz uses the format #(length_digits)DATA when the number of
+    # bytes exceeds what can be represented with 9 decimal digits (≥1 GB).
+    # The length character is no longer used, and instead parentheses are used
+    # to delimit the length, allowing an arbitrary number of length digits.
     header_length = (block.find(b")", begin)) - (begin + 2)
     if header_length < 0:
-        msg = "Block length is indicated using parentheses syntax, but no closing parenthesis was found."
+        msg = (
+            "Block length is indicated using parentheses syntax, but no "
+            "closing parenthesis was found."
+        )
         raise RuntimeError(msg)
     elif header_length > 18:
         # ≥1 exabyte of data seems quite unlikely
-        msg = f"Unexpectedly large block length indicated using parentheses syntax. Indicated length was {header_length} decimal digits long."
+        msg = (
+            "Unexpectedly large block length indicated using parentheses "
+            f"syntax. Indicated length was {header_length} digits long."
+        )
         raise RuntimeError(msg)
 
     """
@@ -1057,7 +1063,12 @@ def to_ieee_block(
     number_of_digits_in_data_length = f"{len(str(data_length)):X}"
 
     if len(number_of_digits_in_data_length) > 1:
-        msg = f"Block length in bytes cannot be greater than or equal to 1 PB (it must be representable with 15 decimal digits), but the block length was {data_length}, which requires {len(str(data_length))} digits to represent."
+        msg = (
+            "Block length in bytes cannot be greater than or equal to 1 PB "
+            "(it must be representable with 15 decimal digits), but the "
+            f"block length was {data_length}, which requires "
+            f"{len(str(data_length))} digits to represent."
+        )
         raise OverflowError(msg)
 
     header = f"#{number_of_digits_in_data_length}{data_length:d}"
@@ -1067,14 +1078,14 @@ def to_ieee_block(
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
 
-
 def to_rs_block(
     iterable: Sequence[Union[int, float]],
     datatype: BINARY_DATATYPES = "f",
     is_big_endian: bool = False,
 ) -> bytes:
-    """Convert an iterable of numbers into a block of data in the Rohde & Schwarz format
-    for extended block lengths. This is used by R&S for blocks greater than or equal to 1 GB.
+    """Convert an iterable of numbers into a block of data in the Rohde & Schwarz
+    format for extended block lengths. This is used by R&S for blocks greater
+    than or equal to 1 GB.
 
     Parameters
     ----------
@@ -1098,7 +1109,6 @@ def to_rs_block(
     header = f"#({data_length:d})"
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
-
 
 def to_hp_block(
     iterable: Sequence[Union[int, float]],
