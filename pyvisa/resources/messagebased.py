@@ -110,7 +110,7 @@ class MessageBasedResource(Resource):
         return self._read_termination
 
     @read_termination.setter
-    def read_termination(self, value: str) -> None:
+    def read_termination(self, value: Optional[str]) -> None:
         if value:
             # termination character, the rest is just used for verification
             # after each read operation.
@@ -821,7 +821,7 @@ class MessageBasedResource(Resource):
         return value
 
     @contextlib.contextmanager
-    def read_termination_context(self, new_termination: str) -> Iterator:
+    def read_termination_context(self, new_termination: Optional[str]) -> Iterator:
         term = self.read_termination
         self.read_termination = new_termination
         yield
