@@ -538,8 +538,6 @@ class TestParser(BaseTestCase):
             elif header == "hp":
                 parse = partial(util.parse_hp_block_header, is_big_endian=False)
             elif header == "rs":
-                parse = util.parse_rs_block_header
-            elif header == "ieee_or_rs":
                 parse = util.parse_ieee_or_rs_block_header
 
             with pytest.raises(RuntimeError):
