@@ -255,19 +255,32 @@ class TestParser(BaseTestCase):
         ]
 
         # Test handling indefinite length block
-        p = util.from_ieee_block(s, datatype="f", is_big_endian=False)
+        p = util.from_ieee_block(
+            s,
+            datatype="f",
+            is_big_endian=False,
+        )
         for a, b in zip(p, e):
             assert a == pytest.approx(b)
 
         # Test handling definite length block
-        p = util.from_ieee_block(b"#214" + s[2:], datatype="f", is_big_endian=False)
+        p = util.from_ieee_block(
+            b"#214" + s[2:],
+            datatype="f",
+            is_big_endian=False,
+        )
         for a, b in zip(p, e):
             assert a == pytest.approx(b)
 
         # Test handling zero length block
-        p = util.from_ieee_block(b"#10" + s[2:], datatype="f", is_big_endian=False)
+        p = util.from_ieee_block(
+            b"#10" + s[2:],
+            datatype="f",
+            is_big_endian=False,
+        )
         assert not p
 
+        # Test handling definite length block with HP header format
         p = util.from_hp_block(
             b"#A\x0e\x00" + s[2:],
             datatype="f",
@@ -276,6 +289,54 @@ class TestParser(BaseTestCase):
         )
         for a, b in zip(p, e):
             assert a == pytest.approx(b)
+
+        # Test handling definite length block with R&S header format
+        p = util.from_rs_block(
+            b"#(14)" + s[2:],
+            datatype="f",
+            is_big_endian=False,
+        )
+        for a, b in zip(p, e):
+            assert a == pytest.approx(b)
+
+        # Test handling definite length block with IEEE header format with
+        # the automatic format determination
+        p = util.from_ieee_or_rs_block(
+            b"#214" + s[2:],
+            datatype="f",
+            is_big_endian=False,
+        )
+        for a, b in zip(p, e):
+            assert a == pytest.approx(b)
+
+        # Test handling definite length block with R&S header format with
+        # the automatic format determination
+        p = util.from_ieee_or_rs_block(
+            b"#(214)" + s[2:],
+            datatype="f",
+            is_big_endian=False,
+        )
+        for a, b in zip(p, e):
+            assert a == pytest.approx(b)
+
+        # Test handling indefinite length block with
+        # the automatic format determination
+        p = util.from_ieee_or_rs_block(
+            s,
+            datatype="f",
+            is_big_endian=False,
+        )
+        for a, b in zip(p, e):
+            assert a == pytest.approx(b)
+
+        # Test handling definite length block with HP header format with
+        # automatic format determination
+        with pytest.raises(ValueError):
+            p = util.from_ieee_or_rs_block(
+                b"#A\x0e\x00" + s[2:],
+                datatype="f",
+                is_big_endian=False,
+            )
 
     def test_integer_ascii_block(self):
         values = list(range(99))
@@ -343,9 +404,9 @@ class TestParser(BaseTestCase):
     def test_integer_binary_block(self):
         values = list(range(99))
         for block, tb, fb in zip(
-            ("ieee", "hp"),
-            (util.to_ieee_block, util.to_hp_block),
-            (util.from_ieee_block, util.from_hp_block),
+            ("ieee", "hp", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
+            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
         ):
             for fmt in "bBhHiIfd":
                 for endi in (True, False):
@@ -363,9 +424,9 @@ class TestParser(BaseTestCase):
     def test_noninteger_binary_block(self):
         values = [val + 0.5 for val in range(99)]
         for block, tb, fb in zip(
-            ("ieee", "hp"),
-            (util.to_ieee_block, util.to_hp_block),
-            (util.from_ieee_block, util.from_hp_block),
+            ("ieee", "hp", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
+            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
         ):
             for fmt in "fd":
                 for endi in (True, False):
@@ -383,9 +444,9 @@ class TestParser(BaseTestCase):
     def test_bytes_binary_block(self):
         values = b"dbslbw cj saj \x00\x76"
         for block, tb, fb in zip(
-            ("ieee", "hp"),
-            (util.to_ieee_block, util.to_hp_block),
-            (util.from_ieee_block, util.from_hp_block),
+            ("ieee", "hp", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
+            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
         ):
             for fmt in "sbB":
                 block = tb(values, datatype=fmt)
@@ -393,12 +454,12 @@ class TestParser(BaseTestCase):
                 rt = fb(block, datatype=fmt, container=bytes)
                 assert values == rt
 
-    def test_malformed_binary_block_header(self):
+    def test_no_start_of_block_indicator_binary_block_header(self):
         values = list(range(10))
         for header, tb, fb in zip(
-            ("ieee", "hp"),
-            (util.to_ieee_block, util.to_hp_block),
-            (util.from_ieee_block, util.from_hp_block),
+            ("ieee", "hp", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
+            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
         ):
             block = tb(values, "h", False)
             bad_block = block[1:]
@@ -407,38 +468,79 @@ class TestParser(BaseTestCase):
 
             assert "(#" in e.exconly()
 
-    def test_weird_binary_block_header(self):
+    def test_malformed_rs_binary_block_header_no_closing_parenthesis(self):
+        values = list(range(10))
+        for header, tb, fb in zip(
+            ("rs"),
+            (util.to_rs_block),
+            (util.from_ieee_or_rs_block),
+        ):
+            block = tb(values, "h", False)
+            index = block.find(b")")
+            bad_block = block[:index] + block[index + 1 :]
+            with pytest.raises(RuntimeError):
+                fb(bad_block, "h", False, list)
+
+    def test_malformed_rs_binary_block_header_late_closing_parenthesis(self):
         values = list(range(100))
         for header, tb, fb in zip(
-            ("ieee", "hp"),
-            (util.to_ieee_block, util.to_hp_block),
-            (util.from_ieee_block, util.from_hp_block),
+            ("rs"),
+            (util.to_rs_block),
+            (util.from_ieee_or_rs_block),
+        ):
+            block = tb(values, "h", False)
+            index = block.find(b")")
+            # Another closing parenthesis will appear late in the datastream
+            # as part of the sequence from 0 to 100
+            bad_block = block[:index] + block[index + 1 :]
+            with pytest.raises(RuntimeError):
+                fb(bad_block, "h", False, list)
+
+    def test_late_binary_block_header(self):
+        values = list(range(100))
+        for header, tb, fb in zip(
+            ("ieee", "hp", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
+            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
         ):
             block = tb(values, "h", False)
             bad_block = block[1:]
+
             if header == "hp":
                 index = bad_block.find(b"#")
                 bad_block = bad_block[:index] + b"#A" + bad_block[index + 2 :]
+            elif header == "rs":
+                index = bad_block.find(b"#")
+                bad_block = bad_block[:index] + b"#(123)" + bad_block[index + 2 :]
+
             with pytest.warns(UserWarning):
                 fb(bad_block, "h", False, list)
 
-    def test_weird_binary_block_header_raise(self):
+    def test_late_binary_block_header_raise(self):
         values = list(range(100))
         for header, tb, fb in zip(
-            ("ieee", "hp"),
-            (util.to_ieee_block, util.to_hp_block),
-            (util.from_ieee_block, util.from_hp_block),
+            ("ieee", "hp", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
+            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
         ):
             block = tb(values, "h", False)
             bad_block = block[1:]
+
             if header == "hp":
                 index = bad_block.find(b"#")
                 bad_block = bad_block[:index] + b"#A" + bad_block[index + 2 :]
-            parse = (
-                util.parse_ieee_block_header
-                if header == "ieee"
-                else partial(util.parse_hp_block_header, is_big_endian=False)
-            )
+            elif header == "rs":
+                index = bad_block.find(b"#")
+                bad_block = bad_block[:index] + b"#(123)" + bad_block[index + 2 :]
+
+            if header == "ieee":
+                parse = util.parse_ieee_block_header
+            elif header == "hp":
+                partial(util.parse_hp_block_header, is_big_endian=False)
+            elif header == "rs":
+                parse = util.parse_rs_block_header
+            elif header == "ieee_or_rs":
+                parse = util.parse_ieee_or_rs_block_header
 
             with pytest.raises(RuntimeError):
                 parse(bad_block, raise_on_late_block=True)
@@ -448,9 +550,9 @@ class TestParser(BaseTestCase):
     def test_binary_block_shorter_than_advertized(self):
         values = list(range(99))
         for header, tb, fb in zip(
-            ("ieee", "hp"),
-            (util.to_ieee_block, util.to_hp_block),
-            (util.from_ieee_block, util.from_hp_block),
+            ("ieee", "hp", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
+            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
         ):
             block = tb(values, "h", False)
             if header == "ieee":
@@ -460,6 +562,8 @@ class TestParser(BaseTestCase):
                     + b"9" * header_byte_number
                     + block[2 + header_byte_number :]
                 )
+            elif header == "rs":
+                block = b"#(9999" + block[block.find(b")") :]
             else:
                 block = block[:2] + b"\xff\xff\xff\xff" + block[2 + 4 :]
             with pytest.raises(ValueError) as e:
@@ -470,13 +574,16 @@ class TestParser(BaseTestCase):
     def test_guessing_block_length(self):
         values = list(range(99))
         for header, tb, fb in zip(
-            ("ieee", "hp"),
-            (util.to_ieee_block, util.to_hp_block),
-            (util.from_ieee_block, util.from_hp_block),
+            ("ieee", "hp", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
+            (util.from_ieee_block, util.from_hp_block, util.from_rs_block),
         ):
             block = tb(values, "h", False) + b"\n"
             if header == "ieee":
                 header_length = int(block[1:2].decode())
+                block = block[:2] + b"0" * header_length + block[2 + header_length :]
+            elif header == "rs":
+                header_length = block.find(b")") - 2
                 block = block[:2] + b"0" * header_length + block[2 + header_length :]
             else:
                 block = block[:2] + b"\x00\x00\x00\x00" + block[2 + 4 :]
