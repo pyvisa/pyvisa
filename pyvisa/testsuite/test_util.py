@@ -265,7 +265,7 @@ class TestParser(BaseTestCase):
 
         # Test handling definite length block
         p = util.from_ieee_block(
-            b"#214" + s[2:],
+            b"#256" + s[2:],
             datatype="f",
             is_big_endian=False,
         )
@@ -282,7 +282,7 @@ class TestParser(BaseTestCase):
 
         # Test handling definite length block with HP header format
         p = util.from_hp_block(
-            b"#A\x0e\x00" + s[2:],
+            b"#A\x38\x00" + s[2:],
             datatype="f",
             is_big_endian=False,
             container=partial(array.array, "f"),
@@ -292,7 +292,7 @@ class TestParser(BaseTestCase):
 
         # Test handling definite length block with R&S header format
         p = util.from_rs_block(
-            b"#(14)" + s[2:],
+            b"#(56)" + s[2:],
             datatype="f",
             is_big_endian=False,
         )
@@ -302,7 +302,7 @@ class TestParser(BaseTestCase):
         # Test handling definite length block with IEEE header format with
         # the automatic format determination
         p = util.from_ieee_or_rs_block(
-            b"#214" + s[2:],
+            b"#256" + s[2:],
             datatype="f",
             is_big_endian=False,
         )
@@ -312,7 +312,7 @@ class TestParser(BaseTestCase):
         # Test handling definite length block with R&S header format with
         # the automatic format determination
         p = util.from_ieee_or_rs_block(
-            b"#(214)" + s[2:],
+            b"#(56)" + s[2:],
             datatype="f",
             is_big_endian=False,
         )
@@ -333,7 +333,7 @@ class TestParser(BaseTestCase):
         # automatic format determination
         with pytest.raises(ValueError):
             p = util.from_ieee_or_rs_block(
-                b"#A\x0e\x00" + s[2:],
+                b"#A\x38\x00" + s[2:],
                 datatype="f",
                 is_big_endian=False,
             )
@@ -471,9 +471,9 @@ class TestParser(BaseTestCase):
     def test_malformed_rs_binary_block_header_no_closing_parenthesis(self):
         values = list(range(10))
         for header, tb, fb in zip(
-            ("rs"),
-            (util.to_rs_block),
-            (util.from_ieee_or_rs_block),
+            ("rs",),
+            (util.to_rs_block,),
+            (util.from_ieee_or_rs_block,),
         ):
             block = tb(values, "h", False)
             index = block.find(b")")
@@ -484,9 +484,9 @@ class TestParser(BaseTestCase):
     def test_malformed_rs_binary_block_header_late_closing_parenthesis(self):
         values = list(range(100))
         for header, tb, fb in zip(
-            ("rs"),
-            (util.to_rs_block),
-            (util.from_ieee_or_rs_block),
+            ("rs",),
+            (util.to_rs_block,),
+            (util.from_ieee_or_rs_block,),
         ):
             block = tb(values, "h", False)
             index = block.find(b")")
@@ -536,7 +536,7 @@ class TestParser(BaseTestCase):
             if header == "ieee":
                 parse = util.parse_ieee_block_header
             elif header == "hp":
-                partial(util.parse_hp_block_header, is_big_endian=False)
+                parse = partial(util.parse_hp_block_header, is_big_endian=False)
             elif header == "rs":
                 parse = util.parse_rs_block_header
             elif header == "ieee_or_rs":
