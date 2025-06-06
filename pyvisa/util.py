@@ -756,7 +756,7 @@ def from_ieee_block(
     if len(block) < offset + data_length:
         raise ValueError(
             "Binary data is incomplete. The header states %d data"
-            " bytes, but %d where received." % (data_length, len(block) - offset)
+            " bytes, but %d were received." % (data_length, len(block) - offset)
         )
 
     return from_binary_block(
@@ -808,7 +808,7 @@ def from_rs_block(
     if len(block) < offset + data_length:
         raise ValueError(
             "Binary data is incomplete. The header states %d data"
-            " bytes, but %d where received." % (data_length, len(block) - offset)
+            " bytes, but %d were received." % (data_length, len(block) - offset)
         )
 
     return from_binary_block(
@@ -863,7 +863,7 @@ def from_ieee_or_rs_block(
     if len(block) < offset + data_length:
         raise ValueError(
             "Binary data is incomplete. The header states %d data"
-            " bytes, but %d where received." % (data_length, len(block) - offset)
+            " bytes, but %d were received." % (data_length, len(block) - offset)
         )
 
     return from_binary_block(
@@ -910,7 +910,7 @@ def from_hp_block(
     if len(block) < offset + data_length:
         raise ValueError(
             "Binary data is incomplete. The header states %d data"
-            " bytes, but %d where received." % (data_length, len(block) - offset)
+            " bytes, but %d were received." % (data_length, len(block) - offset)
         )
 
     return from_binary_block(
