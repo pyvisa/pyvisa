@@ -587,6 +587,12 @@ class TestParser(BaseTestCase):
                 block = block[:2] + b"\x00\x00\x00\x00" + block[2 + 4 :]
             assert not fb(block, "h", False, list)
 
+    def test_block_length_too_large_for_header(self):
+        values = range(1_000_000_000_000_000)
+        for tb in (util.to_ieee_block, util.to_hp_block):
+            with pytest.raises(OverflowError):
+                tb(values, datatype="q")
+
     def test_handling_malformed_binary(self):
         containers = (list, tuple) + ((np.array, np.ndarray) if np else ())
 
