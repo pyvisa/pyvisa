@@ -322,6 +322,8 @@ class MessageBasedResource(Resource):
 
         if header_fmt == "ieee":
             block = util.to_ieee_block(values, datatype, is_big_endian)
+        elif header_fmt == "rs":
+            block = util.to_rs_block(values, datatype, is_big_endian)
         elif header_fmt == "hp":
             block = util.to_hp_block(values, datatype, is_big_endian)
         elif header_fmt == "empty":
@@ -573,6 +575,8 @@ class MessageBasedResource(Resource):
         data_points: int = -1,
         chunk_size: Optional[int] = None,
         monitoring_interface: Optional[SupportsUpdate] = None,
+        length_before_block: Optional[int] = None,
+        raise_on_late_block: bool = False,
     ) -> Sequence[Union[int, float]]:
         """Read values from the device in binary format returning an iterable
         of values.
@@ -613,10 +617,18 @@ class MessageBasedResource(Resource):
         block = self._read_raw(chunk_size, monitoring_interface=monitoring_interface)
 
         if header_fmt == "ieee":
-            offset, data_length = util.parse_ieee_block_header(block)
+            offset, data_length = util.parse_ieee_block_header(
+                block, length_before_block, raise_on_late_block
+            )
 
+        elif header_fmt == "rs":
+            offset, data_length = util.parse_ieee_or_rs_block_header(
+                block, length_before_block, raise_on_late_block
+            )
         elif header_fmt == "hp":
-            offset, data_length = util.parse_hp_block_header(block, is_big_endian)
+            offset, data_length = util.parse_hp_block_header(
+                block, is_big_endian, length_before_block, raise_on_late_block
+            )
         elif header_fmt == "empty":
             offset = 0
             data_length = -1
@@ -742,6 +754,8 @@ class MessageBasedResource(Resource):
         data_points: int = 0,
         chunk_size: Optional[int] = None,
         monitoring_interface: Optional[SupportsUpdate] = None,
+        length_before_block: Optional[int] = None,
+        raise_on_late_block: bool = False,
     ) -> Sequence[Union[int, float]]:
         """Query the device for values in binary format returning an iterable
         of values.
@@ -784,9 +798,9 @@ class MessageBasedResource(Resource):
             Data read from the device.
 
         """
-        if header_fmt not in ("ieee", "empty", "hp"):
+        if header_fmt not in ("ieee", "hp", "rs", "empty"):
             raise ValueError(
-                "Invalid header format. Valid options are 'ieee', 'empty', 'hp'"
+                "Invalid header format. Valid options are 'ieee', 'hp', 'rs', and 'empty'"
             )
 
         self.write(message)
@@ -804,6 +818,8 @@ class MessageBasedResource(Resource):
             data_points,
             chunk_size,
             monitoring_interface,
+            length_before_block,
+            raise_on_late_block,
         )
 
     def assert_trigger(self) -> None:
