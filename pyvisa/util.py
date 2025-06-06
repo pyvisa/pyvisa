@@ -1066,7 +1066,7 @@ def to_ieee_block(
         msg = (
             "Block length in bytes cannot be greater than or equal to 1 PB "
             "(it must be representable with 15 decimal digits), but the "
-            f"block length was {data_length}, which requires "
+            f"block length was {data_length} bytes, which requires "
             f"{len(str(data_length))} digits to represent."
         )
         raise OverflowError(msg)
@@ -1137,6 +1137,14 @@ def to_hp_block(
     array_length = len(iterable)
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
+
+    if data_length >= 2**16:
+        msg = (
+            "Block length in bytes cannot be greater than or equal to 64 KiB "
+            "(it must be representable with a 16-bit unsigned int), but the "
+            f"block length was {data_length} bytes."
+        )
+        raise OverflowError(msg)
 
     header = b"#A" + (
         int.to_bytes(data_length, 2, "big" if is_big_endian else "little")
