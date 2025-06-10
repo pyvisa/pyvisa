@@ -444,9 +444,14 @@ class TestParser(BaseTestCase):
     def test_bytes_binary_block(self):
         values = b"dbslbw cj saj \x00\x76"
         for block, tb, fb in zip(
-            ("ieee", "hp", "rs"),
-            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
-            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
+            ("ieee", "hp", "rs", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block, util.to_rs_block),
+            (
+                util.from_ieee_block,
+                util.from_hp_block,
+                util.from_ieee_or_rs_block,
+                util.from_rs_block,
+            ),
         ):
             for fmt in "sbB":
                 block = tb(values, datatype=fmt)
