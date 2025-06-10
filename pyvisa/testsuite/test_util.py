@@ -457,16 +457,21 @@ class TestParser(BaseTestCase):
     def test_no_start_of_block_indicator_binary_block_header(self):
         values = list(range(10))
         for header, tb, fb in zip(
-            ("ieee", "hp", "rs"),
-            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
-            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
+            ("ieee", "hp", "rs", "rs"),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block, util.to_rs_block),
+            (
+                util.from_ieee_block,
+                util.from_hp_block,
+                util.from_ieee_or_rs_block,
+                util.from_rs_block,
+            ),
         ):
             block = tb(values, "h", False)
             bad_block = block[1:]
             with pytest.raises(ValueError) as e:
                 fb(bad_block, "h", False, list)
 
-            assert "(#" in e.exconly()
+            assert '"#' in e.exconly()
 
     def test_malformed_rs_binary_block_header_no_closing_parenthesis(self):
         values = list(range(10))
@@ -549,8 +554,13 @@ class TestParser(BaseTestCase):
         values = list(range(99))
         for header, tb, fb in zip(
             ("ieee", "hp", "rs"),
-            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
-            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block, util.to_rs_block),
+            (
+                util.from_ieee_block,
+                util.from_hp_block,
+                util.from_ieee_or_rs_block,
+                util.from_rs_block,
+            ),
         ):
             block = tb(values, "h", False)
             if header == "ieee":
