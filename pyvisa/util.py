@@ -445,7 +445,7 @@ def parse_ieee_block_header(
     begin = block.find(b"#")
     if begin < 0:
         raise ValueError(
-            "Could not find hash sign (#) indicating the start of the block. "
+            'Could not find hash sign ("#") indicating the start of the block. '
             "The block begins with %r" % block[:25]
         )
 
@@ -631,7 +631,7 @@ def parse_ieee_or_rs_block_header(
     begin = block.find(b"#")
     if begin < 0:
         raise ValueError(
-            "Could not find hash sign (#) indicating the start of the block. "
+            'Could not find hash sign ("#") indicating the start of the block. '
             "The first 25 characters of the block: %r" % block[:25]
         )
 
@@ -679,7 +679,7 @@ def parse_hp_block_header(
     begin = block.find(b"#A")
     if begin < 0:
         raise ValueError(
-            "Could not find the standard block header (#A) indicating the start "
+            'Could not find the standard block header ("#A") indicating the start '
             "of the block. The block begins with %r" % block[:25]
         )
 
@@ -799,11 +799,6 @@ def from_rs_block(
 
     """
     offset, data_length = parse_rs_block_header(block)
-
-    # If the data length is not reported takes all the data and do not make
-    # any assumption about the termination character
-    if data_length == -1:
-        data_length = len(block) - offset
 
     if len(block) < offset + data_length:
         raise ValueError(
