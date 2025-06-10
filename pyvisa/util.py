@@ -392,7 +392,7 @@ def to_ascii_block(
 
 
 #: Valid binary header when reading/writing binary block of data from an instrument
-BINARY_HEADERS = Literal["ieee", "hp", "empty"]
+BINARY_HEADERS = Literal["ieee", "hp", "rs", "empty"]
 
 #: Valid datatype for binary block. See Python standard library struct module for more
 #: details.
@@ -445,18 +445,22 @@ def parse_ieee_block_header(
     begin = block.find(b"#")
     if begin < 0:
         raise ValueError(
-            "Could not find hash sign (#) indicating the start of the block. "
-            "The block begin by %r" % block[:25]
+            'Could not find hash sign ("#") indicating the start of the block. '
+            "The block begins with %r" % block[:25]
         )
 
-    length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK
+    length_before_block = (
+        DEFAULT_LENGTH_BEFORE_BLOCK
+        if length_before_block is None
+        else length_before_block
+    )
     if begin > length_before_block:
         msg = (
             "The beginning of the block has been found at %d which "
             "is an unexpectedly large value. The actual block may "
             "have been missing a beginning marker but the block "
             "contained one:\n%s"
-        ) % (begin, repr(block))
+        ) % (begin, repr(block[: begin + 25]))
         if raise_on_late_block:
             raise RuntimeError(msg)
         else:
@@ -464,21 +468,177 @@ def parse_ieee_block_header(
 
     try:
         # int(block[begin+1]) != int(block[begin+1:begin+2]) in Python 3
-        header_length = int(block[begin + 1 : begin + 2])
+        header_length = int(block[begin + 1 : begin + 2], base=16)
     except ValueError:
         header_length = 0
+
     offset = begin + 2 + header_length
 
     if header_length > 0:
         # #3100DATA
         # 012345
+
+        if header_length == 10 and len(block[begin:]) < (2**16) + 4:
+            # Detect an HP formatted block, which starts with "A"
+            msg = (
+                "Header length in IEEE format was indicated as 0xA (10d) but the "
+                "block length was less than 64 KiB. It appears the block may be "
+                "using the HP format instead of IEEE. If so, you will need to use "
+                'the `header_fmt = "hp"` argument.'
+            )
+            raise ValueError(msg)
+
         data_length = int(block[begin + 2 : offset])
+
     else:
         # #0DATA
         # 012
         data_length = -1
 
     return offset, data_length
+
+
+def parse_rs_block_header(
+    block: Union[bytes, bytearray],
+    length_before_block: Optional[int] = None,
+    raise_on_late_block: bool = False,
+) -> Tuple[int, int]:
+    """Parse the header of a Rohde & Schwarz extended-length block. This is
+    used for data transfers 1 GB or larger on R&S instruments.
+
+    Definite Length Arbitrary Block:
+    #(<data_length>)<data>
+
+    The header_length specifies the size of the data_length field.
+    And the data_length field specifies the size of the data.
+
+    Parameters
+    ----------
+    block : Union[bytes, bytearray]
+        R&S formatted block of data
+    length_before_block : Optional[int], optional
+        Maximum number of bytes before the actual start of the block before a warning
+        is issued (or an exception is raised, if raise_on_late_block is True). Default
+        to None, which means the DEFAULT_LENGTH_BEFORE_BLOCK constant will be used..
+    raise_on_late_block : bool, optional
+        Raise an error in the beginning of the block is not found before
+        length_before_block, if False use a warning. Default to False.
+
+    Returns
+    -------
+    int
+        Offset at which the actual data starts
+    int
+        Length of the data in bytes.
+
+    """
+    begin = block.find(b"#(")
+    if begin < 0:
+        raise ValueError(
+            'Could not find the standard block header ("#(") indicating the start '
+            "of the block. The block begins with %r" % block[:25]
+        )
+
+    length_before_block = (
+        DEFAULT_LENGTH_BEFORE_BLOCK
+        if length_before_block is None
+        else length_before_block
+    )
+    if begin > length_before_block:
+        msg = (
+            "The beginning of the block has been found at %d which "
+            "is an unexpectedly large value. The actual block may "
+            "have been missing a beginning marker but the block "
+            "contained one:\n%s"
+        ) % (begin, repr(block[: begin + 25]))
+        if raise_on_late_block:
+            raise RuntimeError(msg)
+        else:
+            warnings.warn(msg, UserWarning)
+
+    # Rohde & Schwarz uses the format #(length_digits)DATA when the number of
+    # bytes exceeds what can be represented with 9 decimal digits (≥1 GB).
+    # The length character is no longer used, and instead parentheses are used
+    # to delimit the length, allowing an arbitrary number of length digits.
+    header_length = (block.find(b")", begin)) - (begin + 2)
+    if header_length < 0:
+        msg = (
+            "Block length is indicated using parentheses syntax, but no "
+            "closing parenthesis was found."
+        )
+        raise RuntimeError(msg)
+    elif header_length > 18:
+        # ≥1 exabyte of data seems quite unlikely
+        msg = (
+            "Unexpectedly large block length indicated using parentheses "
+            f"syntax. Indicated length was {header_length} digits long."
+        )
+        raise RuntimeError(msg)
+
+    """
+    #(12345678901234567890123)DATA
+    ^ ^                     ^ ^
+    | |<-- header_length -->| |
+    | |                       `--- offset
+    | `--- begin + 2
+    `--- begin
+    """
+    offset = begin + 2 + header_length + 1
+    data_length = int(block[begin + 2 : offset - 1])
+
+    return offset, data_length
+
+
+def parse_ieee_or_rs_block_header(
+    block: Union[bytes, bytearray],
+    length_before_block: Optional[int] = None,
+    raise_on_late_block: bool = False,
+) -> Tuple[int, int]:
+    """Parse the header of a IEEE block.
+
+    Definite Length Arbitrary Block:
+    #<header_length><data_length><data>
+
+    The header_length specifies the size of the data_length field.
+    And the data_length field specifies the size of the data.
+
+    Indefinite Length Arbitrary Block:
+    #0<data>
+
+    In this case the data length returned will be 0. The actual length can be
+    deduced from the block and the offset.
+
+    Parameters
+    ----------
+    block : Union[bytes, bytearray]
+        IEEE formatted block of data.
+    length_before_block : Optional[int], optional
+        Maximum number of bytes before the actual start of the block before a warning
+        is issued (or an exception is raised, if raise_on_late_block is True). Default
+        to None, which means the DEFAULT_LENGTH_BEFORE_BLOCK constant will be used..
+    raise_on_late_block : bool, optional
+        Raise an error in the beginning of the block is not found before
+        length_before_block, if False use a warning. Default to False.
+
+    Returns
+    -------
+    int
+        Offset at which the actual data starts
+    int
+        Length of the data in bytes.
+
+    """
+    begin = block.find(b"#")
+    if begin < 0:
+        raise ValueError(
+            'Could not find hash sign ("#") indicating the start of the block. '
+            "The first 25 characters of the block: %r" % block[:25]
+        )
+
+    if block[begin + 1] == ord("("):
+        return parse_rs_block_header(block, length_before_block, raise_on_late_block)
+    else:
+        return parse_ieee_block_header(block, length_before_block, raise_on_late_block)
 
 
 def parse_hp_block_header(
@@ -519,11 +679,15 @@ def parse_hp_block_header(
     begin = block.find(b"#A")
     if begin < 0:
         raise ValueError(
-            "Could not find the standard block header (#A) indicating the start "
-            "of the block. The block begin by %r" % block[:25]
+            'Could not find the standard block header ("#A") indicating the start '
+            "of the block. The block begins with %r" % block[:25]
         )
 
-    length_before_block = length_before_block or DEFAULT_LENGTH_BEFORE_BLOCK
+    length_before_block = (
+        DEFAULT_LENGTH_BEFORE_BLOCK
+        if length_before_block is None
+        else length_before_block
+    )
     if begin > length_before_block:
         msg = (
             "The beginning of the block has been found at %d which "
@@ -592,7 +756,109 @@ def from_ieee_block(
     if len(block) < offset + data_length:
         raise ValueError(
             "Binary data is incomplete. The header states %d data"
-            " bytes, but %d where received." % (data_length, len(block) - offset)
+            " bytes, but %d were received." % (data_length, len(block) - offset)
+        )
+
+    return from_binary_block(
+        block, offset, data_length, datatype, is_big_endian, container
+    )
+
+
+def from_rs_block(
+    block: Union[bytes, bytearray],
+    datatype: BINARY_DATATYPES = "f",
+    is_big_endian: bool = False,
+    container: Callable[
+        [Iterable[Union[int, float]]], Sequence[Union[int, float]]
+    ] = list,
+) -> Sequence[Union[int, float]]:
+    """Convert a block in the Rohde & Schwarz format into an iterable of numbers.
+
+    Definite Length Arbitrary Block:
+    #(<data_length>)<data>
+
+    The header_length specifies the size of the data_length field.
+    The data_length field specifies the size of the data.
+
+    Parameters
+    ----------
+    block : Union[bytes, bytearray]
+        R&S formatted block of data.
+    datatype : BINARY_DATATYPES, optional
+        Format string for a single element. See struct module. 'f' by default.
+    is_big_endian : bool, optional
+        Are the data in big or little endian order.
+    container : Union[Type, Callable[[Iterable], Sequence]], optional
+        Container type to use for the output data. Possible values are: list,
+        tuple, np.ndarray, etc, Default to list.
+
+    Returns
+    -------
+    Sequence[Union[int, float]]
+        Parsed data.
+
+    """
+    offset, data_length = parse_rs_block_header(block)
+
+    if len(block) < offset + data_length:
+        raise ValueError(
+            "Binary data is incomplete. The header states %d data"
+            " bytes, but %d were received." % (data_length, len(block) - offset)
+        )
+
+    return from_binary_block(
+        block, offset, data_length, datatype, is_big_endian, container
+    )
+
+
+def from_ieee_or_rs_block(
+    block: Union[bytes, bytearray],
+    datatype: BINARY_DATATYPES = "f",
+    is_big_endian: bool = False,
+    container: Callable[
+        [Iterable[Union[int, float]]], Sequence[Union[int, float]]
+    ] = list,
+) -> Sequence[Union[int, float]]:
+    """Convert a block in either the IEEE or Rohde & Schwarz format into an iterable of numbers.
+
+    Definite Length Arbitrary Block (IEEE):
+    #<header_length><data_length><data>
+
+    Definite Length Arbitrary Block (R&S):
+    #(<data_length>)<data>
+
+    The header_length specifies the size of the data_length field.
+    The data_length field specifies the size of the data.
+
+    Parameters
+    ----------
+    block : Union[bytes, bytearray]
+        R&S formatted block of data.
+    datatype : BINARY_DATATYPES, optional
+        Format string for a single element. See struct module. 'f' by default.
+    is_big_endian : bool, optional
+        Are the data in big or little endian order.
+    container : Union[Type, Callable[[Iterable], Sequence]], optional
+        Container type to use for the output data. Possible values are: list,
+        tuple, np.ndarray, etc, Default to list.
+
+    Returns
+    -------
+    Sequence[Union[int, float]]
+        Parsed data.
+
+    """
+    offset, data_length = parse_ieee_or_rs_block_header(block)
+
+    # If the data length is not reported takes all the data and do not make
+    # any assumption about the termination character
+    if data_length == -1:
+        data_length = len(block) - offset
+
+    if len(block) < offset + data_length:
+        raise ValueError(
+            "Binary data is incomplete. The header states %d data"
+            " bytes, but %d were received." % (data_length, len(block) - offset)
         )
 
     return from_binary_block(
@@ -639,7 +905,7 @@ def from_hp_block(
     if len(block) < offset + data_length:
         raise ValueError(
             "Binary data is incomplete. The header states %d data"
-            " bytes, but %d where received." % (data_length, len(block) - offset)
+            " bytes, but %d were received." % (data_length, len(block) - offset)
         )
 
     return from_binary_block(
@@ -789,8 +1055,54 @@ def to_ieee_block(
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
 
-    header = "%d" % data_length
-    header = "#%d%s" % (len(header), header)
+    number_of_digits_in_data_length = f"{len(str(data_length)):X}"
+
+    if len(number_of_digits_in_data_length) > 1:
+        msg = (
+            "Block length in bytes cannot be greater than or equal to 1 PB "
+            "(it must be representable with 15 decimal digits), but the "
+            f"block length was {data_length} bytes, which requires "
+            f"{len(str(data_length))} digits to represent."
+        )
+        raise OverflowError(msg)
+
+    header = f"#{number_of_digits_in_data_length}{data_length:d}"
+
+    # header = "%d" % data_length
+    # header = "#%d%s" % (len(header), header)
+
+    return to_binary_block(iterable, header, datatype, is_big_endian)
+
+
+def to_rs_block(
+    iterable: Sequence[Union[int, float]],
+    datatype: BINARY_DATATYPES = "f",
+    is_big_endian: bool = False,
+) -> bytes:
+    """Convert an iterable of numbers into a block of data in the Rohde & Schwarz
+    format for extended block lengths. This is used by R&S for blocks greater
+    than or equal to 1 GB.
+
+    Parameters
+    ----------
+    iterable : Sequence[Union[int, float]]
+        Sequence of numbers to pack into a block.
+    datatype : BINARY_DATATYPES, optional
+        Format string for a single element. See struct module. Default to 'f'.
+    is_big_endian : bool, optional
+        Are the data in big or little endian order. Default to False.
+
+    Returns
+    -------
+    bytes
+        Binary block of data preceded by the specified header
+
+    """
+    array_length = len(iterable)
+    element_length = struct.calcsize(datatype)
+    data_length = array_length * element_length
+
+    header = f"#({data_length:d})"
 
     return to_binary_block(iterable, header, datatype, is_big_endian)
 
@@ -820,6 +1132,14 @@ def to_hp_block(
     array_length = len(iterable)
     element_length = struct.calcsize(datatype)
     data_length = array_length * element_length
+
+    if data_length >= 2**16:
+        msg = (
+            "Block length in bytes cannot be greater than or equal to 64 KiB "
+            "(it must be representable with a 16-bit unsigned int), but the "
+            f"block length was {data_length} bytes."
+        )
+        raise OverflowError(msg)
 
     header = b"#A" + (
         int.to_bytes(data_length, 2, "big" if is_big_endian else "little")

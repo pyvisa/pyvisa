@@ -1,9 +1,10 @@
 PyVISA Changelog
 ================
 
-1.16.0 (unrealeased)
+1.16.0 (unreleased)
 -------------------
 - fix handling of missing secondary address for GPIB resources PR #913
+- added support for reading and writing definite-length binary blocks ≥1 GB PR #914
 
 1.15.0 (01-04-2025)
 -------------------
