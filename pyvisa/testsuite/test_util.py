@@ -558,7 +558,7 @@ class TestParser(BaseTestCase):
     def test_binary_block_shorter_than_advertized(self):
         values = list(range(99))
         for header, tb, fb in zip(
-            ("ieee", "hp", "rs"),
+            ("ieee", "hp", "rs", "rs"),
             (util.to_ieee_block, util.to_hp_block, util.to_rs_block, util.to_rs_block),
             (
                 util.from_ieee_block,
