@@ -334,7 +334,7 @@ class VisaLibraryBase(object):
         except TypeError as e:
             raise errors.VisaTypeError(str(e)) from e
 
-        self.handlers[session].append(new_handler[:-1] + (event_type,))
+        self.handlers[session].append((*new_handler[:-1], event_type))
         return new_handler[1]
 
     def uninstall_visa_handler(
