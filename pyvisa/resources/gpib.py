@@ -60,22 +60,22 @@ class GPIBCommand(bytes, Enum):
     configure_enable = CFE = b"\x1f"
 
     #: UNT: UNTALK
-    untalk = UNT = b"\x3f"
+    untalk = UNT = b"\x5f"
 
     #: UNL: UNLISTEN
-    unlisten = UNL = b"\x5f"
+    unlisten = UNL = b"\x3f"
 
     @staticmethod
     def talker(board_pad) -> bytes:
         """MTA: MY TALK ADDRESS."""
-        return (40 + board_pad).to_bytes(1, "big")
+        return (0x40 + board_pad).to_bytes(1, "big")
 
     MTA = talker
 
     @staticmethod
     def listener(device_pad) -> bytes:
         """MLA: MY LISTEN ADDRESS."""
-        return (20 + device_pad).to_bytes(1, "big")
+        return (0x20 + device_pad).to_bytes(1, "big")
 
     MLA = listener
 
@@ -86,7 +86,7 @@ class GPIBCommand(bytes, Enum):
         For VISA SAD range from 1 to 31 and 0 is not SAD.
 
         """
-        if device_sad == 0 or device_sad == constants.VI_NO_SEC_ADDR:
+        if device_sad == 0 or device_sad == 65535:
             return b""
         return (95 + device_sad).to_bytes(1, "big")
 
@@ -240,7 +240,6 @@ class GPIBInterface(_GPIBMixin, MessageBasedResource):
         command = GPIBCommand.talker(self.primary_address) + GPIBCommand.unlisten
 
         for resource in resources:
-            # tell device GPIB::11 to listen
             command += GPIBCommand.listener(
                 resource.primary_address
             ) + GPIBCommand.secondary_address(resource.secondary_address)
