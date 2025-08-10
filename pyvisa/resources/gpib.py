@@ -25,7 +25,7 @@ class GPIBCommand(bytes, Enum):
     perform a trigger addressed to multiple instrument on the bus.
 
     See: https://www.ni.com/docs/en-US/bundle/gpib-for-labview-nxg/page/ieee-488-command-messages.html
-    for the complete list of GPIB commands. 
+    for the complete list of GPIB commands.
 
     """
 
