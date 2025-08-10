@@ -134,7 +134,7 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
     enable_repeat_addressing: Attribute[bool] = attributes.AttrVI_ATTR_GPIB_READDR_EN()
 
     def wait_for_srq(self, timeout: int = 25000) -> None:
-        """Wait for a serial request (SRQ) coming from the instrument.
+        """Wait for a Service Request (SRQ) coming from the instrument.
 
         Note that this method is not ended when *another* instrument signals an
         SRQ, only *this* instrument.
