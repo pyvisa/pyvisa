@@ -24,6 +24,9 @@ class GPIBCommand(bytes, Enum):
     Please note that group_execute_trigger provide a high level interface to
     perform a trigger addressed to multiple instrument on the bus.
 
+    See: https://www.ni.com/docs/en-US/bundle/gpib-for-labview-nxg/page/ieee-488-command-messages.html
+    for the complete list of GPIB commands. 
+
     """
 
     #: GTL: GO TO LOCAL affects only addressed devices
@@ -85,10 +88,14 @@ class GPIBCommand(bytes, Enum):
 
         For VISA SAD range from 1 to 31 and 0 is not SAD.
 
+        WARNING: This is untested. We're assuming it to be 0x60 + device_sad,
+        based on the pattern of 0x20 and 0x40 for the listener and talker addresses.
+
         """
         if device_sad == 0 or device_sad == constants.VI_NO_SEC_ADDR:
             return b""
-        return (95 + device_sad).to_bytes(1, "big")
+
+        return (0x60 + device_sad).to_bytes(1, "big")
 
     MSA = secondary_address
 
