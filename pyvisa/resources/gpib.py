@@ -24,6 +24,9 @@ class GPIBCommand(bytes, Enum):
     Please note that group_execute_trigger provide a high level interface to
     perform a trigger addressed to multiple instrument on the bus.
 
+    See: https://www.ni.com/docs/en-US/bundle/gpib-for-labview-nxg/page/ieee-488-command-messages.html
+    for the complete list of GPIB commands.
+
     """
 
     #: GTL: GO TO LOCAL affects only addressed devices
@@ -60,22 +63,22 @@ class GPIBCommand(bytes, Enum):
     configure_enable = CFE = b"\x1f"
 
     #: UNT: UNTALK
-    untalk = UNT = b"\x3f"
+    untalk = UNT = b"\x5f"
 
     #: UNL: UNLISTEN
-    unlisten = UNL = b"\x5f"
+    unlisten = UNL = b"\x3f"
 
     @staticmethod
     def talker(board_pad) -> bytes:
         """MTA: MY TALK ADDRESS."""
-        return (40 + board_pad).to_bytes(1, "big")
+        return (0x40 + board_pad).to_bytes(1, "big")
 
     MTA = talker
 
     @staticmethod
     def listener(device_pad) -> bytes:
         """MLA: MY LISTEN ADDRESS."""
-        return (20 + device_pad).to_bytes(1, "big")
+        return (0x20 + device_pad).to_bytes(1, "big")
 
     MLA = listener
 
@@ -85,10 +88,14 @@ class GPIBCommand(bytes, Enum):
 
         For VISA SAD range from 1 to 31 and 0 is not SAD.
 
+        WARNING: This is untested. We're assuming it to be 0x60 + device_sad,
+        based on the pattern of 0x20 and 0x40 for the listener and talker addresses.
+
         """
         if device_sad == 0 or device_sad == constants.VI_NO_SEC_ADDR:
             return b""
-        return (95 + device_sad).to_bytes(1, "big")
+
+        return (0x60 + device_sad).to_bytes(1, "big")
 
     MSA = secondary_address
 
@@ -127,7 +134,7 @@ class GPIBInstrument(_GPIBMixin, MessageBasedResource):
     enable_repeat_addressing: Attribute[bool] = attributes.AttrVI_ATTR_GPIB_READDR_EN()
 
     def wait_for_srq(self, timeout: int = 25000) -> None:
-        """Wait for a serial request (SRQ) coming from the instrument.
+        """Wait for a Service Request (SRQ) coming from the instrument.
 
         Note that this method is not ended when *another* instrument signals an
         SRQ, only *this* instrument.
@@ -240,7 +247,6 @@ class GPIBInterface(_GPIBMixin, MessageBasedResource):
         command = GPIBCommand.talker(self.primary_address) + GPIBCommand.unlisten
 
         for resource in resources:
-            # tell device GPIB::11 to listen
             command += GPIBCommand.listener(
                 resource.primary_address
             ) + GPIBCommand.secondary_address(resource.secondary_address)
