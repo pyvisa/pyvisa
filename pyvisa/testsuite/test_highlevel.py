@@ -51,13 +51,13 @@ class TestHighlevel(BaseTestCase):
     def test_base_class_parse_resource(self, rsc_name, values):
         """Test the base class implementation of parse_resource."""
         lib = highlevel.VisaLibraryBase("test")
-        info, ret_code = lib.parse_resource(None, rsc_name)
+        info, _ret_code = lib.parse_resource(None, rsc_name)
 
         # interface_type interface_board_number resource_class resource_name alias
         for parsed, value in zip(info, (*values[:2], None, None, None)):
             assert parsed == value
 
-        info, ret_code = lib.parse_resource_extended(None, rsc_name)
+        info, _ret_code = lib.parse_resource_extended(None, rsc_name)
         # interface_type interface_board_number resource_class resource_name alias
         for parsed, value in zip(
             info,

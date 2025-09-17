@@ -833,7 +833,7 @@ class MessageBasedResource(Resource):
 
     def read_stb(self) -> int:
         """Service request status register."""
-        value, retcode = self.visalib.read_stb(self.session)
+        value, _retcode = self.visalib.read_stb(self.session)
         return value
 
     @contextlib.contextmanager
