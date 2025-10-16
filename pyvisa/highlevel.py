@@ -3010,9 +3010,13 @@ class ResourceManager(object):
         close_ref = WeakMethod(obj.close)  # type: ignore
 
         def call_close():
-            meth = close_ref()
-            if meth:
-                meth()
+            try:
+                meth = close_ref()
+                if meth:
+                    meth()
+            except Exception:
+                # Suppress exceptions during exit
+                pass
 
         atexit.register(call_close)
         obj._atexit_handler = call_close  # type: ignore
