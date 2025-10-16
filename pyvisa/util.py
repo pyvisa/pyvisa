@@ -1307,7 +1307,7 @@ def get_shared_library_arch(filename: Union[str, Path]) -> PEMachineType:
         dos_headers = fp.read(64)
         _ = fp.read(4)
 
-        magic, skip, offset = struct.unpack("=2s58sl", dos_headers)
+        magic, _skip, offset = struct.unpack("=2s58sl", dos_headers)
 
         if magic != b"MZ":
             raise Exception("Not an executable")
@@ -1315,7 +1315,7 @@ def get_shared_library_arch(filename: Union[str, Path]) -> PEMachineType:
         fp.seek(offset, io.SEEK_SET)
         pe_header = fp.read(6)
 
-        sig, skip, machine = struct.unpack(str("=2s2sH"), pe_header)
+        sig, _skip, machine = struct.unpack(str("=2s2sH"), pe_header)
 
         if sig != b"PE":
             raise Exception("Not a PE executable")

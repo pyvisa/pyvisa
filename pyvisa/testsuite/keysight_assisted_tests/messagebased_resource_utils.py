@@ -788,7 +788,7 @@ class EventAwareMessagebasedResourceTestCaseMixin(EventAwareResourceTestCaseMixi
 
         try:
             visalib = self.instr.visalib
-            buffer, job_id, status_code = visalib.read_asynchronously(
+            buffer, job_id, _status_code = visalib.read_asynchronously(
                 self.instr.session, 10
             )
             assert buffer is visalib.get_buffer_from_id(job_id)

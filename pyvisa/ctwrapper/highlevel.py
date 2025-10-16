@@ -287,7 +287,7 @@ class IVIVisaLibrary(highlevel.VisaLibraryBase):
                 find_list,
                 return_counter,
                 instrument_description,
-                err,
+                _err,
             ) = self._find_resources(  # type: ignore
                 session, query
             )

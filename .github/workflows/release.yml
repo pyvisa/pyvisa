@@ -19,7 +19,7 @@ jobs:
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
       - name: Build sdist
         run: |
           pip install --upgrade pip
@@ -47,7 +47,7 @@ jobs:
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
       - name: Build wheels
         run: |
           pip install --upgrade pip
