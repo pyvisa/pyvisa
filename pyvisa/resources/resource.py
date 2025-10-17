@@ -329,7 +329,9 @@ class Resource(object):
             # Mypy is confused by the idea that we can set a value we cannot get
             self.session = None  # type: ignore
         except errors.InvalidSession:
-            pass
+            logger.warning(
+                "Exception suppressed while closing a resource", exc_info=True
+            )
 
     def __switch_events_off(self) -> None:
         """Switch off and discards all events."""

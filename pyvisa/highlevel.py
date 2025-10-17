@@ -3016,7 +3016,10 @@ class ResourceManager(object):
                     meth()
             except Exception:
                 # Suppress exceptions during exit
-                pass
+                logger.warning(
+                    "Exception suppressed while closing a ResourceManager at system exit",
+                    exc_info=True,
+                )
 
         atexit.register(call_close)
         obj._atexit_handler = call_close  # type: ignore
