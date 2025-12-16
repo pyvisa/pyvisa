@@ -2999,7 +2999,7 @@ class ResourceManager(object):
 
         obj = super(ResourceManager, cls).__new__(cls)
 
-        obj.session, err = visa_library.open_default_resource_manager()
+        obj.session, _err = visa_library.open_default_resource_manager()
 
         obj.visalib = visa_library
         obj.visalib.resource_manager = obj
@@ -3180,9 +3180,11 @@ class ResourceManager(object):
         """
 
         if extended:
-            ret, err = self.visalib.parse_resource_extended(self.session, resource_name)
+            ret, _err = self.visalib.parse_resource_extended(
+                self.session, resource_name
+            )
         else:
-            ret, err = self.visalib.parse_resource(self.session, resource_name)
+            ret, _err = self.visalib.parse_resource(self.session, resource_name)
 
         return ret
 

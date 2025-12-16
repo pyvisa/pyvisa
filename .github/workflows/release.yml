@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Get history and tags for SCM versioning to work
         run: |
           git fetch --prune --unshallow
@@ -31,7 +31,7 @@ jobs:
           pip install dist/*.tar.gz
           python -X dev -m pytest --pyargs pyvisa
       - name: Store artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cibw-sdist
           path: dist/*
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Get history and tags for SCM versioning to work
         run: |
           git fetch --prune --unshallow
@@ -59,7 +59,7 @@ jobs:
           pip install dist/*.whl
           python -X dev -m pytest --pyargs pyvisa
       - name: Store artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cibw-wheels
           path: dist/*.whl
@@ -75,7 +75,7 @@ jobs:
       id-token: write
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v7.0.0
         with:
           pattern: cibw-*
           path: dist
@@ -97,13 +97,13 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v5.0.0
+      uses: actions/download-artifact@v7.0.0
       with:
         pattern: cibw-*
         path: dist
         merge-multiple: true
     - name: Sign the dists with Sigstore
-      uses: sigstore/gh-action-sigstore-python@v2.1.0
+      uses: sigstore/gh-action-sigstore-python@v3.2.0
       with:
         inputs: >-
           ./dist/*.tar.gz
