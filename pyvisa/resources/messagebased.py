@@ -217,7 +217,7 @@ class MessageBasedResource(Resource):
     def write_ascii_values(
         self,
         message: str,
-        values: Sequence[Any],
+        values: Iterable[Any],
         converter: util.ASCII_CONVERTER = "f",
         separator: Union[str, Callable[[Iterable[str]], str]] = ",",
         termination: Optional[str] = None,
@@ -232,7 +232,7 @@ class MessageBasedResource(Resource):
         message : str
             Header of the message to be sent.
         values : Sequence[Any]
-            Data to be writen to the device.
+            Data to be written to the device.
         converter : Union[str, Callable[[Any], str]], optional
             Str formatting codes or function used to convert each value.
             Defaults to "f".
