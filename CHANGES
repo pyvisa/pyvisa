@@ -6,6 +6,9 @@ PyVISA Changelog
 - fix handling of missing secondary address for GPIB resources PR #913
 - added support for reading and writing definite-length binary blocks ≥1 GB PR #914
 - fix static methods for GPIB addresses, and some wrong GPIB commands PR #930
+- improve typing of MessageBasedResource.write_ascii_values PR #962
+- improve error handling at resource closing and Python exit PR #943
+
 
 1.15.0 (01-04-2025)
 -------------------
