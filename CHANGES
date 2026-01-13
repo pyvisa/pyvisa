@@ -1,6 +1,10 @@
 PyVISA Changelog
 ================
 
+1.16.1 (xx-xx-2026)
+-------------------
+- fix warning on closing already closed resources PR #967
+
 1.16.0 (18-12-2025)
 -------------------
 - fix handling of missing secondary address for GPIB resources PR #913
