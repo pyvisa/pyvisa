@@ -21,6 +21,8 @@ PyVISA Changelog
 - add a -v option to pyvisa-shell to increase log verbosity and set default to WARN PR #816
 - added support for an optional monitoring interface object to the read_binary_values() and
   query_binary_values() methods of message-based resources.
+- automatically determine default chunk_size in read_binary_values() so only one or two
+  transfers are used for all data PR #874
 - added the message_size() helper function to calculate the estimated size of a data
   transfer, including the header.
 - prevent adding duplicate paths to the DLL search path during ResourceManager
