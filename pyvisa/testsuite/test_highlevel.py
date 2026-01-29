@@ -243,7 +243,8 @@ class TestHighlevel(BaseTestCase):
         """Test the base class implementation of get_debug_info."""
         assert len(highlevel.VisaLibraryBase.get_debug_info()) == 1
 
-    def test_open_resource_attr(self, caplog):
+    @pytest.mark.parametrize("library_prefix", ["", "a", "a@b"])
+    def test_open_resource_attr(self, caplog, library_prefix: str):
         """Test handling errors when trying to open a Visa library."""
         highlevel._WRAPPERS.clear()
 
@@ -252,12 +253,12 @@ class TestHighlevel(BaseTestCase):
         try:
             pkg = import_module("pyvisa_test_open")
             highlevel.get_wrapper_class("test_open")
-            rm = ResourceManager("@test_open")
+            rm = ResourceManager(f"{library_prefix}@test_open")
             assert rm is not None
         finally:
             sys.path.remove(path)
 
         instr = rm.open_resource("TCPIP::192.168.0.1::INSTR")
         assert isinstance(instr, pkg.FakeResource)
-        assert rm.visalib.open_resource_called
+        assert rm.visalib.open_resource_called  # type: ignore[attr-defined]
         rm.close()
