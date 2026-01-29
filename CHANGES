@@ -1,6 +1,10 @@
 PyVISA Changelog
 ================
 
+1.16.2 (29-01-2026)
+-------------------
+- fix creating a ResourceManager with visa_library string containing multiple '@' symbols
+
 1.16.1 (13-01-2026)
 -------------------
 - fix warning on closing already closed resources PR #967
