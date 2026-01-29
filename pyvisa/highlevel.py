@@ -2889,7 +2889,7 @@ def open_visa_library(specification: str = "") -> VisaLibraryBase:
 
     wrapper: Optional[str]
     try:
-        argument, wrapper = specification.split("@")
+        argument, wrapper = specification.rsplit("@", 1)
     except ValueError:
         argument = specification
         wrapper = None  # Flag that we need a fallback, but avoid nested exceptions
