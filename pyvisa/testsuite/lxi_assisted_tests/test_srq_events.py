@@ -14,7 +14,12 @@ from pyvisa import ResourceManager
 from pyvisa.constants import EventMechanism, EventType
 from pyvisa.testsuite import require_visa_lib
 
-from . import RESOURCE_ADDRESSES, require_lxi_assisted, require_lxi_hislip, require_lxi_vxi11
+from . import (
+    RESOURCE_ADDRESSES,
+    require_lxi_assisted,
+    require_lxi_hislip,
+    require_lxi_vxi11,
+)
 
 pytestmark = [require_visa_lib, require_lxi_assisted]
 
@@ -46,9 +51,9 @@ def _compare_user_handle(h1, h2):
 
 
 def _trigger_srq(instr):
-    instr.write("RCVSLOWSRQ")
-    instr.write("1")
-    instr.write("SENDSLOWSRQ")
+    instr.write("DATA:PAYLOAD 1")
+    instr.write("EVEN:SRQ:ARM 1")
+    instr.write("EVEN:SRQ:TRIG")
 
 
 def _run_queue_srq_flow(resource_name: str):

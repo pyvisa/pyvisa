@@ -155,9 +155,8 @@ class TestTCPIPSocket(LxiResourceTestCase):
     def test_nodelay_attr_roundtrip(self):
         original = self.instr.get_visa_attribute(ResourceAttribute.tcpip_nodelay)
         self.instr.set_visa_attribute(ResourceAttribute.tcpip_nodelay, not original)
-        assert (
-            self.instr.get_visa_attribute(ResourceAttribute.tcpip_nodelay)
-            == (not original)
+        assert self.instr.get_visa_attribute(ResourceAttribute.tcpip_nodelay) == (
+            not original
         )
         self.instr.set_visa_attribute(ResourceAttribute.tcpip_nodelay, original)
 

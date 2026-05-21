@@ -39,9 +39,8 @@ def test_vxi11_nodelay_roundtrip():
     try:
         original = instr.get_visa_attribute(ResourceAttribute.tcpip_nodelay)
         instr.set_visa_attribute(ResourceAttribute.tcpip_nodelay, not original)
-        assert (
-            instr.get_visa_attribute(ResourceAttribute.tcpip_nodelay)
-            == (not original)
+        assert instr.get_visa_attribute(ResourceAttribute.tcpip_nodelay) == (
+            not original
         )
         instr.set_visa_attribute(ResourceAttribute.tcpip_nodelay, original)
     finally:
@@ -62,6 +61,7 @@ def test_hislip_is_hislip_attr():
     finally:
         instr.close()
         rm.close()
+
 
 @require_lxi_assisted
 @require_lxi_hislip
@@ -87,9 +87,8 @@ def test_socket_keepalive_roundtrip():
     try:
         original = instr.get_visa_attribute(ResourceAttribute.tcpip_keepalive)
         instr.set_visa_attribute(ResourceAttribute.tcpip_keepalive, not original)
-        assert (
-            instr.get_visa_attribute(ResourceAttribute.tcpip_keepalive)
-            == (not original)
+        assert instr.get_visa_attribute(ResourceAttribute.tcpip_keepalive) == (
+            not original
         )
         instr.set_visa_attribute(ResourceAttribute.tcpip_keepalive, original)
     finally:
