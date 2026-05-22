@@ -8,7 +8,8 @@ import pytest
 from typing_extensions import ClassVar
 
 from pyvisa import constants, errors, rname
-from pyvisa.testsuite import BaseTestCase
+
+from . import BaseTestCase
 
 
 class TestInvalidResourceName(BaseTestCase):

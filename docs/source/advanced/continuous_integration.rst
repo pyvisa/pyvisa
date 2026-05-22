@@ -7,7 +7,7 @@ Continuous integration setup
 Testing PyVISA in a thorough manner is challenging due to the need to access both
 a VISA library implementation and actual instruments to test against. In their
 absence, tests are mostly limited to utility functions and infrastructure. Those
-limited tests are found at the root of the testsuite package of pyvisa. They are
+limited tests are found in the top-level tests folder of pyvisa. They are
 run, along with linters and documentation building on each commit using Github
 Actions.
 

@@ -89,6 +89,14 @@ __version__ = "{version}"
 
 [tool.pytest.ini_options]
   minversion = "6.0"
+  testpaths = ["tests"]
+  markers = [
+    "pyvisa_contract: Shared backend contract tests exposed through pyvisa.testing.",
+    "pyvisa_hardware: Tests that require an instrument profile and may skip by default.",
+    "pyvisa_tester_assisted: Tests that rely on pyvisa-tester-assisted endpoints or mocks.",
+    "pyvisa_tester_shared: Transport-shared assisted API tests.",
+    "pyvisa_tester_usb: USB-assisted tests intended for PYVISA_LIBRARY=@py.",
+  ]
 
 [tool.mypy]
   follow_imports  = "normal"
@@ -103,8 +111,7 @@ __version__ = "{version}"
     branch = true
     source = ["pyvisa"]
     omit = [
-      # Omit the testsuite and thridparty packages that are vendored.
-      "*/pyvisa/testsuite/*",
+      # Omit vendored thirdparty packages.
       "*/pyvisa/thirdparty/*",
     ]
 

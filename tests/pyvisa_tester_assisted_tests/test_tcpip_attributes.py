@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
-"""TCPIP attribute checks against LXI fake instruments."""
+"""TCPIP attribute checks against pyvisa-tester-assisted fake instruments."""
 
 import pytest
 
 from pyvisa import ResourceManager
 from pyvisa.constants import ResourceAttribute
-from pyvisa.testsuite import require_visa_lib
+from pyvisa.testing.requirements import require_visa_lib
 
 from . import (
     RESOURCE_ADDRESSES,
-    require_lxi_assisted,
-    require_lxi_hislip,
-    require_lxi_socket,
-    require_lxi_vxi11,
+    require_pyvisa_tester_assisted,
+    require_transport_hislip,
+    require_transport_socket,
+    require_transport_vxi11,
 )
 
-pytestmark = [require_visa_lib]
+pytestmark = [require_visa_lib, pytest.mark.pyvisa_tester_assisted]
 
 
-@require_lxi_assisted
-@require_lxi_vxi11
+@require_pyvisa_tester_assisted
+@require_transport_vxi11
 def test_vxi11_hostname_attr_is_string():
     rm = ResourceManager()
     instr = rm.open_resource(RESOURCE_ADDRESSES["TCPIP::INSTR"])
@@ -31,8 +31,8 @@ def test_vxi11_hostname_attr_is_string():
         rm.close()
 
 
-@require_lxi_assisted
-@require_lxi_vxi11
+@require_pyvisa_tester_assisted
+@require_transport_vxi11
 def test_vxi11_nodelay_roundtrip():
     rm = ResourceManager()
     instr = rm.open_resource(RESOURCE_ADDRESSES["TCPIP::INSTR"])
@@ -48,8 +48,8 @@ def test_vxi11_nodelay_roundtrip():
         rm.close()
 
 
-@require_lxi_assisted
-@require_lxi_hislip
+@require_pyvisa_tester_assisted
+@require_transport_hislip
 def test_hislip_is_hislip_attr():
     rm = ResourceManager()
     if rm.visalib.library_path == "py":
@@ -63,8 +63,8 @@ def test_hislip_is_hislip_attr():
         rm.close()
 
 
-@require_lxi_assisted
-@require_lxi_hislip
+@require_pyvisa_tester_assisted
+@require_transport_hislip
 def test_hislip_version_attr():
     rm = ResourceManager()
     if rm.visalib.library_path == "py":
@@ -79,8 +79,8 @@ def test_hislip_version_attr():
         rm.close()
 
 
-@require_lxi_assisted
-@require_lxi_socket
+@require_pyvisa_tester_assisted
+@require_transport_socket
 def test_socket_keepalive_roundtrip():
     rm = ResourceManager()
     instr = rm.open_resource(RESOURCE_ADDRESSES["TCPIP::SOCKET"])

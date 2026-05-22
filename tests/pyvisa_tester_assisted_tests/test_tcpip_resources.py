@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
-"""Test TCPIP resources against LXI fake instruments."""
+"""Test TCPIP resources against pyvisa-tester assisted fake instruments."""
 
 import pytest
 
 from pyvisa import VisaIOError, constants
 from pyvisa.constants import ResourceAttribute
-from pyvisa.testsuite import BaseTestCase, require_visa_lib
+from pyvisa.testing.requirements import require_visa_lib
 
+from .. import BaseTestCase
 from . import (
     EXPECTED_IDN,
     RESOURCE_ADDRESSES,
-    require_lxi_assisted,
-    require_lxi_hislip,
-    require_lxi_vxi11,
-    require_lxi_socket,
+    require_pyvisa_tester_assisted,
+    require_transport_hislip,
+    require_transport_socket,
+    require_transport_vxi11,
 )
 
-pytestmark = [require_visa_lib]
+pytestmark = [require_visa_lib, pytest.mark.pyvisa_tester_assisted]
 
 
-class LxiResourceTestCase(BaseTestCase):
-    """Base class for LXI-assisted tests."""
+class AssistedResourceTestCase(BaseTestCase):
+    """Base class for pyvisa-tester-assisted tests."""
 
     RESOURCE_TYPE = ""
     READ_TERMINATION = ""
@@ -69,9 +70,9 @@ class LxiResourceTestCase(BaseTestCase):
         assert addr
 
 
-@require_lxi_assisted
-@require_lxi_vxi11
-class TestTCPIPInstrVXI11(LxiResourceTestCase):
+@require_pyvisa_tester_assisted
+@require_transport_vxi11
+class TestTCPIPInstrVXI11(AssistedResourceTestCase):
     """Test VXI-11 based TCPIP INSTR resources."""
 
     RESOURCE_TYPE = "TCPIP::INSTR"
@@ -99,9 +100,9 @@ class TestTCPIPInstrVXI11(LxiResourceTestCase):
             other.close()
 
 
-@require_lxi_assisted
-@require_lxi_hislip
-class TestTCPIPInstrHiSLIP(LxiResourceTestCase):
+@require_pyvisa_tester_assisted
+@require_transport_hislip
+class TestTCPIPInstrHiSLIP(AssistedResourceTestCase):
     """Test HiSLIP based TCPIP INSTR resources."""
 
     RESOURCE_TYPE = "TCPIP::HISLIP"
@@ -131,9 +132,9 @@ class TestTCPIPInstrHiSLIP(LxiResourceTestCase):
             third.close()
 
 
-@require_lxi_assisted
-@require_lxi_socket
-class TestTCPIPSocket(LxiResourceTestCase):
+@require_pyvisa_tester_assisted
+@require_transport_socket
+class TestTCPIPSocket(AssistedResourceTestCase):
     """Test raw TCPIP SOCKET resources."""
 
     RESOURCE_TYPE = "TCPIP::SOCKET"
@@ -161,9 +162,10 @@ class TestTCPIPSocket(LxiResourceTestCase):
         self.instr.set_visa_attribute(ResourceAttribute.tcpip_nodelay, original)
 
 
-@require_lxi_assisted
+@require_pyvisa_tester_assisted
+@require_transport_vxi11
 def test_resource_class_resolution():
-    """Verify that the configured resources open as expected classes."""
+    """Verify that configured resources open as expected classes."""
     from pyvisa import ResourceManager
 
     rm = ResourceManager()

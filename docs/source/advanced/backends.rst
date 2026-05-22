@@ -112,6 +112,9 @@ require:
 For other usages or devices, you might need to implement other functions. Is
 really up to you and your needs.
 
+To validate a backend implementation against the shared PyVISA contract tests,
+see :ref:`advanced-testing-harness`.
+
 These functions should raise a :class:`pyvisa.errors.VisaIOError` or emit a
 :class:`pyvisa.errors.VisaIOWarning` if necessary, and store error code on a
 per session basis. This can be done easily by calling

@@ -2,7 +2,8 @@
 """Test pyvisa utility functions that requires a VISA library to be tested."""
 
 from pyvisa import util
-from pyvisa.testsuite import BaseTestCase
+
+from .. import BaseTestCase
 
 
 class TestSystemDetailsAnalysis(BaseTestCase):
