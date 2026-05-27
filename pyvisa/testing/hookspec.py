@@ -3,12 +3,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-
 import pytest
 from pluggy import HookspecMarker
 
-from .profiles import InstrumentProfile
+from .pools import InstrumentPool
+from .profiles import (
+    CapabilityFlags,
+    CommandMap,
+    ContractExclusions,
+    InstrumentProfile,
+)
+from .providers import ResourceManagerProvider
 
 hookspec = HookspecMarker("pytest")
 
@@ -23,14 +28,40 @@ def pytest_pyvisa_select_profile(
     """
 
 
+@hookspec(firstresult=True)
+def pytest_pyvisa_select_resource_manager_provider(
+    config: pytest.Config,
+    backend_id: str,
+    profile: InstrumentProfile | None,
+) -> ResourceManagerProvider | None:
+    """Return the provider used to create ResourceManager instances.
+
+    Returning ``None`` lets the shared plugin create the default provider for the
+    selected backend identifier.
+    """
+
+
 @hookspec
 def pytest_pyvisa_command_map(
     config: pytest.Config,
     profile: InstrumentProfile | None,
-) -> Mapping[str, str]:
+) -> CommandMap:
     """Return semantic command mappings for contract tests.
 
     Hooks can return partial mappings; entries are merged in plugin registration order.
+    """
+
+
+@hookspec(firstresult=True)
+def pytest_pyvisa_select_instrument_pool(
+    config: pytest.Config,
+    profile: InstrumentProfile,
+    command_map: CommandMap,
+) -> InstrumentPool | None:
+    """Return the instrument pool used by shared contracts.
+
+    Returning ``None`` lets the shared plugin create a default command-map-backed
+    pool from the selected profile.
     """
 
 
@@ -39,7 +70,7 @@ def pytest_pyvisa_backend_capabilities(
     config: pytest.Config,
     backend_id: str,
     profile: InstrumentProfile | None,
-) -> Mapping[str, bool]:
+) -> CapabilityFlags:
     """Return backend capability flags used by shared contract tests.
 
     Hooks can return partial mappings; entries are merged in plugin registration order.
@@ -51,8 +82,8 @@ def pytest_pyvisa_contract_exclusions(
     config: pytest.Config,
     backend_id: str,
     profile: InstrumentProfile | None,
-) -> Sequence[tuple[str, str]]:
-    """Return contract exclusions as ``(contract_id, reason)`` tuples.
+) -> ContractExclusions:
+    """Return contract exclusions keyed by contract identifier.
 
     Contract tests can interpret entries as skip/xfail declarations.
     """

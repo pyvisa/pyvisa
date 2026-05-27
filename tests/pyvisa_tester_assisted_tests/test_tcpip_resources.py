@@ -8,16 +8,13 @@ from pyvisa.constants import ResourceAttribute
 from pyvisa.testing.requirements import require_visa_lib
 
 from .. import BaseTestCase
-from . import (
-    EXPECTED_IDN,
-    RESOURCE_ADDRESSES,
-    require_pyvisa_tester_assisted,
-    require_transport_hislip,
-    require_transport_socket,
-    require_transport_vxi11,
-)
+from . import EXPECTED_IDN
 
-pytestmark = [require_visa_lib, pytest.mark.pyvisa_tester_assisted]
+pytestmark = [
+    require_visa_lib,
+    pytest.mark.usefixtures("require_pyvisa_tester_profile"),
+    pytest.mark.pyvisa_tester_assisted,
+]
 
 
 class AssistedResourceTestCase(BaseTestCase):
@@ -27,42 +24,41 @@ class AssistedResourceTestCase(BaseTestCase):
     READ_TERMINATION = ""
     WRITE_TERMINATION = ""
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def _assisted_instrument(self, require_assisted_resource, require_assisted_command):
         super().setup_method()
         self.rm = None
         self.instr = None
+        self._expected_idn = ""
+        self._identity_query = require_assisted_command("identity_query")
+        self._shared_query = require_assisted_command("shared_query")
 
         from pyvisa import ResourceManager
 
-        self.rm = ResourceManager()
-
-        # pyvisa-py does not currently support HiSLIP resources.
-        if (
-            self.RESOURCE_TYPE == "TCPIP::HISLIP"
-            and self.rm.visalib.library_path == "py"
-        ):
-            pytest.skip("pyvisa-py does not support HiSLIP")
-
-        self.instr = self.rm.open_resource(RESOURCE_ADDRESSES[self.RESOURCE_TYPE])
-        self.instr.read_termination = self.READ_TERMINATION
-        self.instr.write_termination = self.WRITE_TERMINATION
-        self.instr.timeout = 1000
-
-    def teardown_method(self):
-        if self.instr:
-            self.instr.close()
-        if self.rm:
-            self.rm.close()
-        super().teardown_method()
+        try:
+            resource_name = require_assisted_resource(self.RESOURCE_TYPE)
+            self.rm = ResourceManager()
+            self.instr = self.rm.open_resource(resource_name)
+            self.instr.read_termination = self.READ_TERMINATION
+            self.instr.write_termination = self.WRITE_TERMINATION
+            self.instr.timeout = 1000
+            yield
+        finally:
+            if self.instr:
+                self.instr.close()
+            if self.rm:
+                self.rm.close()
+            super().teardown_method()
 
     def test_open_close(self):
         assert self.instr.session is not None
 
     def test_idn(self):
-        assert self.instr.query("*IDN?").strip() == EXPECTED_IDN
+        expected_idn = self._expected_idn or EXPECTED_IDN
+        assert self.instr.query(self._identity_query).strip() == expected_idn
 
     def test_query(self):
-        assert self.instr.query("QUERY?").strip() == "RESPONSE"
+        assert self.instr.query(self._shared_query).strip() == "RESPONSE"
 
     def test_tcpip_attributes_readable(self):
         addr = self.instr.get_visa_attribute(ResourceAttribute.tcpip_address)
@@ -70,12 +66,14 @@ class AssistedResourceTestCase(BaseTestCase):
         assert addr
 
 
-@require_pyvisa_tester_assisted
-@require_transport_vxi11
 class TestTCPIPInstrVXI11(AssistedResourceTestCase):
     """Test VXI-11 based TCPIP INSTR resources."""
 
     RESOURCE_TYPE = "TCPIP::INSTR"
+
+    @pytest.fixture(autouse=True)
+    def _expected_profile_idn(self, require_pyvisa_profile):
+        self._expected_idn = require_pyvisa_profile.expected_idn
 
     def test_read_stb(self):
         assert self.instr.read_stb() == 0
@@ -88,7 +86,7 @@ class TestTCPIPInstrVXI11(AssistedResourceTestCase):
         assert self.instr.read_stb() & 0x40 == 0
 
     def test_exclusive_lock(self):
-        other = self.rm.open_resource(RESOURCE_ADDRESSES[self.RESOURCE_TYPE])
+        other = self.rm.open_resource(self.instr.resource_name)
         try:
             self.instr.lock_excl()
             with pytest.raises(VisaIOError):
@@ -100,12 +98,14 @@ class TestTCPIPInstrVXI11(AssistedResourceTestCase):
             other.close()
 
 
-@require_pyvisa_tester_assisted
-@require_transport_hislip
 class TestTCPIPInstrHiSLIP(AssistedResourceTestCase):
     """Test HiSLIP based TCPIP INSTR resources."""
 
     RESOURCE_TYPE = "TCPIP::HISLIP"
+
+    @pytest.fixture(autouse=True)
+    def _expected_profile_idn(self, require_pyvisa_profile):
+        self._expected_idn = require_pyvisa_profile.expected_idn
 
     def test_clear(self):
         self.instr.clear()
@@ -118,8 +118,8 @@ class TestTCPIPInstrHiSLIP(AssistedResourceTestCase):
         self.instr.unlock()
 
     def test_shared_lock_timeout(self):
-        second = self.rm.open_resource(RESOURCE_ADDRESSES[self.RESOURCE_TYPE])
-        third = self.rm.open_resource(RESOURCE_ADDRESSES[self.RESOURCE_TYPE])
+        second = self.rm.open_resource(self.instr.resource_name)
+        third = self.rm.open_resource(self.instr.resource_name)
         try:
             self.instr.lock(requested_key="foo", timeout=0)
             second.lock(requested_key="foo", timeout=1000)
@@ -132,8 +132,6 @@ class TestTCPIPInstrHiSLIP(AssistedResourceTestCase):
             third.close()
 
 
-@require_pyvisa_tester_assisted
-@require_transport_socket
 class TestTCPIPSocket(AssistedResourceTestCase):
     """Test raw TCPIP SOCKET resources."""
 
@@ -141,8 +139,13 @@ class TestTCPIPSocket(AssistedResourceTestCase):
     READ_TERMINATION = "\n"
     WRITE_TERMINATION = "\n"
 
+    @pytest.fixture(autouse=True)
+    def _expected_profile_idn(self, require_pyvisa_profile):
+        self._expected_idn = require_pyvisa_profile.expected_idn
+
     def test_socket_query(self):
-        assert self.instr.query("*IDN?") == EXPECTED_IDN
+        expected_idn = self._expected_idn or EXPECTED_IDN
+        assert self.instr.query(self._identity_query).strip() == expected_idn
 
     def test_socket_port_attribute(self):
         port = self.instr.get_visa_attribute(ResourceAttribute.tcpip_port)
@@ -162,15 +165,14 @@ class TestTCPIPSocket(AssistedResourceTestCase):
         self.instr.set_visa_attribute(ResourceAttribute.tcpip_nodelay, original)
 
 
-@require_pyvisa_tester_assisted
-@require_transport_vxi11
-def test_resource_class_resolution():
+def test_resource_class_resolution(require_assisted_resource):
     """Verify that configured resources open as expected classes."""
     from pyvisa import ResourceManager
 
+    resource_name = require_assisted_resource("TCPIP::INSTR")
     rm = ResourceManager()
     try:
-        instr = rm.open_resource(RESOURCE_ADDRESSES["TCPIP::INSTR"])
+        instr = rm.open_resource(resource_name)
         try:
             assert instr.resource_class == "INSTR"
             assert instr.interface_type == constants.InterfaceType.tcpip

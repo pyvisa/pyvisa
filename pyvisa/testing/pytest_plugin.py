@@ -3,25 +3,32 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 import pytest
 
 from . import hookspec
 from .env_profile import profile_from_environment
-from .profiles import InstrumentProfile
+from .pools import InstrumentPool, build_default_instrument_pool
+from .profiles import (
+    CapabilityFlags,
+    CommandMap,
+    ContractExclusions,
+    InstrumentProfile,
+)
+from .providers import ResourceManagerProvider, default_resource_manager_provider
 
-DEFAULT_COMMAND_MAP = {
-    "identity_query": "*IDN?",
-    "shared_query": "QUERY?",
-    "health_query": "SYST:HEALTH?",
-    "binary_query_template": "DATA:BIN? {datatype},{count},{endian},{header},{termination},{pattern},{start}",
-    "srq_payload": "DATA:PAYLOAD 1",
-    "srq_expected_read": "1",
-    "srq_arm": "EVEN:SRQ:ARM 1",
-    "srq_trigger": "EVEN:SRQ:TRIG",
-    "srq_clear": "EVEN:SRQ:CLE",
-}
+DEFAULT_COMMAND_MAP = CommandMap(
+    {
+        "identity_query": "*IDN?",
+        "shared_query": "QUERY?",
+        "health_query": "SYST:HEALTH?",
+        "binary_query_template": "DATA:BIN? {datatype},{count},{endian},{header},{termination},{pattern},{start}",
+        "srq_payload": "DATA:PAYLOAD 1",
+        "srq_expected_read": "1",
+        "srq_arm": "EVEN:SRQ:ARM 1",
+        "srq_trigger": "EVEN:SRQ:TRIG",
+        "srq_clear": "EVEN:SRQ:CLE",
+    }
+)
 
 
 def pytest_addhooks(pluginmanager: pytest.PytestPluginManager) -> None:
@@ -43,6 +50,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store",
         default="ivi",
         help="Backend identifier used by capability hooks (for example ivi, py).",
+    )
+    group.addoption(
+        "--pyvisa-ivi-library",
+        action="store",
+        default="",
+        help="Explicit IVI library path used by the default IVI provider.",
     )
 
 
@@ -69,19 +82,54 @@ def pytest_pyvisa_select_profile(
     return profile_from_environment()
 
 
+def _selected_backend_id(pytestconfig: pytest.Config) -> str:
+    return str(pytestconfig.getoption("--pyvisa-backend-id"))
+
+
+@pytest.fixture(scope="session")
+def pyvisa_resource_manager_provider(
+    pytestconfig: pytest.Config,
+    pyvisa_profile: InstrumentProfile | None,
+) -> ResourceManagerProvider:
+    """Provider used by shared contracts to create ResourceManager instances."""
+    backend_id = _selected_backend_id(pytestconfig)
+    provider = pytestconfig.hook.pytest_pyvisa_select_resource_manager_provider(
+        config=pytestconfig,
+        backend_id=backend_id,
+        profile=pyvisa_profile,
+    )
+    if provider is not None:
+        return provider
+
+    return default_resource_manager_provider(
+        backend_id,
+        ivi_library_path=str(pytestconfig.getoption("--pyvisa-ivi-library")),
+    )
+
+
+@pytest.fixture
+def pyvisa_resource_manager(pyvisa_resource_manager_provider: ResourceManagerProvider):
+    """ResourceManager created through the selected provider."""
+    rm = pyvisa_resource_manager_provider.create_resource_manager()
+    try:
+        yield rm
+    finally:
+        rm.close()
+
+
 @pytest.hookimpl(trylast=True)
 def pytest_pyvisa_command_map(
     config: pytest.Config,
     profile: InstrumentProfile | None,
-) -> Mapping[str, str]:
+) -> CommandMap:
     """Provide default semantic command mappings."""
     _ = config
     if profile is None:
-        return {}
+        return CommandMap()
 
-    merged = dict(DEFAULT_COMMAND_MAP)
-    merged.update(profile.command_map)
-    return merged
+    merged = DEFAULT_COMMAND_MAP.to_dict()
+    merged.update(profile.command_map.to_dict())
+    return CommandMap(merged)
 
 
 @pytest.fixture(scope="session")
@@ -97,46 +145,73 @@ def pyvisa_profile(pytestconfig: pytest.Config) -> InstrumentProfile | None:
 def pyvisa_command_map(
     pytestconfig: pytest.Config,
     pyvisa_profile: InstrumentProfile | None,
-) -> dict[str, str]:
+) -> CommandMap:
     """Merged semantic command mapping provided by plugins."""
     merged: dict[str, str] = {}
     results = pytestconfig.hook.pytest_pyvisa_command_map(
         config=pytestconfig, profile=pyvisa_profile
     )
     for mapping in results:
-        merged.update(dict(mapping))
-    return merged
+        merged.update(mapping.to_dict())
+    return CommandMap(merged)
+
+
+@pytest.fixture(scope="session")
+def pyvisa_instrument_pool(
+    pytestconfig: pytest.Config,
+    pyvisa_profile: InstrumentProfile | None,
+    pyvisa_command_map: CommandMap,
+) -> InstrumentPool:
+    """Instrument pool used by shared contracts."""
+    if pyvisa_profile is None:
+        pytest.skip(
+            "No instrument profile available to build an instrument pool. "
+            "Configure a shared test profile or plugin provider."
+        )
+
+    pool = pytestconfig.hook.pytest_pyvisa_select_instrument_pool(
+        config=pytestconfig,
+        profile=pyvisa_profile,
+        command_map=pyvisa_command_map,
+    )
+    if pool is not None:
+        return pool
+
+    return build_default_instrument_pool(pyvisa_profile, pyvisa_command_map)
 
 
 @pytest.fixture(scope="session")
 def pyvisa_backend_capabilities(
     pytestconfig: pytest.Config,
     pyvisa_profile: InstrumentProfile | None,
-) -> dict[str, bool]:
+    pyvisa_resource_manager_provider: ResourceManagerProvider,
+) -> CapabilityFlags:
     """Merged backend capability map used by contract tests."""
-    backend_id = str(pytestconfig.getoption("--pyvisa-backend-id"))
-    merged: dict[str, bool] = {}
+    backend_id = _selected_backend_id(pytestconfig)
+    merged: dict[str, bool] = (
+        pyvisa_resource_manager_provider.backend_capabilities.to_dict()
+    )
     results = pytestconfig.hook.pytest_pyvisa_backend_capabilities(
         config=pytestconfig,
         backend_id=backend_id,
         profile=pyvisa_profile,
     )
     for mapping in results:
-        merged.update({key: bool(value) for key, value in dict(mapping).items()})
+        merged.update(mapping.to_dict())
 
     if pyvisa_profile is not None:
-        merged.update({k: bool(v) for k, v in pyvisa_profile.capabilities.items()})
+        merged.update(pyvisa_profile.capabilities.to_dict())
 
-    return merged
+    return CapabilityFlags(merged)
 
 
 @pytest.fixture(scope="session")
 def pyvisa_contract_exclusions(
     pytestconfig: pytest.Config,
     pyvisa_profile: InstrumentProfile | None,
-) -> dict[str, str]:
+) -> ContractExclusions:
     """Contract exclusions declared by backend plugins."""
-    backend_id = str(pytestconfig.getoption("--pyvisa-backend-id"))
+    backend_id = _selected_backend_id(pytestconfig)
     exclusions: dict[str, str] = {}
     results = pytestconfig.hook.pytest_pyvisa_contract_exclusions(
         config=pytestconfig,
@@ -144,13 +219,12 @@ def pyvisa_contract_exclusions(
         profile=pyvisa_profile,
     )
     for entries in results:
-        for contract_id, reason in entries:
-            exclusions[str(contract_id)] = str(reason)
-    return exclusions
+        exclusions.update(entries.to_dict())
+    return ContractExclusions(exclusions)
 
 
 @pytest.fixture
-def apply_pyvisa_contract_policy(pyvisa_contract_exclusions: dict[str, str]):
+def apply_pyvisa_contract_policy(pyvisa_contract_exclusions: ContractExclusions):
     """Apply hook-declared contract exclusions by contract identifier."""
 
     def _apply(contract_id: str) -> None:
@@ -174,21 +248,41 @@ def require_pyvisa_profile(
     return pyvisa_profile
 
 
+def pytest_pyvisa_select_instrument_pool(
+    config: pytest.Config,
+    profile: InstrumentProfile,
+    command_map: CommandMap,
+) -> InstrumentPool | None:
+    """Default pool fallback used when no plugin contributes one."""
+    _ = config
+    return build_default_instrument_pool(profile, command_map)
+
+
+def pytest_pyvisa_select_resource_manager_provider(
+    config: pytest.Config,
+    backend_id: str,
+    profile: InstrumentProfile | None,
+) -> ResourceManagerProvider | None:
+    """Default provider fallback used when no plugin contributes one."""
+    _ = (config, profile)
+    return default_resource_manager_provider(backend_id)
+
+
 def pytest_pyvisa_backend_capabilities(
     config: pytest.Config,
     backend_id: str,
     profile: InstrumentProfile | None,
-) -> Mapping[str, bool]:
+) -> CapabilityFlags:
     """Default capability fallback used when no backend plugin contributes flags."""
     _ = (config, backend_id, profile)
-    return {}
+    return CapabilityFlags()
 
 
 def pytest_pyvisa_contract_exclusions(
     config: pytest.Config,
     backend_id: str,
     profile: InstrumentProfile | None,
-) -> list[tuple[str, str]]:
+) -> ContractExclusions:
     """Default exclusion fallback used when no backend plugin contributes entries."""
     _ = (config, backend_id, profile)
-    return []
+    return ContractExclusions()

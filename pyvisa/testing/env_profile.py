@@ -73,6 +73,11 @@ def profile_from_environment() -> InstrumentProfile | None:
         "USB::INSTR": os.environ.get(
             "PYVISA_TESTER_USB_INSTR_ADDR", "USB0::0xF4EC::0xEE3A::PYVISA0001::INSTR"
         ),
+        "GPIB::INSTR": os.environ.get(
+            "PYVISA_TESTER_GPIB_INSTR_ADDR", "GPIB0::1::INSTR"
+        ),
+        "GPIB::INTFC": os.environ.get("PYVISA_TESTER_GPIB_INTFC_ADDR", "GPIB0::INTFC"),
+        "ASRL::INSTR": os.environ.get("PYVISA_TESTER_ASRL_INSTR_ADDR", "ASRL1::INSTR"),
     }
 
     capabilities = {
@@ -80,10 +85,24 @@ def profile_from_environment() -> InstrumentProfile | None:
         "transport.hislip": os.environ.get("PYVISA_TESTER_HISLIP", "1") != "0",
         "transport.socket": os.environ.get("PYVISA_TESTER_SOCKET", "1") != "0",
         "transport.usb": os.environ.get("PYVISA_TESTER_USB", "1") != "0",
+        "transport.gpib": os.environ.get("PYVISA_TESTER_GPIB", "0") != "0",
+        "transport.asrl": os.environ.get("PYVISA_TESTER_ASRL", "0") != "0",
+        "resource.gpib.intfc.query": os.environ.get(
+            "PYVISA_TESTER_GPIB_INTFC_QUERY", "0"
+        )
+        != "0",
     }
 
     command_map = {
         "identity_query": os.environ.get("PYVISA_TESTER_CMD_IDENTITY_QUERY", "*IDN?"),
+        "error_query": os.environ.get("PYVISA_TESTER_CMD_ERROR_QUERY", "SYST:ERR?"),
+        "binary_configure_template": os.environ.get(
+            "PYVISA_TESTER_CMD_BINARY_CONFIGURE_TEMPLATE",
+            "DATA:BIN:CFG {datatype},{count},{endian},{header},{termination},{pattern},{start}",
+        ),
+        "binary_read_query": os.environ.get(
+            "PYVISA_TESTER_CMD_BINARY_READ_QUERY", "DATA:BIN:READ?"
+        ),
         "srq_arm": os.environ.get("PYVISA_TESTER_CMD_SRQ_ARM", "EVEN:SRQ:ARM 1"),
         "srq_trigger": os.environ.get("PYVISA_TESTER_CMD_SRQ_TRIGGER", "EVEN:SRQ:TRIG"),
         "srq_clear": os.environ.get("PYVISA_TESTER_CMD_SRQ_CLEAR", "EVEN:SRQ:CLE"),
@@ -98,5 +117,5 @@ def profile_from_environment() -> InstrumentProfile | None:
         ),
         command_map=command_map,
         capabilities=capabilities,
-        metadata={"source": "env"},
+        metadata={"source": "env", "target": "pyvisa-tester"},
     )

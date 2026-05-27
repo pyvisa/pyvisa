@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""SRQ event adapter over shared backend contract definitions."""
+"""Message-based resource adapter over shared backend contract definitions."""
 
 import pytest
 
-from pyvisa.testing.contracts.test_srq_event_contracts import *  # noqa: F403
+from pyvisa.testing.contracts.test_message_based_resource_contracts import *  # noqa: F403
 from pyvisa.testing.requirements import require_visa_lib
 
 pytestmark = [

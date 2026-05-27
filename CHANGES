@@ -3,14 +3,22 @@ PyVISA Changelog
 
 1.16.2 (29-01-2026)
 -------------------
+
 - fix creating a ResourceManager with visa_library string containing multiple '@' symbols PR #971
+- rename shared TCPIP query contract module to generic naming and keep compatibility shim for downstream backends
+- define pyvisa-tester assisted test profile defaults in pyvisa tests code, reducing reliance on external PYVISA_TESTER_* environment setup
+- migrate assisted tests to profile/capability fixtures and remove local env-file bootstrap logic
+- add capability-gated status-byte and SRQ queue/handler stub contracts to extend non-message/control-plane coverage
+- add capability-gated USB attribute and GPIB INTFC controller-operation stub contracts to extend non-message coverage
 
 1.16.1 (13-01-2026)
 -------------------
+
 - fix warning on closing already closed resources PR #967
 
 1.16.0 (18-12-2025)
 -------------------
+
 - fix handling of missing secondary address for GPIB resources PR #913
 - added support for reading and writing definite-length binary blocks ≥1 GB PR #914
 - fix static methods for GPIB addresses, and some wrong GPIB commands PR #930
@@ -19,6 +27,7 @@ PyVISA Changelog
 
 1.15.0 (01-04-2025)
 -------------------
+
 - make `pyvisa-shell` and `pyvisa-info` handle arguments independently PR #859
 - add support for Python 3.13 PR #852
 - drop support for Python 3.8 and 3.9 PR #852
@@ -35,10 +44,12 @@ PyVISA Changelog
 
 1.14.1 (22-11-2023)
 -------------------
+
 - fix handling of missing board number for VICP resources PR #787
 
 1.14.0 (13-11-2023)
 -------------------
+
 - fix ctypes truncated pointers on 64-bit for ViBusAddress, ViBusSize, ViAttrState PR #725
 - fix read_termination_context does not allow None PR #727
 - replace `bitness` for library and python runtime information with instruction set
@@ -71,8 +82,7 @@ PyVISA Changelog
 -------------------
 
 - remove deprecated feature planned for removal PR #600
-  This include the visa.py module. `
-  import visa` should be replaced by `import pyvisa as visa` and usage of
+  This include the visa.py module. `import visa` should be replaced by `import pyvisa as visa` and usage of
   `python -m visa info` by `pyvisa-info` and `python -m visa shell` by `pyvisa-shell`
 - optimize write_binary_values when passing in bytes, bytearray or numpy arrays PR #668
   We avoid going through the struct module which can cause large memory overheads.
@@ -133,7 +143,7 @@ set ctwrapper.WRAP_HANDLER to False but please consider updating to the new
 behavior.
 
 PyVISA 1.11 also removes deprecated functions and attributes that were supposed
-to be removed  in 1.10:
+to be removed in 1.10:
 
 - `ask`: use `query` instead
 - `ask_delay`: use `query_delay`
@@ -169,7 +179,7 @@ to be removed  in 1.10:
 - Make MessageBasedResource.read_bytes break on message end when
   `break_on_termchar` is True PR #511
 - Add support for dll_extra_paths in .pyvisarc to provide a way to specify paths
-  in which to look for dll on Windows and Python >= 3.8  PR #509
+  in which to look for dll on Windows and Python >= 3.8 PR #509
 - Drop Python 2 support PR #486
 - Limit support to Python 3.6+ PR #486
 - Improve the test suite and introduce tests relying on Keysight Virtual
@@ -196,7 +206,6 @@ to be removed  in 1.10:
 - Remove `delay` kwarg from `read_ascii_values` which should never have been there PR #454
 - Clarify the documentation about open_timeout PR #451
 
-
 1.10 (2019-08-09)
 -----------------
 
@@ -222,7 +231,6 @@ to be removed  in 1.10:
 - Add flush() method to all resource classes that support viFlush()
   (with the exception of VXIInstrument class) PR #390
 
-
 1.9.1 (2018-08-13)
 ------------------
 
@@ -230,7 +238,7 @@ to be removed  in 1.10:
   query_binary_values. This allows to retain the behavior of these methods from
   pyvisa 1.8, where the length of the block of values that is being read did
   not include the very final read termination. For instruments omitting the
-  termination character when transferring binary data, visa  library raises a
+  termination character when transferring binary data, visa library raises a
   timeout exception in case pyvisa 1.9.0 is used. Note that the behavior is not
   reverted completely to its pyvisa 1.8 state because for other instruments
   (for example, Keysight PNA on Ethernet) the termination character is indeed
@@ -248,7 +256,6 @@ to be removed  in 1.10:
   PR #336
 - ensure docstrings exist before manipulating them (attributes.py) PR #318
 - documentation improvements PR #320 #323
-
 
 1.9 (2017-02-25)
 ----------------
@@ -274,7 +281,6 @@ to be removed  in 1.10:
 - fix wait_on_event behavior in case of timeout (PR #234)
 - allow selecting the backend using the PYVISA_LIBRARY env var (PR #195)
 
-
 1.8 (2015-08-24)
 ----------------
 
@@ -294,7 +300,6 @@ to be removed  in 1.10:
 - Fixed bug in serial flush.
   (Thanks bkstein)
 - Implemented resource name parsing in pure python.
-
 
 1.7 (2015-05-16)
 ----------------
@@ -334,7 +339,6 @@ to be removed  in 1.10:
 - Fix UnicodeDecodeError on wrong file for library load
   (Issue #136, thanks lupien)
 
-
 1.6.3 (2015-02-08)
 ------------------
 
@@ -344,7 +348,6 @@ to be removed  in 1.10:
   (Issue #114, thanks mordoror)
 - Imported constants module in visa module.
   (Issue #72)
-
 
 1.6.2 (2014-12-29)
 ------------------
@@ -358,7 +361,6 @@ to be removed  in 1.10:
 - Easier way to get debug information.
 - Better debug info for backends.
 
-
 1.6.1 (2014-10-28)
 ------------------
 
@@ -371,8 +373,6 @@ to be removed  in 1.10:
 - Better debug info for binary libraries.
 - Fixed exceptions formatting
   (thanks Matthew94)
-
-
 
 1.6 (2014-09-28)
 ----------------
@@ -400,7 +400,6 @@ to be removed  in 1.10:
 - Refactored warning ignoring mechanisms to a thread-safe one.
 - Added enum34 requirement for Python < 3.4.
 - Removed deprecated term_chars.
-
 
 1.5 (2014-06-24)
 ----------------
@@ -441,13 +440,11 @@ to be removed  in 1.10:
 - Added 64 bits VISA library methods.
 - Cleaned up code.
 
-
 1.4 (2012-05-13)
 ----------------
 
 - add coverage
 - add tox testing
-
 
 1.3 (2008-03-26)
 ----------------
@@ -455,17 +452,15 @@ to be removed  in 1.10:
 - Changed licence to MIT.
 - Made determination of resource class even more careful.
 
-
 1.2 (2007-09-19)
 ----------------
 
 - Changed some __getattr__ to getattr in order to have working exceptions again
   (e.g. timeouts) in vpp43
-- Softened the test for "INSTR" even further.  Introduced the "stb" property for
+- Softened the test for "INSTR" even further. Introduced the "stb" property for
   GPIB instruments.
 - Changed "is not an INSTR" error to a warning.
 - Added correct prefix for RPM in setup.cfg.
-
 
 1.1 (2006-11-21)
 ----------------
@@ -482,7 +477,6 @@ to be removed  in 1.10:
 - New properties of SerialInstrument explained.
 - Added many further properties to SerialInstrument.
 
-
 0.9.7 (2005-09-21)
 ------------------
 
@@ -490,7 +484,6 @@ to be removed  in 1.10:
 - Renamed Timeout parameter in open() to open_timeout.
 - Added section about SerialInstrument.
 - Added class SerialInstrument. Made termination characters even more robust.
-
 
 0.9.6 (2005-08-31)
 ------------------
@@ -507,14 +500,12 @@ to be removed  in 1.10:
 - Improved documentation.
 - Switched from distutils to setuptools.
 
-
 0.9.5 (2005-08-27)
 ------------------
 
 - Changed package name to "PyVISA".
 - visa_attributes.py: 0xFFFFFFFF -> 0xFFFFFFFFL.
 - Switched from distutils to setuptools.
-
 
 0.9.4 (2005-08-12)
 ------------------
@@ -525,7 +516,6 @@ to be removed  in 1.10:
 - Added support for endianess in case of binary transfers.
 - Improved binary reading; now it also accepts things like "#267...".
 
-
 0.9.3 (2005-07-21)
 ------------------
 
@@ -533,16 +523,15 @@ to be removed  in 1.10:
   are completely stripped from the end of read string, no matter how the
   termination characters are set.
 
-
 0.9.2 (2005-07-19)
 ------------------
 
-- Added remaining keyword arguments for Instrument constructor.  Added CR and LF.
+- Added remaining keyword arguments for Instrument constructor. Added CR and LF.
   Added working support for reading binary data.
 - Added ask() and ask_for_values().
 - Partially implemented binary reading.
 - Split the old term_chars in term_chars, delay, and send_end.
-- Implemented warning system for invalid keyword arguments.  Added test for valid
+- Implemented warning system for invalid keyword arguments. Added test for valid
   float values in read_floats(). Added full term_char string in __get_term_char().
 - Standard timeout increased from 2 to 5 seconds.
 - read_floats() returns *always* a list.
@@ -551,13 +540,11 @@ to be removed  in 1.10:
 - Fixed bug with ignored term_char attribute for GPIB instruments.
 - Increased chunk_size's default value and added it to the keyword arguments of the constructor.
 
-
 0.9.1 (2005-07-03)
 ------------------
 
-- Added properties resource_name and resource_class to ResourceTemplate.  Used
+- Added properties resource_name and resource_class to ResourceTemplate. Used
   both to simplify code.
-
 
 0.9 (2005-06-29)
 ----------------

@@ -10,6 +10,13 @@ own hardware resources.
 
 The shared contracts currently live in ``pyvisa/testing/contracts``.
 
+The harness is built around three concepts:
+
+- a resource-manager provider chooses how ``ResourceManager`` instances are created.
+- an instrument profile names the logical resources and capability flags for a test target.
+- an instrument pool exposes resource-class-specific commands while keeping the
+    shared contracts backend-agnostic.
+
 When to use this harness
 ------------------------
 
@@ -22,8 +29,19 @@ Use the shared harness when you want to:
 Backend selection
 -----------------
 
-Contract tests instantiate ``pyvisa.ResourceManager()`` without a hard-coded
-backend. Select the backend exactly as in normal PyVISA usage:
+Contract tests do not hard-code a backend. The shared plugin resolves a
+``ResourceManagerProvider`` first and then creates ``ResourceManager``
+instances through that provider.
+
+The default provider behaves as follows:
+
+- ``--pyvisa-backend-id=ivi`` selects the built-in IVI provider.
+- any other backend id falls back to normal PyVISA backend resolution.
+- backend repositories can override the provider entirely through
+    ``pytest_pyvisa_select_resource_manager_provider``.
+
+For backend ids that use normal PyVISA resolution, select the backend exactly
+as in normal PyVISA usage:
 
 - with ``PYVISA_LIBRARY`` (recommended in CI):
 
@@ -45,7 +63,43 @@ The harness also accepts a logical backend id through pytest:
     pytest --pyvisa-backend-id=mybackend
 
 ``--pyvisa-backend-id`` is used by hook implementations to expose
-capabilities/exclusions. It does not replace ``PYVISA_LIBRARY``.
+capabilities/exclusions and provider selection. It does not replace
+``PYVISA_LIBRARY`` for backends that still use normal PyVISA backend
+resolution.
+
+To force the IVI provider to use a specific vendor library, pass
+``--pyvisa-ivi-library``:
+
+.. code-block:: bash
+
+    pytest pyvisa/testing/contracts --pyvisa-backend-id=ivi --pyvisa-ivi-library=/path/to/visa64.dll
+
+This is useful when you want the shared harness to ignore any ambient
+``PYVISA_LIBRARY`` setting and always open the IVI backend through a specific
+library path.
+
+Using the standard harness with a different backend
+---------------------------------------------------
+
+The standard harness can be reused unchanged from either the PyVISA repository
+or a backend repository.
+
+Run the shared contracts from the PyVISA repository against ``pyvisa-py``:
+
+.. code-block:: bash
+
+    export PYVISA_LIBRARY=@py
+    pytest pyvisa/testing/contracts --pyvisa-backend-id=py
+
+Run the shared contracts from the ``pyvisa-py`` repository through its wrapper
+module:
+
+.. code-block:: bash
+
+    pytest tests/keysight_assisted_tests/test_shared_contracts.py --pyvisa-backend-id=py
+
+In both cases the backend repository can still override provider and pool
+selection in its own ``tests/conftest.py``.
 
 Using the harness from another backend project
 ----------------------------------------------
@@ -85,7 +139,29 @@ In your backend repository, enable the plugin and implement the hooks you need.
               },
           )
 
-3. Optionally declare exclusions by contract id:
+   Profiles describe the hardware target. Providers describe the backend.
+   Keep those responsibilities separate so the same profile can be reused with
+   different backends.
+
+3. Optionally provide an explicit resource-manager provider:
+
+   .. code-block:: python
+
+      from pyvisa.testing import StaticResourceManagerProvider
+
+      @pytest.hookimpl(tryfirst=True)
+      def pytest_pyvisa_select_resource_manager_provider(config, backend_id, profile):
+          if backend_id != "mybackend":
+              return None
+          return StaticResourceManagerProvider(
+              name="mybackend",
+              backend_id="mybackend",
+              specification="@mybackend",
+              backend_capabilities={"transport.vxi11": True},
+              ignores_standard_env=True,
+          )
+
+4. Optionally declare exclusions by contract id:
 
    .. code-block:: python
 
@@ -97,7 +173,7 @@ In your backend repository, enable the plugin and implement the hooks you need.
               ("identity.query.tcpip::hislip", "HiSLIP not supported"),
           ]
 
-4. Run shared contracts:
+5. Run shared contracts:
 
    .. code-block:: bash
 
@@ -118,9 +194,16 @@ Create a profile file (for example ``pyvisa_tester.env``):
     PYVISA_TESTER_VXI11=1
     PYVISA_TESTER_HISLIP=0
     PYVISA_TESTER_SOCKET=1
+    PYVISA_TESTER_USB=1
 
     PYVISA_TESTER_VXI11_ADDR=TCPIP::192.168.1.50::inst0::INSTR
     PYVISA_TESTER_SOCKET_ADDR=TCPIP::192.168.1.50::5025::SOCKET
+    PYVISA_TESTER_USB_INSTR_ADDR=USB0::0xF4EC::0xEE3A::PYVISA0001::INSTR
+
+    PYVISA_TESTER_CMD_ERROR_QUERY=SYST:ERR?
+    PYVISA_TESTER_CMD_BINARY_CONFIGURE_TEMPLATE=DATA:BIN:CFG {datatype},{count},{endian},{header},{termination},{pattern},{start}
+    PYVISA_TESTER_CMD_BINARY_READ_QUERY=DATA:BIN:READ?
+
     PYVISA_TESTER_EXPECTED_IDN=ACME,Model 1000,123456,1.0
 
 Then run with an explicit backend and profile source:
@@ -131,12 +214,89 @@ Then run with an explicit backend and profile source:
     export PYVISA_TESTER_ENV_FILE=/path/to/pyvisa_tester.env
     pytest pyvisa/testing/contracts --pyvisa-backend-id=mybackend --pyvisa-profile=env
 
+You can use the same env-backed profile with different backends. For example,
+to exercise the IVI backend against the same hardware target:
+
+.. code-block:: bash
+
+    pytest pyvisa/testing/contracts --pyvisa-backend-id=ivi --pyvisa-profile=env --pyvisa-ivi-library=/path/to/visa64.dll
+
+To exercise ``pyvisa-py`` against the same target:
+
+.. code-block:: bash
+
+    export PYVISA_LIBRARY=@py
+    pytest pyvisa/testing/contracts --pyvisa-backend-id=py --pyvisa-profile=env
+
 Notes:
 
 - ``--pyvisa-profile=env`` is the default and can be omitted.
 - If ``PYVISA_TESTER_ASSISTED`` is not ``1``, hardware contract tests are skipped.
+- Capability flags such as ``PYVISA_TESTER_HISLIP=0`` disable only the matching
+  contract slices; they do not affect the other resources in the same profile.
 - You can still override profile selection by implementing
   ``pytest_pyvisa_select_profile`` in your own ``conftest.py``.
+
+Assisted test modules can also rely on fixture-level profile checks instead of
+import-time environment markers. In the PyVISA tree, the
+``tests/pyvisa_tester_assisted_tests/conftest.py`` module exposes:
+
+- ``require_pyvisa_tester_profile`` to ensure the selected profile targets the
+    pyvisa-tester stack.
+- ``require_assisted_resource(resource_key)`` to apply capability checks and
+    resolve resource addresses consistently from the selected profile.
+
+This keeps transport selection and skip behavior in one place and avoids
+duplicating environment-dependent marker logic per test module.
+
+Capability-gated non-message stubs
+----------------------------------
+
+The shared contracts include capability-gated stubs in
+``pyvisa/testing/contracts/test_resource_capability_stubs.py``. These stubs are
+intended to reserve contract identifiers and provide a migration path from
+"declared but untested" capabilities to strict behavior checks.
+
+Current stub families include:
+
+- resource locking (``resource.stub.locking.*``)
+- trigger/clear and status-byte contracts (``resource.stub.trigger_clear.*``,
+    ``resource.stub.status_byte.*``)
+- SRQ queue/handler event paths (``resource.stub.event.queue.*``,
+    ``resource.stub.event.handler.*``)
+- USB control-transfer and USB attribute slices
+    (``resource.stub.usb.control_transfer.usb::instr``,
+    ``resource.stub.usb.attributes.usb::instr``)
+- GPIB INTFC bus-control/controller-operation slices
+    (``resource.stub.gpib.intfc.bus_control``,
+    ``resource.stub.gpib.intfc.controller_ops``)
+
+These stubs are driven by capability keys (for example
+``resource.usb.control_transfer``, ``resource.usb.attributes``,
+``resource.gpib.intfc.controller_ops``) so backend/profile owners can enable
+them incrementally.
+
+Running one backend against one resource class
+----------------------------------------------
+
+Use normal pytest path selection together with the backend/profile options to
+focus on a single contract module or transport slice.
+
+Run only the identity contracts for one backend:
+
+.. code-block:: bash
+
+    pytest pyvisa/testing/contracts/test_identity_contract.py --pyvisa-backend-id=py --pyvisa-profile=env
+
+Run the binary contracts only:
+
+.. code-block:: bash
+
+    pytest pyvisa/testing/contracts/test_binary_value_contracts.py --pyvisa-backend-id=ivi --pyvisa-profile=env --pyvisa-ivi-library=/path/to/visa64.dll
+
+If a resource class should be excluded for a given run, prefer turning off the
+matching capability in the selected profile instead of branching inside the
+shared contracts.
 
 Useful test selection patterns
 ------------------------------

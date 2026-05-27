@@ -3,61 +3,32 @@
 
 from __future__ import annotations
 
-import os
-
 import pytest
 
 from pyvisa.testing import InstrumentProfile
 
+from .keysight_assisted_tests.conftest import keysight_profile_from_env
+from .pyvisa_tester_assisted_tests.config import build_pyvisa_tester_profile
+
 pytest_plugins = ("pyvisa.testing.pytest_plugin",)
-
-
-def _keysight_profile_from_env() -> InstrumentProfile | None:
-    """Build an IVI profile from Keysight virtual instrument settings."""
-    setting = os.environ.get("PYVISA_KEYSIGHT_VIRTUAL_INSTR")
-    if setting is None:
-        return None
-
-    if setting == "0":
-        addresses = {
-            "TCPIP::INSTR": "TCPIP::127.0.0.1::INSTR",
-            "TCPIP::SOCKET": "TCPIP::127.0.0.1::5025::SOCKET",
-        }
-    else:
-        addresses = {
-            "TCPIP::INSTR": "TCPIP::192.168.0.2::INSTR",
-            "TCPIP::SOCKET": "TCPIP::192.168.0.2::5025::SOCKET",
-        }
-
-    return InstrumentProfile(
-        name="keysight-virtual-instr",
-        resource_addresses=addresses,
-        command_map={
-            "identity_query": "*IDN?",
-            "shared_query": "QUERY?",
-            "health_query": "SYST:HEALTH?",
-            "binary_query_template": "DATA:BIN? {datatype},{count},{endian},{header},{termination},{pattern},{start}",
-        },
-        capabilities={
-            "transport.vxi11": True,
-            "transport.socket": True,
-            "transport.hislip": False,
-            "transport.usb": False,
-        },
-        metadata={"source": "pyvisa-tests", "backend": "ivi", "target": "keysight"},
-    )
 
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_pyvisa_select_profile(
     config: pytest.Config, profile_name: str
 ) -> InstrumentProfile | None:
-    """Provide pyvisa-owned IVI profile selection for Keysight runs.
-
-    Returning ``None`` preserves the default env profile provider used for
-    pyvisa-tester-driven runs.
-    """
+    """Provide pyvisa-owned profile selection with code-first defaults."""
     _ = config
-    if profile_name in ("env", "keysight"):
-        return _keysight_profile_from_env()
+    if profile_name == "keysight":
+        return keysight_profile_from_env()
+
+    if profile_name == "env":
+        return keysight_profile_from_env() or build_pyvisa_tester_profile()
+
+    if profile_name == "pyvisa-tester":
+        return build_pyvisa_tester_profile()
+
+    if profile_name == "keysight-or-tester":
+        return keysight_profile_from_env() or build_pyvisa_tester_profile()
+
     return None

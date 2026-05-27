@@ -7,22 +7,21 @@ from pyvisa import ResourceManager
 from pyvisa.constants import ResourceAttribute
 from pyvisa.testing.requirements import require_visa_lib
 
-from . import (
-    RESOURCE_ADDRESSES,
-    require_pyvisa_tester_assisted,
-    require_transport_hislip,
-    require_transport_socket,
-    require_transport_vxi11,
-)
-
-pytestmark = [require_visa_lib, pytest.mark.pyvisa_tester_assisted]
+pytestmark = [
+    require_visa_lib,
+    pytest.mark.usefixtures("require_pyvisa_tester_profile"),
+    pytest.mark.pyvisa_tester_assisted,
+]
 
 
-@require_pyvisa_tester_assisted
-@require_transport_vxi11
-def test_vxi11_hostname_attr_is_string():
+def _open_tcpip_resource(resource_name: str):
     rm = ResourceManager()
-    instr = rm.open_resource(RESOURCE_ADDRESSES["TCPIP::INSTR"])
+    instr = rm.open_resource(resource_name)
+    return rm, instr
+
+
+def test_vxi11_hostname_attr_is_string(require_assisted_resource):
+    rm, instr = _open_tcpip_resource(require_assisted_resource("TCPIP::INSTR"))
     try:
         hostname = instr.get_visa_attribute(ResourceAttribute.tcpip_hostname)
         assert isinstance(hostname, str)
@@ -31,11 +30,8 @@ def test_vxi11_hostname_attr_is_string():
         rm.close()
 
 
-@require_pyvisa_tester_assisted
-@require_transport_vxi11
-def test_vxi11_nodelay_roundtrip():
-    rm = ResourceManager()
-    instr = rm.open_resource(RESOURCE_ADDRESSES["TCPIP::INSTR"])
+def test_vxi11_nodelay_roundtrip(require_assisted_resource):
+    rm, instr = _open_tcpip_resource(require_assisted_resource("TCPIP::INSTR"))
     try:
         original = instr.get_visa_attribute(ResourceAttribute.tcpip_nodelay)
         instr.set_visa_attribute(ResourceAttribute.tcpip_nodelay, not original)
@@ -48,13 +44,8 @@ def test_vxi11_nodelay_roundtrip():
         rm.close()
 
 
-@require_pyvisa_tester_assisted
-@require_transport_hislip
-def test_hislip_is_hislip_attr():
-    rm = ResourceManager()
-    if rm.visalib.library_path == "py":
-        pytest.skip("pyvisa-py does not support HiSLIP")
-    instr = rm.open_resource(RESOURCE_ADDRESSES["TCPIP::HISLIP"])
+def test_hislip_is_hislip_attr(require_assisted_resource):
+    rm, instr = _open_tcpip_resource(require_assisted_resource("TCPIP::HISLIP"))
     try:
         is_hislip = instr.get_visa_attribute(ResourceAttribute.tcpip_is_hislip)
         assert isinstance(is_hislip, bool)
@@ -63,13 +54,8 @@ def test_hislip_is_hislip_attr():
         rm.close()
 
 
-@require_pyvisa_tester_assisted
-@require_transport_hislip
-def test_hislip_version_attr():
-    rm = ResourceManager()
-    if rm.visalib.library_path == "py":
-        pytest.skip("pyvisa-py does not support HiSLIP")
-    instr = rm.open_resource(RESOURCE_ADDRESSES["TCPIP::HISLIP"])
+def test_hislip_version_attr(require_assisted_resource):
+    rm, instr = _open_tcpip_resource(require_assisted_resource("TCPIP::HISLIP"))
     try:
         version = instr.get_visa_attribute(ResourceAttribute.tcpip_hislip_version)
         assert isinstance(version, int)
@@ -79,11 +65,8 @@ def test_hislip_version_attr():
         rm.close()
 
 
-@require_pyvisa_tester_assisted
-@require_transport_socket
-def test_socket_keepalive_roundtrip():
-    rm = ResourceManager()
-    instr = rm.open_resource(RESOURCE_ADDRESSES["TCPIP::SOCKET"])
+def test_socket_keepalive_roundtrip(require_assisted_resource):
+    rm, instr = _open_tcpip_resource(require_assisted_resource("TCPIP::SOCKET"))
     try:
         original = instr.get_visa_attribute(ResourceAttribute.tcpip_keepalive)
         instr.set_visa_attribute(ResourceAttribute.tcpip_keepalive, not original)

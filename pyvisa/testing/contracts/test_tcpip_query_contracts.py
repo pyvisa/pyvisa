@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Shared Keysight-style TCPIP contracts for backend implementations."""
+"""Shared TCPIP query contracts for backend implementations."""
 
 from __future__ import annotations
 
 import pytest
 
+from pyvisa.testing import CapabilityFlags, CommandMap
+from pyvisa.testing.contracts._command_helpers import require_command
 from pyvisa.testing.requirements import require_visa_lib
 
 pytestmark = [
@@ -21,16 +23,17 @@ pytestmark = [
         ("TCPIP::SOCKET", "transport.socket"),
     ],
 )
-def test_keysight_tcpip_query_contract(
+def test_tcpip_query_contract(
     resource_key: str,
     capability_key: str,
     require_pyvisa_profile,
-    pyvisa_backend_capabilities,
-    pyvisa_command_map,
+    pyvisa_backend_capabilities: CapabilityFlags,
+    pyvisa_command_map: CommandMap,
     apply_pyvisa_contract_policy,
+    pyvisa_resource_manager,
 ):
     """Validate identity and query semantics over supported TCPIP transports."""
-    contract_id = f"keysight.tcpip.query.{resource_key.lower()}"
+    contract_id = f"tcpip.query.{resource_key.lower()}"
     apply_pyvisa_contract_policy(contract_id)
 
     if not pyvisa_backend_capabilities.get(capability_key, True):
@@ -40,21 +43,16 @@ def test_keysight_tcpip_query_contract(
     if not resource_name:
         pytest.skip(f"Profile does not define resource address for {resource_key}")
 
-    idn_cmd = pyvisa_command_map.get("identity_query", "*IDN?")
-    query_cmd = pyvisa_command_map.get("shared_query", "QUERY?")
+    idn_cmd = require_command(pyvisa_command_map, "identity_query")
+    query_cmd = require_command(pyvisa_command_map, "shared_query")
 
-    from pyvisa import ResourceManager
-
-    rm = ResourceManager()
+    rm = pyvisa_resource_manager
+    instr = rm.open_resource(resource_name)
     try:
-        instr = rm.open_resource(resource_name)
-        try:
-            idn = instr.query(idn_cmd).strip()
-            answer = instr.query(query_cmd).strip()
-        finally:
-            instr.close()
+        idn = instr.query(idn_cmd).strip()
+        answer = instr.query(query_cmd).strip()
     finally:
-        rm.close()
+        instr.close()
 
     expected_idn = require_pyvisa_profile.expected_idn
     assert idn

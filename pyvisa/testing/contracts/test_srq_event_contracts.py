@@ -8,6 +8,8 @@ import time
 import pytest
 
 from pyvisa.constants import EventMechanism, EventType
+from pyvisa.testing import CapabilityFlags, CommandMap
+from pyvisa.testing.contracts._command_helpers import require_command
 from pyvisa.testing.contracts._event_helpers import compare_user_handle
 from pyvisa.testing.requirements import require_visa_lib
 
@@ -34,10 +36,10 @@ class _EventHandler:
         return 0
 
 
-def _trigger_srq(instr, command_map: dict[str, str]) -> None:
-    instr.write(command_map.get("srq_payload", "DATA:PAYLOAD 1"))
-    instr.write(command_map.get("srq_arm", "EVEN:SRQ:ARM 1"))
-    instr.write(command_map.get("srq_trigger", "EVEN:SRQ:TRIG"))
+def _trigger_srq(instr, command_map: CommandMap) -> None:
+    instr.write(require_command(command_map, "srq_payload"))
+    instr.write(require_command(command_map, "srq_arm"))
+    instr.write(require_command(command_map, "srq_trigger"))
 
 
 @pytest.mark.parametrize(
@@ -51,9 +53,10 @@ def test_srq_queue_event_contract(
     resource_key: str,
     capability_key: str,
     require_pyvisa_profile,
-    pyvisa_backend_capabilities,
-    pyvisa_command_map,
+    pyvisa_backend_capabilities: CapabilityFlags,
+    pyvisa_command_map: CommandMap,
     apply_pyvisa_contract_policy,
+    pyvisa_resource_manager,
 ):
     """Validate queue-based SRQ handling across supported TCPIP transports."""
     contract_id = f"srq.queue.{resource_key.lower()}"
@@ -69,9 +72,7 @@ def test_srq_queue_event_contract(
     if not resource_name:
         pytest.skip(f"Profile does not define resource address for {resource_key}")
 
-    from pyvisa import ResourceManager
-
-    rm = ResourceManager()
+    rm = pyvisa_resource_manager
     instr = rm.open_resource(resource_name)
     instr.timeout = 2000
     try:
@@ -85,10 +86,9 @@ def test_srq_queue_event_contract(
 
         assert not response.timed_out
         assert response.event.event_type == EventType.service_request
-        assert instr.read() == pyvisa_command_map.get("srq_expected_read", "1")
+        assert instr.read() == require_command(pyvisa_command_map, "srq_expected_read")
     finally:
         instr.close()
-        rm.close()
 
 
 @pytest.mark.parametrize(
@@ -102,9 +102,10 @@ def test_srq_handler_event_contract(
     resource_key: str,
     capability_key: str,
     require_pyvisa_profile,
-    pyvisa_backend_capabilities,
-    pyvisa_command_map,
+    pyvisa_backend_capabilities: CapabilityFlags,
+    pyvisa_command_map: CommandMap,
     apply_pyvisa_contract_policy,
+    pyvisa_resource_manager,
 ):
     """Validate handler-based SRQ handling across supported TCPIP transports."""
     contract_id = f"srq.handler.{resource_key.lower()}"
@@ -120,9 +121,7 @@ def test_srq_handler_event_contract(
     if not resource_name:
         pytest.skip(f"Profile does not define resource address for {resource_key}")
 
-    from pyvisa import ResourceManager
-
-    rm = ResourceManager()
+    rm = pyvisa_resource_manager
     instr = rm.open_resource(resource_name)
     instr.timeout = 2000
     try:
@@ -146,7 +145,6 @@ def test_srq_handler_event_contract(
         assert handler.session == instr.session
         assert compare_user_handle(handler.handle, user_handle)
         assert handler.srq_success
-        assert instr.read() == pyvisa_command_map.get("srq_expected_read", "1")
+        assert instr.read() == require_command(pyvisa_command_map, "srq_expected_read")
     finally:
         instr.close()
-        rm.close()
