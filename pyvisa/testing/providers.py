@@ -26,9 +26,7 @@ class ResourceManagerProvider(ABC):
 
     def __post_init__(self) -> None:
         if not isinstance(self.backend_capabilities, CapabilityFlags):
-            raise TypeError(
-                "backend_capabilities must be a CapabilityFlags instance"
-            )
+            raise TypeError("backend_capabilities must be a CapabilityFlags instance")
         if not isinstance(self.metadata, ProfileMetadata):
             raise TypeError("metadata must be a ProfileMetadata instance")
 
