@@ -17,17 +17,18 @@ from .profiles import (
 from .providers import ResourceManagerProvider, default_resource_manager_provider
 
 DEFAULT_COMMAND_MAP = CommandMap(
-    {
-        "identity_query": "*IDN?",
-        "shared_query": "QUERY?",
-        "health_query": "SYST:HEALTH?",
-        "binary_query_template": "DATA:BIN? {datatype},{count},{endian},{header},{termination},{pattern},{start}",
-        "srq_payload": "DATA:PAYLOAD 1",
-        "srq_expected_read": "1",
-        "srq_arm": "EVEN:SRQ:ARM 1",
-        "srq_trigger": "EVEN:SRQ:TRIG",
-        "srq_clear": "EVEN:SRQ:CLE",
-    }
+    identity_query="*IDN?",
+    shared_query="QUERY?",
+    health_query="SYST:HEALTH?",
+    error_query="SYST:ERR?",
+    binary_query_template="DATA:BIN? {datatype},{count},{endian},{header},{termination},{pattern},{start}",
+    binary_configure_template="DATA:BIN:CFG {datatype},{count},{endian},{header},{termination},{pattern},{start}",
+    binary_read_query="DATA:BIN:READ?",
+    srq_payload="DATA:PAYLOAD 1",
+    srq_expected_read="1",
+    srq_arm="EVEN:SRQ:ARM 1",
+    srq_trigger="EVEN:SRQ:TRIG",
+    srq_clear="EVEN:SRQ:CLE",
 )
 
 
@@ -127,9 +128,7 @@ def pytest_pyvisa_command_map(
     if profile is None:
         return CommandMap()
 
-    merged = DEFAULT_COMMAND_MAP.to_dict()
-    merged.update(profile.command_map.to_dict())
-    return CommandMap(merged)
+    return DEFAULT_COMMAND_MAP.overlay(profile.command_map)
 
 
 @pytest.fixture(scope="session")
@@ -147,13 +146,13 @@ def pyvisa_command_map(
     pyvisa_profile: InstrumentProfile | None,
 ) -> CommandMap:
     """Merged semantic command mapping provided by plugins."""
-    merged: dict[str, str] = {}
+    merged = CommandMap()
     results = pytestconfig.hook.pytest_pyvisa_command_map(
         config=pytestconfig, profile=pyvisa_profile
     )
     for mapping in results:
-        merged.update(mapping.to_dict())
-    return CommandMap(merged)
+        merged = merged.overlay(mapping)
+    return merged
 
 
 @pytest.fixture(scope="session")
@@ -188,21 +187,19 @@ def pyvisa_backend_capabilities(
 ) -> CapabilityFlags:
     """Merged backend capability map used by contract tests."""
     backend_id = _selected_backend_id(pytestconfig)
-    merged: dict[str, bool] = (
-        pyvisa_resource_manager_provider.backend_capabilities.to_dict()
-    )
+    merged = pyvisa_resource_manager_provider.backend_capabilities
     results = pytestconfig.hook.pytest_pyvisa_backend_capabilities(
         config=pytestconfig,
         backend_id=backend_id,
         profile=pyvisa_profile,
     )
     for mapping in results:
-        merged.update(mapping.to_dict())
+        merged = merged.overlay(mapping)
 
     if pyvisa_profile is not None:
-        merged.update(pyvisa_profile.capabilities.to_dict())
+        merged = merged.overlay(pyvisa_profile.capabilities)
 
-    return CapabilityFlags(merged)
+    return merged
 
 
 @pytest.fixture(scope="session")

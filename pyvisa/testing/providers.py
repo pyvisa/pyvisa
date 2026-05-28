@@ -4,9 +4,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
 
 from .profiles import CapabilityFlags, ProfileMetadata
 
@@ -28,17 +26,11 @@ class ResourceManagerProvider(ABC):
 
     def __post_init__(self) -> None:
         if not isinstance(self.backend_capabilities, CapabilityFlags):
-            object.__setattr__(
-                self,
-                "backend_capabilities",
-                CapabilityFlags(self.backend_capabilities),
+            raise TypeError(
+                "backend_capabilities must be a CapabilityFlags instance"
             )
         if not isinstance(self.metadata, ProfileMetadata):
-            object.__setattr__(
-                self,
-                "metadata",
-                ProfileMetadata.from_mapping(self.metadata),
-            )
+            raise TypeError("metadata must be a ProfileMetadata instance")
 
     @abstractmethod
     def resource_manager_specification(self) -> str:

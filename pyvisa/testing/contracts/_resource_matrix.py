@@ -11,10 +11,10 @@ class ResourceSpec:
     """Contract metadata for one logical resource class."""
 
     resource_key: str
-    capability_key: str
+    transport_capability_attr: str
     expected_class: str
     message_based: bool = True
-    query_capability_key: str | None = None
+    query_capability_attr: str | None = None
     default_query_enabled: bool = True
 
     @property
@@ -23,20 +23,50 @@ class ResourceSpec:
 
 
 ALL_RESOURCE_SPECS: tuple[ResourceSpec, ...] = (
-    ResourceSpec("TCPIP::INSTR", "transport.vxi11", "INSTR"),
-    ResourceSpec("TCPIP::HISLIP", "transport.hislip", "INSTR"),
-    ResourceSpec("TCPIP::SOCKET", "transport.socket", "SOCKET"),
-    ResourceSpec("USB::INSTR", "transport.usb", "INSTR"),
-    ResourceSpec("GPIB::INSTR", "transport.gpib", "INSTR"),
+    ResourceSpec(
+        "TCPIP::INSTR",
+        "transport_vxi11",
+        "INSTR",
+        query_capability_attr="resource_query_tcpip_instr",
+    ),
+    ResourceSpec(
+        "TCPIP::HISLIP",
+        "transport_hislip",
+        "INSTR",
+        query_capability_attr="resource_query_tcpip_hislip",
+    ),
+    ResourceSpec(
+        "TCPIP::SOCKET",
+        "transport_socket",
+        "SOCKET",
+        query_capability_attr="resource_query_tcpip_socket",
+    ),
+    ResourceSpec(
+        "USB::INSTR",
+        "transport_usb",
+        "INSTR",
+        query_capability_attr="resource_query_usb_instr",
+    ),
+    ResourceSpec(
+        "GPIB::INSTR",
+        "transport_gpib",
+        "INSTR",
+        query_capability_attr="resource_query_gpib_instr",
+    ),
     ResourceSpec(
         "GPIB::INTFC",
-        "transport.gpib",
+        "transport_gpib",
         "INTFC",
         message_based=False,
-        query_capability_key="resource.gpib.intfc.query",
+        query_capability_attr="resource_gpib_intfc_query",
         default_query_enabled=False,
     ),
-    ResourceSpec("ASRL::INSTR", "transport.asrl", "INSTR"),
+    ResourceSpec(
+        "ASRL::INSTR",
+        "transport_asrl",
+        "INSTR",
+        query_capability_attr="resource_query_asrl_instr",
+    ),
 )
 
 MESSAGE_BASED_RESOURCE_SPECS: tuple[ResourceSpec, ...] = tuple(

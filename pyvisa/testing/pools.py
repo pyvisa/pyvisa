@@ -6,7 +6,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
 
 from .profiles import (
     CommandMap,
@@ -32,9 +31,7 @@ class ResourceCommandFacet(ABC):
 
     def __post_init__(self) -> None:
         if not isinstance(self.metadata, ProfileMetadata):
-            object.__setattr__(
-                self, "metadata", ProfileMetadata.from_mapping(self.metadata)
-            )
+            raise TypeError("metadata must be a ProfileMetadata instance")
 
     def prepare_binary_query(self, instrument) -> None:
         """Hook for real instruments needing setup before binary-query use."""
@@ -92,9 +89,7 @@ class InstrumentPool(ABC):
 
     def __post_init__(self) -> None:
         if not isinstance(self.metadata, ProfileMetadata):
-            object.__setattr__(
-                self, "metadata", ProfileMetadata.from_mapping(self.metadata)
-            )
+            raise TypeError("metadata must be a ProfileMetadata instance")
 
     @abstractmethod
     def supports_resource(self, resource_key: str) -> bool:
@@ -130,11 +125,11 @@ class CommandMapResourceFacet(ResourceCommandFacet):
     def __post_init__(self) -> None:
         super().__post_init__()
         if not isinstance(self.command_map, CommandMap):
-            object.__setattr__(self, "command_map", CommandMap(self.command_map))
+            raise TypeError("command_map must be a CommandMap instance")
 
     def _command(self, key: str) -> str:
         try:
-            return str(self.command_map[key])
+            return str(self.command_map.require(key))
         except KeyError as exc:
             raise NotImplementedError(f"Command {key} is unavailable") from exc
 
@@ -229,13 +224,9 @@ class CommandMapInstrumentPool(InstrumentPool):
     def __post_init__(self) -> None:
         super().__post_init__()
         if not isinstance(self.resource_addresses, ResourceAddresses):
-            object.__setattr__(
-                self,
-                "resource_addresses",
-                ResourceAddresses(self.resource_addresses),
-            )
+            raise TypeError("resource_addresses must be a ResourceAddresses instance")
         if not isinstance(self.command_map, CommandMap):
-            object.__setattr__(self, "command_map", CommandMap(self.command_map))
+            raise TypeError("command_map must be a CommandMap instance")
 
     @classmethod
     def from_profile(
@@ -252,13 +243,12 @@ class CommandMapInstrumentPool(InstrumentPool):
         )
 
     def supports_resource(self, resource_key: str) -> bool:
-        return resource_key in self.resource_addresses
+        return self.resource_addresses.for_resource(resource_key) is not None
 
     def for_resource(self, resource_key: str) -> ResourceCommandFacet:
-        try:
-            resource_name = self.resource_addresses[resource_key]
-        except KeyError as exc:
-            raise KeyError(f"Pool does not define resource {resource_key}") from exc
+        resource_name = self.resource_addresses.for_resource(resource_key)
+        if resource_name is None:
+            raise KeyError(f"Pool does not define resource {resource_key}")
 
         return CommandMapResourceFacet(
             resource_key=resource_key,
@@ -325,7 +315,7 @@ class PyvisaTesterTcpipInstrumentPool(StaticInstrumentPool):
         cls,
         profile: InstrumentProfile,
     ) -> "PyvisaTesterTcpipInstrumentPool | None":
-        if profile.metadata.get("target") != "pyvisa-tester":
+        if profile.metadata.target != "pyvisa-tester":
             return None
 
         resources = {

@@ -9,17 +9,17 @@ import os
 import pytest
 
 _RESOURCE_CAPABILITY_KEYS = {
-    "TCPIP::INSTR": "transport.vxi11",
-    "TCPIP::HISLIP": "transport.hislip",
-    "TCPIP::SOCKET": "transport.socket",
-    "USB::INSTR": "transport.usb",
-    "GPIB::INSTR": "transport.gpib",
-    "GPIB::INTFC": "transport.gpib",
-    "ASRL::INSTR": "transport.asrl",
+    "TCPIP::INSTR": "transport_vxi11",
+    "TCPIP::HISLIP": "transport_hislip",
+    "TCPIP::SOCKET": "transport_socket",
+    "USB::INSTR": "transport_usb",
+    "GPIB::INSTR": "transport_gpib",
+    "GPIB::INTFC": "transport_gpib",
+    "ASRL::INSTR": "transport_asrl",
 }
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def require_pyvisa_tester_profile(require_pyvisa_profile):
     """Require a resolved profile targeting the pyvisa-tester fake instrument stack."""
     if os.environ.get("PYVISA_TESTER_ASSISTED") != "1":
@@ -31,7 +31,7 @@ def require_pyvisa_tester_profile(require_pyvisa_profile):
     return require_pyvisa_profile
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def require_assisted_resource(
     require_pyvisa_tester_profile,
     pyvisa_backend_capabilities,
@@ -40,12 +40,17 @@ def require_assisted_resource(
 
     def _require(resource_key: str) -> str:
         capability_key = _RESOURCE_CAPABILITY_KEYS.get(resource_key)
-        if capability_key and not pyvisa_backend_capabilities.get(capability_key, True):
+        capability_enabled = (
+            True
+            if not capability_key
+            else getattr(pyvisa_backend_capabilities, capability_key)
+        )
+        if capability_enabled is False:
             pytest.skip(
                 f"Capability {capability_key} is disabled for this backend/profile"
             )
 
-        resource_name = require_pyvisa_tester_profile.resource_addresses.get(
+        resource_name = require_pyvisa_tester_profile.resource_addresses.for_resource(
             resource_key
         )
         if not resource_name:
@@ -56,13 +61,13 @@ def require_assisted_resource(
     return _require
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def require_assisted_command(require_pyvisa_tester_profile) -> Callable[[str], str]:
     """Return required semantic command mappings from the selected profile."""
 
     def _require(command_key: str) -> str:
         try:
-            command = require_pyvisa_tester_profile.command_map[command_key]
+            command = require_pyvisa_tester_profile.command_map.require(command_key)
         except KeyError:
             pytest.fail(
                 f"Profile does not define required command mapping {command_key!r}"

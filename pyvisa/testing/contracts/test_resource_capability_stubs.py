@@ -27,14 +27,15 @@ pytestmark = [
 
 
 def _resource_name_or_skip(profile, resource_key: str) -> str:
-    resource_name = profile.resource_addresses.get(resource_key)
+    resource_name = profile.resource_addresses.for_resource(resource_key)
     if not resource_name:
         pytest.skip(f"Profile does not define resource address for {resource_key}")
     return resource_name
 
 
 def _capability_or_skip(capabilities: CapabilityFlags, capability_key: str) -> None:
-    if not capabilities.get(capability_key, False):
+    value = getattr(capabilities, capability_key)
+    if not bool(value):
         pytest.skip(f"Capability {capability_key} is disabled for this backend/profile")
 
 
@@ -66,11 +67,11 @@ def test_resource_locking_stub_contract(
 
     _capability_or_skip(
         pyvisa_backend_capabilities,
-        "locking.shared",
+        "locking_shared",
     )
     _capability_or_skip(
         pyvisa_backend_capabilities,
-        f"resource.locking.{resource_spec.contract_suffix.replace('::', '.')}",
+        f"resource_locking_{resource_spec.contract_suffix.replace('::', '_')}",
     )
 
     resource_name = _resource_name_or_skip(
@@ -99,7 +100,7 @@ def test_resource_trigger_clear_stub_contract(
 
     _capability_or_skip(
         pyvisa_backend_capabilities,
-        f"resource.trigger.{resource_spec.contract_suffix.replace('::', '.')}",
+        f"resource_trigger_{resource_spec.contract_suffix.replace('::', '_')}",
     )
 
     resource_name = _resource_name_or_skip(
@@ -128,7 +129,7 @@ def test_resource_status_byte_stub_contract(
 
     _capability_or_skip(
         pyvisa_backend_capabilities,
-        f"resource.read_stb.{resource_spec.contract_suffix.replace('::', '.')}",
+        f"resource_read_stb_{resource_spec.contract_suffix.replace('::', '_')}",
     )
 
     resource_name = _resource_name_or_skip(
@@ -160,10 +161,10 @@ def test_resource_srq_queue_stub_contract(
     contract_id = f"resource.stub.event.queue.{resource_spec.contract_suffix}"
     apply_pyvisa_contract_policy(contract_id)
 
-    _capability_or_skip(pyvisa_backend_capabilities, "events.srq")
+    _capability_or_skip(pyvisa_backend_capabilities, "events_srq")
     _capability_or_skip(
         pyvisa_backend_capabilities,
-        f"resource.event.srq.queue.{resource_spec.contract_suffix.replace('::', '.')}",
+        f"resource_event_srq_queue_{resource_spec.contract_suffix.replace('::', '_')}",
     )
 
     resource_name = _resource_name_or_skip(
@@ -202,10 +203,10 @@ def test_resource_srq_handler_stub_contract(
     contract_id = f"resource.stub.event.handler.{resource_spec.contract_suffix}"
     apply_pyvisa_contract_policy(contract_id)
 
-    _capability_or_skip(pyvisa_backend_capabilities, "events.srq")
+    _capability_or_skip(pyvisa_backend_capabilities, "events_srq")
     _capability_or_skip(
         pyvisa_backend_capabilities,
-        f"resource.event.srq.handler.{resource_spec.contract_suffix.replace('::', '.')}",
+        f"resource_event_srq_handler_{resource_spec.contract_suffix.replace('::', '_')}",
     )
 
     resource_name = _resource_name_or_skip(
@@ -260,8 +261,8 @@ def test_usb_control_transfer_stub_contract(
     contract_id = "resource.stub.usb.control_transfer.usb::instr"
     apply_pyvisa_contract_policy(contract_id)
 
-    _capability_or_skip(pyvisa_backend_capabilities, "transport.usb")
-    _capability_or_skip(pyvisa_backend_capabilities, "resource.usb.control_transfer")
+    _capability_or_skip(pyvisa_backend_capabilities, "transport_usb")
+    _capability_or_skip(pyvisa_backend_capabilities, "resource_usb_control_transfer")
 
     resource_name = _resource_name_or_skip(require_pyvisa_profile, "USB::INSTR")
 
@@ -285,8 +286,8 @@ def test_usb_attributes_stub_contract(
     contract_id = "resource.stub.usb.attributes.usb::instr"
     apply_pyvisa_contract_policy(contract_id)
 
-    _capability_or_skip(pyvisa_backend_capabilities, "transport.usb")
-    _capability_or_skip(pyvisa_backend_capabilities, "resource.usb.attributes")
+    _capability_or_skip(pyvisa_backend_capabilities, "transport_usb")
+    _capability_or_skip(pyvisa_backend_capabilities, "resource_usb_attributes")
 
     resource_name = _resource_name_or_skip(require_pyvisa_profile, "USB::INSTR")
 
@@ -323,8 +324,8 @@ def test_gpib_intfc_bus_control_stub_contract(
     contract_id = "resource.stub.gpib.intfc.bus_control"
     apply_pyvisa_contract_policy(contract_id)
 
-    _capability_or_skip(pyvisa_backend_capabilities, "transport.gpib")
-    _capability_or_skip(pyvisa_backend_capabilities, "resource.gpib.intfc.bus_control")
+    _capability_or_skip(pyvisa_backend_capabilities, "transport_gpib")
+    _capability_or_skip(pyvisa_backend_capabilities, "resource_gpib_intfc_bus_control")
 
     resource_name = _resource_name_or_skip(require_pyvisa_profile, "GPIB::INTFC")
 
@@ -347,9 +348,9 @@ def test_gpib_intfc_controller_ops_stub_contract(
     contract_id = "resource.stub.gpib.intfc.controller_ops"
     apply_pyvisa_contract_policy(contract_id)
 
-    _capability_or_skip(pyvisa_backend_capabilities, "transport.gpib")
+    _capability_or_skip(pyvisa_backend_capabilities, "transport_gpib")
     _capability_or_skip(
-        pyvisa_backend_capabilities, "resource.gpib.intfc.controller_ops"
+        pyvisa_backend_capabilities, "resource_gpib_intfc_controller_ops"
     )
 
     resource_name = _resource_name_or_skip(require_pyvisa_profile, "GPIB::INTFC")

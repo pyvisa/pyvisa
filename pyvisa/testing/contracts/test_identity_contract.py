@@ -21,6 +21,13 @@ pytestmark = [
 ]
 
 
+def _capability_or_default(
+    capabilities: CapabilityFlags, attr_name: str, default: bool
+) -> bool:
+    value = getattr(capabilities, attr_name)
+    return default if value is None else bool(value)
+
+
 @pytest.mark.parametrize("resource_spec", contract_params(MESSAGE_BASED_RESOURCE_SPECS))
 def test_identity_query_contract(
     resource_spec: ResourceSpec,
@@ -34,24 +41,27 @@ def test_identity_query_contract(
     contract_id = f"identity.query.{resource_spec.contract_suffix}"
     apply_pyvisa_contract_policy(contract_id)
 
-    if not pyvisa_backend_capabilities.get(resource_spec.capability_key, True):
+    if not _capability_or_default(
+        pyvisa_backend_capabilities, resource_spec.transport_capability_attr, True
+    ):
         pytest.skip(
-            f"Capability {resource_spec.capability_key} is disabled for this backend/profile"
+            f"Capability {resource_spec.transport_capability_attr} is disabled for this backend/profile"
         )
 
-    query_capability_key = (
-        resource_spec.query_capability_key
-        or f"resource.query.{resource_spec.contract_suffix.replace('::', '.')}"
+    query_capability_attr = (
+        resource_spec.query_capability_attr
+        or f"resource_query_{resource_spec.contract_suffix.replace('::', '_')}"
     )
-    if not pyvisa_backend_capabilities.get(
-        query_capability_key,
+    if not _capability_or_default(
+        pyvisa_backend_capabilities,
+        query_capability_attr,
         resource_spec.default_query_enabled,
     ):
         pytest.skip(
-            f"Capability {query_capability_key} is disabled for this backend/profile"
+            f"Capability {query_capability_attr} is disabled for this backend/profile"
         )
 
-    resource_name = require_pyvisa_profile.resource_addresses.get(
+    resource_name = require_pyvisa_profile.resource_addresses.for_resource(
         resource_spec.resource_key
     )
     if not resource_name:
