@@ -8,11 +8,17 @@ from pathlib import Path
 from typing import Dict
 
 from .profiles import (
+    AsrlResourceCapabilities,
     CapabilityFlags,
     CommandMap,
+    GpibCapabilities,
+    GpibInterfaceCapabilities,
     InstrumentProfile,
+    MessageBasedResourceCapabilities,
     ProfileMetadata,
     ResourceAddresses,
+    TcpipCapabilities,
+    UsbResourceCapabilities,
 )
 
 
@@ -85,14 +91,86 @@ def profile_from_environment() -> InstrumentProfile | None:
     )
 
     capabilities = CapabilityFlags(
-        transport_vxi11=os.environ.get("PYVISA_TESTER_VXI11", "1") != "0",
-        transport_hislip=os.environ.get("PYVISA_TESTER_HISLIP", "1") != "0",
-        transport_socket=os.environ.get("PYVISA_TESTER_SOCKET", "1") != "0",
-        transport_usb=os.environ.get("PYVISA_TESTER_USB", "1") != "0",
-        transport_gpib=os.environ.get("PYVISA_TESTER_GPIB", "0") != "0",
-        transport_asrl=os.environ.get("PYVISA_TESTER_ASRL", "0") != "0",
-        resource_gpib_intfc_query=os.environ.get("PYVISA_TESTER_GPIB_INTFC_QUERY", "0")
-        != "0",
+        tcpip=TcpipCapabilities(
+            vxi11=(
+                MessageBasedResourceCapabilities(
+                    query=True,
+                    timeout=True,
+                    locking=True,
+                    trigger=True,
+                    read_stb=True,
+                    srq_queue=True,
+                    srq_handler=True,
+                )
+                if os.environ.get("PYVISA_TESTER_VXI11", "1") != "0"
+                else None
+            ),
+            hislip=(
+                MessageBasedResourceCapabilities(
+                    query=True,
+                    timeout=True,
+                    locking=True,
+                    trigger=True,
+                    read_stb=True,
+                    srq_queue=True,
+                    srq_handler=True,
+                )
+                if os.environ.get("PYVISA_TESTER_HISLIP", "1") != "0"
+                else None
+            ),
+            socket=(
+                MessageBasedResourceCapabilities(
+                    query=True,
+                    timeout=True,
+                    locking=False,
+                    trigger=False,
+                    read_stb=False,
+                    srq_queue=False,
+                    srq_handler=False,
+                )
+                if os.environ.get("PYVISA_TESTER_SOCKET", "1") != "0"
+                else None
+            ),
+        ),
+        usb=UsbResourceCapabilities(
+            supported=os.environ.get("PYVISA_TESTER_USB", "1") != "0",
+            query=True,
+            timeout=True,
+            locking=False,
+            trigger=False,
+            read_stb=False,
+            srq_queue=False,
+            srq_handler=False,
+            control_transfer=False,
+            attributes=False,
+        ),
+        gpib=GpibCapabilities(
+            enabled=os.environ.get("PYVISA_TESTER_GPIB", "0") != "0",
+            instr=MessageBasedResourceCapabilities(
+                query=True,
+                timeout=True,
+                locking=False,
+                trigger=False,
+                read_stb=False,
+            ),
+            intfc=GpibInterfaceCapabilities(
+                query=os.environ.get("PYVISA_TESTER_GPIB_INTFC_QUERY", "0") != "0",
+                timeout=False,
+                locking=False,
+                trigger=False,
+                read_stb=False,
+                bus_control=False,
+                controller_ops=False,
+            ),
+        ),
+        asrl=AsrlResourceCapabilities(
+            supported=os.environ.get("PYVISA_TESTER_ASRL", "0") != "0",
+            query=True,
+            timeout=True,
+            locking=False,
+            trigger=False,
+            read_stb=False,
+        ),
     )
 
     command_map = CommandMap(

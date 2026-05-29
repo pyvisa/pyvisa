@@ -19,9 +19,12 @@ pytestmark = [
 ]
 
 
-def _capability_or_default(capabilities, attr_name: str, default: bool) -> bool:
-    value = getattr(capabilities, attr_name)
-    return default if value is None else bool(value)
+def _transport_or_default(
+    capabilities, resource_spec: ResourceSpec, default: bool
+) -> bool:
+    return capabilities.transport_enabled_for_resource(
+        resource_spec.resource_key, default
+    )
 
 
 @pytest.mark.parametrize("resource_spec", contract_params(ALL_RESOURCE_SPECS))
@@ -36,11 +39,9 @@ def test_resource_manager_lists_profile_resources(
     contract_id = f"resource_manager.listed.{resource_spec.contract_suffix}"
     apply_pyvisa_contract_policy(contract_id)
 
-    if not _capability_or_default(
-        pyvisa_backend_capabilities, resource_spec.transport_capability_attr, True
-    ):
+    if not _transport_or_default(pyvisa_backend_capabilities, resource_spec, True):
         pytest.skip(
-            f"Capability {resource_spec.transport_capability_attr} is disabled for this backend/profile"
+            f"Transport {resource_spec.transport_key} is disabled for this backend/profile"
         )
 
     resource_name = require_pyvisa_profile.resource_addresses.for_resource(
@@ -68,11 +69,9 @@ def test_resource_manager_open_close_contract(
     contract_id = f"resource_manager.open_close.{resource_spec.contract_suffix}"
     apply_pyvisa_contract_policy(contract_id)
 
-    if not _capability_or_default(
-        pyvisa_backend_capabilities, resource_spec.transport_capability_attr, True
-    ):
+    if not _transport_or_default(pyvisa_backend_capabilities, resource_spec, True):
         pytest.skip(
-            f"Capability {resource_spec.transport_capability_attr} is disabled for this backend/profile"
+            f"Transport {resource_spec.transport_key} is disabled for this backend/profile"
         )
 
     resource_name = require_pyvisa_profile.resource_addresses.for_resource(
@@ -99,11 +98,9 @@ def test_resource_manager_resource_info_contract(
     contract_id = f"resource_manager.info.{resource_spec.contract_suffix}"
     apply_pyvisa_contract_policy(contract_id)
 
-    if not _capability_or_default(
-        pyvisa_backend_capabilities, resource_spec.transport_capability_attr, True
-    ):
+    if not _transport_or_default(pyvisa_backend_capabilities, resource_spec, True):
         pytest.skip(
-            f"Capability {resource_spec.transport_capability_attr} is disabled for this backend/profile"
+            f"Transport {resource_spec.transport_key} is disabled for this backend/profile"
         )
 
     resource_name = require_pyvisa_profile.resource_addresses.for_resource(

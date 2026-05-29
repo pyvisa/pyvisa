@@ -8,16 +8,6 @@ import os
 
 import pytest
 
-_RESOURCE_CAPABILITY_KEYS = {
-    "TCPIP::INSTR": "transport_vxi11",
-    "TCPIP::HISLIP": "transport_hislip",
-    "TCPIP::SOCKET": "transport_socket",
-    "USB::INSTR": "transport_usb",
-    "GPIB::INSTR": "transport_gpib",
-    "GPIB::INTFC": "transport_gpib",
-    "ASRL::INSTR": "transport_asrl",
-}
-
 
 @pytest.fixture
 def require_pyvisa_tester_profile(require_pyvisa_profile):
@@ -39,15 +29,12 @@ def require_assisted_resource(
     """Return the configured resource address for a supported assisted resource key."""
 
     def _require(resource_key: str) -> str:
-        capability_key = _RESOURCE_CAPABILITY_KEYS.get(resource_key)
-        capability_enabled = (
-            True
-            if not capability_key
-            else getattr(pyvisa_backend_capabilities, capability_key)
+        capability_enabled = pyvisa_backend_capabilities.transport_enabled_for_resource(
+            resource_key, True
         )
-        if capability_enabled is False:
+        if not capability_enabled:
             pytest.skip(
-                f"Capability {capability_key} is disabled for this backend/profile"
+                f"Transport for {resource_key} is disabled for this backend/profile"
             )
 
         resource_name = require_pyvisa_tester_profile.resource_addresses.for_resource(

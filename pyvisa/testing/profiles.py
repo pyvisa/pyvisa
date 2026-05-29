@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Iterator, Mapping
+from typing import Any, Iterator, Mapping, TypeVar, cast
 
 _RESOURCE_KEY_TO_ATTR = {
     "TCPIP::INSTR": "tcpip_instr",
@@ -31,61 +31,14 @@ _COMMAND_KEY_TO_ATTR = {
     "srq_clear": "srq_clear",
 }
 
-_CAPABILITY_KEY_TO_ATTR = {
-    "transport.vxi11": "transport_vxi11",
-    "transport.hislip": "transport_hislip",
-    "transport.socket": "transport_socket",
-    "transport.usb": "transport_usb",
-    "transport.gpib": "transport_gpib",
-    "transport.asrl": "transport_asrl",
-    "resource.query.tcpip.instr": "resource_query_tcpip_instr",
-    "resource.query.tcpip.hislip": "resource_query_tcpip_hislip",
-    "resource.query.tcpip.socket": "resource_query_tcpip_socket",
-    "resource.query.usb.instr": "resource_query_usb_instr",
-    "resource.query.gpib.instr": "resource_query_gpib_instr",
-    "resource.query.gpib.intfc": "resource_query_gpib_intfc",
-    "resource.query.asrl.instr": "resource_query_asrl_instr",
-    "resource.gpib.intfc.query": "resource_gpib_intfc_query",
-    "resource.timeout.tcpip.instr": "resource_timeout_tcpip_instr",
-    "resource.timeout.tcpip.hislip": "resource_timeout_tcpip_hislip",
-    "resource.timeout.tcpip.socket": "resource_timeout_tcpip_socket",
-    "resource.timeout.usb.instr": "resource_timeout_usb_instr",
-    "resource.timeout.gpib.instr": "resource_timeout_gpib_instr",
-    "resource.timeout.gpib.intfc": "resource_timeout_gpib_intfc",
-    "resource.timeout.asrl.instr": "resource_timeout_asrl_instr",
-    "locking.shared": "locking_shared",
-    "resource.locking.tcpip.instr": "resource_locking_tcpip_instr",
-    "resource.locking.tcpip.hislip": "resource_locking_tcpip_hislip",
-    "resource.locking.tcpip.socket": "resource_locking_tcpip_socket",
-    "resource.locking.usb.instr": "resource_locking_usb_instr",
-    "resource.locking.gpib.instr": "resource_locking_gpib_instr",
-    "resource.locking.gpib.intfc": "resource_locking_gpib_intfc",
-    "resource.locking.asrl.instr": "resource_locking_asrl_instr",
-    "resource.trigger.tcpip.instr": "resource_trigger_tcpip_instr",
-    "resource.trigger.tcpip.hislip": "resource_trigger_tcpip_hislip",
-    "resource.trigger.tcpip.socket": "resource_trigger_tcpip_socket",
-    "resource.trigger.usb.instr": "resource_trigger_usb_instr",
-    "resource.trigger.gpib.instr": "resource_trigger_gpib_instr",
-    "resource.trigger.gpib.intfc": "resource_trigger_gpib_intfc",
-    "resource.trigger.asrl.instr": "resource_trigger_asrl_instr",
-    "resource.read_stb.tcpip.instr": "resource_read_stb_tcpip_instr",
-    "resource.read_stb.tcpip.hislip": "resource_read_stb_tcpip_hislip",
-    "resource.read_stb.tcpip.socket": "resource_read_stb_tcpip_socket",
-    "resource.read_stb.usb.instr": "resource_read_stb_usb_instr",
-    "resource.read_stb.gpib.instr": "resource_read_stb_gpib_instr",
-    "resource.read_stb.gpib.intfc": "resource_read_stb_gpib_intfc",
-    "resource.read_stb.asrl.instr": "resource_read_stb_asrl_instr",
-    "events.srq": "events_srq",
-    "resource.event.srq.queue.tcpip.instr": "resource_event_srq_queue_tcpip_instr",
-    "resource.event.srq.queue.tcpip.hislip": "resource_event_srq_queue_tcpip_hislip",
-    "resource.event.srq.queue.tcpip.socket": "resource_event_srq_queue_tcpip_socket",
-    "resource.event.srq.handler.tcpip.instr": "resource_event_srq_handler_tcpip_instr",
-    "resource.event.srq.handler.tcpip.hislip": "resource_event_srq_handler_tcpip_hislip",
-    "resource.event.srq.handler.tcpip.socket": "resource_event_srq_handler_tcpip_socket",
-    "resource.usb.control_transfer": "resource_usb_control_transfer",
-    "resource.usb.attributes": "resource_usb_attributes",
-    "resource.gpib.intfc.bus_control": "resource_gpib_intfc_bus_control",
-    "resource.gpib.intfc.controller_ops": "resource_gpib_intfc_controller_ops",
+_RESOURCE_KEY_TO_CAPABILITY_ROUTE = {
+    "TCPIP::INSTR": ("tcpip", "vxi11"),
+    "TCPIP::HISLIP": ("tcpip", "hislip"),
+    "TCPIP::SOCKET": ("tcpip", "socket"),
+    "USB::INSTR": ("usb", None),
+    "GPIB::INSTR": ("gpib", "instr"),
+    "GPIB::INTFC": ("gpib", "intfc"),
+    "ASRL::INSTR": ("asrl", None),
 }
 
 
@@ -181,93 +134,241 @@ class CommandMap:
 
 
 @dataclass(frozen=True)
-class CapabilityFlags:
-    """Explicit capability semantics used by shared contract skip logic."""
+class BaseResourceCapabilities:
+    """Common feature toggles shared by resource-class capability types."""
 
-    transport_vxi11: bool | None = None
-    transport_hislip: bool | None = None
-    transport_socket: bool | None = None
-    transport_usb: bool | None = None
-    transport_gpib: bool | None = None
-    transport_asrl: bool | None = None
-    resource_query_tcpip_instr: bool | None = None
-    resource_query_tcpip_hislip: bool | None = None
-    resource_query_tcpip_socket: bool | None = None
-    resource_query_usb_instr: bool | None = None
-    resource_query_gpib_instr: bool | None = None
-    resource_query_gpib_intfc: bool | None = None
-    resource_query_asrl_instr: bool | None = None
-    resource_gpib_intfc_query: bool | None = None
-    resource_timeout_tcpip_instr: bool | None = None
-    resource_timeout_tcpip_hislip: bool | None = None
-    resource_timeout_tcpip_socket: bool | None = None
-    resource_timeout_usb_instr: bool | None = None
-    resource_timeout_gpib_instr: bool | None = None
-    resource_timeout_gpib_intfc: bool | None = None
-    resource_timeout_asrl_instr: bool | None = None
-    locking_shared: bool | None = None
-    resource_locking_tcpip_instr: bool | None = None
-    resource_locking_tcpip_hislip: bool | None = None
-    resource_locking_tcpip_socket: bool | None = None
-    resource_locking_usb_instr: bool | None = None
-    resource_locking_gpib_instr: bool | None = None
-    resource_locking_gpib_intfc: bool | None = None
-    resource_locking_asrl_instr: bool | None = None
-    resource_trigger_tcpip_instr: bool | None = None
-    resource_trigger_tcpip_hislip: bool | None = None
-    resource_trigger_tcpip_socket: bool | None = None
-    resource_trigger_usb_instr: bool | None = None
-    resource_trigger_gpib_instr: bool | None = None
-    resource_trigger_gpib_intfc: bool | None = None
-    resource_trigger_asrl_instr: bool | None = None
-    resource_read_stb_tcpip_instr: bool | None = None
-    resource_read_stb_tcpip_hislip: bool | None = None
-    resource_read_stb_tcpip_socket: bool | None = None
-    resource_read_stb_usb_instr: bool | None = None
-    resource_read_stb_gpib_instr: bool | None = None
-    resource_read_stb_gpib_intfc: bool | None = None
-    resource_read_stb_asrl_instr: bool | None = None
-    events_srq: bool | None = None
-    resource_event_srq_queue_tcpip_instr: bool | None = None
-    resource_event_srq_queue_tcpip_hislip: bool | None = None
-    resource_event_srq_queue_tcpip_socket: bool | None = None
-    resource_event_srq_handler_tcpip_instr: bool | None = None
-    resource_event_srq_handler_tcpip_hislip: bool | None = None
-    resource_event_srq_handler_tcpip_socket: bool | None = None
-    resource_usb_control_transfer: bool | None = None
-    resource_usb_attributes: bool | None = None
-    resource_gpib_intfc_bus_control: bool | None = None
-    resource_gpib_intfc_controller_ops: bool | None = None
-    extras: Mapping[str, bool] = field(default_factory=dict)
+    supported: bool | None = None
+    query: bool | None = None
+    timeout: bool | None = None
+    locking: bool | None = None
+    trigger: bool | None = None
+    read_stb: bool | None = None
+    srq_queue: bool | None = None
+    srq_handler: bool | None = None
 
-    @classmethod
-    def from_mapping(cls, mapping: Mapping[str, bool]) -> "CapabilityFlags":
-        values = dict(mapping)
-        fields: dict[str, bool | None] = {}
-        for key, attr_name in _CAPABILITY_KEY_TO_ATTR.items():
-            if key in values:
-                fields[attr_name] = bool(values.pop(key))
-        return cls(extras={k: bool(v) for k, v in values.items()}, **fields)
-
-    def get(self, capability_key: str, default: bool = False) -> bool:
-        attr_name = _CAPABILITY_KEY_TO_ATTR.get(capability_key)
-        if attr_name is None:
-            return bool(self.extras.get(capability_key, default))
-        value = getattr(self, attr_name)
+    def feature(self, name: str, default: bool = False) -> bool:
+        value = getattr(self, name, None)
         return default if value is None else bool(value)
 
-    def to_dict(self) -> dict[str, bool]:
-        values = dict(self.extras)
-        for key, attr_name in _CAPABILITY_KEY_TO_ATTR.items():
-            value = getattr(self, attr_name)
-            if value is not None:
-                values[key] = bool(value)
-        return values
+    def overlay(self, other: "BaseResourceCapabilities") -> "BaseResourceCapabilities":
+        if type(self) is not type(other):
+            raise TypeError(
+                "Cannot overlay capabilities from different resource classes"
+            )
+        merged: dict[str, Any] = {}
+        for field_name in self.__dataclass_fields__:
+            self_value = getattr(self, field_name)
+            other_value = getattr(other, field_name)
+            merged[field_name] = self_value if other_value is None else other_value
+        return type(self)(**merged)
+
+
+@dataclass(frozen=True)
+class MessageBasedResourceCapabilities(BaseResourceCapabilities):
+    """Capabilities shared by message-based resources."""
+
+
+@dataclass(frozen=True)
+class UsbResourceCapabilities(MessageBasedResourceCapabilities):
+    """USB-specific resource capability toggles."""
+
+    control_transfer: bool | None = None
+    attributes: bool | None = None
+
+
+@dataclass(frozen=True)
+class GpibInterfaceCapabilities(BaseResourceCapabilities):
+    """GPIB interface-class capability toggles."""
+
+    bus_control: bool | None = None
+    controller_ops: bool | None = None
+
+
+@dataclass(frozen=True)
+class AsrlResourceCapabilities(BaseResourceCapabilities):
+    """ASRL-specific capability toggles."""
+
+
+_CapabilityT = TypeVar("_CapabilityT", bound="BaseResourceCapabilities")
+
+
+def _overlay_resource_caps(
+    base: _CapabilityT | None,
+    override: _CapabilityT | None,
+) -> _CapabilityT | None:
+    if override is None:
+        return base
+    if base is None:
+        return override
+    return cast(_CapabilityT, base.overlay(override))
+
+
+@dataclass(frozen=True)
+class TcpipCapabilities:
+    """Capabilities grouped for TCPIP resource families."""
+
+    vxi11: MessageBasedResourceCapabilities | None = None
+    hislip: MessageBasedResourceCapabilities | None = None
+    socket: MessageBasedResourceCapabilities | None = None
+
+    def transport_enabled_for_member(self, member: str, default: bool = True) -> bool:
+        caps = self.capabilities_for_member(member)
+        if caps is None:
+            return default
+        if caps.supported is None:
+            return True
+        return bool(caps.supported)
+
+    def capabilities_for_member(
+        self, member: str
+    ) -> MessageBasedResourceCapabilities | None:
+        if member == "vxi11":
+            return self.vxi11
+        if member == "hislip":
+            return self.hislip
+        if member == "socket":
+            return self.socket
+        raise KeyError(member)
+
+    def overlay(self, other: "TcpipCapabilities") -> "TcpipCapabilities":
+        return TcpipCapabilities(
+            vxi11=_overlay_resource_caps(self.vxi11, other.vxi11),
+            hislip=_overlay_resource_caps(self.hislip, other.hislip),
+            socket=_overlay_resource_caps(self.socket, other.socket),
+        )
+
+
+@dataclass(frozen=True)
+class GpibCapabilities:
+    """Capabilities grouped for GPIB resource families."""
+
+    enabled: bool | None = None
+    instr: MessageBasedResourceCapabilities | None = None
+    intfc: GpibInterfaceCapabilities | None = None
+
+    def enabled_for_member(self, member: str, default: bool = True) -> bool:
+        _ = member
+        return default if self.enabled is None else bool(self.enabled)
+
+    def capabilities_for_member(
+        self,
+        member: str,
+    ) -> MessageBasedResourceCapabilities | GpibInterfaceCapabilities | None:
+        if member == "instr":
+            return self.instr
+        if member == "intfc":
+            return self.intfc
+        raise KeyError(member)
+
+    def overlay(self, other: "GpibCapabilities") -> "GpibCapabilities":
+        return GpibCapabilities(
+            enabled=self.enabled if other.enabled is None else other.enabled,
+            instr=_overlay_resource_caps(self.instr, other.instr),
+            intfc=_overlay_resource_caps(self.intfc, other.intfc),
+        )
+
+
+@dataclass(frozen=True)
+class CapabilityFlags:
+    """Domain-composed capability model used by shared contract skip logic."""
+
+    tcpip: TcpipCapabilities | None = None
+    gpib: GpibCapabilities | None = None
+    usb: UsbResourceCapabilities | None = None
+    asrl: AsrlResourceCapabilities | None = None
+
+    def transport_enabled_for_resource(
+        self, resource_key: str, default: bool = True
+    ) -> bool:
+        route = _RESOURCE_KEY_TO_CAPABILITY_ROUTE.get(resource_key)
+        if route is None:
+            raise KeyError(resource_key)
+
+        domain_name, member_name = route
+        if domain_name == "tcpip":
+            if self.tcpip is None:
+                return default
+            assert member_name is not None
+            return self.tcpip.transport_enabled_for_member(member_name, default)
+
+        if domain_name == "gpib":
+            if self.gpib is None:
+                return default
+            assert member_name is not None
+            return self.gpib.enabled_for_member(member_name, default)
+
+        if domain_name == "usb":
+            if self.usb is None or self.usb.supported is None:
+                return default
+            return bool(self.usb.supported)
+
+        if domain_name == "asrl":
+            if self.asrl is None or self.asrl.supported is None:
+                return default
+            return bool(self.asrl.supported)
+
+        raise KeyError(resource_key)
+
+    def resource_capabilities(
+        self, resource_key: str
+    ) -> BaseResourceCapabilities | None:
+        route = _RESOURCE_KEY_TO_CAPABILITY_ROUTE.get(resource_key)
+        if route is None:
+            raise KeyError(resource_key)
+
+        domain_name, member_name = route
+        if domain_name == "tcpip":
+            if self.tcpip is None:
+                return None
+            assert member_name is not None
+            return self.tcpip.capabilities_for_member(member_name)
+
+        if domain_name == "gpib":
+            if self.gpib is None:
+                return None
+            assert member_name is not None
+            return self.gpib.capabilities_for_member(member_name)
+
+        if domain_name == "usb":
+            return self.usb
+
+        if domain_name == "asrl":
+            return self.asrl
+
+        raise KeyError(resource_key)
+
+    def resource_feature(
+        self, resource_key: str, feature: str, default: bool = True
+    ) -> bool:
+        caps = self.resource_capabilities(resource_key)
+        if caps is None:
+            return default
+        return caps.feature(feature, default)
 
     def overlay(self, other: "CapabilityFlags") -> "CapabilityFlags":
-        merged = self.to_dict()
-        merged.update(other.to_dict())
-        return CapabilityFlags.from_mapping(merged)
+        if other.tcpip is None:
+            tcpip = self.tcpip
+        elif self.tcpip is None:
+            tcpip = other.tcpip
+        else:
+            tcpip = self.tcpip.overlay(other.tcpip)
+
+        if other.gpib is None:
+            gpib = self.gpib
+        elif self.gpib is None:
+            gpib = other.gpib
+        else:
+            gpib = self.gpib.overlay(other.gpib)
+
+        usb = _overlay_resource_caps(self.usb, other.usb)
+        asrl = _overlay_resource_caps(self.asrl, other.asrl)
+
+        return CapabilityFlags(
+            tcpip=tcpip,
+            gpib=gpib,
+            usb=usb,
+            asrl=asrl,
+        )
 
 
 @dataclass(frozen=True)

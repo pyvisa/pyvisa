@@ -17,15 +17,15 @@ pytestmark = [
 
 
 @pytest.mark.parametrize(
-    "resource_key, capability_attr",
+    "resource_key, transport_key",
     [
-        ("TCPIP::INSTR", "transport_vxi11"),
-        ("TCPIP::SOCKET", "transport_socket"),
+        ("TCPIP::INSTR", "vxi11"),
+        ("TCPIP::SOCKET", "socket"),
     ],
 )
 def test_tcpip_query_contract(
     resource_key: str,
-    capability_attr: str,
+    transport_key: str,
     require_pyvisa_profile,
     pyvisa_backend_capabilities: CapabilityFlags,
     pyvisa_command_map: CommandMap,
@@ -36,11 +36,12 @@ def test_tcpip_query_contract(
     contract_id = f"tcpip.query.{resource_key.lower()}"
     apply_pyvisa_contract_policy(contract_id)
 
-    capability_enabled = getattr(pyvisa_backend_capabilities, capability_attr)
-    if capability_enabled is False:
-        pytest.skip(
-            f"Capability {capability_attr} is disabled for this backend/profile"
-        )
+    capability_enabled = pyvisa_backend_capabilities.transport_enabled_for_resource(
+        resource_key,
+        True,
+    )
+    if not capability_enabled:
+        pytest.skip(f"Transport {transport_key} is disabled for this backend/profile")
 
     resource_name = require_pyvisa_profile.resource_addresses.for_resource(resource_key)
     if not resource_name:

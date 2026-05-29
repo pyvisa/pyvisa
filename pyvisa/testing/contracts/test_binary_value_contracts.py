@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import pytest
 
+from pyvisa.testing import CapabilityFlags
 from pyvisa.testing.requirements import require_visa_lib
 
 pytestmark = [
@@ -14,9 +15,12 @@ pytestmark = [
 ]
 
 
-def _capability_or_default(capabilities, attr_name: str, default: bool) -> bool:
-    value = getattr(capabilities, attr_name)
-    return default if value is None else bool(value)
+def _transport_or_default(
+    capabilities: CapabilityFlags,
+    resource_key: str,
+    default: bool,
+) -> bool:
+    return capabilities.transport_enabled_for_resource(resource_key, default)
 
 
 def _binary_query_kwargs(
@@ -36,10 +40,10 @@ def _binary_query_kwargs(
 
 
 @pytest.mark.parametrize(
-    "resource_key, capability_attr",
+    "resource_key, transport_key",
     [
-        ("TCPIP::INSTR", "transport_vxi11"),
-        ("TCPIP::HISLIP", "transport_hislip"),
+        ("TCPIP::INSTR", "vxi11"),
+        ("TCPIP::HISLIP", "hislip"),
     ],
 )
 @pytest.mark.parametrize(
@@ -52,7 +56,7 @@ def _binary_query_kwargs(
 )
 def test_binary_query_u16_ramp_contract(
     resource_key: str,
-    capability_attr: str,
+    transport_key: str,
     header_fmt: str,
     is_big_endian: bool,
     header_token: str,
@@ -60,7 +64,7 @@ def test_binary_query_u16_ramp_contract(
     expect_termination: bool,
     contract_suffix: str,
     require_pyvisa_profile,
-    pyvisa_backend_capabilities,
+    pyvisa_backend_capabilities: CapabilityFlags,
     pyvisa_instrument_pool,
     apply_pyvisa_contract_policy,
     pyvisa_resource_manager,
@@ -69,10 +73,8 @@ def test_binary_query_u16_ramp_contract(
     contract_id = f"binary.query.{contract_suffix}.{resource_key.lower()}"
     apply_pyvisa_contract_policy(contract_id)
 
-    if not _capability_or_default(pyvisa_backend_capabilities, capability_attr, True):
-        pytest.skip(
-            f"Capability {capability_attr} is disabled for this backend/profile"
-        )
+    if not _transport_or_default(pyvisa_backend_capabilities, resource_key, True):
+        pytest.skip(f"Transport {transport_key} is disabled for this backend/profile")
 
     if not pyvisa_instrument_pool.supports_resource(resource_key):
         pytest.skip(f"Instrument pool does not define resource {resource_key}")
@@ -110,10 +112,10 @@ def test_binary_query_u16_ramp_contract(
 
 
 @pytest.mark.parametrize(
-    "resource_key, capability_attr",
+    "resource_key, transport_key",
     [
-        ("TCPIP::INSTR", "transport_vxi11"),
-        ("TCPIP::HISLIP", "transport_hislip"),
+        ("TCPIP::INSTR", "vxi11"),
+        ("TCPIP::HISLIP", "hislip"),
     ],
 )
 @pytest.mark.parametrize(
@@ -126,7 +128,7 @@ def test_binary_query_u16_ramp_contract(
 )
 def test_binary_staged_transfer_contract(
     resource_key: str,
-    capability_attr: str,
+    transport_key: str,
     header_fmt: str,
     is_big_endian: bool,
     header_token: str,
@@ -142,10 +144,8 @@ def test_binary_staged_transfer_contract(
     contract_id = f"binary.staged.{contract_suffix}.{resource_key.lower()}"
     apply_pyvisa_contract_policy(contract_id)
 
-    if not _capability_or_default(pyvisa_backend_capabilities, capability_attr, True):
-        pytest.skip(
-            f"Capability {capability_attr} is disabled for this backend/profile"
-        )
+    if not _transport_or_default(pyvisa_backend_capabilities, resource_key, True):
+        pytest.skip(f"Transport {transport_key} is disabled for this backend/profile")
 
     if not pyvisa_instrument_pool.supports_resource(resource_key):
         pytest.skip(f"Instrument pool does not define resource {resource_key}")

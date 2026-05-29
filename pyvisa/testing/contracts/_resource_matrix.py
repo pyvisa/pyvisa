@@ -11,10 +11,10 @@ class ResourceSpec:
     """Contract metadata for one logical resource class."""
 
     resource_key: str
-    transport_capability_attr: str
+    transport_key: str
+    resource_class: str
     expected_class: str
     message_based: bool = True
-    query_capability_attr: str | None = None
     default_query_enabled: bool = True
 
     @property
@@ -25,47 +25,47 @@ class ResourceSpec:
 ALL_RESOURCE_SPECS: tuple[ResourceSpec, ...] = (
     ResourceSpec(
         "TCPIP::INSTR",
-        "transport_vxi11",
+        "vxi11",
         "INSTR",
-        query_capability_attr="resource_query_tcpip_instr",
+        "INSTR",
     ),
     ResourceSpec(
         "TCPIP::HISLIP",
-        "transport_hislip",
+        "hislip",
         "INSTR",
-        query_capability_attr="resource_query_tcpip_hislip",
+        "INSTR",
     ),
     ResourceSpec(
         "TCPIP::SOCKET",
-        "transport_socket",
+        "socket",
         "SOCKET",
-        query_capability_attr="resource_query_tcpip_socket",
+        "SOCKET",
     ),
     ResourceSpec(
         "USB::INSTR",
-        "transport_usb",
+        "usb",
         "INSTR",
-        query_capability_attr="resource_query_usb_instr",
+        "INSTR",
     ),
     ResourceSpec(
         "GPIB::INSTR",
-        "transport_gpib",
+        "gpib",
         "INSTR",
-        query_capability_attr="resource_query_gpib_instr",
+        "INSTR",
     ),
     ResourceSpec(
         "GPIB::INTFC",
-        "transport_gpib",
+        "gpib",
+        "INTFC",
         "INTFC",
         message_based=False,
-        query_capability_attr="resource_gpib_intfc_query",
         default_query_enabled=False,
     ),
     ResourceSpec(
         "ASRL::INSTR",
-        "transport_asrl",
+        "asrl",
         "INSTR",
-        query_capability_attr="resource_query_asrl_instr",
+        "INSTR",
     ),
 )
 

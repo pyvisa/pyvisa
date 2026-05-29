@@ -4,11 +4,17 @@
 from __future__ import annotations
 
 from pyvisa.testing import (
+    AsrlResourceCapabilities,
     CapabilityFlags,
     CommandMap,
+    GpibCapabilities,
+    GpibInterfaceCapabilities,
     InstrumentProfile,
+    MessageBasedResourceCapabilities,
     ProfileMetadata,
     ResourceAddresses,
+    TcpipCapabilities,
+    UsbResourceCapabilities,
 )
 
 PYVISA_TESTER_RESOURCE_ADDRESSES = ResourceAddresses(
@@ -36,31 +42,67 @@ PYVISA_TESTER_COMMAND_MAP = CommandMap(
 )
 
 PYVISA_TESTER_CAPABILITIES = CapabilityFlags(
-    transport_vxi11=True,
-    transport_hislip=True,
-    transport_socket=True,
-    transport_usb=True,
-    transport_gpib=False,
-    transport_asrl=False,
-    events_srq=True,
-    locking_shared=True,
-    resource_gpib_intfc_query=False,
-    resource_locking_tcpip_instr=True,
-    resource_locking_tcpip_hislip=True,
-    resource_locking_tcpip_socket=False,
-    resource_trigger_tcpip_instr=True,
-    resource_trigger_tcpip_hislip=True,
-    resource_trigger_tcpip_socket=False,
-    resource_read_stb_tcpip_instr=True,
-    resource_read_stb_tcpip_hislip=True,
-    resource_read_stb_tcpip_socket=False,
-    resource_event_srq_queue_tcpip_instr=True,
-    resource_event_srq_queue_tcpip_hislip=True,
-    resource_event_srq_handler_tcpip_instr=True,
-    resource_event_srq_handler_tcpip_hislip=True,
-    resource_usb_control_transfer=False,
-    resource_usb_attributes=False,
-    resource_gpib_intfc_controller_ops=False,
+    tcpip=TcpipCapabilities(
+        vxi11=MessageBasedResourceCapabilities(
+            query=True,
+            timeout=True,
+            locking=True,
+            trigger=True,
+            read_stb=True,
+            srq_queue=True,
+            srq_handler=True,
+        ),
+        hislip=MessageBasedResourceCapabilities(
+            query=True,
+            timeout=True,
+            locking=True,
+            trigger=True,
+            read_stb=True,
+            srq_queue=True,
+            srq_handler=True,
+        ),
+        socket=MessageBasedResourceCapabilities(
+            query=True,
+            timeout=True,
+            locking=False,
+            trigger=False,
+            read_stb=False,
+            srq_queue=False,
+            srq_handler=False,
+        ),
+    ),
+    usb=UsbResourceCapabilities(
+        supported=True,
+        query=True,
+        timeout=True,
+        locking=False,
+        trigger=False,
+        read_stb=False,
+        srq_queue=False,
+        srq_handler=False,
+        control_transfer=False,
+        attributes=False,
+    ),
+    gpib=GpibCapabilities(
+        enabled=False,
+        instr=MessageBasedResourceCapabilities(
+            query=True,
+            timeout=True,
+            locking=False,
+            trigger=False,
+            read_stb=False,
+        ),
+        intfc=GpibInterfaceCapabilities(
+            query=False,
+            timeout=False,
+            locking=False,
+            trigger=False,
+            read_stb=False,
+            bus_control=False,
+            controller_ops=False,
+        ),
+    ),
+    asrl=AsrlResourceCapabilities(supported=False),
 )
 
 

@@ -6,11 +6,14 @@ from __future__ import annotations
 import os
 
 from pyvisa.testing import (
+    UsbResourceCapabilities,
+    MessageBasedResourceCapabilities,
     CapabilityFlags,
     CommandMap,
     InstrumentProfile,
     ProfileMetadata,
     ResourceAddresses,
+    TcpipCapabilities,
 )
 
 
@@ -41,10 +44,11 @@ def keysight_profile_from_env() -> InstrumentProfile | None:
             binary_query_template="DATA:BIN? {datatype},{count},{endian},{header},{termination},{pattern},{start}",
         ),
         capabilities=CapabilityFlags(
-            transport_vxi11=True,
-            transport_socket=True,
-            transport_hislip=False,
-            transport_usb=False,
+            tcpip=TcpipCapabilities(
+                vxi11=MessageBasedResourceCapabilities(query=True, timeout=True),
+                socket=MessageBasedResourceCapabilities(query=True, timeout=True),
+            ),
+            usb=UsbResourceCapabilities(supported=False),
         ),
         metadata=ProfileMetadata(
             source="pyvisa-tests",

@@ -20,11 +20,21 @@ pytestmark = [
 ]
 
 
-def _capability_or_default(
-    capabilities: CapabilityFlags, attr_name: str, default: bool
+def _transport_or_default(
+    capabilities: CapabilityFlags,
+    resource_key: str,
+    default: bool,
 ) -> bool:
-    value = getattr(capabilities, attr_name)
-    return default if value is None else bool(value)
+    return capabilities.transport_enabled_for_resource(resource_key, default)
+
+
+def _resource_feature_or_default(
+    capabilities: CapabilityFlags,
+    resource_key: str,
+    feature_name: str,
+    default: bool,
+) -> bool:
+    return capabilities.resource_feature(resource_key, feature_name, default)
 
 
 class _EventHandler:
@@ -50,15 +60,15 @@ def _trigger_srq(instr, command_map: CommandMap) -> None:
 
 
 @pytest.mark.parametrize(
-    "resource_key, capability_attr",
+    "resource_key, transport_key",
     [
-        ("TCPIP::INSTR", "transport_vxi11"),
-        ("TCPIP::HISLIP", "transport_hislip"),
+        ("TCPIP::INSTR", "vxi11"),
+        ("TCPIP::HISLIP", "hislip"),
     ],
 )
 def test_srq_queue_event_contract(
     resource_key: str,
-    capability_attr: str,
+    transport_key: str,
     require_pyvisa_profile,
     pyvisa_backend_capabilities: CapabilityFlags,
     pyvisa_command_map: CommandMap,
@@ -69,13 +79,16 @@ def test_srq_queue_event_contract(
     contract_id = f"srq.queue.{resource_key.lower()}"
     apply_pyvisa_contract_policy(contract_id)
 
-    if not _capability_or_default(pyvisa_backend_capabilities, capability_attr, True):
-        pytest.skip(
-            f"Capability {capability_attr} is disabled for this backend/profile"
-        )
+    if not _transport_or_default(pyvisa_backend_capabilities, resource_key, True):
+        pytest.skip(f"Transport {transport_key} is disabled for this backend/profile")
 
-    if not _capability_or_default(pyvisa_backend_capabilities, "events_srq", True):
-        pytest.skip("Capability events_srq is disabled for this backend/profile")
+    if not _resource_feature_or_default(
+        pyvisa_backend_capabilities,
+        resource_key,
+        "srq_queue",
+        True,
+    ):
+        pytest.skip(f"SRQ queue support is disabled for {resource_key}")
 
     resource_name = require_pyvisa_profile.resource_addresses.for_resource(resource_key)
     if not resource_name:
@@ -101,15 +114,15 @@ def test_srq_queue_event_contract(
 
 
 @pytest.mark.parametrize(
-    "resource_key, capability_attr",
+    "resource_key, transport_key",
     [
-        ("TCPIP::INSTR", "transport_vxi11"),
-        ("TCPIP::HISLIP", "transport_hislip"),
+        ("TCPIP::INSTR", "vxi11"),
+        ("TCPIP::HISLIP", "hislip"),
     ],
 )
 def test_srq_handler_event_contract(
     resource_key: str,
-    capability_attr: str,
+    transport_key: str,
     require_pyvisa_profile,
     pyvisa_backend_capabilities: CapabilityFlags,
     pyvisa_command_map: CommandMap,
@@ -120,13 +133,16 @@ def test_srq_handler_event_contract(
     contract_id = f"srq.handler.{resource_key.lower()}"
     apply_pyvisa_contract_policy(contract_id)
 
-    if not _capability_or_default(pyvisa_backend_capabilities, capability_attr, True):
-        pytest.skip(
-            f"Capability {capability_attr} is disabled for this backend/profile"
-        )
+    if not _transport_or_default(pyvisa_backend_capabilities, resource_key, True):
+        pytest.skip(f"Transport {transport_key} is disabled for this backend/profile")
 
-    if not _capability_or_default(pyvisa_backend_capabilities, "events_srq", True):
-        pytest.skip("Capability events_srq is disabled for this backend/profile")
+    if not _resource_feature_or_default(
+        pyvisa_backend_capabilities,
+        resource_key,
+        "srq_handler",
+        True,
+    ):
+        pytest.skip(f"SRQ handler support is disabled for {resource_key}")
 
     resource_name = require_pyvisa_profile.resource_addresses.for_resource(resource_key)
     if not resource_name:

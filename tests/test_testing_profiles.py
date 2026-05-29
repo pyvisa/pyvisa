@@ -6,18 +6,28 @@ from __future__ import annotations
 import pytest
 
 from pyvisa.testing import (
+    AsrlResourceCapabilities,
+    BaseResourceCapabilities,
     CapabilityFlags,
     CommandMap,
+    GpibCapabilities,
+    MessageBasedResourceCapabilities,
     InstrumentProfile,
     ProfileMetadata,
     ResourceAddresses,
+    TcpipCapabilities,
+    UsbResourceCapabilities,
 )
 
 
 def test_instrument_profile_uses_explicit_typed_fields():
     addresses = ResourceAddresses(tcpip_instr="TCPIP::127.0.0.1::INSTR")
     command_map = CommandMap(identity_query="*IDN?")
-    capabilities = CapabilityFlags(transport_vxi11=True)
+    capabilities = CapabilityFlags(
+        tcpip=TcpipCapabilities(
+            vxi11=MessageBasedResourceCapabilities(query=True),
+        )
+    )
     metadata = ProfileMetadata(
         source="env", target="pyvisa-tester", extras={"extra": 3}
     )
@@ -37,7 +47,11 @@ def test_instrument_profile_uses_explicit_typed_fields():
 
     assert profile.resource_addresses.tcpip_instr == "TCPIP::127.0.0.1::INSTR"
     assert profile.command_map.identity_query == "*IDN?"
-    assert profile.capabilities.transport_vxi11 is True
+    assert (
+        profile.capabilities.transport_enabled_for_resource("TCPIP::INSTR", False)
+        is True
+    )
+    assert profile.capabilities.resource_feature("TCPIP::INSTR", "query", False) is True
     assert profile.metadata.source == "env"
     assert profile.metadata.target == "pyvisa-tester"
     assert profile.metadata.extras["extra"] == 3
@@ -49,7 +63,9 @@ def test_instrument_profile_rejects_plain_mappings():
             name="sample",
             resource_addresses={"TCPIP::INSTR": "TCPIP::127.0.0.1::INSTR"},
             command_map=CommandMap(identity_query="*IDN?"),
-            capabilities=CapabilityFlags(transport_vxi11=True),
+            capabilities=CapabilityFlags(
+                tcpip=TcpipCapabilities(vxi11=MessageBasedResourceCapabilities())
+            ),
             metadata=ProfileMetadata(source="env", target="pyvisa-tester"),
         )
 
@@ -60,7 +76,9 @@ def test_instrument_profile_rejects_non_command_map():
             name="sample",
             resource_addresses=ResourceAddresses(tcpip_instr="TCPIP::127.0.0.1::INSTR"),
             command_map={"identity_query": "*IDN?"},
-            capabilities=CapabilityFlags(transport_vxi11=True),
+            capabilities=CapabilityFlags(
+                tcpip=TcpipCapabilities(vxi11=MessageBasedResourceCapabilities())
+            ),
             metadata=ProfileMetadata(source="env", target="pyvisa-tester"),
         )
 
@@ -82,9 +100,39 @@ def test_instrument_profile_rejects_non_metadata():
             name="sample",
             resource_addresses=ResourceAddresses(tcpip_instr="TCPIP::127.0.0.1::INSTR"),
             command_map=CommandMap(identity_query="*IDN?"),
-            capabilities=CapabilityFlags(transport_vxi11=True),
+            capabilities=CapabilityFlags(
+                tcpip=TcpipCapabilities(
+                    vxi11=BaseResourceCapabilities(query=True),
+                )
+            ),
             metadata={"target": "pyvisa-tester"},
         )
+
+
+def test_capability_flags_overlay_merges_transports_and_features():
+    base = CapabilityFlags(
+        tcpip=TcpipCapabilities(
+            vxi11=BaseResourceCapabilities(query=True, timeout=True, locking=True),
+        ),
+        usb=UsbResourceCapabilities(supported=False),
+    )
+    override = CapabilityFlags(
+        tcpip=TcpipCapabilities(
+            vxi11=BaseResourceCapabilities(locking=False),
+        ),
+        asrl=AsrlResourceCapabilities(supported=True),
+        gpib=GpibCapabilities(enabled=False),
+    )
+
+    merged = base.overlay(override)
+
+    assert merged.transport_enabled_for_resource("TCPIP::INSTR", False)
+    assert merged.transport_enabled_for_resource("GPIB::INSTR", True) is False
+    assert merged.transport_enabled_for_resource("USB::INSTR", True) is False
+    assert merged.transport_enabled_for_resource("ASRL::INSTR", False)
+    assert merged.resource_feature("TCPIP::INSTR", "query", False)
+    assert merged.resource_feature("TCPIP::INSTR", "timeout", False)
+    assert merged.resource_feature("TCPIP::INSTR", "locking", True) is False
 
 
 def test_profile_metadata_to_dict_merges_canonical_and_extra_fields():
