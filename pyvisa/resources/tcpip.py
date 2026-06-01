@@ -68,3 +68,19 @@ class PrlgxTCPIPIntfc(MessageBasedResource):
     """
 
     pass
+
+
+@Resource.register(constants.InterfaceType.ni_enet100_tcpip, "INTFC")
+class NIEnet100TCPIPIntfc(Resource):
+    """Communicates with the NI GPIB-ENET/100 bridge of type
+    NI-ENET100-TCPIP::host address::INTFC
+
+    More complex resource names can be specified with the following grammar:
+        NI-ENET100-TCPIP[board]::host address::INTFC
+
+    Do not instantiate directly, use
+    :meth:`pyvisa.highlevel.ResourceManager.open_resource`.
+
+    """
+
+    pass
