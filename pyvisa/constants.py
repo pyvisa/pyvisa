@@ -826,6 +826,9 @@ class InterfaceType(enum.IntEnum):
     #: prologix tcpip
     prlgx_tcpip = 76543  # an arbitrarily chosen value
 
+    #: NI GPIB-ENET/100
+    ni_enet100_tcpip = 76544  # similar to Prologix, hence +1
+
 
 @enum.unique
 class LineState(enum.IntEnum):
