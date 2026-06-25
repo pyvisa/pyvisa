@@ -11,4 +11,5 @@ In particular, it will explain in details how PyVISA manage backends.
 
     architecture
     backends
+    testing_harness
     continuous_integration

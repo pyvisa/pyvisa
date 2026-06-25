@@ -91,10 +91,10 @@ As a **very minimum** set you need:
 
 (you can get the signature below or here :ref:`api_visalibrarybase`)
 
-.. note:: 
+.. note::
 
-  A |ResourceManager| attribute check for 
-  :class:`pyvisa.highlevel.VisaLibraryBase.open_resource` is implemented 
+  A |ResourceManager| attribute check for
+  :class:`pyvisa.highlevel.VisaLibraryBase.open_resource` is implemented
   in order to support custom opening handling by the new backend implementation.
 
 But of course you cannot do anything interesting with just this. In general you
@@ -111,6 +111,9 @@ require:
 
 For other usages or devices, you might need to implement other functions. Is
 really up to you and your needs.
+
+To validate a backend implementation against the shared PyVISA contract tests,
+see :ref:`advanced-testing-harness`.
 
 These functions should raise a :class:`pyvisa.errors.VisaIOError` or emit a
 :class:`pyvisa.errors.VisaIOWarning` if necessary, and store error code on a

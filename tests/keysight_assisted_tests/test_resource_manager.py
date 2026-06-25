@@ -11,8 +11,8 @@ from pyvisa import InvalidSession, ResourceManager, VisaIOError, errors
 from pyvisa.constants import AccessModes, InterfaceType, StatusCode
 from pyvisa.highlevel import VisaLibraryBase
 from pyvisa.rname import ResourceName
-from pyvisa.testsuite import BaseTestCase
 
+from .. import BaseTestCase
 from . import RESOURCE_ADDRESSES, require_virtual_instr
 
 

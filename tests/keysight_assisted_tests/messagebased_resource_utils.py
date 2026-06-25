@@ -14,6 +14,7 @@ import pytest
 from pyvisa import constants, errors
 from pyvisa.constants import EventType, ResourceAttribute
 from pyvisa.resources import Resource
+from pyvisa.testing.contracts._event_helpers import compare_user_handle
 
 from .resource_utils import (
     EventAwareResourceTestCaseMixin,
@@ -115,12 +116,7 @@ class MessagebasedResourceTestCase(ResourceTestCase):
         a Python object and most ctypes object do not compare equal.
 
         """
-        if isinstance(h1, ctypes.Structure):
-            return h1 == h2
-        elif hasattr(h1, "value"):
-            return h1.value == h2.value
-        else:  # assume an array
-            return all((i == j for i, j in zip(h1, h2)))
+        return compare_user_handle(h1, h2)
 
     def test_encoding(self):
         """Tets setting the string encoding."""

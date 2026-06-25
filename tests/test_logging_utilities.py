@@ -5,7 +5,8 @@ import logging
 from io import StringIO
 
 import pyvisa
-from pyvisa.testsuite import BaseTestCase
+
+from . import BaseTestCase
 
 
 class TestLoggingUtilities(BaseTestCase):

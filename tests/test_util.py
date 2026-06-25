@@ -22,7 +22,8 @@ from pytest import LogCaptureFixture, MonkeyPatch
 
 from pyvisa import highlevel, util
 from pyvisa.ctwrapper import IVIVisaLibrary
-from pyvisa.testsuite import BaseTestCase
+
+from . import BaseTestCase
 
 np: Optional[ModuleType]
 try:
