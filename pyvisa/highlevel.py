@@ -17,7 +17,7 @@ import warnings
 from collections import defaultdict
 from importlib import import_module
 from itertools import chain
-from types import ModuleType
+from types import ModuleType, TracebackType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -3055,6 +3055,18 @@ class ResourceManager(object):
         if self._session is not None:
             self.close()
 
+    def __enter__(self) -> "ResourceManager":
+        return self
+
+    def __exit__(
+        self,
+        _type: Union[type[BaseException], None],
+        _value: Union[BaseException, None],
+        _traceback: Union[TracebackType, None],
+    ) -> None:
+        if self._session is not None:
+            self.close()
+
     def ignore_warning(self, *warnings_constants: StatusCode) -> ContextManager:
         """Ignoring warnings context manager for the current resource.
 
@@ -3078,7 +3090,8 @@ class ResourceManager(object):
         -----
         Since the resource manager session is shared between instances
         this will also terminate connections obtained from other
-        ResourceManager instances.
+        ResourceManager instances. This call will also be triggered by the
+        context manager protocol and destructor.
 
         """
         atexit.unregister(self._atexit_handler)

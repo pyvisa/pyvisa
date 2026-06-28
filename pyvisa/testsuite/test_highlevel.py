@@ -8,7 +8,7 @@ from importlib import import_module
 
 import pytest
 
-from pyvisa import ResourceManager, constants, highlevel, resources, rname
+from pyvisa import ResourceManager, constants, errors, highlevel, resources, rname
 from pyvisa.ctwrapper import IVIVisaLibrary
 
 from . import BaseTestCase
@@ -262,3 +262,16 @@ class TestHighlevel(BaseTestCase):
         assert isinstance(instr, pkg.FakeResource)
         assert rm.visalib.open_resource_called  # type: ignore[attr-defined]
         rm.close()
+
+    def test_resource_manager_context_manager_closes_session(self):
+        """Test session was invalidated on context exit."""
+        with ResourceManager() as rm:
+            assert rm.session is not None
+        with pytest.raises(errors.InvalidSession):
+            rm.session
+
+    def test_resource_manager_context_manager_does_not_throw_on_double_close(self):
+        """Test that exit from context does not throw if session was already closed."""
+        with ResourceManager() as rm:
+            assert rm.session is not None
+            rm.close()
