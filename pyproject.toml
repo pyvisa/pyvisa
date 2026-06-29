@@ -93,6 +93,7 @@ __version__ = "{version}"
 [tool.mypy]
   follow_imports  = "normal"
   strict_optional = true
+  python_version = "3.10"
 
   [[tool.mypy.overrides]]
     module        = ["pyvisa.thirdparty.*"]

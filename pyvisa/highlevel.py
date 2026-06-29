@@ -3060,9 +3060,9 @@ class ResourceManager(object):
 
     def __exit__(
         self,
-        _type: Union[type[BaseException], None],
-        _value: Union[BaseException, None],
-        _traceback: Union[TracebackType, None],
+        _type: type[BaseException] | None,
+        _value: BaseException | None,
+        _traceback: TracebackType | None,
     ) -> None:
         if self._session is not None:
             self.close()

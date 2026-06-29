@@ -1,6 +1,6 @@
 PyVISA Changelog
 ================
-1.16.3 (27-06-2026)
+1.17 (unreleased)
 - add support for context manager protocol to ResourceManager PR #985
 
 1.16.2 (29-01-2026)
