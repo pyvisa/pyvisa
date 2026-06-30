@@ -8,10 +8,21 @@ from importlib import import_module
 
 import pytest
 
-from pyvisa import ResourceManager, constants, highlevel, resources, rname
+from pyvisa import ResourceManager, constants, errors, highlevel, resources, rname
 from pyvisa.ctwrapper import IVIVisaLibrary
 
 from . import BaseTestCase
+
+
+@pytest.fixture
+def load_fake_extensions():
+    """Temporarily load the extensions into the path."""
+    path = os.path.join(os.path.dirname(__file__), "fake-extensions")
+    sys.path.append(path)
+    try:
+        yield
+    finally:
+        sys.path.remove(path)
 
 
 class TestHighlevel(BaseTestCase):
@@ -108,20 +119,16 @@ class TestHighlevel(BaseTestCase):
         assert "oserror" in msg[1]
         assert "error" in msg[2]
 
+    @pytest.mark.usefixtures("load_fake_extensions")
     def test_list_backends(self):
         """Test listing backends."""
         highlevel._WRAPPERS.clear()
-
-        path = os.path.join(os.path.dirname(__file__), "fake-extensions")
-        sys.path.append(path)
-        try:
-            backends = highlevel.list_backends()
-        finally:
-            sys.path.remove(path)
+        backends = highlevel.list_backends()
 
         assert "ivi" in backends
         assert "test" in backends
 
+    @pytest.mark.usefixtures("load_fake_extensions")
     def test_get_wrapper_class(self):
         """Test retrieving a wrapper class."""
         highlevel._WRAPPERS.clear()
@@ -129,13 +136,7 @@ class TestHighlevel(BaseTestCase):
         highlevel.get_wrapper_class("ivi")
         assert "ivi" in highlevel._WRAPPERS
 
-        path = os.path.join(os.path.dirname(__file__), "fake-extensions")
-        sys.path.append(path)
-        try:
-            highlevel.get_wrapper_class("test")
-        finally:
-            sys.path.remove(path)
-
+        highlevel.get_wrapper_class("test")
         assert "test" in highlevel._WRAPPERS
 
         with pytest.raises(ValueError):
@@ -244,21 +245,35 @@ class TestHighlevel(BaseTestCase):
         assert len(highlevel.VisaLibraryBase.get_debug_info()) == 1
 
     @pytest.mark.parametrize("library_prefix", ["", "a", "a@b"])
-    def test_open_resource_attr(self, caplog, library_prefix: str):
+    @pytest.mark.usefixtures("load_fake_extensions")
+    def test_open_resource_attr(self, library_prefix: str):
         """Test handling errors when trying to open a Visa library."""
         highlevel._WRAPPERS.clear()
+        pkg = import_module("pyvisa_test_open")
+        highlevel.get_wrapper_class("test_open")
 
-        path = os.path.join(os.path.dirname(__file__), "fake-extensions")
-        sys.path.append(path)
-        try:
-            pkg = import_module("pyvisa_test_open")
-            highlevel.get_wrapper_class("test_open")
-            rm = ResourceManager(f"{library_prefix}@test_open")
+        with ResourceManager(f"{library_prefix}@test_open") as rm:
             assert rm is not None
-        finally:
-            sys.path.remove(path)
+            instr = rm.open_resource("TCPIP::192.168.0.1::INSTR")
 
-        instr = rm.open_resource("TCPIP::192.168.0.1::INSTR")
         assert isinstance(instr, pkg.FakeResource)
         assert rm.visalib.open_resource_called  # type: ignore[attr-defined]
-        rm.close()
+
+    @pytest.mark.usefixtures("load_fake_extensions")
+    def test_resource_manager_context_manager_closes_session(self):
+        """Test session was invalidated on context exit."""
+        # Using the test backend provided in the fake extensions to avoid
+        # loading a full VISA implementation.
+        with ResourceManager("@test_open") as rm:
+            assert rm.session is not None
+        with pytest.raises(errors.InvalidSession):
+            rm.session
+
+    @pytest.mark.usefixtures("load_fake_extensions")
+    def test_resource_manager_context_manager_does_not_throw_on_double_close(self):
+        """Test that exit from context does not throw if session was already closed."""
+        # Using the test backend provided in the fake extensions to avoid
+        # loading a full VISA implementation.
+        with ResourceManager("@test_open") as rm:
+            assert rm.session is not None
+            rm.close()
