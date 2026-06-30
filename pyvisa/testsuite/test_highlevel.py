@@ -14,6 +14,17 @@ from pyvisa.ctwrapper import IVIVisaLibrary
 from . import BaseTestCase
 
 
+@pytest.fixture
+def load_fake_extensions():
+    """Temporarily load the extensions into the path."""
+    path = os.path.join(os.path.dirname(__file__), "fake-extensions")
+    sys.path.append(path)
+    try:
+        yield
+    finally:
+        sys.path.remove(path)
+
+
 class TestHighlevel(BaseTestCase):
     """Test highlevel functionalities."""
 
@@ -263,15 +274,21 @@ class TestHighlevel(BaseTestCase):
         assert rm.visalib.open_resource_called  # type: ignore[attr-defined]
         rm.close()
 
+    @pytest.mark.usefixtures("load_fake_extensions")
     def test_resource_manager_context_manager_closes_session(self):
         """Test session was invalidated on context exit."""
-        with ResourceManager() as rm:
+        # Using the test backend provided in the fake extensions to avoid
+        # loading a full VISA implementation.
+        with ResourceManager("@test_open") as rm:
             assert rm.session is not None
         with pytest.raises(errors.InvalidSession):
             rm.session
 
+    @pytest.mark.usefixtures("load_fake_extensions")
     def test_resource_manager_context_manager_does_not_throw_on_double_close(self):
         """Test that exit from context does not throw if session was already closed."""
-        with ResourceManager() as rm:
+        # Using the test backend provided in the fake extensions to avoid
+        # loading a full VISA implementation.
+        with ResourceManager("@test_open") as rm:
             assert rm.session is not None
             rm.close()
