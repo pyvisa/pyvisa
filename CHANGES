@@ -3,6 +3,7 @@ PyVISA Changelog
 1.17 (unreleased)
 -------------------
 - add support for context manager protocol to ResourceManager PR #985
+- fix outdated manual install instructions in README PR #986
 
 1.16.2 (29-01-2026)
 -------------------
