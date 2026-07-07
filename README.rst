@@ -95,7 +95,7 @@ or download and unzip the source distribution file and, from that directory:
 
 pip can install without accessing PyPI if the build and runtime dependencies
 are already available locally, e.g. using ``--no-build-isolation`` together
-with ``--no-index --find-links=<path-to-local-wheels>``, see pip's
+with ``--no-index --find-links=<path-to-local-wheels>``. See pip's
 `local project installs
 <https://pip.pypa.io/en/stable/topics/local-project-installs/>`_
 documentation for details.
