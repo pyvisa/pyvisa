@@ -7,7 +7,10 @@ PyVISA Changelog
 1.17.0 (06-07-2026)
 -------------------
 - added support for National Instruments GPIB/ENET 100 PR #980
-
+1.17 (unreleased)
+-------------------
+- add support for context manager protocol to ResourceManager PR #985
+- added support for National Instruments GPIB/ENET 100 PR #980
 1.16.2 (29-01-2026)
 -------------------
 - fix creating a ResourceManager with visa_library string containing multiple '@' symbols PR #971
