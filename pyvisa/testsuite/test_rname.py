@@ -148,8 +148,28 @@ class TestResourceName(BaseTestCase):
         """Test converting the interface to a VISA constant"""
         types = constants.InterfaceType
         for it, itc in zip(
-            ("ASRL", "USB", "GPIB", "TCPIP", "PXI", "VXI"),
-            (types.asrl, types.usb, types.gpib, types.tcpip, types.pxi, types.vxi),
+            (
+                "ASRL",
+                "USB",
+                "GPIB",
+                "TCPIP",
+                "PXI",
+                "VXI",
+                "PRLGX-TCPIP",
+                "PRLGX-ASRL",
+                "NI-ENET100-TCPIP",
+            ),
+            (
+                types.asrl,
+                types.usb,
+                types.gpib,
+                types.tcpip,
+                types.pxi,
+                types.vxi,
+                types.prlgx_tcpip,
+                types.prlgx_asrl,
+                types.ni_enet100_tcpip,
+            ),
         ):
             rn = rname.ResourceName()
             rn.interface_type = it
@@ -297,6 +317,25 @@ class TestParsers(BaseTestCase):
             serial_device="asrl1",
             board="0",
             canonical_resource_name="PRLGX-ASRL0::asrl1::INTFC",
+        )
+
+    def test_ni_enet100_intf(self):
+        self._parse_test(
+            "NI-ENET100-TCPIP::1.2.3.4::INTFC",
+            interface_type="NI-ENET100-TCPIP",
+            resource_class="INTFC",
+            host_address="1.2.3.4",
+            board="0",
+            canonical_resource_name="NI-ENET100-TCPIP0::1.2.3.4::INTFC",
+        )
+
+        self._parse_test(
+            "NI-ENET100-TCPIP3::dev.company.com::INTFC",
+            interface_type="NI-ENET100-TCPIP",
+            resource_class="INTFC",
+            host_address="dev.company.com",
+            board="3",
+            canonical_resource_name="NI-ENET100-TCPIP3::dev.company.com::INTFC",
         )
 
     def test_tcpip_intr(self):

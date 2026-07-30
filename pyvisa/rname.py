@@ -429,6 +429,25 @@ class PrlgxTCPIPIntfc(ResourceName):
 
 @register_subclass
 @dataclass
+class NIEnet100TCPIPIntfc(ResourceName):
+    """NI-ENET100 TCPIP INTFC
+
+    The syntax is:
+    NI-ENET100-TCPIP[board]::host address::INTFC
+    """
+
+    #: GPIB "board" to use.
+    board: str = "0"
+
+    #: Host address of the device (IPv4 or host name)
+    host_address: str = ""
+
+    interface_type: ClassVar[str] = "NI-ENET100-TCPIP"
+    resource_class: ClassVar[str] = "INTFC"
+
+
+@register_subclass
+@dataclass
 class ASRLInstr(ResourceName):
     """ASRL INSTR
 
