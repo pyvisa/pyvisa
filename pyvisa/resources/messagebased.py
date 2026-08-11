@@ -602,7 +602,9 @@ class MessageBasedResource(Resource):
              number of bytes based on the datatype. Defaults to 0.
         chunk_size : int, optional
             Size of the chunks to read from the device. Using larger chunks may
-            be faster for large amount of data.
+            be faster for large amount of data. Defaults to using one transfer
+            to read the header, and another for the remainder of the reported
+            data length.
         monitoring_interface : SupportsUpdate Protocol, optional
             Progress monitoring object with update() method that accepts the number
             of bytes read. See the tqdm documentation (a progress bar package) for
@@ -650,10 +652,11 @@ class MessageBasedResource(Resource):
 
         # Read all the data if we know what to expect.
         if data_length > 0:
+            to_read = expected_length - len(block)
             block.extend(
                 self.read_bytes(
-                    expected_length - len(block),
-                    chunk_size=chunk_size,
+                    to_read,
+                    chunk_size=chunk_size or to_read,
                     monitoring_interface=monitoring_interface,
                 )
             )
