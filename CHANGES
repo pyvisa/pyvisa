@@ -4,6 +4,8 @@ PyVISA Changelog
 -------------------
 - add support for context manager protocol to ResourceManager PR #985
 - fix outdated manual install instructions in README PR #986
+- add typing overloads to ResourceManager.open_resource to narrow the
+  return type when resource_pyclass is given PR #989
 
 1.17.0 (06-07-2026)
 -------------------

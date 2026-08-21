@@ -36,6 +36,7 @@ from typing import (
     TypeVar,
     Union,
     cast,
+    overload,
 )
 from weakref import WeakMethod, WeakSet, WeakValueDictionary
 
@@ -2908,6 +2909,11 @@ def open_visa_library(specification: str = "") -> VisaLibraryBase:
         raise
 
 
+#: Bound to Resource so that open_resource() can be overloaded to return the
+#: specific subclass passed as resource_pyclass instead of the base Resource.
+TResource = TypeVar("TResource", bound="Resource")
+
+
 class ResourceManager(object):
     """VISA Resource Manager."""
 
@@ -3239,6 +3245,27 @@ class ResourceManager(object):
         """
         return self.visalib.open(self.session, resource_name, access_mode, open_timeout)
 
+    @overload
+    def open_resource(
+        self,
+        resource_name: str,
+        access_mode: constants.AccessModes = ...,
+        open_timeout: int = ...,
+        *,
+        resource_pyclass: Type[TResource],
+        **kwargs: Any,
+    ) -> TResource: ...
+
+    @overload
+    def open_resource(
+        self,
+        resource_name: str,
+        access_mode: constants.AccessModes = ...,
+        open_timeout: int = ...,
+        resource_pyclass: None = ...,
+        **kwargs: Any,
+    ) -> "Resource": ...
+
     def open_resource(
         self,
         resource_name: str,
@@ -3263,7 +3290,10 @@ class ResourceManager(object):
             error, by default constants.VI_TMO_IMMEDIATE.
         resource_pyclass : Optional[Type[Resource]], optional
             Resource Python class to use to instantiate the Resource.
-            Defaults to None: select based on the resource name.
+            Defaults to None: select based on the resource name. Passing an
+            explicit class also narrows the return type for static type
+            checkers (e.g. ``open_resource(name, resource_pyclass=GPIBInstrument)``
+            is typed as returning ``GPIBInstrument``).
         kwargs : Any
             Keyword arguments to be used to change instrument attributes
             after construction.
