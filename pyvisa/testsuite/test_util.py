@@ -15,7 +15,7 @@ from functools import partial
 from io import StringIO
 from pathlib import Path
 from types import ModuleType
-from typing import Optional
+from typing import Optional, get_args
 
 import pytest
 from pytest import LogCaptureFixture, MonkeyPatch
@@ -31,6 +31,12 @@ try:
     np = numpy
 except ImportError:
     np = None
+
+#: Every advertised binary datatype that carries numbers. "s" is the only
+#: entry of BINARY_DATATYPES that maps to raw bytes instead.
+NUMERIC_DATATYPES = tuple(
+    dt for dt in get_args(util.BINARY_DATATYPES) if dt not in ("s", "p")
+)
 
 
 class TestConfigFile(BaseTestCase):
@@ -408,7 +414,10 @@ class TestParser(BaseTestCase):
             (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
             (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
         ):
-            for fmt in "bBhHiIfd":
+            # Derived from BINARY_DATATYPES rather than spelled out, so that a
+            # datatype cannot be advertised as supported and left untested.
+            # "s" is covered by test_bytes_binary_block.
+            for fmt in NUMERIC_DATATYPES:
                 for endi in (True, False):
                     msg = "block=%s, fmt=%s, endianness=%s"
                     msg = msg % (block, fmt, endi)
@@ -440,6 +449,58 @@ class TestParser(BaseTestCase):
                         return fb(block, fmt, endi, cont)
 
                     self.round_trip_block_conversion(values, tblock, fblock, msg)
+
+    def test_block_header_length_matches_payload(self):
+        """The length declared in the header must be the number of bytes that follow.
+
+        This is what IEEE 488.2 8.7.9 requires of a definite length arbitrary
+        block, and it does not depend on knowing the size of an element.
+
+        """
+        values = list(range(10))
+        for fmt in NUMERIC_DATATYPES:
+            for endi in (True, False):
+                msg = "fmt=%s, endianness=%s" % (fmt, endi)
+
+                block = util.to_ieee_block(values, fmt, endi)
+                offset, declared = util.parse_ieee_block_header(block)
+                assert len(block) - offset == declared, "ieee, " + msg
+
+                block = util.to_rs_block(values, fmt, endi)
+                offset, declared = util.parse_rs_block_header(block)
+                assert len(block) - offset == declared, "rs, " + msg
+
+                block = util.to_hp_block(values, fmt, endi)
+                offset, declared = util.parse_hp_block_header(block, endi)
+                assert len(block) - offset == declared, "hp, " + msg
+
+    def test_binary_block_does_not_depend_on_container(self):
+        """The bytes put on the wire must not depend on the output container."""
+        if np is None:
+            pytest.skip("numpy is not installed")
+        values = list(range(10))
+        for fmt in NUMERIC_DATATYPES:
+            for endi in (True, False):
+                msg = "fmt=%s, endianness=%s" % (fmt, endi)
+                from_list = util.to_ieee_block(values, fmt, endi)
+                from_array = util.to_ieee_block(np.array(values), fmt, endi)
+                assert from_list == from_array, msg
+
+                parsed = util.from_ieee_block(from_list, fmt, endi, np.array)
+                np.testing.assert_array_equal(np.array(values), parsed, msg)
+
+    def test_message_size_matches_emitted_block(self):
+        """message_size must agree with the block the library actually builds."""
+        values = list(range(10))
+        for fmt in NUMERIC_DATATYPES:
+            for header_fmt, tb in (
+                ("ieee", util.to_ieee_block),
+                ("hp", util.to_hp_block),
+            ):
+                msg = "fmt=%s, header=%s" % (fmt, header_fmt)
+                # message_size accounts for a single termination character.
+                expected = len(tb(values, fmt, False)) + 1
+                assert util.message_size(len(values), fmt, header_fmt) == expected, msg
 
     def test_bytes_binary_block(self):
         values = b"dbslbw cj saj \x00\x76"

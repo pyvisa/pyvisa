@@ -403,6 +403,30 @@ BINARY_DATATYPES = Literal[
 #: Valid output containers for storing the parsed binary data
 BINARY_CONTAINERS = Union[type, Callable]
 
+#: Equivalent datatype whose numpy itemsize matches the size struct uses in
+#: standard mode. Binary blocks are always packed and unpacked through a "<" or
+#: ">" prefixed format, which selects struct's standard sizes: "l"/"L" are then
+#: 4 bytes. numpy instead maps them onto the platform C long, which is 8 bytes
+#: on LP64 systems, so they have to be spelled as "i"/"I" for numpy.
+_NUMPY_DATATYPES: Dict[str, str] = {"l": "i", "L": "I"}
+
+
+def _element_size(datatype: BINARY_DATATYPES) -> int:
+    """Size in bytes of a single element of the given datatype.
+
+    Binary blocks are always packed with an explicit byte order, so the size
+    must be computed in struct's standard mode too. Calling
+    ``struct.calcsize(datatype)`` instead selects the native mode, whose sizes
+    are platform dependent ("l"/"L" are 8 bytes on LP64 systems).
+
+    """
+    return struct.calcsize("<" + datatype)
+
+
+def _numpy_datatype(endianess: str, datatype: BINARY_DATATYPES) -> str:
+    """Numpy dtype string matching the struct standard-mode size of datatype."""
+    return endianess + _NUMPY_DATATYPES.get(datatype, datatype)
+
 
 def parse_ieee_block_header(
     block: Union[bytes, bytearray],
@@ -951,14 +975,16 @@ def from_binary_block(
     if data_length is None:
         data_length = len(block) - offset
 
-    element_length = struct.calcsize(datatype)
+    element_length = _element_size(datatype)
     array_length = int(data_length / element_length)
 
     endianess = ">" if is_big_endian else "<"
 
     if _use_numpy_routines(container):
         assert np  # for typing
-        return np.frombuffer(block, endianess + datatype, array_length, offset)
+        return np.frombuffer(
+            block, _numpy_datatype(endianess, datatype), array_length, offset
+        )
 
     fullfmt = "%s%d%s" % (endianess, array_length, datatype)
 
@@ -1015,7 +1041,7 @@ def to_binary_block(
 
     if _use_numpy_routines(type(iterable)):
         assert np and isinstance(iterable, np.ndarray)  # For typing
-        return header + iterable.astype(endianess + datatype).tobytes()
+        return header + iterable.astype(_numpy_datatype(endianess, datatype)).tobytes()
 
     array_length = len(iterable)
     fullfmt = "%s%d%s" % (endianess, array_length, datatype)
@@ -1052,7 +1078,7 @@ def to_ieee_block(
 
     """
     array_length = len(iterable)
-    element_length = struct.calcsize(datatype)
+    element_length = _element_size(datatype)
     data_length = array_length * element_length
 
     number_of_digits_in_data_length = f"{len(str(data_length)):X}"
@@ -1099,7 +1125,7 @@ def to_rs_block(
 
     """
     array_length = len(iterable)
-    element_length = struct.calcsize(datatype)
+    element_length = _element_size(datatype)
     data_length = array_length * element_length
 
     header = f"#({data_length:d})"
@@ -1130,7 +1156,7 @@ def to_hp_block(
 
     """
     array_length = len(iterable)
-    element_length = struct.calcsize(datatype)
+    element_length = _element_size(datatype)
     data_length = array_length * element_length
 
     if data_length >= 2**16:
@@ -1405,7 +1431,7 @@ def message_size(
         The total message size in bytes
 
     """
-    data_length = num_points * struct.calcsize(datatype)
+    data_length = num_points * _element_size(datatype)
     if header_format == "ieee":
         header_length = len(f"{data_length}") + 2
     elif header_format == "hp":

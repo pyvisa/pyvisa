@@ -9,7 +9,6 @@ This file is part of PyVISA.
 """
 
 import contextlib
-import struct
 import time
 import warnings
 from typing import (
@@ -640,7 +639,9 @@ class MessageBasedResource(Resource):
         # Allow to support instrument such as the Keithley 2000 that do not
         # report the length of the block
         data_length = (
-            data_length if data_length >= 0 else data_points * struct.calcsize(datatype)
+            data_length
+            if data_length >= 0
+            else data_points * util._element_size(datatype)
         )
 
         expected_length = offset + data_length
