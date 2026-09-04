@@ -4,6 +4,8 @@ PyVISA Changelog
 -------------------
 - add support for context manager protocol to ResourceManager PR #985
 - fix outdated manual install instructions in README PR #986
+- fix the size of the 'l' and 'L' binary datatypes, which was taken from the
+  platform C long instead of the 4 bytes struct uses in standard mode PR #990
 
 1.17.0 (06-07-2026)
 -------------------
