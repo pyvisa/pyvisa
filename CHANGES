@@ -2,6 +2,7 @@ PyVISA Changelog
 ================
 1.17 (unreleased)
 -------------------
+- reject non-integer and out-of-range TCPIP SOCKET ports when parsing resource names
 - add support for context manager protocol to ResourceManager PR #985
 - fix outdated manual install instructions in README PR #986
 - fix the size of the 'l' and 'L' binary datatypes, which was taken from the

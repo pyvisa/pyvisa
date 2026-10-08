@@ -43,6 +43,18 @@ class TestHighlevel(BaseTestCase):
                 "TCPIP2::192.168.0.1::5000::SOCKET",
                 (constants.InterfaceType.tcpip, 2, "SOCKET"),
             ),
+            (
+                "TCPIP::192.168.0.1::0::SOCKET",
+                (constants.InterfaceType.tcpip, 0, "SOCKET"),
+            ),
+            (
+                "TCPIP::192.168.0.1::65535::SOCKET",
+                (constants.InterfaceType.tcpip, 0, "SOCKET"),
+            ),
+            (
+                "TCPIP2::192.168.0.1::05025::SOCKET",
+                (constants.InterfaceType.tcpip, 2, "SOCKET"),
+            ),
             ("GPIB::1::INSTR", (constants.InterfaceType.gpib, 0, "INSTR")),
             ("GPIB::INTFC", (constants.InterfaceType.gpib, 0, "INTFC")),
             ("GPIB2::1::INSTR", (constants.InterfaceType.gpib, 2, "INSTR")),
@@ -84,6 +96,17 @@ class TestHighlevel(BaseTestCase):
 
         assert ret_code == constants.StatusCode.error_invalid_resource_name
         assert info[0] == constants.InterfaceType.unknown
+
+    @pytest.mark.parametrize("port", ["notaport", "5000.5", "-1", "65536"])
+    def test_base_class_parse_resource_invalid_socket_port(self, port):
+        lib = highlevel.VisaLibraryBase("test")
+        name = f"TCPIP::127.0.0.1::{port}::SOCKET"
+        for parse in (lib.parse_resource, lib.parse_resource_extended):
+            info, status = parse(None, name)
+            assert status == constants.StatusCode.error_invalid_resource_name
+            assert info == highlevel.ResourceInfo(
+                constants.InterfaceType.unknown, 0, None, None, None
+            )
 
     def test_specifying_path_open_visa_library(self, caplog):
         """Test handling a specified path in open_visa_library."""
