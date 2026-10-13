@@ -771,11 +771,13 @@ def from_ieee_block(
 
     """
     offset, data_length = parse_ieee_block_header(block)
+    reported_data_length: Optional[int] = data_length
 
     # If the data length is not reported takes all the data and do not make
     # any assumption about the termination character
     if data_length == -1:
         data_length = len(block) - offset
+        reported_data_length = None
 
     if len(block) < offset + data_length:
         raise ValueError(
@@ -784,7 +786,12 @@ def from_ieee_block(
         )
 
     return from_binary_block(
-        block, offset, data_length, datatype, is_big_endian, container
+        block,
+        offset,
+        reported_data_length,
+        datatype,
+        is_big_endian,
+        container,
     )
 
 
@@ -873,11 +880,13 @@ def from_ieee_or_rs_block(
 
     """
     offset, data_length = parse_ieee_or_rs_block_header(block)
+    reported_data_length: Optional[int] = data_length
 
     # If the data length is not reported takes all the data and do not make
     # any assumption about the termination character
     if data_length == -1:
         data_length = len(block) - offset
+        reported_data_length = None
 
     if len(block) < offset + data_length:
         raise ValueError(
@@ -886,7 +895,12 @@ def from_ieee_or_rs_block(
         )
 
     return from_binary_block(
-        block, offset, data_length, datatype, is_big_endian, container
+        block,
+        offset,
+        reported_data_length,
+        datatype,
+        is_big_endian,
+        container,
     )
 
 
@@ -956,8 +970,10 @@ def from_binary_block(
         HP formatted block of data.
     offset : int
         Offset at which the actual data starts
-    data_length : int
-        Length of the data in bytes.
+    data_length : int, optional
+        Length of the data in bytes. If omitted, the bytes from ``offset`` to
+        the end of ``block`` are used; because that length is inferred, a
+        trailing termination byte may be ignored.
     datatype : BINARY_DATATYPES, optional
         Format string for a single element. See struct module. 'f' by default.
     is_big_endian : bool, optional
@@ -972,11 +988,17 @@ def from_binary_block(
         Parsed data.
 
     """
-    if data_length is None:
-        data_length = len(block) - offset
-
     element_length = _element_size(datatype)
-    array_length = int(data_length / element_length)
+    if data_length is None:
+        effective_data_length = len(block) - offset
+    else:
+        if data_length % element_length:
+            raise ValueError(
+                "Binary data length %d is not a multiple of element size %d."
+                % (data_length, element_length)
+            )
+        effective_data_length = data_length
+    array_length = effective_data_length // element_length
 
     endianess = ">" if is_big_endian else "<"
 
