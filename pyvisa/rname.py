@@ -532,6 +532,15 @@ class TCPIPSocket(ResourceName):
     interface_type: ClassVar[str] = "TCPIP"
     resource_class: ClassVar[str] = "SOCKET"
 
+    def __post_init__(self):
+        super().__post_init__()
+        try:
+            port = int(self.port)
+        except (TypeError, ValueError):
+            raise ValueError("port must be an integer between 0 and 65535") from None
+        if not 0 <= port <= 65535:
+            raise ValueError("port must be between 0 and 65535")
+
 
 @register_subclass
 @dataclass

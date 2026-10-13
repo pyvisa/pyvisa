@@ -437,6 +437,69 @@ class TestParsers(BaseTestCase):
             canonical_resource_name="TCPIP2::1.2.3.4::999::SOCKET",
         )
 
+    @pytest.mark.parametrize(
+        ("port", "message"),
+        [
+            ("notaport", "port must be an integer between 0 and 65535"),
+            ("5000.5", "port must be an integer between 0 and 65535"),
+            ("-1", "port must be between 0 and 65535"),
+            ("65536", "port must be between 0 and 65535"),
+        ],
+    )
+    @pytest.mark.parametrize("use_kwargs", [False, True])
+    def test_tcpip_socket_invalid_port(self, port, message, use_kwargs):
+        with pytest.raises(rname.InvalidResourceName, match=message):
+            if use_kwargs:
+                rname.ResourceName.from_kwargs(
+                    interface_type="TCPIP",
+                    resource_class="SOCKET",
+                    host_address="127.0.0.1",
+                    port=port,
+                )
+            else:
+                rname.parse_resource_name(f"TCPIP::127.0.0.1::{port}::SOCKET")
+
+    @pytest.mark.parametrize("port", ["0", "1", "65535", "05025", "+5025", " 5025 "])
+    def test_tcpip_socket_valid_port(self, port):
+        name = f"TCPIP::127.0.0.1::{port}::SOCKET"
+        parsed = rname.parse_resource_name(name)
+        assert parsed.port == port
+        assert parsed._fields == ("board", "host_address", "port")
+        assert str(parsed) == f"TCPIP0::127.0.0.1::{port}::SOCKET"
+        assembled = rname.ResourceName.from_kwargs(
+            interface_type="TCPIP",
+            resource_class="SOCKET",
+            host_address="127.0.0.1",
+            port=port,
+        )
+        assert assembled.port == port
+        assert str(assembled) == str(parsed)
+
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "TCPIP::127.0.0.1::SOCKET",
+            "TCPIP::127.0.0.1::::SOCKET",
+            "TCPIP::::5025::SOCKET",
+        ],
+    )
+    def test_tcpip_socket_required_fields(self, name):
+        with pytest.raises(rname.InvalidResourceName):
+            rname.parse_resource_name(name)
+
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "TCPIP::127.0.0.1::inst0::INSTR",
+            "TCPIP::127.0.0.1::hislip0,4880::INSTR",
+            "TCPIP::127.0.0.1,111::inst0::INSTR",
+        ],
+    )
+    def test_tcpip_instr_names(self, name):
+        parsed = rname.parse_resource_name(name)
+        assert parsed.resource_class == "INSTR"
+        assert str(parsed) == name.replace("TCPIP::", "TCPIP0::", 1)
+
     def test_usb_instr(self):
         self._parse_test(
             "USB::0x1234::125::A22-5::INSTR",
