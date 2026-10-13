@@ -534,7 +534,11 @@ class TCPIPSocket(ResourceName):
 
     def __post_init__(self):
         super().__post_init__()
-        if not 0 <= int(self.port) <= 65535:
+        try:
+            port = int(self.port)
+        except (TypeError, ValueError):
+            raise ValueError("port must be an integer between 0 and 65535") from None
+        if not 0 <= port <= 65535:
             raise ValueError("port must be between 0 and 65535")
 
 

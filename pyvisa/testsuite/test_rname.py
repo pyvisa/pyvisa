@@ -437,10 +437,18 @@ class TestParsers(BaseTestCase):
             canonical_resource_name="TCPIP2::1.2.3.4::999::SOCKET",
         )
 
-    @pytest.mark.parametrize("port", ["notaport", "5000.5", "-1", "65536"])
+    @pytest.mark.parametrize(
+        ("port", "message"),
+        [
+            ("notaport", "port must be an integer between 0 and 65535"),
+            ("5000.5", "port must be an integer between 0 and 65535"),
+            ("-1", "port must be between 0 and 65535"),
+            ("65536", "port must be between 0 and 65535"),
+        ],
+    )
     @pytest.mark.parametrize("use_kwargs", [False, True])
-    def test_tcpip_socket_invalid_port(self, port, use_kwargs):
-        with pytest.raises(rname.InvalidResourceName):
+    def test_tcpip_socket_invalid_port(self, port, message, use_kwargs):
+        with pytest.raises(rname.InvalidResourceName, match=message):
             if use_kwargs:
                 rname.ResourceName.from_kwargs(
                     interface_type="TCPIP",
