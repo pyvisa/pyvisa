@@ -164,3 +164,33 @@ returned by install handler to uninstall the handler at a later time.
 
     In the case of ctwrapper that ships with PyVISA, the value is converted
     to an equivalent ctypes object (c_float for a float, c_int for an integer, etc)
+
+Asynchronous read buffers
+-------------------------
+
+The IVI backend retains the buffers created by ``read_asynchronously`` so that
+completion events can access them through ``get_buffer_from_id``. Looking up a
+buffer or reading ``IOCompletionEvent.data`` does not remove it from the backend.
+
+Once a read has completed and all consumers have finished using its completion
+event, retrieve the buffer and remove the backend's reference with
+``get_buffer_from_id_and_pop``. For example, using the job ID returned by
+``read_asynchronously``:
+
+.. code-block:: python
+
+    # After the read has completed and the completion event has been consumed:
+    buffer = instr.visalib.get_buffer_from_id_and_pop(job_id)
+
+The returned buffer remains valid while you hold a reference to it. Until the
+job ID is reused for another read, subsequent lookups return ``None``, including
+a repeated call to this method. Read any needed completion-event data before
+removing the buffer.
+
+.. warning::
+
+    This method does not wait for, cancel, or check the state of a read. Do not
+    use it to release a buffer that a pending read may still write into. A timeout
+    while waiting for an event is not evidence that the read has completed. After
+    cancellation, ensure the operation has been safely terminated before releasing
+    the buffer.

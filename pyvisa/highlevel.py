@@ -2330,6 +2330,29 @@ class VisaLibraryBase(object):
         """
         raise NotImplementedError
 
+    def get_buffer_from_id_and_pop(self, job_id: VISAJobID) -> Optional[SupportsBytes]:
+        """Retrieve an asynchronous read buffer and stop retaining it.
+
+        Only call this after the read has completed or has been safely terminated,
+        and after all consumers of the completion event have finished using it.
+        This method does not wait for, cancel, or check the state of the read. A
+        timeout while waiting for an event does not mean the read has completed.
+        The returned buffer remains valid while the caller holds a reference.
+
+        Parameters
+        ----------
+        job_id : VISAJobID
+            Id of the job for which to retrieve and release the buffer.
+
+        Returns
+        -------
+        Optional[SupportsBytes]
+            The retained buffer, or None if the job id is not associated with any
+            retained buffer.
+
+        """
+        raise NotImplementedError
+
     def read_stb(self, session: VISASession) -> Tuple[int, StatusCode]:
         """Reads a status byte of the service request.
 
