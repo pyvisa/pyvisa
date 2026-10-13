@@ -584,8 +584,26 @@ class TestParser(BaseTestCase):
                 index = bad_block.find(b"#")
                 bad_block = bad_block[:index] + b"#(123)" + bad_block[index + 2 :]
 
+            if header == "rs":
+                with pytest.warns(UserWarning):
+                    with pytest.raises(ValueError, match="not a multiple"):
+                        fb(bad_block, "h", False, list)
+            else:
+                with pytest.warns(UserWarning):
+                    fb(bad_block, "h", False, list)
+
+    def test_late_valid_binary_block_header_is_decoded(self):
+        values = list(range(10))
+        for tb, fb in zip(
+            (util.to_ieee_block, util.to_hp_block, util.to_rs_block),
+            (util.from_ieee_block, util.from_hp_block, util.from_ieee_or_rs_block),
+        ):
+            block = b"x" * (util.DEFAULT_LENGTH_BEFORE_BLOCK + 1) + tb(
+                values, "h", False
+            )
             with pytest.warns(UserWarning):
-                fb(bad_block, "h", False, list)
+                parsed = fb(block, "h", False, list)
+            assert parsed == values
 
     def test_late_binary_block_header_raise(self):
         values = list(range(100))
@@ -644,6 +662,23 @@ class TestParser(BaseTestCase):
                 fb(block, "h", False, list)
 
             assert "Binary data is incomplete" in e.exconly()
+
+    def test_binary_block_rejects_partial_element(self):
+        """A declared payload must contain complete datatype-sized elements."""
+        cases = (
+            (util.from_ieee_block, b"#13\x01\x02\x03"),
+            (util.from_hp_block, b"#A\x03\x00\x01\x02\x03"),
+            (util.from_rs_block, b"#(3)\x01\x02\x03"),
+        )
+
+        for decoder, block in cases:
+            with pytest.raises(ValueError, match="not a multiple"):
+                decoder(block, datatype="h")
+
+        assert util.from_ieee_block(b"#13\x01\x02\x03", datatype="B") == [1, 2, 3]
+        assert util.from_ieee_block(b"#10", datatype="h") == []
+        assert util.from_ieee_block(b"#0\x01\x00\n", datatype="h") == [1]
+        assert util.from_ieee_or_rs_block(b"#0\x01\x00\n", datatype="h") == [1]
 
     def test_guessing_block_length(self):
         values = list(range(99))
