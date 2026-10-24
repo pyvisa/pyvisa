@@ -625,6 +625,18 @@ class MessageBasedResource(Resource):
                 block, length_before_block, raise_on_late_block
             )
         elif header_fmt == "hp":
+            # The two length bytes of the header are binary, so one of them
+            # can be the termination character and end the first read before
+            # the header is complete.
+            begin = block.find(b"#A")
+            if begin >= 0 and len(block) < begin + 4:
+                block.extend(
+                    self.read_bytes(
+                        begin + 4 - len(block),
+                        chunk_size=chunk_size,
+                        monitoring_interface=monitoring_interface,
+                    )
+                )
             offset, data_length = util.parse_hp_block_header(
                 block, is_big_endian, length_before_block, raise_on_late_block
             )
