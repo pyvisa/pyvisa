@@ -676,6 +676,40 @@ class TestFilters(BaseTestCase):
         self._test_filter2("ASRL1+::INSTR", 2, 8)
         self._test_filter2("(GPIB|VXI)?*INSTR", 0, 7, 14)
 
+    @pytest.mark.parametrize("extended", [False, True])
+    @pytest.mark.parametrize(
+        "query, indices",
+        [
+            (r"?*q\?::INSTR", (0,)),
+            (r"?*q[?]::INSTR", (0,)),
+            (r"?*q[^?]::INSTR", (1, 2, 5, 6)),
+            (r"?*q[.?]::INSTR", (0, 1)),
+            (r"?*q[\?]::INSTR", (0,)),
+            (r"?*q[?X]::INSTR", (0, 2)),
+            (r"?*q\\?::INSTR", (3, 4)),
+            (r"?*q\\\?::INSTR", (3,)),
+            (r"?*q[]?]::INSTR", (0, 5)),
+            (r"?*q[^]?]::INSTR", (1, 2, 6)),
+            (r"?*q[\]?]::INSTR", (0, 5)),
+            (r"?*q?::INSTR", (0, 1, 2, 5, 6)),
+            (r"?*q\[::INSTR", (6,)),
+        ],
+    )
+    def test_literal_question_marks(self, query, indices, extended):
+        resources = tuple(
+            f"USB0::1::2::q{suffix}::INSTR"
+            for suffix in ("?", ".", "X", "\\?", "\\X", "]", "[")
+        )
+
+        def unexpected_connection(name):
+            raise AssertionError(f"Query unexpectedly opened {name}")
+
+        if extended:
+            result = rname.filter2(resources, query, unexpected_connection)
+        else:
+            result = rname.filter(resources, query)
+        assert result == tuple(resources[index] for index in indices)
+
     def test_filter2_optional_clause_no_connection(self):
         self._test_filter2("?*::INSTR{!(VI_ATTR_INTF_NUM == 0)}", 2, 7, 8, 9)
         self._test_filter2('?*{VI_ATTR_MANF_ID == "0x1111"}', 3)
