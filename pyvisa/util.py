@@ -513,6 +513,8 @@ def parse_ieee_block_header(
             raise ValueError(msg)
 
         data_length = int(block[begin + 2 : offset])
+        if data_length < 0:
+            raise ValueError("Declared binary data length cannot be negative.")
 
     else:
         # #0DATA
@@ -609,6 +611,8 @@ def parse_rs_block_header(
     """
     offset = begin + 2 + header_length + 1
     data_length = int(block[begin + 2 : offset - 1])
+    if data_length < 0:
+        raise ValueError("Declared binary data length cannot be negative.")
 
     return offset, data_length
 
@@ -992,6 +996,8 @@ def from_binary_block(
     if data_length is None:
         effective_data_length = len(block) - offset
     else:
+        if data_length < 0:
+            raise ValueError("Binary data length cannot be negative.")
         if data_length % element_length:
             raise ValueError(
                 "Binary data length %d is not a multiple of element size %d."

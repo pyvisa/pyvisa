@@ -11,6 +11,8 @@ PyVISA Changelog
   platform C long instead of the 4 bytes struct uses in standard mode PR #990
 - reject declared binary block lengths that are not an integral number of
   datatype elements
+- reject negative declared binary block lengths instead of decoding them as
+  indefinite or inferred payload sizes
 - fix read_binary_values with header_fmt="hp" when a byte of the binary length
   is the termination character, which ended the read inside the header
 
