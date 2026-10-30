@@ -680,6 +680,32 @@ class TestParser(BaseTestCase):
         assert util.from_ieee_block(b"#0\x01\x00\n", datatype="h") == [1]
         assert util.from_ieee_or_rs_block(b"#0\x01\x00\n", datatype="h") == [1]
 
+    @pytest.mark.parametrize("header_format", ["ieee", "rs", "raw"])
+    @pytest.mark.parametrize("length", [-1, -2])
+    def test_reject_negative_declared_binary_length(self, header_format, length):
+        containers = (list, tuple) + ((np.array, np.ndarray) if np else ())
+        for container in containers:
+            if header_format == "ieee":
+                block = f"#2{length}".encode() + b"\x01\x02"
+                decode = partial(
+                    util.from_ieee_block, block, datatype="B", container=container
+                )
+            elif header_format == "rs":
+                block = f"#({length})".encode() + b"\x01\x02"
+                decode = partial(
+                    util.from_rs_block, block, datatype="B", container=container
+                )
+            else:
+                decode = partial(
+                    util.from_binary_block,
+                    b"\x01\x02",
+                    data_length=length,
+                    datatype="B",
+                    container=container,
+                )
+            with pytest.raises(ValueError):
+                decode()
+
     def test_guessing_block_length(self):
         values = list(range(99))
         for header, tb, fb in zip(
