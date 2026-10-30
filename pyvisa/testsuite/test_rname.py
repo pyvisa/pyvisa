@@ -114,6 +114,33 @@ class TestResourceName(BaseTestCase):
             rname.ResourceName.from_string("ASRL")
         assert "The syntax is" in e.exconly()
 
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "GPIB0::8::INSTR",
+            "GPIB9::7::1::INSTR",
+            "GPIB::INTFC",
+            "ASRL1::INSTR",
+            "USB1::0x1111::0x2222::MixedSerial::0::RAW",
+            "USB0::0x1112::0x2223::MixedSerial::0::INSTR",
+            "TCPIP0::MixedHost::MixedDevice::INSTR",
+            "TCPIP0::MixedHost::10001::SOCKET",
+            "PXI::1::BACKPLANE",
+            "PXI::MEMACC",
+            "VXI::1::BACKPLANE",
+            "VXI::1::INSTR",
+            "VXI::SERVANT",
+        ],
+    )
+    def test_resource_class_case_insensitive(self, name):
+        prefix, resource_class = name.rsplit("::", 1)
+        canonical = rname.to_canonical_name(name)
+        for suffix in (resource_class.lower(), resource_class.title()):
+            candidate = f"{prefix}::{suffix}"
+            parsed = rname.ResourceName.from_string(candidate)
+            assert str(parsed) == canonical
+            assert parsed.user == candidate
+
     def test_creation_from_kwargs(self):
         """Test error handling when creating a name from a kwargs."""
         # No interface class registered
