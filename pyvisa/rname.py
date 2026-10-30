@@ -202,8 +202,8 @@ class _ResourceNameBase:
             # one of the known resource classes for the given interface type.
             # If not possible, use the default resource class
             # for the given interface type.
-            if parts and parts[-1] in _RESOURCE_CLASSES[interface_type]:
-                parts, resource_class = parts[:-1], parts[-1]
+            if parts and parts[-1].upper() in _RESOURCE_CLASSES[interface_type]:
+                parts, resource_class = parts[:-1], parts[-1].upper()
             else:
                 try:
                     resource_class = _DEFAULT_RC[interface_type]
