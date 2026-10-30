@@ -797,7 +797,13 @@ def filter(resources: Iterable[str], query: str) -> Tuple[str, ...]:
         )
 
     try:
-        query = query.replace("?", ".")
+        # Keep escaped characters and character classes intact. Only a bare
+        # question mark is a VISA wildcard (Python uses a dot for that).
+        query = re.sub(
+            r"\\[\s\S]|\[(?:\^?\])?(?:\\[\s\S]|[^\\\]])*\]|\?",
+            lambda match: "." if match[0] == "?" else match[0],
+            query,
+        )
         matcher = re.compile(query, re.IGNORECASE)
     except re.error:
         raise errors.VisaIOError(constants.VI_ERROR_INV_EXPR)
