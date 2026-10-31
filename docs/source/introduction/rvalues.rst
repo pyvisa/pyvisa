@@ -134,10 +134,12 @@ An implementation of a progress bar might look like:
 If you can read without any problem from your instrument, but cannot retrieve
 the full message when using this method (VI_ERROR_CONN_LOST,
 VI_ERROR_INV_SETUP, or Python simply crashes), try passing different values for
-``chunk_size`` (the default is 20*1024). The underlying mechanism for this issue
-is not clear but changing ``chunk_size`` has been used to work around it. Note
-that using  larger chunk sizes for large transfer may result in a speed up of
-the transfer.
+``chunk_size`` (the default is 20*1024 for the first transfer to get the header,
+then the remaining data length in a second transfer if necessary). The underlying
+mechanism for this issue is not clear but changing ``chunk_size`` has been used to
+work around it. Note that using larger chunk sizes for large transfer may result in
+a speed up of the transfer, which is why the default is to use the largest
+possible ``chunk_size`` once the data length is known.
 
 In some cases, the instrument may use a protocol that does not indicate how
 many bytes will be transferred. The Keithley 2000 for example always returns the
