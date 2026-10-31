@@ -845,7 +845,7 @@ class _AttrGetter:
             if not isinstance(self.parsed, (USBInstr, USBRaw)):
                 raise self.raise_missing_attr(item)
             else:
-                return int(self.parsed.board)
+                return int(self.parsed.usb_interface_number)
         elif item == "VI_ATTR_TCPIP_ADDR":
             if not isinstance(self.parsed, (TCPIPInstr, TCPIPSocket)):
                 raise self.raise_missing_attr(item)
