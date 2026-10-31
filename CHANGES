@@ -3,6 +3,8 @@ PyVISA Changelog
 1.17 (unreleased)
 -------------------
 - reject non-integer and out-of-range TCPIP SOCKET ports when parsing resource names
+- preserve quoted attribute values and unequal comparisons when translating
+  optional resource-filter expressions
 - add an explicit get_buffer_from_id_and_pop method to release retained IVI
   asynchronous read buffers after completion (issue #761)
 - add support for context manager protocol to ResourceManager PR #985

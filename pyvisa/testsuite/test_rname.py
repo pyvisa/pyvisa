@@ -694,6 +694,51 @@ class TestFilters(BaseTestCase):
         self._test_filter2("?*{VI_ATTR_MAINFRAME_LA == 1}", 13, 14)
         self._test_filter2("?*{VI_ATTR_MAINFRAME_LA == 1 && VI_test == 1}", 13, 14)
 
+    @pytest.mark.parametrize(
+        "expression, boards",
+        [
+            ("VI_ATTR_INTF_NUM != 0", (1, 2)),
+            ("VI_ATTR_INTF_NUM!=0", (1, 2)),
+            ("VI_ATTR_INTF_NUM==0||VI_ATTR_INTF_NUM==2", (0, 2)),
+            ("VI_ATTR_INTF_NUM>0&&VI_ATTR_INTF_NUM<2", (1,)),
+            ("!(VI_ATTR_INTF_NUM==0)", (1, 2)),
+            ("!(VI_ATTR_INTF_NUM!=0)", (0,)),
+            ("VI_ATTR_INTF_NUM == 1", (1,)),
+        ],
+    )
+    def test_filter2_attribute_operators(self, expression, boards):
+        resources = tuple(f"GPIB{board}::1::INSTR" for board in range(3))
+
+        def unexpected_connection(name):
+            raise AssertionError(f"Query unexpectedly opened {name}")
+
+        assert rname.filter2(
+            resources, "?*{" + expression + "}", unexpected_connection
+        ) == tuple(resources[board] for board in boards)
+
+    @pytest.mark.parametrize(
+        "serial, literal",
+        [
+            ("wow!x", '"wow!x"'),
+            ("A&&B", '"A&&B"'),
+            ("A||B", "'A||B'"),
+            ("VI_ABC", '"VI_ABC"'),
+            ('say "VI_!"', r'"say \"VI_!\""'),
+            ("say 'VI_!'", "\"say 'VI_!'\""),
+            ("say 'VI_!'", '"""say \'VI_!\'"""'),
+            ('say "VI_!"', "'''say \"VI_!\"'''"),
+            ("plain", '"plain"'),
+        ],
+    )
+    def test_filter2_quoted_attribute_values(self, serial, literal):
+        resources = (f"USB0::1::2::{serial}::0::INSTR",)
+
+        def unexpected_connection(name):
+            raise AssertionError(f"Query unexpectedly opened {name}")
+
+        query = "?*{VI_ATTR_USB_SERIAL_NUM == " + literal + "}"
+        assert rname.filter2(resources, query, unexpected_connection) == resources
+
     def test_bad_filter(self):
         with pytest.raises(errors.VisaIOError) as e:
             rname.filter([], "?*(")
