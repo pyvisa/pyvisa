@@ -681,7 +681,7 @@ class TestFilters(BaseTestCase):
         self._test_filter2('?*{VI_ATTR_MANF_ID == "0x1111"}', 3)
         self._test_filter2('?*{VI_ATTR_MODEL_CODE == "0x2223"}', 4)
         self._test_filter2('?*{VI_ATTR_USB_SERIAL_NUM == "0x1234"}', 4)
-        self._test_filter2("?*{VI_ATTR_USB_INTFC_NUM == 0}", 4)
+        self._test_filter2("?*{VI_ATTR_USB_INTFC_NUM == 0}", 3, 4)
         self._test_filter2('?*{VI_ATTR_TCPIP_ADDR == "localhost"}', 6)
         self._test_filter2('?*{VI_ATTR_TCPIP_DEVICE_NAME == "inst1"}', 5)
         self._test_filter2("?*{VI_ATTR_TCPIP_PORT == 10001}", 6)
@@ -693,6 +693,28 @@ class TestFilters(BaseTestCase):
         self._test_filter2("?*{VI_ATTR_PXI_CHASSIS == 1}", 11)
         self._test_filter2("?*{VI_ATTR_MAINFRAME_LA == 1}", 13, 14)
         self._test_filter2("?*{VI_ATTR_MAINFRAME_LA == 1 && VI_test == 1}", 13, 14)
+
+    @pytest.mark.parametrize("resource_class", ["INSTR", "RAW"])
+    @pytest.mark.parametrize(
+        "board, interface",
+        [(0, "3"), (3, "0"), (2, "7"), (0, "0"), (3, None), (0, None)],
+    )
+    def test_filter2_usb_interface_number(self, resource_class, board, interface):
+        name = f"USB{board}::1::2::serial"
+        if interface is not None:
+            name += f"::{interface}"
+        name += f"::{resource_class}"
+        expected_interface = int(interface or 0)
+
+        def unexpected_connection(name):
+            raise AssertionError(f"Query unexpectedly opened {name}")
+
+        for number in {board, expected_interface, 9}:
+            query = "?*{VI_ATTR_USB_INTFC_NUM == " + str(number) + "}"
+            expected = (name,) if number == expected_interface else ()
+            assert rname.filter2((name,), query, unexpected_connection) == expected
+        board_query = "?*{VI_ATTR_INTF_NUM == " + str(board) + "}"
+        assert rname.filter2((name,), board_query, unexpected_connection) == (name,)
 
     def test_bad_filter(self):
         with pytest.raises(errors.VisaIOError) as e:
