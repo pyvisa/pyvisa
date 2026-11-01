@@ -932,8 +932,23 @@ def filter2(
     if not optional:
         return tuple(filtered)
 
-    optional = optional.replace("&&", "and").replace("||", "or").replace("!", "not ")
-    optional = optional.replace("VI_", "res.VI_")
+    def translate_token(match):
+        token = match[0]
+        if token.startswith("VI_"):
+            return "res." + token
+        return {"&&": " and ", "||": " or ", "!": " not "}.get(token, token)
+
+    # Translate operators and attribute names, leaving quoted values intact.
+    # In particular, the unary ! operator must not consume the != comparator.
+    optional = re.sub(
+        r'"""(?:\\.|(?!""").)*"""'
+        r"|'''(?:\\.|(?!''').)*'''"
+        r"""|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'"""
+        r"|\bVI_\w+\b|&&|\|\||!(?!=)",
+        translate_token,
+        optional,
+        flags=re.S,
+    )
 
     @contextlib.contextmanager
     def open_close(resource_name):
