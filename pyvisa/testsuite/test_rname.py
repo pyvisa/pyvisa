@@ -717,6 +717,33 @@ class TestFilters(BaseTestCase):
         ) == tuple(resources[board] for board in boards)
 
     @pytest.mark.parametrize(
+        "expression, boards",
+        [
+            ("!VI_ATTR_INTF_NUM==1", (0, 2)),
+            ("!VI_ATTR_INTF_NUM!=1", (1,)),
+            ("!!VI_ATTR_INTF_NUM==1", (1,)),
+            ("!VI_ATTR_INTF_NUM>1", (0, 1)),
+            ("!VI_ATTR_INTF_NUM<1", (1, 2)),
+            ("!VI_ATTR_INTF_NUM>=1", (0,)),
+            ("!VI_ATTR_INTF_NUM<=1", (2,)),
+            ("!VI_ATTR_INTF_NUM==1&&VI_ATTR_INTF_NUM>0", (2,)),
+            ("!VI_ATTR_INTF_NUM==1||VI_ATTR_INTF_NUM==2", (0, 2)),
+            ("!(!VI_ATTR_INTF_NUM==1)", (1,)),
+        ],
+    )
+    def test_filter2_negates_complete_relations(self, expression, boards):
+        # VPP-4.3 section4.4.2.1: attrFactor negates another factor,
+        # whose ungrouped base case is a complete relationExpr.
+        resources = tuple(f"GPIB{board}::1::INSTR" for board in range(3))
+
+        def unexpected_connection(name):
+            raise AssertionError(f"Query unexpectedly opened {name}")
+
+        assert rname.filter2(
+            resources, "?*{" + expression + "}", unexpected_connection
+        ) == tuple(resources[board] for board in boards)
+
+    @pytest.mark.parametrize(
         "serial, literal",
         [
             ("wow!x", '"wow!x"'),
