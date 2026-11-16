@@ -329,6 +329,11 @@ class Resource(object):
             self.session = None  # type: ignore
         except errors.InvalidSession:
             pass
+        except errors.VisaIOError as exc:
+            if exc.error_code != constants.StatusCode.error_invalid_object:
+                raise
+            # The backend has already invalidated this session.
+            self.session = None  # type: ignore
 
         logger.debug("%s - is closed", self._resource_name, extra=self._logging_extra)
 
