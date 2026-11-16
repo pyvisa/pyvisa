@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """Test highlevel functions not requiring an actual backend."""
 
+import gc
 import logging
 import os
 import sys
 from importlib import import_module
+from weakref import WeakValueDictionary, ref
 
 import pytest
 
@@ -29,6 +31,49 @@ class TestHighlevel(BaseTestCase):
     """Test highlevel functionalities."""
 
     CHECK_NO_WARNING = False
+
+    @pytest.mark.parametrize("library_path", ["", "cache"])
+    @pytest.mark.parametrize("collection", ["live", "before", "during"])
+    def test_library_cache_collection(self, monkeypatch, library_path, collection):
+        class CollectingCache(WeakValueDictionary):
+            collect_on_lookup = False
+
+            def __getitem__(self, key):
+                if self.collect_on_lookup:
+                    gc.collect()
+                return super().__getitem__(key)
+
+        class FakeLibrary(highlevel.VisaLibraryBase):
+            @staticmethod
+            def get_library_paths():
+                return ["cache"]
+
+        cache = CollectingCache()
+        monkeypatch.setattr(FakeLibrary, "_registry", cache)
+        gc_enabled = gc.isenabled()
+        gc.disable()
+        try:
+            original = FakeLibrary("cache")
+            # Keep the weakly cached value alive only until cyclic collection.
+            setattr(original, "_cache_cycle", original)
+            original_ref = ref(original)
+            if collection != "live":
+                del original
+            if collection == "before":
+                gc.collect()
+            cache.collect_on_lookup = collection == "during"
+
+            library = FakeLibrary(library_path)
+
+            if collection == "live":
+                assert library is original
+            else:
+                assert original_ref() is None
+            assert library.library_path == "cache"
+            assert FakeLibrary(library_path) is library
+        finally:
+            if gc_enabled:
+                gc.enable()
 
     @pytest.mark.parametrize(
         "rsc_name, values",
