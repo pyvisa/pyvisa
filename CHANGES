@@ -2,6 +2,8 @@ PyVISA Changelog
 ================
 1.17 (unreleased)
 -------------------
+- treat a resource session invalidated by the VISA backend as closed, allowing
+  resource manager cleanup to continue after a failed connection (issue #908)
 - reject non-integer and out-of-range TCPIP SOCKET ports when parsing resource names
 - add an explicit get_buffer_from_id_and_pop method to release retained IVI
   asynchronous read buffers after completion (issue #761)
