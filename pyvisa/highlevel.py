@@ -180,8 +180,10 @@ class VisaLibraryBase(object):
         else:
             lib_path = library_path
 
-        if (cls, lib_path) in cls._registry:
+        try:
             return cls._registry[(cls, lib_path)]
+        except KeyError:
+            pass
 
         obj = super(VisaLibraryBase, cls).__new__(cls)
 
