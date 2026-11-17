@@ -1,5 +1,8 @@
 PyVISA Changelog
 ================
+
+.. towncrier release notes start
+
 1.17 (unreleased)
 -------------------
 - reject non-integer and out-of-range TCPIP SOCKET ports when parsing resource names
