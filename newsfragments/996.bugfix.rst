@@ -1,0 +1,2 @@
+Fix ``read_binary_values`` with ``header_fmt="hp"`` when a byte of the binary
+length is the termination character, which caused the read to end inside the header.

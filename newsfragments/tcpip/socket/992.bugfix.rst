@@ -1,0 +1,1 @@
+Reject non-integer and out-of-range TCPIP SOCKET ports when parsing resource names.
