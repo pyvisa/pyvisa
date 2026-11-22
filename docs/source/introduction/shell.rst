@@ -43,10 +43,29 @@ Let's open comport 1::
 
     (visa) open 0
     ASRL1::INSTR has been opened.
-    You can talk to the device using "write", "read" or "query.
+    You can talk to the device using "write", "read" or "query".
     The default end of message is added to each message
     (open) query *IDN?
-    Some Instrument, Some Company.
+    Response: Some Instrument, Some Company.
+
+Three commands talk to the opened device:
+
+``write``
+    Sends the text after the command to the device and prints nothing. Use it
+    for commands that do not answer, such as ``write *RST``.
+
+``read``
+    Reads one response from the device and prints it. It takes no argument and
+    does not send anything, so use it after a ``write`` whose response you want
+    to see.
+
+``query``
+    Sends the text after the command and then reads the response, which is
+    printed after ``Response:``. ``query *IDN?`` is the same as
+    ``write *IDN?`` followed by ``read``.
+
+They correspond to the ``write``, ``read`` and ``query`` methods of a resource
+in PyVISA.
 
 You can print timeout that is set for query/read operation::
 

@@ -123,7 +123,10 @@ class VisaShell(cmd.Cmd):
             self.prompt = self.default_prompt
 
     def do_query(self, args):
-        """Query resource in use: query *IDN?"""
+        """Send a command to the resource in use and print its response: query *IDN?
+
+        This is a write followed by a read.
+        """
 
         if not self.current:
             print('There are no resources in use. Use the command "open".')
@@ -135,7 +138,11 @@ class VisaShell(cmd.Cmd):
             print(e)
 
     def do_read(self, args):
-        """Receive from the resource in use."""
+        """Read and print a response from the resource in use: read
+
+        Nothing is sent first, so use it after "write" for a command whose
+        response was not read yet.
+        """
 
         if not self.current:
             print('There are no resources in use. Use the command "open".')
@@ -147,7 +154,10 @@ class VisaShell(cmd.Cmd):
             print(e)
 
     def do_write(self, args):
-        """Send to the resource in use: send *IDN?"""
+        """Send a command to the resource in use without reading a response: write *RST
+
+        Use "query" for a command that returns data.
+        """
 
         if not self.current:
             print('There are no resources in use. Use the command "open".')
