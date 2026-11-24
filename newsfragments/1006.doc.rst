@@ -1,0 +1,2 @@
+Update the broken VISA specification and NI-VISA manual links in the docs and
+the ``list_resources`` docstring.

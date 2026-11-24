@@ -195,7 +195,7 @@ Where can I get more information about VISA?
 
 * The original VISA docs:
 
-  - `VISA specification`_ (scroll down to the end)
+  - `VISA specification`_
   - `VISA library specification`_
   - `VISA specification for textual languages`_
 
@@ -203,21 +203,21 @@ Where can I get more information about VISA?
 
   - `NI-VISA User Manual`_
   - `NI-VISA Programmer Reference Manual`_
-  - `NI-VISA help file`_ in HTML
+  - `NI-VISA online documentation`_
 
 .. _`VISA specification`:
-       http://www.ivifoundation.org/Downloads/Specifications.htm
+       https://www.ivifoundation.org/specifications/default.html#visa-specifications
 .. _`VISA library specification`:
-       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp43.doc
+       https://www.ivifoundation.org/downloads/VISA/vpp43_2024-01-04.pdf
 .. _`VISA specification for textual languages`:
-       http://www.ivifoundation.org/Downloads/Class%20Specifications/vpp432.doc
+       https://www.ivifoundation.org/downloads/VISA/vpp432_2022-05-19.pdf
 .. _`National Instruments's VISA`: http://ni.com/visa/
 .. _`NI-VISA Programmer Reference Manual`:
-       http://digital.ni.com/manuals.nsf/websearch/87E52268CF9ACCEE86256D0F006E860D
-.. _`NI-VISA help file`:
-       http://digital.ni.com/manuals.nsf/websearch/21992F3750B967ED86256F47007B00B3
+       https://download.ni.com/support/manuals/370132c.pdf
+.. _`NI-VISA online documentation`:
+       https://www.ni.com/docs/en-US/bundle/ni-visa/page/user-manual-welcome.html
 .. _`NI-VISA User Manual`:
-       http://digital.ni.com/manuals.nsf/websearch/266526277DFF74F786256ADC0065C50C
+       https://download.ni.com/support/manuals/370423a.pdf
 
 
 .. _`AUTHORS`: https://github.com/pyvisa/pyvisa/blob/main/AUTHORS
