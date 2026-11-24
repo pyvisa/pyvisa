@@ -84,6 +84,17 @@ __version__ = "{version}"
   title_format = "{version} - {project_date}"
   issue_pattern = "^(?P<issue>\\d+|[A-Za-z]+-\\d+)$"
   underlines = ["=", "-", "~"]
+  ignore = [
+    "asrl",
+    "gpib",
+    "hislip",
+    "prologix",
+    "socket",
+    "tcpip",
+    "vxi11",
+    "usb",
+    "vicp",
+  ]
 
   [[tool.towncrier.section]]
     name = "General"
