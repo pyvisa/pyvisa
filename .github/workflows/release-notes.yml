@@ -1,0 +1,135 @@
+name: Prepare release notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to prepare in the changelog (for example 0.4.0)."
+        required: true
+        type: string
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  prepare-release-pr:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    name: Create release notes PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - name: Install towncrier
+        run: python -m pip install --upgrade pip towncrier packaging
+      - name: Validate release version
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          from packaging.version import InvalidVersion, Version
+
+          version = os.environ["INPUT_VERSION"]
+          try:
+              Version(version)
+          except InvalidVersion as exc:
+              raise SystemExit(f"Invalid release version: {version}") from exc
+          PY
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+      - name: Build release notes
+        run: python -m towncrier build --version "${{ inputs.version }}" --yes
+      - name: Check whether the tag already exists
+        shell: bash
+        run: |
+          if git ls-remote --tags origin "${{ inputs.version }}" | grep -q "refs/tags/${{ inputs.version }}$"; then
+            echo "Tag ${{ inputs.version }} already exists; refusing to open a release notes PR for it."
+            exit 1
+          fi
+      - name: Create release notes PR
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: prepare release notes for ${{ inputs.version }}"
+          title: "Prepare release notes for ${{ inputs.version }}"
+          body: |
+            This PR was prepared by the manual release workflow to collect the towncrier fragments for version ${{ inputs.version }}.
+
+            Once it is merged, the tag workflow will create the corresponding release tag.
+          branch: "release-notes-${{ inputs.version }}"
+          delete-branch: true
+          labels: release
+
+  create-tag:
+    if: >-
+      ${{
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.merged == true &&
+        github.event.pull_request.base.ref == 'main' &&
+        github.event.pull_request.user.login == 'github-actions[bot]' &&
+        startsWith(github.event.pull_request.head.ref, 'release-notes-') &&
+        contains(github.event.pull_request.labels.*.name, 'release') &&
+        startsWith(github.event.pull_request.title, 'Prepare release notes for ')
+      }}
+    name: Create release tag
+    environment:
+      name: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+      - name: Install packaging
+        run: python -m pip install packaging
+      - name: Extract release version
+        id: version
+        env:
+          RELEASE_BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import re
+
+          from packaging.version import InvalidVersion, Version
+
+          branch = os.environ["RELEASE_BRANCH"]
+          match = re.fullmatch(r"release-notes-(.+)", branch)
+          if match is None:
+              raise SystemExit(f"Unexpected release branch: {branch}")
+
+          version = match.group(1)
+          try:
+              version = str(Version(version))
+          except InvalidVersion as exc:
+              raise SystemExit(f"Invalid release version: {version}") from exc
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"version={version}\n")
+          PY
+
+      - name: Create and push tag
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git rev-parse --verify "refs/tags/${VERSION}" >/dev/null 2>&1; then
+            echo "Tag ${VERSION} already exists; refusing to overwrite it."
+            exit 1
+          fi
+          git tag -a "${VERSION}" -m "Release ${VERSION}"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" "${VERSION}"
