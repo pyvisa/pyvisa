@@ -3140,7 +3140,7 @@ class ResourceManager(object):
 
         The VISA Resource Regular Expression syntax is defined in the VISA
         Library specification:
-        http://www.ivifoundation.org/docs/vpp43.pdf
+        https://www.ivifoundation.org/downloads/VISA/vpp43_2024-01-04.pdf
 
         Symbol      Meaning
         ----------  ----------

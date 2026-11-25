@@ -40,7 +40,7 @@ aliases.
 The resource name is case-insensitive.  It doesn't matter whether you
 say ``"ASRL2"`` or ``"asrl2"``.  For further information, I have to refer
 you to a comprehensive VISA description like
-`<http://www.ni.com/pdf/manuals/370423a.pdf>`_.
+`<https://download.ni.com/support/manuals/370423a.pdf>`_.
 
 
 VISA Resource Syntax and Examples
