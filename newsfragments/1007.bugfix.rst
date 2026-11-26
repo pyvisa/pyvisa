@@ -1,0 +1,2 @@
+Parse integer ASCII blocks as 64-bit integers when returning a NumPy array,
+instead of silently wrapping values that do not fit in 32 bits.

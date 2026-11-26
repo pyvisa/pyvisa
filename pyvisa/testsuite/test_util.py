@@ -359,6 +359,13 @@ class TestParser(BaseTestCase):
 
             self.round_trip_block_conversion(values, tb, fb, msg)
 
+    @pytest.mark.skipif(np is None, reason="NumPy is not present")
+    def test_large_integer_ascii_block(self):
+        values = [2**31, 3_000_000_000, -(2**31) - 1, 2**40]
+        block = util.to_ascii_block(values, "d", ",")
+        assert list(util.from_ascii_block(block, "d", ",", np.array)) == values
+        assert util.from_ascii_block(block, "d", ",", list) == values
+
     def test_non_integer_ascii_block(self):
         values = [val + 0.5 for val in range(99)]
         values = list(range(99))
