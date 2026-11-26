@@ -286,8 +286,10 @@ _converters: Dict[str, Callable[[str], Any]] = {
     "G": float,
 }
 
+# "d" maps to a 64-bit integer: a 32-bit "i" silently wrapped values above
+# 2**31 - 1.
 _np_converters = {
-    "d": "i",
+    "d": "q",
     "e": "d",
     "E": "d",
     "f": "d",
