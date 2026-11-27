@@ -1,0 +1,30 @@
+name: News fragment check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+      - unlabeled
+      - ready_for_review
+
+jobs:
+  check-news-fragment:
+    permissions:
+      contents: read
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-news-required') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - name: Install towncrier
+        run: python -m pip install --upgrade pip towncrier
+      - name: Check for a news fragment
+        run: python -m towncrier check --compare-with origin/${{ github.base_ref }}
