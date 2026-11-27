@@ -1,0 +1,1 @@
+Handle garbage collection during a cached VISA library lookup.
