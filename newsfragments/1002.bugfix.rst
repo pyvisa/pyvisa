@@ -1,0 +1,1 @@
+Treat a resource session invalidated by the VISA backend as closed, allowing resource manager cleanup to continue after a failed connection (issue #908).
