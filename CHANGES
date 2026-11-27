@@ -13,9 +13,6 @@ PyVISA Changelog
   datatype elements
 - fix read_binary_values with header_fmt="hp" when a byte of the binary length
   is the termination character, which ended the read inside the header
-- fix the pyvisa-shell help of the write command, which showed a query example,
-  and document the write, read and query commands in the shell documentation
-  (issue #685)
 
 1.17.0 (06-07-2026)
 -------------------

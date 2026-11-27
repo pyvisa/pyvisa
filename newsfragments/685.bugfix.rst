@@ -1,0 +1,2 @@
+Fix the help of the ``pyvisa-shell`` write command, which showed a query example,
+and document the write, read and query commands in the shell documentation.
