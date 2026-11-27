@@ -1,0 +1,2 @@
+Reject declared binary block lengths that are not an integral number of
+datatype elements.

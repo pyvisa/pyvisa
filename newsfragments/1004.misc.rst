@@ -1,0 +1,2 @@
+Switch the build backend to Hatchling with ``hatch-vcs`` and adopt Towncrier-managed changelogs.
+This also adds CI checks for news fragments and an automated release workflow for release notes and tags.

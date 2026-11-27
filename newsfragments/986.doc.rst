@@ -1,0 +1,1 @@
+Fix outdated manual installation instructions in the README.
